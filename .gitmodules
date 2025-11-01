@@ -1,0 +1,9 @@
+[submodule "docs/dev/reference-implementations/claude-api-py"]
+	path = docs/dev/reference-implementations/claude-api-py
+	url = git@github.com:AshwinPathi/claude-api-py.git
+[submodule "docs/dev/reference-implementations/claude-unofficial-api"]
+	path = docs/dev/reference-implementations/claude-unofficial-api
+	url = git@github.com:Explosion-Scratch/claude-unofficial-api.git
+[submodule "docs/dev/reference-implementations/unofficial-claude-api"]
+	path = docs/dev/reference-implementations/unofficial-claude-api
+	url = git@github.com:st1vms/unofficial-claude-api.git

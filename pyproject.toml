@@ -1,0 +1,43 @@
+[project]
+name = "bukzor-template-python-project"
+version = "0.1.0"
+description = "Python project template with copier support"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = []
+
+[dependency-groups]
+dev = [
+  "black>=25.1.0",
+  "copier>=9.4.1",
+  "hypothesis>=6.139.1",
+  "isort>=5.13.2",
+  "pre-commit>=4.3.0",
+  "pyright>=1.1.405",
+  "pytest>=8.4.2",
+  "pyupgrade>=3.19.0",
+]
+
+[tool.pytest.ini_options]
+addopts = "--doctest-modules"
+
+[tool.pyright]
+typeCheckingMode = "strict"
+analyzeUnannotatedFunctions = true
+reportIncompatibleMethodOverride = "error"
+pythonVersion = "3.13"
+enableTypeIgnoreComments = true
+reportPrivateUsage = "warning"
+reportConstantRedefinition = "error"
+reportIncompatibleVariableOverride = "error"
+reportMissingImports = "error"
+reportMissingTypeStubs = false
+exclude = [
+  "docs/dev/reference-implementations",
+
+  # standard stuff
+  ".venv",
+  "__pycache__",
+  "node_modules",
+  "trash",
+]
