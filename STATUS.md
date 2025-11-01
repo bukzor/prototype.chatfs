@@ -10,7 +10,7 @@
 
 ## Progress Summary
 
-See [docs/dev/devlog/](docs/dev/devlog/) for session details.
+See [docs/dev/devlog/] for session details.
 
 **M0 Status:** Core documentation structure complete. Remaining: populate placeholder docs and refine design before M1.
 

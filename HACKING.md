@@ -44,14 +44,14 @@ claude-api/
         └── reference-implementations/  # Reference code (git submodules)
 ```
 
-See [docs/dev/technical-design.md](docs/dev/technical-design.md) for
+See [docs/dev/technical-design.md] for
 architecture details.
 
 ## Running Tests
 
-**Note:** CLI entry points are not yet configured. Part of M0 tasks.
+**Note:** The testing commands shown below will work after M0 configures entry points in pyproject.toml. For now, these serve as reference for post-M0 testing workflow.
 
-**Test plumbing modules:**
+**Test plumbing modules** (available after M0 entry point configuration):
 
 ```bash
 uv sync  # one-time setup, for new modules
@@ -177,34 +177,16 @@ claifs-render-md (stdin: message records)
 ```
 
 See
-[docs/dev/technical-design.md#data-flow](docs/dev/technical-design.md#data-flow)
+[docs/dev/technical-design.md#data-flow]
 for details.
 
 ### Working with the Cache
 
-**Cache structure:**
+**Cache location:** `./claudefs/` directory with org-based structure
 
-```
-./claudefs/
-├── .config.json           # Session key, default org
-└── claude.ai/
-    └── Buck Evan/         # Organization name
-        ├── org.jsonl      # Org metadata
-        ├── 2025-10-29/    # Date-based directories
-        │   ├── title.md
-        │   └── title.jsonl
-        └── .uuid-index.json
-```
+**Staleness tracking:** Files have `mtime = conversation.updated_at` from API. If stale, re-fetch.
 
-**Cache invalidation:**
-
-- Files have `mtime = conversation.updated_at`
-- If `file.mtime < api.updated_at`, re-fetch
-- `claifs-sync` forces refresh regardless of mtime
-
-See
-[docs/dev/technical-design/caching-strategy.md](docs/dev/technical-design/caching-strategy.md)
-for implementation.
+See [docs/dev/technical-design.md#filesystem-cache-structure] for detailed cache structure and invalidation logic.
 
 ## Architecture
 
@@ -227,22 +209,22 @@ for implementation.
 - Fetch on-demand keeps everything fast
 - Filesystem mtime tracks staleness
 
-See [docs/dev/design-rationale.md](docs/dev/design-rationale.md) for full
+See [docs/dev/design-rationale.md] for full
 reasoning.
 
 ## Design Decisions
 
 For detailed rationale on architectural choices, see:
 
-- [docs/dev/design-rationale.md](docs/dev/design-rationale.md) - Core design
+- [docs/dev/design-rationale.md] - Core design
   decisions
-- [docs/dev/technical-design.md](docs/dev/technical-design.md) - System
+- [docs/dev/technical-design.md] - System
   architecture
-- [design-incubators/](design-incubators/) - Unsolved problems being explored
+- [design-incubators/] - Unsolved problems being explored
 
 ## Contributing Workflow
 
-1. Check [STATUS.md](STATUS.md) for current milestone
+1. Check [STATUS.md] for current milestone
 2. Read relevant design docs
 3. Implement changes
 4. Test with plumbing pipeline

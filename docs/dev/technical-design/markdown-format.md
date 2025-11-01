@@ -9,5 +9,5 @@ This document will describe:
 - Example output format
 - Obsidian compatibility considerations
 
-See [../technical-design.md#data-flow](../technical-design.md#data-flow) for
+See [../technical-design.md#data-flow] for
 overview of where this fits in the pipeline.

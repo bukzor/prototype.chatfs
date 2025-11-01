@@ -12,7 +12,7 @@ This document would contain:
 - Edge cases and failure modes
 
 See
-[../design-rationale.md#lazy-filesystem-model](../design-rationale.md#lazy-filesystem-model)
+[../design-rationale.md#lazy-filesystem-model]
 for the decision summary.
 
 **Note:** May not need this level of detail. The summary in design-rationale.md

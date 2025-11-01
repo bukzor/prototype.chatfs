@@ -28,13 +28,14 @@ before implementation
 
 **Deliverables:**
 
-- [x] Core documentation files (README, HACKING, CLAUDE, STATUS)
-- [x] Design rationale document (plumbing/porcelain split, JSONL choice, lazy loading)
-- [x] Technical design document (architecture, data flow, components)
-- [x] Development plan (this document - high-level overview)
+- [x] Core documentation files rough draft (README, HACKING, CLAUDE, STATUS)
+- [x] Design rationale document rough draft (plumbing/porcelain split, JSONL choice, lazy loading)
+- [x] Technical design document rough draft (architecture, data flow, components)
+- [x] Development plan rough draft (this document - high-level overview)
 - [x] Devlog structure and first entry
 - [x] Fork representation design incubator setup
 - [ ] Populate placeholder docs (`git grep -l "TODO\|Status:.*TODO" docs/`)
+  - [ ] Delete unnecessary detail placeholder docs
 - [ ] Solidify technical design (API wrapper, data models, JSONL schemas)
 - [ ] Apply template.python-project baseline configurations
   - [ ] pyproject.toml entry points for CLI commands
@@ -62,10 +63,10 @@ before implementation
 
 **Deliverables:**
 
-- [ ] `bin/plumbing/claifs-list-orgs` - List organizations
-- [ ] `bin/plumbing/claifs-list-convos` - List conversations for org
-- [ ] `bin/plumbing/claifs-get-convo` - Get messages for conversation
-- [ ] `bin/plumbing/claifs-render-md` - Render messages to markdown
+- [ ] `claifs-list-orgs` command - List organizations (entry point from `lib/claifs/plumbing/list_orgs.py`)
+- [ ] `claifs-list-convos` command - List conversations for org (entry point from `lib/claifs/plumbing/list_convos.py`)
+- [ ] `claifs-get-convo` command - Get messages for conversation (entry point from `lib/claifs/plumbing/get_convo.py`)
+- [ ] `claifs-render-md` command - Render messages to markdown (entry point from `lib/claifs/plumbing/render_md.py`)
 - [ ] `lib/claifs/api.py` - API client wrapper
 - [ ] `lib/claifs/cache.py` - Filesystem cache (read-only)
 - [ ] `lib/claifs/models.py` - Data structures
@@ -94,7 +95,7 @@ before implementation
 
 **Implementation Notes:**
 
-See [plan/milestone-1-plumbing.md](plan/milestone-1-plumbing.md) for task
+See [plan/milestone-1-plumbing.md] for task
 breakdown.
 
 **Key tasks:**
@@ -187,9 +188,9 @@ echo '{"provider":"chatgpt"}' | claifs-list-convos
 **Deliverables:**
 
 - [ ] Fork representation decision (see design-incubators/fork-representation/)
-- [ ] `bin/plumbing/claifs-append` - Add message to conversation
-- [ ] `bin/plumbing/claifs-fork` - Fork conversation at message
-- [ ] `bin/plumbing/claifs-amend` - Edit message in conversation
+- [ ] `claifs-append` command - Add message to conversation (entry point from `lib/claifs/plumbing/append.py`)
+- [ ] `claifs-fork` command - Fork conversation at message (entry point from `lib/claifs/plumbing/fork.py`)
+- [ ] `claifs-amend` command - Edit message in conversation (entry point from `lib/claifs/plumbing/amend.py`)
 - [ ] Cache write operations with fork tracking
 - [ ] Tests for write operations
 
@@ -223,7 +224,7 @@ echo '{"provider":"chatgpt"}' | claifs-list-convos
 **Implementation Notes:**
 
 Must resolve
-[design-incubators/fork-representation/](../../design-incubators/fork-representation/)
+[../../design-incubators/fork-representation/]
 first.
 
 ## Tier 2: Maybe Soon, Maybe Later
@@ -320,7 +321,7 @@ If capnshell exists by then:
 
 ## Related Documents
 
-- [design-rationale.md](design-rationale.md) - Why these milestones and order
-- [technical-design.md](technical-design.md) - What we're building
-- [plan/milestone-1-plumbing.md](plan/milestone-1-plumbing.md) - Detailed M1
+- [design-rationale.md] - Why these milestones and order
+- [technical-design.md] - What we're building
+- [plan/milestone-1-plumbing.md] - Detailed M1
   tasks

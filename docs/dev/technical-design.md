@@ -100,10 +100,10 @@ echo '{"uuid":"org-123"}' | claifs-list-convos | jq
 - Input: Message records (JSONL)
 - Output: Markdown with YAML frontmatter (NOT JSONL)
 - Format: See
-  [technical-design/markdown-format.md](technical-design/markdown-format.md)
+  [technical-design/markdown-format.md]
 
 See
-[HACKING.md#adding-a-new-plumbing-tool](../../HACKING.md#adding-a-new-plumbing-tool)
+[../../HACKING.md#adding-a-new-plumbing-tool]
 for implementation guide.
 
 ### Shared Libraries
@@ -129,7 +129,7 @@ messages = client.get_conversation(convo_uuid="...")
 - `list_conversations(org_uuid: str) → List[Conversation]`
 - `get_conversation(convo_uuid: str) → List[Message]`
 
-See [technical-design/api-reference.md](technical-design/api-reference.md) for
+See [technical-design/api-reference.md] for
 full API documentation.
 
 **lib/claifs/cache.py** - Filesystem Cache
@@ -155,7 +155,7 @@ cache.is_stale(path="...", remote_updated_at="...")
 - `is_stale(path: str, remote_updated_at: datetime) → bool`
 - `create_stub(path: str, mtime: datetime) → None` - Empty file with mtime
 
-See [technical-design/caching-strategy.md](technical-design/caching-strategy.md)
+See [technical-design/caching-strategy.md]
 for staleness logic.
 
 **lib/claifs/models.py** - Data Structures
@@ -206,7 +206,7 @@ claifs sync "Buck Evan/2025-10"     # Force refresh
 - Colors/formatting
 - Error messages
 
-See [technical-design/porcelain-design.md](technical-design/porcelain-design.md)
+See [technical-design/porcelain-design.md]
 for UX design.
 
 ## Data Flow
@@ -372,35 +372,12 @@ created_at: ...
 - `claifs-cat` checks staleness before reading
 - Regular `cat` bypasses check (shows cached data)
 
-See [technical-design/caching-strategy.md](technical-design/caching-strategy.md)
+See [technical-design/caching-strategy.md]
 for details.
 
-## Testing Strategy
+## Testing
 
-**Unit tests:**
-
-- Test plumbing tools with echo + pipe
-- Verify JSONL output with jq
-- Mock API responses for deterministic tests
-
-**Integration tests:**
-
-- Full pipeline (list-orgs → list-convos → get-convo → render-md)
-- Real API calls (optional, requires session key)
-
-**Example:**
-
-```bash
-# Unit test: Verify claifs-list-orgs output format
-claifs-list-orgs | jq -e 'has("uuid") and has("name")'
-
-# Integration test: Full pipeline
-claifs-list-orgs | head -n 1 | \
-  claifs-list-convos | head -n 5 | \
-  claifs-get-convo | \
-  claifs-render-md > test.md
-test -f test.md && grep -q "uuid:" test.md
-```
+See [../../HACKING.md#running-tests] for testing approach and examples.
 
 ## Future Considerations
 
@@ -415,7 +392,7 @@ When capnshell exists:
 ### Write Operations
 
 Not yet designed (see
-[design-incubators/fork-representation/](../../design-incubators/fork-representation/)):
+[../../design-incubators/fork-representation/]):
 
 - Append to conversation
 - Fork conversation
@@ -431,10 +408,10 @@ ChatGPT, Gemini support:
 - Plumbing tools gain `--provider` flag
 - Cache structure: `./claudefs/chatgpt/`, `./claudefs/gemini/`
 
-See [development-plan.md#milestone-2](development-plan.md#milestone-2).
+See [development-plan.md#milestone-2].
 
 ## Related Documents
 
-- [design-rationale.md](design-rationale.md) - Why these design choices
-- [development-plan.md](development-plan.md) - Implementation milestones
-- [technical-design/](technical-design/) - Detailed subsystem documentation
+- [design-rationale.md] - Why these design choices
+- [development-plan.md] - Implementation milestones
+- [technical-design/] - Detailed subsystem documentation

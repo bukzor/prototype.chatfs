@@ -11,5 +11,5 @@ This document will describe:
 - Offline access behavior
 
 See
-[../technical-design.md#filesystem-cache-structure](../technical-design.md#filesystem-cache-structure)
+[../technical-design.md#filesystem-cache-structure]
 for overview.

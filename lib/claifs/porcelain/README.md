@@ -37,5 +37,5 @@ complete.
 ## See Also
 
 - [lib/claifs/plumbing/](../plumbing/) - Low-level tools that porcelain wraps
-- [docs/dev/development-plan.md](../../../docs/dev/development-plan.md) -
+- [../../../docs/dev/development-plan.md] -
   Implementation roadmap

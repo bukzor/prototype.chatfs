@@ -13,7 +13,7 @@ This document would contain:
 - Fallback plans if API breaks
 
 See
-[../design-rationale.md#unofficial-api-instead-of-official](../design-rationale.md#unofficial-api-instead-of-official)
+[../design-rationale.md#unofficial-api-instead-of-official]
 for the decision summary.
 
 **Note:** May not need this level of detail. The summary in design-rationale.md

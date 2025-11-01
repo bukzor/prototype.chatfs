@@ -4,9 +4,7 @@
 
 ## Quick Reference
 
-**Testing plumbing modules:**
-
-**Note:** CLI entry points are not yet configured. Part of M0 tasks.
+**Testing plumbing modules** (commands available after M0 configures entry points):
 
 ```bash
 echo '{}' | claifs-list-orgs | jq
@@ -14,12 +12,12 @@ echo '{"uuid":"org-uuid"}' | claifs-list-convos | jq
 ```
 
 For _new_ plumbing, use `uv sync` to install.
-Use echo + pipe + jq. Example: `echo '{"uuid":"abc"}' | claifs-list-convos | jq`. See [HACKING.md#running-tests](HACKING.md#running-tests).
+Use echo + pipe + jq. Example: `echo '{"uuid":"abc"}' | claifs-list-convos | jq`. See [HACKING.md#running-tests].
 
 **Working with unofficial API:**
-Wrapped in `lib/claifs/api.py`. Uses curl_cffi for Cloudflare bypass. Raw access: `from unofficial_claude_api import Client`. See [docs/dev/technical-design/api-reference.md](docs/dev/technical-design/api-reference.md).
+Wrapped in `lib/claifs/api.py`. Uses curl_cffi for Cloudflare bypass. Raw access: `from unofficial_claude_api import Client`. See [docs/dev/technical-design/api-reference.md].
 
-**Current state:** See [STATUS.md](STATUS.md) for milestone, blockers, and next actions.
+**Current state:** See [STATUS.md] for milestone, blockers, and next actions.
 
 ## Architecture Overview
 
@@ -29,10 +27,10 @@ claifs provides lazy filesystem access to claude.ai conversations. Built on plum
 
 **Key subsystems:**
 
-- **API client** (`lib/claifs/api.py`): Wraps unofficial-claude-api, handles auth. See [docs/dev/technical-design/api-reference.md](docs/dev/technical-design/api-reference.md).
+- **API client** (`lib/claifs/api.py`): Wraps unofficial-claude-api, handles auth. See [docs/dev/technical-design/api-reference.md].
 - **Cache layer** (`lib/claifs/cache.py`): Filesystem operations, mtime tracking, lazy creation (design TODO).
-- **Plumbing tools** (`lib/claifs/plumbing/`): JSONL-based modules for raw operations. See [docs/dev/technical-design.md#plumbing-tools](docs/dev/technical-design.md#plumbing-tools).
-- **Porcelain** (`lib/claifs/porcelain/`, future): Human-friendly wrappers. See [docs/dev/technical-design/porcelain-design.md](docs/dev/technical-design/porcelain-design.md).
+- **Plumbing tools** (`lib/claifs/plumbing/`): JSONL-based modules for raw operations. See [docs/dev/technical-design.md#plumbing-tools].
+- **Porcelain** (`lib/claifs/porcelain/`, future): Human-friendly wrappers. See [docs/dev/technical-design/porcelain-design.md].
 
 ## Data Flow
 
@@ -51,7 +49,7 @@ claifs-render-md (stdin: message records)
   → Markdown output (not JSONL)
 ```
 
-See [docs/dev/technical-design.md#data-flow](docs/dev/technical-design.md#data-flow) for details.
+See [docs/dev/technical-design.md#data-flow] for details.
 
 ## Key Files
 
@@ -101,4 +99,4 @@ claifs-list-orgs | head -n 1 | \
   claifs-render-md > output.md
 ```
 
-See [HACKING.md#running-tests](HACKING.md#running-tests) for details.
+See [HACKING.md#running-tests] for details.

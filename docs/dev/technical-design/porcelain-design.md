@@ -11,5 +11,5 @@ This document will describe:
 - Shell completion
 
 See
-[../technical-design.md#porcelain-future](../technical-design.md#porcelain-future)
+[../technical-design.md#porcelain-future]
 for architecture overview.

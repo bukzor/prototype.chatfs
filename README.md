@@ -6,7 +6,7 @@ Browse your claude.ai conversations as files and directories, with on-demand laz
 
 ⚠️ **Pre-Alpha:** Not ready for use. Documentation and design phase.
 
-See [STATUS.md](STATUS.md) for current development state.
+See [STATUS.md] for current development state.
 
 ## What This Will Do
 
@@ -48,17 +48,17 @@ Built on **plumbing/porcelain** split:
 - **Plumbing:** Small JSONL-based tools for raw API operations
 - **Porcelain:** (Future) Nice CLI wrappers for human UX
 
-See [docs/dev/technical-design.md](docs/dev/technical-design.md) for details.
+See [docs/dev/technical-design.md] for details.
 
 ## Contributing
 
-See [HACKING.md](HACKING.md) for development setup and architecture.
+See [HACKING.md] for development setup and architecture.
 
 ## Design Documentation
 
-- [docs/dev/design-rationale.md](docs/dev/design-rationale.md) - Why decisions were made
-- [docs/dev/technical-design.md](docs/dev/technical-design.md) - How the system works
-- [docs/dev/development-plan.md](docs/dev/development-plan.md) - Implementation milestones
+- [docs/dev/design-rationale.md] - Why decisions were made
+- [docs/dev/technical-design.md] - How the system works
+- [docs/dev/development-plan.md] - Implementation milestones
 
 ## Related Projects
 

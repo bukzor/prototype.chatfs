@@ -12,7 +12,7 @@ This document would contain:
 - Migration path to capnshell (technical details)
 
 See
-[../design-rationale.md#plumbing-porcelain-split](../design-rationale.md#plumbing-porcelain-split)
+[../design-rationale.md#plumbing-porcelain-split]
 for the decision summary.
 
 **Note:** May not need this level of detail. The summary in design-rationale.md

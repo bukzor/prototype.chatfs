@@ -12,7 +12,7 @@ This document will contain:
 - Known risks and mitigation
 
 See
-[../development-plan.md#milestone-1-read-only-plumbing](../development-plan.md#milestone-1-read-only-plumbing)
+[../development-plan.md#milestone-1-read-only-plumbing]
 for overview.
 
 **When to create:** At start of M1 implementation, after M0 (documentation) is
