@@ -1,4 +1,4 @@
-# docs/dev/rationale/ - Decision Deep Dives
+# docs/dev/design-rationale/ - Decision Deep Dives
 
 Detailed analysis and justification for major architectural decisions.
 

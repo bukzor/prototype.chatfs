@@ -1,4 +1,4 @@
-# bin/plumbing/ - Low-Level JSONL Tools
+# lib/claifs/plumbing/ - Low-Level JSONL Tools
 
 Plumbing commands provide raw, composable access to Claude.ai API operations.
 

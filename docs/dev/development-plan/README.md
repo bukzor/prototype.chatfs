@@ -1,4 +1,4 @@
-# docs/dev/plan/ - Milestone Task Breakdowns
+# docs/dev/development-plan/ - Milestone Task Breakdowns
 
 Detailed task breakdowns for individual milestones.
 

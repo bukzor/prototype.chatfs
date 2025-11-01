@@ -1,43 +1,29 @@
 [project]
-name = "bukzor-template-python-project"
+name = "claifs"
 version = "0.1.0"
-description = "Python project template with copier support"
+description = "Lazy filesystem for claude.ai conversations"
 readme = "README.md"
-requires-python = ">=3.13"
-dependencies = []
-
-[dependency-groups]
-dev = [
-  "black>=25.1.0",
-  "copier>=9.4.1",
-  "hypothesis>=6.139.1",
-  "isort>=5.13.2",
-  "pre-commit>=4.3.0",
-  "pyright>=1.1.405",
-  "pytest>=8.4.2",
-  "pyupgrade>=3.19.0",
+requires-python = ">=3.10"
+dependencies = [
+    "python-dotenv>=1.2.1",
+    "sseclient-py>=1.8.0",
 ]
 
-[tool.pytest.ini_options]
-addopts = "--doctest-modules"
+[project.scripts]
+# Plumbing commands (low-level JSONL tools)
+# NOTE: Entry points will be properly configured when applying template.python-project (M0 task)
+# Uncomment these as modules are implemented during M1:
+# claifs-list-orgs = "claifs.plumbing.list_orgs:main"
+# claifs-list-convos = "claifs.plumbing.list_convos:main"
+# claifs-get-convo = "claifs.plumbing.get_convo:main"
+# claifs-render-md = "claifs.plumbing.render_md:main"
 
-[tool.pyright]
-typeCheckingMode = "strict"
-analyzeUnannotatedFunctions = true
-reportIncompatibleMethodOverride = "error"
-pythonVersion = "3.13"
-enableTypeIgnoreComments = true
-reportPrivateUsage = "warning"
-reportConstantRedefinition = "error"
-reportIncompatibleVariableOverride = "error"
-reportMissingImports = "error"
-reportMissingTypeStubs = false
-exclude = [
-  "docs/dev/reference-implementations",
+# Porcelain commands (future - user-friendly wrappers)
+# claifs-init = "claifs.porcelain.init:main"
+# claifs-ls = "claifs.porcelain.ls:main"
+# claifs-cat = "claifs.porcelain.cat:main"
+# claifs-sync = "claifs.porcelain.sync:main"
 
-  # standard stuff
-  ".venv",
-  "__pycache__",
-  "node_modules",
-  "trash",
-]
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

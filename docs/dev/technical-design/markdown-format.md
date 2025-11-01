@@ -1,6 +1,6 @@
 # Markdown Output Format
 
-**Status:** TODO - Will be documented during Milestone 1 implementation
+**Status:** TODO - Will be documented during Milestone 0 (design phase)
 
 This document will describe:
 

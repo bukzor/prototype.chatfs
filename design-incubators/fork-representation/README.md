@@ -99,19 +99,23 @@ Create `DECISION.md` with:
 ## Open Questions
 
 1. **How does Claude.ai represent forks in the API?**
+
    - Separate conversation UUIDs?
    - Parent/child relationships?
    - Full ancestry chain?
 
 2. **Can we list all forks from a parent?**
+
    - Is there an API endpoint for this?
    - Or do we need to track it ourselves?
 
 3. **What happens when you fork a fork?**
+
    - Tree structure?
    - How deep can it go?
 
 4. **Do forked conversations appear in date-based listings?**
+
    - Do they have their own created_at?
    - Or do they inherit from parent?
 

@@ -1,5 +1,7 @@
 # Hacking on claifs
 
+**Last Updated:** 2025-11-01
+
 ## Setup
 
 **Prerequisites:**
@@ -46,6 +48,8 @@ See [docs/dev/technical-design.md](docs/dev/technical-design.md) for
 architecture details.
 
 ## Running Tests
+
+**Note:** CLI entry points are not yet configured. Part of M0 tasks.
 
 **Test plumbing modules:**
 

@@ -21,6 +21,7 @@ wrappers) layers
 **Alternatives Considered:**
 
 - **Option A: Monolithic CLI** (like `claifs ls`, `claifs cat` with subcommands)
+
   - Pros: Faster to initial MVP, familiar Git-like UX, easier state management
   - Cons: Harder to compose with other tools, requires refactor for capnshell,
     doesn't inform future tool design
@@ -38,7 +39,7 @@ wrappers) layers
 3. **Informs future design** - Learn which compositions matter before building
    capnshell
 4. **Natural AI integration** - Pipe conversations to future coding assistant
-   (TBD?)
+   (aider-ng)
 5. **Aligns with project philosophy** - "DIY/composable" tools
 
 **Tradeoffs:**
@@ -59,11 +60,13 @@ for detailed analysis.
 **Alternatives Considered:**
 
 - **Option A: Plain JSON**
+
   - Pros: Well-known, human-readable
   - Cons: Not streaming-friendly (need to parse entire structure), harder to
     pipe
 
 - **Option B: JSONL**
+
   - Pros: Streaming (process line-by-line), works with jq, easy testing (echo
     one line), future capnproto migration is just serialization swap
   - Cons: Slightly less human-readable than pretty-printed JSON
@@ -99,11 +102,13 @@ integration
 **Alternatives Considered:**
 
 - **Option A: Eager sync** (fetch all conversations upfront)
+
   - Pros: Simple implementation, always have data
   - Cons: Slow startup (users have 100s-1000s of conversations), wastes
     bandwidth, most conversations never accessed
 
 - **Option B: Lazy creation with mtime tracking**
+
   - Pros: Fast (only fetch when accessed), efficient (cache staleness via
     filesystem), scales to any conversation count
   - Cons: More complex logic, empty stub files, requires staleness checks
@@ -140,6 +145,7 @@ Anthropic API
 **Alternatives Considered:**
 
 - **Option A: Official Anthropic API** (https://api.anthropic.com)
+
   - Pros: Reliable, documented, production-ready, cheap ($3/$15 per million
     tokens)
   - Cons: **Cannot access claude.ai conversations** (separate systems),
@@ -177,6 +183,7 @@ history and alternatives.
 **Alternatives Considered:**
 
 - **Option A: Code first, document later**
+
   - Pros: Faster to working prototype, discover issues through implementation
   - Cons: Design decisions implicit, hard to maintain direction across sessions,
     LLM loses context

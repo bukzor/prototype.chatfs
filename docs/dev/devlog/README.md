@@ -4,6 +4,7 @@ Chronological record of development sessions.
 
 ## Recent Entries
 
+- [2025-11-01](2025-11-01.md) - Documentation review and consistency fixes
 - [2025-10-30](2025-10-30.md) - Documentation structure, plumbing/porcelain
   architecture, fork representation incubator
 
@@ -21,5 +22,7 @@ Chronological record of development sessions.
 
 ### Documentation
 
+- [2025-11-01](2025-11-01.md) - Comprehensive review, status contradictions,
+  placeholder policy
 - [2025-10-30](2025-10-30.md) - Established doc structure following
   meta-documentation standard

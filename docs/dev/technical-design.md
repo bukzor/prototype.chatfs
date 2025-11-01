@@ -395,10 +395,10 @@ for details.
 claifs-list-orgs | jq -e 'has("uuid") and has("name")'
 
 # Integration test: Full pipeline
-bin/plumbing/claifs-list-orgs | head -n 1 | \
-  bin/plumbing/claifs-list-convos | head -n 5 | \
-  bin/plumbing/claifs-get-convo | \
-  bin/plumbing/claifs-render-md > test.md
+claifs-list-orgs | head -n 1 | \
+  claifs-list-convos | head -n 5 | \
+  claifs-get-convo | \
+  claifs-render-md > test.md
 test -f test.md && grep -q "uuid:" test.md
 ```
 

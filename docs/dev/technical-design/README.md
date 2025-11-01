@@ -1,4 +1,4 @@
-# docs/dev/design/ - Component Design Details
+# docs/dev/technical-design/ - Component Design Details
 
 Detailed specifications for individual components and subsystems.
 

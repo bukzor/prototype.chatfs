@@ -21,7 +21,7 @@ M0: Documentation   → M1: Plumbing     → M2: Multi-Provider → M3: Write Op
 
 ## Milestone 0: Documentation Phase
 
-**Status:** In Progress
+**Status:** In Progress (firming up design)
 
 **Goal:** Establish project structure, design foundation, and documentation
 before implementation
@@ -29,12 +29,17 @@ before implementation
 **Deliverables:**
 
 - [x] Core documentation files (README, HACKING, CLAUDE, STATUS)
-- [x] Design rationale document (plumbing/porcelain split, JSONL choice, lazy
-      loading)
+- [x] Design rationale document (plumbing/porcelain split, JSONL choice, lazy loading)
 - [x] Technical design document (architecture, data flow, components)
-- [ ] Development plan (this document)
-- [ ] Devlog structure and first entry
-- [ ] Fork representation design incubator setup
+- [x] Development plan (this document - high-level overview)
+- [x] Devlog structure and first entry
+- [x] Fork representation design incubator setup
+- [ ] Populate placeholder docs (`git grep -l "TODO\|Status:.*TODO" docs/`)
+- [ ] Solidify technical design (API wrapper, data models, JSONL schemas)
+- [ ] Apply template.python-project baseline configurations
+  - [ ] pyproject.toml entry points for CLI commands
+- [ ] Investigate fork representation via API
+- [ ] Review and finalize M0 - ready for M1?
 
 **Dependencies:** None
 
@@ -50,6 +55,8 @@ before implementation
 **Next Milestone:** M1 (Plumbing implementation) or continue design exploration
 
 ## Milestone 1: Read-Only Plumbing
+
+**Status:** Blocked (depends on M0 completion)
 
 **Goal:** Implement core JSONL-based tools for reading claude.ai conversations
 
@@ -102,6 +109,8 @@ breakdown.
 8. Test full pipeline end-to-end
 
 ## Milestone 2: Multi-Provider Support
+
+**Status:** Blocked (depends on M1 completion)
 
 **Goal:** Add ChatGPT support, refactor for provider abstraction
 

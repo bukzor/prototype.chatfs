@@ -65,6 +65,6 @@ See [HACKING.md](HACKING.md) for development setup and architecture.
 This project explores ideas that may feed into:
 
 - **capnshell:** A shell using capnproto for structured data (like nushell)
-- **TBD?:** Modular, composable AI coding assistant (like aider/claude-code)
+- **aider-ng:** Modular, composable AI coding assistant (like aider/claude-code)
 
 claifs serves as a test case for composable tool design.

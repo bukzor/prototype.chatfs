@@ -2,8 +2,7 @@
 
 **Last Updated:** 2025-11-01
 
-**Status:** 📝 Reference doc - Will be populated during Milestone 1
-implementation
+**Status:** 📝 Reference doc - Will be populated during Milestone 0 (design phase)
 
 This document will serve as the canonical reference for the unofficial claude.ai
 API as exposed by st1vms/unofficial-claude-api.
@@ -15,7 +14,7 @@ API as exposed by st1vms/unofficial-claude-api.
 - Understanding conversation data structures
 - Investigating fork representation
 
-**To populate during M1:**
+**To populate during M0:**
 
 1. Make real API calls using st1vms/unofficial-claude-api
 2. Document actual request/response formats

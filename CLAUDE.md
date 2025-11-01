@@ -1,27 +1,25 @@
 # claifs - Development Guide for Claude
 
+**Last Updated:** 2025-11-01
+
 ## Quick Reference
 
 **Testing plumbing modules:**
+
+**Note:** CLI entry points are not yet configured. Part of M0 tasks.
 
 ```bash
 echo '{}' | claifs-list-orgs | jq
 echo '{"uuid":"org-uuid"}' | claifs-list-convos | jq
 ```
 
-For *new* plumbing, use `uv sync` to install.
+For _new_ plumbing, use `uv sync` to install.
 Use echo + pipe + jq. Example: `echo '{"uuid":"abc"}' | claifs-list-convos | jq`. See [HACKING.md#running-tests](HACKING.md#running-tests).
 
 **Working with unofficial API:**
 Wrapped in `lib/claifs/api.py`. Uses curl_cffi for Cloudflare bypass. Raw access: `from unofficial_claude_api import Client`. See [docs/dev/technical-design/api-reference.md](docs/dev/technical-design/api-reference.md).
 
-## Current Focus
-
-- **Milestone:** [Milestone 0: Documentation Phase](docs/dev/development-plan.md#milestone-0) - **COMPLETE**
-- **Next:** [Milestone 1: Read-Only Plumbing](docs/dev/development-plan.md#milestone-1-read-only-plumbing)
-- **Last Session:** [devlog/2025-11-01](docs/dev/devlog/2025-11-01.md) (TBD - create after session)
-- **Status:** [STATUS.md](STATUS.md)
-- **Blockers:** Fork representation (deferred to M3)
+**Current state:** See [STATUS.md](STATUS.md) for milestone, blockers, and next actions.
 
 ## Architecture Overview
 
