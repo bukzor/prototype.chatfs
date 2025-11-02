@@ -1,6 +1,6 @@
 # docs/dev/ - Developer Documentation
 
-Developer-focused documentation for understanding and modifying claifs.
+Developer-focused documentation for understanding and modifying chatfs.
 
 ## Core Documents
 

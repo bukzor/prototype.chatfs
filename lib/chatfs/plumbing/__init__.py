@@ -1,5 +1,5 @@
 """
-claifs.plumbing - Low-level JSONL-based tools
+chatfs.plumbing - Low-level JSONL-based tools
 
 All plumbing modules follow the contract:
 - Read JSONL from stdin (one JSON object per line)

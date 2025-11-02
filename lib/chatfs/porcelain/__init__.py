@@ -1,5 +1,5 @@
 """
-claifs.porcelain - User-facing command wrappers
+chatfs.porcelain - User-facing command wrappers
 
 Porcelain commands provide friendly UX by composing plumbing tools.
 These modules may use:

@@ -13,11 +13,11 @@ during Milestone 1.
 - Debugging data flow issues
 - Onboarding as a contributor
 
-This document describes what claifs is and how it's architected.
+This document describes what chatfs is and how it's architected.
 
 ## System Overview
 
-claifs provides lazy filesystem access to claude.ai conversations through
+chatfs provides lazy filesystem access to claude.ai conversations through
 composable JSONL-based plumbing tools.
 
 **Key characteristics:**
@@ -33,23 +33,23 @@ composable JSONL-based plumbing tools.
 ```
 ┌─────────────────────────────────────────┐
 │          Porcelain (Future)             │
-│   claifs ls "Buck Evan/2025-10-29"      │
-│   claifs cat "path/to/conversation.md"  │
+│   chatfs ls "Buck Evan/2025-10-29"      │
+│   chatfs cat "path/to/conversation.md"  │
 └─────────────────┬───────────────────────┘
                   │ Uses
 ┌─────────────────▼───────────────────────┐
 │         Plumbing (JSONL I/O)            │
-│  claifs-list-orgs                       │
-│  claifs-list-convos                     │
-│  claifs-get-convo                       │
-│  claifs-render-md                       │
+│  chatfs-list-orgs                       │
+│  chatfs-list-convos                     │
+│  chatfs-get-convo                       │
+│  chatfs-render-md                       │
 └─────────────────┬───────────────────────┘
                   │ Uses
 ┌─────────────────▼───────────────────────┐
 │        Shared Libraries                 │
-│  lib/claifs/api.py     (API client)     │
-│  lib/claifs/cache.py   (Filesystem)     │
-│  lib/claifs/models.py  (Data structs)   │
+│  lib/chatfs/api.py     (API client)     │
+│  lib/chatfs/cache.py   (Filesystem)     │
+│  lib/chatfs/models.py  (Data structs)   │
 └─────────────────┬───────────────────────┘
                   │ Uses
 ┌─────────────────▼───────────────────────┐
@@ -72,30 +72,30 @@ composable JSONL-based plumbing tools.
 
 ```bash
 # Read JSONL from stdin, write JSONL to stdout
-echo '{"uuid":"org-123"}' | claifs-list-convos | jq
+echo '{"uuid":"org-123"}' | chatfs-list-convos | jq
 ```
 
 **Tools:**
 
-**claifs-list-orgs**
+**chatfs-list-orgs**
 
 - Input: None (or `{}` empty object)
 - Output: One JSON object per org per line
 - Schema: `{uuid, name, created_at, ...}`
 
-**claifs-list-convos**
+**chatfs-list-convos**
 
 - Input: Org record `{uuid, ...}`
 - Output: One JSON object per conversation per line
 - Schema: `{uuid, title, created_at, updated_at, org_uuid, ...}`
 
-**claifs-get-convo**
+**chatfs-get-convo**
 
 - Input: Conversation record `{uuid, ...}`
 - Output: One JSON object per message per line
 - Schema: `{type: "human"|"assistant", text, created_at, ...}`
 
-**claifs-render-md**
+**chatfs-render-md**
 
 - Input: Message records (JSONL)
 - Output: Markdown with YAML frontmatter (NOT JSONL)
@@ -108,14 +108,14 @@ for implementation guide.
 
 ### Shared Libraries
 
-**lib/claifs/api.py** - API Client Wrapper
+**lib/chatfs/api.py** - API Client Wrapper
 
 **Responsibility:** Wrap unofficial-claude-api, handle auth, normalize responses
 
 **Interface:**
 
 ```python
-from claifs.api import Client
+from chatfs.api import Client
 
 client = Client()  # Uses CLAUDE_SESSION_KEY from env
 orgs = client.list_organizations()
@@ -132,7 +132,7 @@ messages = client.get_conversation(convo_uuid="...")
 See [technical-design/api-reference.md] for
 full API documentation.
 
-**lib/claifs/cache.py** - Filesystem Cache
+**lib/chatfs/cache.py** - Filesystem Cache
 
 **Responsibility:** Manage filesystem cache, track staleness via mtime, lazy
 creation
@@ -140,7 +140,7 @@ creation
 **Interface:**
 
 ```python
-from claifs.cache import Cache
+from chatfs.cache import Cache
 
 cache = Cache(base_path="./claudefs")
 cache.ensure_org_dir(org_name="Buck Evan")
@@ -158,7 +158,7 @@ cache.is_stale(path="...", remote_updated_at="...")
 See [technical-design/caching-strategy.md]
 for staleness logic.
 
-**lib/claifs/models.py** - Data Structures
+**lib/chatfs/models.py** - Data Structures
 
 **Responsibility:** Type definitions for org, conversation, message
 
@@ -194,9 +194,9 @@ class Message:
 **Examples:**
 
 ```bash
-claifs ls "Buck Evan"               # List conversations
-claifs cat "path/to/convo.md"       # Read conversation
-claifs sync "Buck Evan/2025-10"     # Force refresh
+chatfs ls "Buck Evan"               # List conversations
+chatfs cat "path/to/convo.md"       # Read conversation
+chatfs sync "Buck Evan/2025-10"     # Force refresh
 ```
 
 **Implementation:** Uses plumbing tools under the hood, adds:
@@ -214,15 +214,15 @@ for UX design.
 ### List Organizations
 
 ```
-claifs-list-orgs
+chatfs-list-orgs
   ↓
-lib/claifs/api.Client.list_organizations()
+lib/chatfs/api.Client.list_organizations()
   ↓
 unofficial-claude-api HTTP request
   ↓
 claude.ai API response
   ↓
-lib/claifs/models.Org objects
+lib/chatfs/models.Org objects
   ↓
 JSONL output: {"uuid": "...", "name": "Buck Evan", ...}
 ```
@@ -230,17 +230,17 @@ JSONL output: {"uuid": "...", "name": "Buck Evan", ...}
 ### List Conversations for Org
 
 ```
-echo '{"uuid":"org-123"}' | claifs-list-convos
+echo '{"uuid":"org-123"}' | chatfs-list-convos
   ↓
 Parse JSONL stdin → org_uuid
   ↓
-lib/claifs/api.Client.list_conversations(org_uuid)
+lib/chatfs/api.Client.list_conversations(org_uuid)
   ↓
 unofficial-claude-api HTTP request
   ↓
 claude.ai API response
   ↓
-lib/claifs/models.Conversation objects
+lib/chatfs/models.Conversation objects
   ↓
 JSONL output: {"uuid": "...", "title": "...", "created_at": "...", ...}
 ```
@@ -248,17 +248,17 @@ JSONL output: {"uuid": "...", "title": "...", "created_at": "...", ...}
 ### Get Conversation Messages
 
 ```
-echo '{"uuid":"convo-456"}' | claifs-get-convo
+echo '{"uuid":"convo-456"}' | chatfs-get-convo
   ↓
 Parse JSONL stdin → convo_uuid
   ↓
-lib/claifs/api.Client.get_conversation(convo_uuid)
+lib/chatfs/api.Client.get_conversation(convo_uuid)
   ↓
 unofficial-claude-api HTTP request
   ↓
 claude.ai API response
   ↓
-lib/claifs/models.Message objects
+lib/chatfs/models.Message objects
   ↓
 JSONL output: {"type": "human", "text": "...", ...}
                 {"type": "assistant", "text": "...", ...}
@@ -267,7 +267,7 @@ JSONL output: {"type": "human", "text": "...", ...}
 ### Render to Markdown
 
 ```
-claifs-get-convo | claifs-render-md
+chatfs-get-convo | chatfs-render-md
   ↓
 Parse JSONL stdin → List[Message]
   ↓
@@ -369,7 +369,7 @@ created_at: ...
 
 - File mtime = conversation.updated_at from API
 - If `file.mtime < api.updated_at`, file is stale
-- `claifs-cat` checks staleness before reading
+- `chatfs-cat` checks staleness before reading
 - Regular `cat` bypasses check (shows cached data)
 
 See [technical-design/caching-strategy.md]
@@ -404,7 +404,7 @@ Blocked on fork representation decision.
 
 ChatGPT, Gemini support:
 
-- Add `lib/claifs/providers/` with provider-specific API clients
+- Add `lib/chatfs/providers/` with provider-specific API clients
 - Plumbing tools gain `--provider` flag
 - Cache structure: `./claudefs/chatgpt/`, `./claudefs/gemini/`
 

@@ -1,4 +1,4 @@
-# Hacking on claifs
+# Hacking on chatfs
 
 **Last Updated:** 2025-11-01
 
@@ -29,7 +29,7 @@ uv sync
 ```
 claude-api/
 ├── lib/
-│   └── claifs/             # Main claifs package
+│   └── chatfs/             # Main chatfs package
 │       ├── plumbing/       # Low-level JSONL tools (modules)
 │       │   ├── list_orgs.py
 │       │   ├── list_convos.py
@@ -55,29 +55,29 @@ architecture details.
 
 ```bash
 uv sync  # one-time setup, for new modules
-echo '{}' | claifs-list-orgs | jq
+echo '{}' | chatfs-list-orgs | jq
 
 # List conversations for org
-echo '{"uuid":"org-uuid"}' | claifs-list-convos | jq
+echo '{"uuid":"org-uuid"}' | chatfs-list-convos | jq
 
 # After installation - use CLI commands
-claifs-list-orgs | jq -r '.name'
+chatfs-list-orgs | jq -r '.name'
 
 # Pipe through entire flow
-claifs-list-orgs | head -n 1 | \
-  claifs-list-convos | head -n 5 | \
-  claifs-get-convo | \
-  claifs-render-md > output.md
+chatfs-list-orgs | head -n 1 | \
+  chatfs-list-convos | head -n 5 | \
+  chatfs-get-convo | \
+  chatfs-render-md > output.md
 ```
 
 **Testing with jq:**
 
 ```bash
 # Extract specific fields
-claifs-list-orgs | jq -r '.name'
+chatfs-list-orgs | jq -r '.name'
 
 # Filter conversations
-claifs-list-convos | jq 'select(.created_at > "2025-10")'
+chatfs-list-convos | jq 'select(.created_at > "2025-10")'
 ```
 
 ## Common Tasks
@@ -97,7 +97,7 @@ claifs-list-convos | jq 'select(.created_at > "2025-10")'
 ```python
 #!/usr/bin/env -S uv run
 """
-claifs-example-tool - Does something useful
+chatfs-example-tool - Does something useful
 
 Reads: {input_field: "value"}
 Writes: {output_field: "result"}
@@ -106,7 +106,7 @@ import sys
 import json
 
 def main():
-    """CLI entry point for claifs-example-tool command."""
+    """CLI entry point for chatfs-example-tool command."""
     for line in sys.stdin:
         input_obj = json.loads(line)
 
@@ -122,19 +122,19 @@ if __name__ == "__main__":
 
 **Steps:**
 
-1. Create module in `lib/claifs/plumbing/example_tool.py`
+1. Create module in `lib/chatfs/plumbing/example_tool.py`
 2. Add `main()` function as entry point
 3. Document input/output schema in module docstring
-4. Add entry point to `pyproject.toml` to create `claifs-example-tool` command
+4. Add entry point to `pyproject.toml` to create `chatfs-example-tool` command
 5. uv sync
-6. Test with: `echo '{"test":"data"}' | claifs-example-tool`
+6. Test with: `echo '{"test":"data"}' | chatfs-example-tool`
 
 ### Debugging API Issues
 
 **Enable verbose logging:**
 
 ```python
-# In lib/claifs/api.py
+# In lib/chatfs/api.py
 import logging
 logging.basicConfig(level=logging.DEBUG)
 ```
@@ -142,8 +142,8 @@ logging.basicConfig(level=logging.DEBUG)
 **Inspect raw API responses:**
 
 ```bash
-# Use claifs-get-convo and save raw JSON
-echo '{"uuid":"convo-uuid"}' | claifs-get-convo > raw-response.jsonl
+# Use chatfs-get-convo and save raw JSON
+echo '{"uuid":"convo-uuid"}' | chatfs-get-convo > raw-response.jsonl
 jq -s '.' raw-response.jsonl > formatted.json
 ```
 
@@ -162,17 +162,17 @@ print(orgs)
 **Plumbing pipeline:**
 
 ```
-claifs-list-orgs
+chatfs-list-orgs
   → {uuid, name, created_at, ...}
 
-claifs-list-convos (stdin: org record)
+chatfs-list-convos (stdin: org record)
   → {uuid, title, created_at, updated_at, org_uuid, ...}
 
-claifs-get-convo (stdin: convo record)
+chatfs-get-convo (stdin: convo record)
   → {type: "human", text: "...", created_at: "..."}
   → {type: "assistant", text: "...", created_at: "..."}
 
-claifs-render-md (stdin: message records)
+chatfs-render-md (stdin: message records)
   → Markdown output (not JSONL)
 ```
 

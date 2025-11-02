@@ -1,7 +1,7 @@
 [project]
-name = "claifs"
+name = "chatfs"
 version = "0.1.0"
-description = "Lazy filesystem for claude.ai conversations"
+description = "Lazy filesystem for chat conversations (claude.ai, ChatGPT)"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
@@ -13,16 +13,16 @@ dependencies = [
 # Plumbing commands (low-level JSONL tools)
 # NOTE: Entry points will be properly configured when applying template.python-project (M0 task)
 # Uncomment these as modules are implemented during M1:
-# claifs-list-orgs = "claifs.plumbing.list_orgs:main"
-# claifs-list-convos = "claifs.plumbing.list_convos:main"
-# claifs-get-convo = "claifs.plumbing.get_convo:main"
-# claifs-render-md = "claifs.plumbing.render_md:main"
+# chatfs-list-orgs = "chatfs.plumbing.list_orgs:main"
+# chatfs-list-convos = "chatfs.plumbing.list_convos:main"
+# chatfs-get-convo = "chatfs.plumbing.get_convo:main"
+# chatfs-render-md = "chatfs.plumbing.render_md:main"
 
 # Porcelain commands (future - user-friendly wrappers)
-# claifs-init = "claifs.porcelain.init:main"
-# claifs-ls = "claifs.porcelain.ls:main"
-# claifs-cat = "claifs.porcelain.cat:main"
-# claifs-sync = "claifs.porcelain.sync:main"
+# chatfs-init = "chatfs.porcelain.init:main"
+# chatfs-ls = "chatfs.porcelain.ls:main"
+# chatfs-cat = "chatfs.porcelain.cat:main"
+# chatfs-sync = "chatfs.porcelain.sync:main"
 
 [build-system]
 requires = ["hatchling"]

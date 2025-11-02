@@ -1,6 +1,6 @@
-# claifs - Lazy Filesystem for Claude.ai Conversations
+# chatfs - Lazy Filesystem for Chat Conversations
 
-Browse your claude.ai conversations as files and directories, with on-demand lazy loading.
+Browse your chat conversations (claude.ai, ChatGPT) as files and directories, with on-demand lazy loading.
 
 ## Status
 
@@ -12,16 +12,16 @@ See [STATUS.md] for current development state.
 
 ```bash
 # Browse conversations by date
-claifs-ls "Buck Evan/2025-10-29"
+chatfs-ls "Buck Evan/2025-10-29"
 # conversation-title-1.md
 # conversation-title-2.md
 
 # Read a conversation
-claifs-cat "Buck Evan/2025-10-29/tshark-filtering.md"
+chatfs-cat "Buck Evan/2025-10-29/tshark-filtering.md"
 # (Fetches from claude.ai if stale, shows cached content if fresh)
 
 # Search across conversations
-grep -r "authentication" ./claudefs/
+grep -r "authentication" ./chatfs/
 ```
 
 ## The Problem
@@ -34,7 +34,7 @@ You have hundreds of conversations on claude.ai, but:
 
 ## The Solution
 
-claifs creates a lazy filesystem where directories and files appear on-demand:
+chatfs creates a lazy filesystem where directories and files appear on-demand:
 
 - **Lazy loading:** Fetch only when accessed, never eagerly
 - **Staleness tracking:** Filesystem mtime tracks when conversations need refresh
@@ -67,4 +67,4 @@ This project explores ideas that may feed into:
 - **capnshell:** A shell using capnproto for structured data (like nushell)
 - **aider-ng:** Modular, composable AI coding assistant (like aider/claude-code)
 
-claifs serves as a test case for composable tool design.
+chatfs serves as a test case for composable tool design.

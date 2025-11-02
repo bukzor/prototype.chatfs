@@ -9,7 +9,7 @@
 - Onboarding new contributors who ask "why?"
 
 This document explains the reasoning behind major architectural decisions for
-claifs.
+chatfs.
 
 ## Core Decisions
 
@@ -20,7 +20,7 @@ wrappers) layers
 
 **Alternatives Considered:**
 
-- **Option A: Monolithic CLI** (like `claifs ls`, `claifs cat` with subcommands)
+- **Option A: Monolithic CLI** (like `chatfs ls`, `chatfs cat` with subcommands)
 
   - Pros: Faster to initial MVP, familiar Git-like UX, easier state management
   - Cons: Harder to compose with other tools, requires refactor for capnshell,

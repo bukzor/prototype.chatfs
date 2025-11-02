@@ -9,7 +9,7 @@
 - Prioritizing features
 - Estimating project timeline
 
-This document defines milestones and implementation order for claifs.
+This document defines milestones and implementation order for chatfs.
 
 ## Milestones Overview
 
@@ -63,13 +63,13 @@ before implementation
 
 **Deliverables:**
 
-- [ ] `claifs-list-orgs` command - List organizations (entry point from `lib/claifs/plumbing/list_orgs.py`)
-- [ ] `claifs-list-convos` command - List conversations for org (entry point from `lib/claifs/plumbing/list_convos.py`)
-- [ ] `claifs-get-convo` command - Get messages for conversation (entry point from `lib/claifs/plumbing/get_convo.py`)
-- [ ] `claifs-render-md` command - Render messages to markdown (entry point from `lib/claifs/plumbing/render_md.py`)
-- [ ] `lib/claifs/api.py` - API client wrapper
-- [ ] `lib/claifs/cache.py` - Filesystem cache (read-only)
-- [ ] `lib/claifs/models.py` - Data structures
+- [ ] `chatfs-list-orgs` command - List organizations (entry point from `lib/chatfs/plumbing/list_orgs.py`)
+- [ ] `chatfs-list-convos` command - List conversations for org (entry point from `lib/chatfs/plumbing/list_convos.py`)
+- [ ] `chatfs-get-convo` command - Get messages for conversation (entry point from `lib/chatfs/plumbing/get_convo.py`)
+- [ ] `chatfs-render-md` command - Render messages to markdown (entry point from `lib/chatfs/plumbing/render_md.py`)
+- [ ] `lib/chatfs/api.py` - API client wrapper
+- [ ] `lib/chatfs/cache.py` - Filesystem cache (read-only)
+- [ ] `lib/chatfs/models.py` - Data structures
 - [ ] Integration tests (full pipeline)
 - [ ] Session key setup docs
 
@@ -78,7 +78,7 @@ before implementation
 **Success Criteria:**
 
 - Can pipe plumbing tools:
-  `claifs-list-orgs | claifs-list-convos | claifs-get-convo | claifs-render-md`
+  `chatfs-list-orgs | chatfs-list-convos | chatfs-get-convo | chatfs-render-md`
 - Output is valid JSONL (except render-md outputs markdown)
 - Works with jq for filtering/transforming
 - Cache writes conversations to `./claudefs/` structure
@@ -100,13 +100,13 @@ breakdown.
 
 **Key tasks:**
 
-1. Wrap unofficial-claude-api in `lib/claifs/api.py`
-2. Implement data models in `lib/claifs/models.py`
-3. Implement `claifs-list-orgs` (simplest, no input needed)
-4. Implement `claifs-list-convos` (takes org UUID)
-5. Implement `claifs-get-convo` (takes convo UUID)
-6. Implement `claifs-render-md` (formats messages)
-7. Implement cache writes in `lib/claifs/cache.py`
+1. Wrap unofficial-claude-api in `lib/chatfs/api.py`
+2. Implement data models in `lib/chatfs/models.py`
+3. Implement `chatfs-list-orgs` (simplest, no input needed)
+4. Implement `chatfs-list-convos` (takes org UUID)
+5. Implement `chatfs-get-convo` (takes convo UUID)
+6. Implement `chatfs-render-md` (formats messages)
+7. Implement cache writes in `lib/chatfs/cache.py`
 8. Test full pipeline end-to-end
 
 ## Milestone 2: Multi-Provider Support
@@ -117,9 +117,9 @@ breakdown.
 
 **Deliverables:**
 
-- [ ] `lib/claifs/providers/` module structure
-- [ ] `lib/claifs/providers/claude.py` - Claude provider
-- [ ] `lib/claifs/providers/chatgpt.py` - ChatGPT provider
+- [ ] `lib/chatfs/providers/` module structure
+- [ ] `lib/chatfs/providers/claude.py` - Claude provider
+- [ ] `lib/chatfs/providers/chatgpt.py` - ChatGPT provider
 - [ ] Plumbing tools accept `--provider` flag
 - [ ] Cache structure: `./claudefs/chatgpt/`, `./claudefs/claude.ai/`
 - [ ] ChatGPT unofficial API integration (TBD which library)
@@ -130,7 +130,7 @@ breakdown.
 **Success Criteria:**
 
 - Same plumbing tools work for both Claude and ChatGPT
-- `echo '{"provider":"chatgpt"}' | claifs-list-orgs` works
+- `echo '{"provider":"chatgpt"}' | chatfs-list-orgs` works
 - Cache keeps providers separate
 - Provider-specific quirks abstracted in provider modules
 
@@ -147,7 +147,7 @@ breakdown.
 **Provider abstraction:**
 
 ```python
-# lib/claifs/providers/base.py
+# lib/chatfs/providers/base.py
 class Provider(ABC):
     @abstractmethod
     def list_organizations(self) -> List[Org]: ...
@@ -158,12 +158,12 @@ class Provider(ABC):
     @abstractmethod
     def get_conversation(self, convo_uuid: str) -> List[Message]: ...
 
-# lib/claifs/providers/claude.py
+# lib/chatfs/providers/claude.py
 class ClaudeProvider(Provider):
     def __init__(self, session_key: str):
         self.client = Client()  # unofficial-claude-api
 
-# lib/claifs/providers/chatgpt.py
+# lib/chatfs/providers/chatgpt.py
 class ChatGPTProvider(Provider):
     # TBD: Which unofficial ChatGPT API to use?
 ```
@@ -172,11 +172,11 @@ class ChatGPTProvider(Provider):
 
 ```bash
 # Before
-claifs-list-orgs
+chatfs-list-orgs
 
 # After
-claifs-list-orgs --provider claude
-echo '{"provider":"chatgpt"}' | claifs-list-convos
+chatfs-list-orgs --provider claude
+echo '{"provider":"chatgpt"}' | chatfs-list-convos
 ```
 
 ## Milestone 3: Write Operations
@@ -188,9 +188,9 @@ echo '{"provider":"chatgpt"}' | claifs-list-convos
 **Deliverables:**
 
 - [ ] Fork representation decision (see design-incubators/fork-representation/)
-- [ ] `claifs-append` command - Add message to conversation (entry point from `lib/claifs/plumbing/append.py`)
-- [ ] `claifs-fork` command - Fork conversation at message (entry point from `lib/claifs/plumbing/fork.py`)
-- [ ] `claifs-amend` command - Edit message in conversation (entry point from `lib/claifs/plumbing/amend.py`)
+- [ ] `chatfs-append` command - Add message to conversation (entry point from `lib/chatfs/plumbing/append.py`)
+- [ ] `chatfs-fork` command - Fork conversation at message (entry point from `lib/chatfs/plumbing/fork.py`)
+- [ ] `chatfs-amend` command - Edit message in conversation (entry point from `lib/chatfs/plumbing/amend.py`)
 - [ ] Cache write operations with fork tracking
 - [ ] Tests for write operations
 
@@ -207,9 +207,9 @@ echo '{"provider":"chatgpt"}' | claifs-list-convos
 **Success Criteria:**
 
 - Can append message:
-  `echo '{"convo_uuid":"...", "text":"..."}' | claifs-append`
+  `echo '{"convo_uuid":"...", "text":"..."}' | chatfs-append`
 - Can fork conversation:
-  `echo '{"convo_uuid":"...", "fork_name":"try-alt"}' | claifs-fork`
+  `echo '{"convo_uuid":"...", "fork_name":"try-alt"}' | chatfs-fork`
 - Filesystem reflects fork structure (per chosen design)
 - Cache maintains fork relationships
 
@@ -241,9 +241,9 @@ Features identified but not scheduled:
 
 ### Frontmatter CLI Suite
 
-- `claifs-frontmatter-read` - Extract YAML frontmatter
-- `claifs-frontmatter-write` - Update frontmatter fields
-- `claifs-frontmatter-edit` - Modify while preserving formatting
+- `chatfs-frontmatter-read` - Extract YAML frontmatter
+- `chatfs-frontmatter-write` - Update frontmatter fields
+- `chatfs-frontmatter-edit` - Modify while preserving formatting
 
 **Effort:** Medium (1 week) **Priority:** Low (only needed for advanced
 porcelain features)

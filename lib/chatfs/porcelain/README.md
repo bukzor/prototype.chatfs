@@ -1,4 +1,4 @@
-# lib/claifs/porcelain/ - High-Level User Commands
+# lib/chatfs/porcelain/ - High-Level User Commands
 
 Porcelain commands provide user-friendly wrappers around plumbing operations.
 
@@ -25,8 +25,8 @@ Porcelain commands:
 
 ## What Doesn't Belong Here
 
-- Low-level API operations (goes in lib/claifs/plumbing/)
-- Library code (goes in lib/claifs/ root or other modules)
+- Low-level API operations (goes in lib/chatfs/plumbing/)
+- Library code (goes in lib/chatfs/ root or other modules)
 - Raw JSONL pipelines (that's plumbing's job)
 
 ## Status
@@ -36,6 +36,6 @@ complete.
 
 ## See Also
 
-- [lib/claifs/plumbing/](../plumbing/) - Low-level tools that porcelain wraps
+- [lib/chatfs/plumbing/](../plumbing/) - Low-level tools that porcelain wraps
 - [../../../docs/dev/development-plan.md] -
   Implementation roadmap

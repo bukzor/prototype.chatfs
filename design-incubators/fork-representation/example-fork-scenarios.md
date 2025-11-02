@@ -15,14 +15,14 @@ against.
 **Expected filesystem behavior:**
 
 ```bash
-claifs-ls "Buck Evan/2025-10-30"
+chatfs-ls "Buck Evan/2025-10-30"
 # Should show: authentication-design.md (or both forks?)
 
-claifs-forks "Buck Evan/2025-10-30/authentication-design.md"
+chatfs-forks "Buck Evan/2025-10-30/authentication-design.md"
 # oauth-approach
 # jwt-approach
 
-claifs-cat "Buck Evan/2025-10-30/authentication-design.md"
+chatfs-cat "Buck Evan/2025-10-30/authentication-design.md"
 # Which fork do we show? Main? Most recent? Ask user?
 ```
 
@@ -79,7 +79,7 @@ main
 
 **User expectations:**
 
-- Easy switching: `claifs-switch-fork optimistic`
+- Easy switching: `chatfs-switch-fork optimistic`
 - Compare forks: `diff fork1.md fork2.md`
 - Grep both: `grep "database" *.md`
 
@@ -101,10 +101,10 @@ main
 
 **User workflow:**
 
-1. Browse old conversations with `claifs-ls "Buck Evan/2024-06-15"`
+1. Browse old conversations with `chatfs-ls "Buck Evan/2024-06-15"`
 2. See `database-design.md`
 3. `cat database-design.md` - reads main thread
-4. Doesn't realize there were 2 forks until running `claifs-forks`
+4. Doesn't realize there were 2 forks until running `chatfs-forks`
 
 **Questions:**
 

@@ -1,4 +1,4 @@
-# lib/claifs/plumbing/ - Low-Level JSONL Tools
+# lib/chatfs/plumbing/ - Low-Level JSONL Tools
 
 Plumbing commands provide raw, composable access to Claude.ai API operations.
 
@@ -30,7 +30,7 @@ Commands that perform single, well-defined API operations:
 ## What Doesn't Belong Here
 
 - User-friendly CLI wrappers (goes in bin/porcelain/)
-- Shared library code (goes in lib/claifs/)
+- Shared library code (goes in lib/chatfs/)
 - Business logic beyond API operations
 
 ## See Also

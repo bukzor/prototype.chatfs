@@ -4,7 +4,7 @@
 
 This document will describe:
 
-- User-facing command design (claifs ls, claifs cat, claifs sync)
+- User-facing command design (chatfs ls, chatfs cat, chatfs sync)
 - Path parsing and resolution
 - Progress bars and terminal UI
 - Error messages and help text

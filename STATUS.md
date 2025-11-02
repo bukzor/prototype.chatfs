@@ -1,4 +1,4 @@
-# claifs Project Status
+# chatfs Project Status
 
 **Last Updated:** 2025-11-01
 

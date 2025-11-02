@@ -130,8 +130,8 @@ to filesystem design.
 2025-10-29/
 └── tshark-filtering.md          # Contains all forks in frontmatter
                                  # Virtual commands expose forks:
-                                 # claifs-forks "tshark-filtering.md"
-                                 # claifs-cat "tshark-filtering.md#fork-2"
+                                 # chatfs-forks "tshark-filtering.md"
+                                 # chatfs-cat "tshark-filtering.md#fork-2"
 ```
 
 **Pros:**
