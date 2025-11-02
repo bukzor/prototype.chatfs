@@ -39,9 +39,9 @@ They're in browser tabs, not files - locked away from the Unix toolchain.
 
 ## The Solution
 
-chatfs creates a lazy filesystem where directories and files appear on-demand:
+chatfs creates a lazy filesystem where directories and files appear on-demand via explicit CLI commands:
 
-- **Lazy loading:** Fetch only when accessed, never eagerly
+- **Lazy loading:** Fetch only when accessed via CLI tools (e.g., `chatfs-ls`, `chatfs-cat`), never eagerly
 - **Staleness tracking:** Filesystem mtime tracks when conversations need refresh
 - **Plain files:** Just markdown - use cat/grep/ls normally when offline
 - **Git-like UX:** Familiar init/sync workflow

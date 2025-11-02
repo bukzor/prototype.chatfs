@@ -22,11 +22,12 @@ composable JSONL-based plumbing tools.
 
 **Key characteristics:**
 
-- **Lazy:** Files/directories created only when accessed
+- **Lazy:** Files/directories created only when accessed via explicit CLI commands (not FUSE syscalls)
 - **Composable:** Small tools that pipe together (Unix philosophy)
 - **Cached:** Filesystem stores conversation data, mtime tracks staleness
 - **Offline-friendly:** Cached files work without network
 - **Future-proof:** JSONL → capnproto migration path
+- **FUSE-compatible:** Design maintains clear correlation between CLI commands and potential FUSE callbacks (secondary goal)
 
 ## Architecture
 
@@ -79,7 +80,7 @@ echo '{"uuid":"org-123"}' | chatfs-list-convos | jq
 
 **chatfs-list-orgs**
 
-- Input: None (or `{}` empty object)
+- Input: None required (can accept `{}` empty object on stdin, but ignores it; starting point for pipelines)
 - Output: One JSON object per org per line
 - Schema: `{uuid, name, created_at, ...}`
 
@@ -210,6 +211,8 @@ See [porcelain-layer] for UX design.
 ```
 chatfs-list-orgs
   ↓
+Check cache: lib/chatfs/cache.Cache.is_stale(org_list)
+  ↓ (if stale or missing)
 lib/chatfs/api.Client.list_organizations()
   ↓
 unofficial-claude-api HTTP request
@@ -217,6 +220,8 @@ unofficial-claude-api HTTP request
 claude.ai API response
   ↓
 lib/chatfs/models.Org objects
+  ↓
+lib/chatfs/cache.Cache.write_org_list(orgs)
   ↓
 JSONL output: {"uuid": "...", "name": "Buck Evan", ...}
 ```
@@ -228,6 +233,8 @@ echo '{"uuid":"org-123"}' | chatfs-list-convos
   ↓
 Parse JSONL stdin → org_uuid
   ↓
+Check cache: lib/chatfs/cache.Cache.is_stale(convo_list, org_uuid)
+  ↓ (if stale or missing)
 lib/chatfs/api.Client.list_conversations(org_uuid)
   ↓
 unofficial-claude-api HTTP request
@@ -235,6 +242,8 @@ unofficial-claude-api HTTP request
 claude.ai API response
   ↓
 lib/chatfs/models.Conversation objects
+  ↓
+lib/chatfs/cache.Cache.write_convo_list(org_uuid, convos)
   ↓
 JSONL output: {"uuid": "...", "title": "...", "created_at": "...", ...}
 ```
@@ -244,8 +253,10 @@ JSONL output: {"uuid": "...", "title": "...", "created_at": "...", ...}
 ```
 echo '{"uuid":"convo-456"}' | chatfs-get-convo
   ↓
-Parse JSONL stdin → convo_uuid
+Parse JSONL stdin → convo_uuid, updated_at
   ↓
+Check cache: lib/chatfs/cache.Cache.is_stale(convo_path, updated_at)
+  ↓ (if stale or missing)
 lib/chatfs/api.Client.get_conversation(convo_uuid)
   ↓
 unofficial-claude-api HTTP request
@@ -253,6 +264,8 @@ unofficial-claude-api HTTP request
 claude.ai API response
   ↓
 lib/chatfs/models.Message objects
+  ↓
+lib/chatfs/cache.Cache.write_conversation(path, messages, mtime=updated_at)
   ↓
 JSONL output: {"type": "human", "text": "...", ...}
                 {"type": "assistant", "text": "...", ...}

@@ -4,7 +4,19 @@
 **Milestone:** M0 (Documentation Phase) - see [docs/dev/development-plan.md#milestone-0-documentation-phase]
 **Current Status:** See [STATUS.md]
 **Goal:** LLM-resumable documentation foundation before M1 implementation
-**Approach:** Breadth-first - build solid foundation (L1) before details (L3/4)
+
+**Approach:** Discussion-based validation → Develop certainty → Evaluate/Correct/Rewrite
+
+**IMPORTANT:** Existing docs are rough drafts written by Claude with minimal oversight. Do NOT treat them as authoritative. Your task is to:
+
+1. **Discuss** concepts with the user to develop deep understanding
+2. **Validate** existing content for accuracy/completeness
+3. **Correct** what's wrong or misleading
+4. **Create** missing content with confidence
+
+**NOT:** Mechanical fill-in-the-blanks. You must reach certainty before making changes.
+
+**Editing Guideline:** Make edits at 80% confidence. Do NOT over-hedge or seek permission for edits when you have reasonable confidence. Edit first, discuss if uncertain.
 
 **Structure fixed:** Files moved, renamed, all links updated (2025-11-02)
 
@@ -103,148 +115,176 @@ All topics have natural homes in our doc structure:
 
 **One gap identified:** JSONL schemas may need a new `technical-design/jsonl-schemas.md` (stub in Phase 3)
 
-## Phase 1: Complete Level 1 (Foundation - Main Doc Bodies)
+## Phase 1: Validate Level 1 (Foundation - Main Doc Bodies)
 
-**Goal:** Solid foundation in main docs before elaborating subdirectories
+**Goal:** Develop certainty about foundational concepts through discussion, then validate/correct main docs
 
-- [x] Add Problem Statement to `design-rationale.md`
+### Workflow per topic:
+1. **Discuss** with user to develop understanding
+2. **Read** existing rough-draft content
+3. **Evaluate** accuracy/completeness
+4. **Correct/Rewrite** with confidence
 
-  - Why chatfs exists
-  - What problem it solves
-  - Current state of alternatives
+### Topics to validate:
 
-- [ ] Strengthen Design Philosophy in `design-rationale.md`
+- [x] **Problem Statement** (`design-rationale.md` intro)
+  - Discussion: What problem does chatfs solve? Why do existing solutions fail?
+  - Validate: Does current text accurately represent the problem?
+  - Correct: Fix any mischaracterizations or missing context
 
-  - Summarize the four key decisions (plumbing/porcelain, JSONL, lazy loading, unofficial APIs)
-  - Brief rationale for each (1-2 sentences + link to subdoc)
+- [x] **Design Philosophy** (`design-rationale.md` core decisions)
+  - Discussion: Are the four key decisions (plumbing/porcelain, JSONL, lazy, unofficial API) correct?
+  - Validate: Is the rationale for each decision sound?
+  - Correct: Fix weak reasoning, add missing tradeoffs
 
-- [ ] Review `technical-design.md` System Architecture section
+- [ ] **System Architecture** (`technical-design.md`)
+  - Discussion: What are the actual components? How do they interact?
+  - Validate: Does the architecture section match reality?
+  - Correct: Fix component descriptions, data flow inaccuracies
 
-  - Ensure architecture overview is clear
-  - Verify component responsibilities are stated
-  - Check data flow description exists
+- [ ] **Open Questions** (`design-incubators/README.md`)
+  - Discussion: What are the actual unsolved problems?
+  - Validate: Is fork-representation correctly characterized?
+  - Correct: Add missing unknowns, remove resolved questions
 
-- [ ] Review `design-incubators/README.md`
-  - Ensure fork-representation problem is listed
-  - Add any other open questions discovered
+## Phase 2: Validate Level 2 (Elaborate Foundations - Subdirectories)
 
-## Phase 2: Complete Level 2 (Elaborate Foundations - Subdirectories)
+**Goal:** Validate/correct detailed rationale and design docs through discussion
 
-**Goal:** Flesh out rationale and design subdocs with detail
+### Workflow per subdoc:
+1. **Discuss** the concept in depth with user
+2. **Read** existing rough-draft subdoc
+3. **Evaluate** for technical accuracy, completeness, weak arguments
+4. **Correct/Rewrite** OR **Delete** if unnecessary (per documentation-howto: subdocs only if >100-200 lines or independently referenced)
 
 ### Design Rationale Subdocs
 
-- [ ] Populate `design-rationale/plumbing-porcelain-split.md`
+- [ ] **Plumbing/Porcelain Split** (`design-rationale/plumbing-porcelain-split.md`)
+  - Discussion: Why this decision? What alternatives exist? Real tradeoffs?
+  - Validate: Are the arguments sound? Any strawman alternatives?
+  - Correct: Strengthen weak arguments, add missing perspectives
+  - Delete?: If <100 lines and fully covered in main doc
 
-  - Remove TODOs
-  - Add concrete examples
-  - Document alternatives considered
+- [ ] **JSONL Choice** (currently in main `design-rationale.md`, may need subdoc)
+  - Discussion: Why JSONL specifically? What about msgpack, CSV, protobuf?
+  - Validate: Is current rationale complete?
+  - Create?: Only if detailed analysis needed (>100 lines)
 
-- [ ] Create `design-rationale/jsonl-choice.md`
+- [ ] **Lazy Filesystem** (`design-rationale/lazy-filesystem.md`)
+  - Discussion: Lazy vs eager tradeoffs? Staleness handling strategy?
+  - Validate: Does existing content match actual design intent?
+  - Correct: Fix mischaracterizations of lazy loading behavior
+  - Delete?: If simple enough for main doc
 
-  - Why JSONL over other formats (CSV, msgpack, JSON arrays, capnproto)
-  - Streaming benefits
-  - jq composability
-  - Future migration path
-
-- [ ] Populate `design-rationale/lazy-filesystem.md`
-
-  - Remove TODOs
-  - Explain lazy vs eager tradeoffs
-  - Document staleness handling strategy
-
-- [ ] Populate `design-rationale/unofficial-api.md`
-  - Remove TODOs
-  - Document risks/mitigations
-  - Explain why official API insufficient
+- [ ] **Unofficial API** (`design-rationale/unofficial-api.md`)
+  - Discussion: Real risks? Mitigations? Why official API truly insufficient?
+  - Validate: Are risks accurately stated? Mitigations realistic?
+  - Correct: Fix any overconfidence or understatement of risks
 
 ### Technical Design Subdocs
 
-- [ ] Review `technical-design/provider-interface.md` (was api-reference.md)
+- [ ] **Provider Interface** (`technical-design/provider-interface.md`)
+  - Discussion: What's the actual abstraction? How will multi-provider work?
+  - Validate: Does design match M1/M2 plans?
+  - Correct: Clarify unofficial-claude-api wrapping vs future abstraction
 
-  - Clarify it's about wrapping unofficial-claude-api
-  - Document provider abstraction concept
-  - Stub ChatGPT provider for M2
+- [ ] **Cache Layer** (`technical-design/cache-layer.md`)
+  - Discussion: M1 scope? What's deferred? Directory structure?
+  - Validate: Is M1 scope clearly bounded?
+  - Correct: Mark staleness checking, lazy stubs as explicitly deferred
 
-- [ ] Review `technical-design/cache-layer.md` (was caching-strategy.md)
+- [ ] **Porcelain Layer** (`technical-design/porcelain-layer.md`)
+  - Discussion: What porcelain commands make sense? When to build them?
+  - Validate: Is it clear this is mostly post-M1?
+  - Correct: Add concrete examples, mark deferred scope
 
-  - Clarify M1 scope (simple writes only)
-  - Mark staleness checking as deferred
-  - Mark lazy stubs as deferred
+- [ ] **Markdown Format** (`technical-design/markdown-format.md`)
+  - Discussion: Exact format spec? Frontmatter fields? Obsidian compat?
+  - Validate: Is format well-specified enough for implementation?
+  - Correct: Add missing details, clarify ambiguities
 
-- [ ] Review `technical-design/porcelain-layer.md` (was porcelain-design.md)
+## Phase 3: Mark Deferred Details (Implementation Specifics for M1+)
 
-  - Mark as mostly deferred post-M1
-  - Clarify examples of future porcelain commands
+**Goal:** Clearly mark what's intentionally deferred to implementation phase
 
-- [ ] Review `technical-design/markdown-format.md`
-  - Ensure format is well-specified
-  - Document frontmatter fields
-  - Show examples
+### Workflow:
+1. **Discuss** what level of detail is appropriate for M0 (design phase)
+2. **Identify** implementation details that belong in M1 documentation
+3. **Mark clearly** as "TBD M1" or similar
+4. **Avoid** creating placeholder docs that add no value
 
-## Phase 3: Stub Level 3 (Implementation Details - Defer to M1)
+### Deferred topics:
 
-**Goal:** Acknowledge what's deferred, mark clearly
+- [ ] **JSONL Schemas**
+  - Discussion: Do we need placeholder now, or define during M1 implementation?
+  - Action: Add note to `technical-design.md` that schemas will be documented during M1
+  - Avoid: Creating empty `jsonl-schemas.md` with just "TODO"
 
-- [ ] Note in `technical-design.md` that JSONL schemas will be in `technical-design/jsonl-schemas.md`
+- [ ] **Per-tool Implementation Details**
+  - Discussion: How much detail about list-orgs, list-convos, etc. belongs in M0?
+  - Action: Mark tool details as "documented during implementation"
+  - Avoid: Speculative implementation docs that will be wrong
 
-  - Mark as "TBD in M1 implementation"
-  - Placeholder: will document Org, Conversation, Message record schemas
+## Phase 4: Validate Against Success Criteria
 
-- [ ] Note in `technical-design.md` that per-tool details defer to M1
-  - list-orgs, list-convos, get-convo, render-md
-  - Each will be documented as implemented
+**Goal:** Verify M0 achieves actual success criteria through critical evaluation, not mechanical checkbox completion
 
-## Phase 4: Final Review & Validation
+### Acceptance Tests (User-driven validation)
 
-**Goal:** Verify M0 achieves its actual success criteria, not just checklist completion
+- [ ] **LLM Entry Point Test** (simulate fresh session)
+  - Discussion: Would a new LLM understand the project from docs alone?
+  - Test: Read CLAUDE.md → STATUS.md → development-plan.md
+  - Evaluate: Can LLM start work without clarifying questions?
+  - Criteria: Architecture clear, next actions obvious, design rationale accessible
 
-### Acceptance Tests
+- [ ] **Documentation Standards Check**
+  - Discussion: Do docs follow documentation-howto.md principles?
+  - Validate:
+    - "Read this when" sections present and useful
+    - Links include context (not bare URLs)
+    - Tiered detail (summary → link → deep dive)
+    - Subdocs only for >100-200 lines
+  - Correct: Fix any violations
 
-- [ ] Test LLM entry point path (simulate fresh session)
+- [ ] **M0 Success Criteria** (from development-plan.md)
+  - Discussion: Have we achieved the actual goals, not just checkboxes?
+  - Validate:
+    - Core docs exist AND are accurate (not just present)
+    - Design decisions explicitly documented WITH sound rationale
+    - Entry points clear AND actually helpful
+    - LLM can resume AND make progress without user handholding
 
-  - [ ] Read CLAUDE.md → Can I understand architecture? Y/N
-  - [ ] Read STATUS.md → Do I know what to do next? Y/N
-  - [ ] Read development-plan.md M0 section → Can I see progress? Y/N
-  - [ ] Can I start work without asking clarifying questions? Y/N
+### Technical Cleanup (After validation complete)
 
-- [ ] Verify against documentation-howto.md standards
+- [ ] **Remaining TODOs audit**
+  - Run: `git grep -l "TODO\|Status:.*TODO" docs/`
+  - Discussion: Which TODOs are acceptable vs problematic?
+  - Acceptable: Implementation details marked "TBD M1"
+  - Not acceptable: Unresolved design questions, vague placeholders in L1/L2
+  - Action: Fix or remove unacceptable TODOs
 
-  - [ ] Each main doc has "Read this when" section at top
-  - [ ] All links include context (not just bare URLs)
-  - [ ] Tiered detail present (summary in main → link → deep dive in subdoc)
-  - [ ] Subdirectories only used for >100-200 line content
+- [ ] **Cross-reference verification**
+  - Discussion: Did file moves/renames break any links?
+  - Test: Click through major links in docs
+  - Fix: Update any broken references
 
-- [ ] Check M0 success criteria explicitly (from development-plan.md)
-  - [ ] All core docs exist and follow meta-documentation standard
-  - [ ] Design decisions explicitly documented with rationale
-  - [ ] Clear entry points for future sessions (STATUS.md, devlog/)
-  - [ ] LLM can resume work by reading CLAUDE.md → STATUS.md → latest devlog
+- [ ] **Python project baseline**
+  - Discussion: What baseline configs are needed for M0 vs M1?
+  - M0 scope: Entry points defined (for M1 implementation)
+  - M1 scope: Actual tool installation/testing
+  - Action: Add pyproject.toml entry points, verify uv structure
 
-### Technical Cleanup
+### Session Closeout (End of session)
 
-- [ ] Run `git grep -l "TODO\|Status:.*TODO" docs/` to find remaining TODOs
+- [ ] **Update STATUS.md**
+  - Discussion: Is M0 actually complete? What blockers remain?
+  - Document: Validation results, remaining work
+  - Next actions: Either "Ready for M1" or "Continue M0 validation on X"
 
-  - Acceptable: TODOs in Level 3/4 (implementation details, marked "TBD M1")
-  - Not acceptable: TODOs in Level 1-2 (foundation/rationale)
-
-- [ ] Verify all cross-references are correct after moves/renames
-
-- [ ] Apply template.python-project baseline configurations
-  - [ ] Add pyproject.toml entry points for CLI commands (chatfs-list-orgs, etc.)
-  - [ ] Verify uv project structure matches template
-
-### Session Closeout
-
-- [ ] Update STATUS.md
-
-  - Mark M0 complete or identify remaining blockers
-  - List next actions for M1
-
-- [ ] Create devlog entry for this session
-  - Document restructuring decisions
-  - Link to updated docs
-  - Record acceptance test results
+- [ ] **Create devlog entry**
+  - Discussion: What was learned this session?
+  - Document: Validation approach, corrections made, design clarifications
+  - Record: Which docs were validated/corrected, acceptance test results
 
 ## Decision Points
 

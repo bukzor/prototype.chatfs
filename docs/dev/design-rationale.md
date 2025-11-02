@@ -126,10 +126,10 @@ integration
   - Cons: Slow startup (users have 100s-1000s of conversations), wastes
     bandwidth, most conversations never accessed
 
-- **Option B: Lazy creation with mtime tracking**
+- **Option B: Lazy creation with mtime tracking via explicit CLI calls**
 
-  - Pros: Fast (only fetch when accessed), efficient (cache staleness via
-    filesystem), scales to any conversation count
+  - Pros: Fast (only fetch when accessed via CLI), efficient (cache staleness via
+    filesystem), scales to any conversation count, FUSE-compatible design (clear correlation between CLI commands and potential FUSE callbacks)
   - Cons: More complex logic, empty stub files, requires staleness checks
 
 - **Option C: Virtual filesystem (FUSE)**
@@ -140,10 +140,11 @@ integration
 **Rationale:** Chose Option B because:
 
 1. **Scales** - Works for 10 conversations or 10,000
-2. **Fast** - Only pay for what you use
+2. **Fast** - Only pay for what you use (explicit CLI calls, not syscalls)
 3. **Offline-friendly** - Files persist, work with cat/grep when offline
 4. **Simple staleness** - Filesystem mtime = conversation.updated_at
 5. **No special dependencies** - Just Python + files
+6. **FUSE-compatible** - Design maintains clear correlation between CLI commands and potential FUSE callbacks (secondary requirement)
 
 **Tradeoffs:**
 
@@ -171,7 +172,7 @@ Anthropic API
 
 - **Option B: Unofficial claude.ai API** (st1vms/unofficial-claude-api)
   - Pros: **Accesses claude.ai conversations**, works now, serves our niche
-    (conversation access)
+    (conversation access), proven stable (three years in practice)
   - Cons: Unmaintained, could break, requires session key, uses curl_cffi for
     Cloudflare bypass
 
@@ -182,7 +183,7 @@ Anthropic API
 2. **Only working option** - Uses curl_cffi to bypass Cloudflare TLS
    fingerprinting
 3. **Serves our niche** - We need conversation access, not chatbot building
-4. **Acceptable risk** - Unmaintained but stable (API unlikely to change)
+4. **Acceptable risk** - Unmaintained but stable (three years of observed stability; internal APIs appear notably stable)
 
 **Tradeoffs:**
 
