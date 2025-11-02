@@ -15,7 +15,7 @@ For _new_ plumbing, use `uv sync` to install.
 Use echo + pipe + jq. Example: `echo '{"uuid":"abc"}' | chatfs-list-convos | jq`. See [HACKING.md#running-tests].
 
 **Working with unofficial API:**
-Wrapped in `lib/chatfs/api.py`. Uses curl_cffi for Cloudflare bypass. Raw access: `from unofficial_claude_api import Client`. See [docs/dev/technical-design/api-reference.md].
+Wrapped in `lib/chatfs/api.py`. Uses curl_cffi for Cloudflare bypass. Raw access: `from unofficial_claude_api import Client`. See [docs/dev/technical-design/provider-interface.md].
 
 **Current state:** See [STATUS.md] for milestone, blockers, and next actions.
 
@@ -27,10 +27,10 @@ chatfs provides lazy filesystem access to chat conversations (claude.ai, ChatGPT
 
 **Key subsystems:**
 
-- **API client** (`lib/chatfs/api.py`): Wraps unofficial-claude-api, handles auth. See [docs/dev/technical-design/api-reference.md].
+- **API client** (`lib/chatfs/api.py`): Wraps unofficial-claude-api, handles auth. See [docs/dev/technical-design/provider-interface.md].
 - **Cache layer** (`lib/chatfs/cache.py`): Filesystem operations, mtime tracking, lazy creation (design TODO).
 - **Plumbing tools** (`lib/chatfs/plumbing/`): JSONL-based modules for raw operations. See [docs/dev/technical-design.md#plumbing-tools].
-- **Porcelain** (`lib/chatfs/porcelain/`, future): Human-friendly wrappers. See [docs/dev/technical-design/porcelain-design.md].
+- **Porcelain** (`lib/chatfs/porcelain/`, future): Human-friendly wrappers. See [docs/dev/technical-design/porcelain-layer.md].
 
 ## Data Flow
 
@@ -67,7 +67,7 @@ See [docs/dev/technical-design.md#data-flow] for details.
 - Plumbing modules: `lib/chatfs/plumbing/verb_noun.py` (e.g., `list_orgs.py`)
 - CLI commands (via packaging): `chatfs-verb-noun` (e.g., `chatfs-list-orgs`)
 - Libraries: `lib/chatfs/noun.py` (e.g., `lib/chatfs/cache.py`)
-- Design docs: `docs/dev/category/topic.md` (e.g., `docs/dev/technical-design/api-reference.md`)
+- Design docs: `docs/dev/category/topic.md` (e.g., `docs/dev/technical-design/provider-interface.md`)
 
 **JSONL format:**
 

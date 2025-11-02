@@ -182,7 +182,7 @@ for details.
 
 ### Working with the Cache
 
-**Cache location:** `./claudefs/` directory with org-based structure
+**Cache location:** `./chatfs/` directory with org-based structure
 
 **Staleness tracking:** Files have `mtime = conversation.updated_at` from API. If stale, re-fetch.
 

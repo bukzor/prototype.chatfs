@@ -81,7 +81,7 @@ before implementation
   `chatfs-list-orgs | chatfs-list-convos | chatfs-get-convo | chatfs-render-md`
 - Output is valid JSONL (except render-md outputs markdown)
 - Works with jq for filtering/transforming
-- Cache writes conversations to `./claudefs/` structure
+- Cache writes conversations to `./chatfs/` structure
 - Manual testing with real claude.ai account works
 
 **Estimated Effort:** 2-3 weeks
@@ -95,8 +95,7 @@ before implementation
 
 **Implementation Notes:**
 
-See [plan/milestone-1-plumbing.md] for task
-breakdown.
+See [milestone-1-plumbing] for task breakdown.
 
 **Key tasks:**
 
@@ -121,7 +120,7 @@ breakdown.
 - [ ] `lib/chatfs/providers/claude.py` - Claude provider
 - [ ] `lib/chatfs/providers/chatgpt.py` - ChatGPT provider
 - [ ] Plumbing tools accept `--provider` flag
-- [ ] Cache structure: `./claudefs/chatgpt/`, `./claudefs/claude.ai/`
+- [ ] Cache structure: `./chatfs/chatgpt/`, `./chatfs/claude.ai/`
 - [ ] ChatGPT unofficial API integration (TBD which library)
 - [ ] Tests for both providers
 
@@ -323,5 +322,8 @@ If capnshell exists by then:
 
 - [design-rationale.md] - Why these milestones and order
 - [technical-design.md] - What we're building
-- [plan/milestone-1-plumbing.md] - Detailed M1
-  tasks
+- [milestone-1-plumbing] - Detailed M1 tasks
+
+[design-rationale.md]: design-rationale.md
+[technical-design.md]: technical-design.md
+[milestone-1-plumbing]: development-plan/milestone-1-plumbing.md

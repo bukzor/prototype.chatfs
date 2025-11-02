@@ -169,7 +169,7 @@ to filesystem design.
 
 The chosen approach should:
 
-- Enable `grep -r "search term" ./claudefs/` across all forks
+- Enable `grep -r "search term" ./chatfs/` across all forks
 - Make it obvious when a conversation has forks (`ls` should reveal them)
 - Support adding new forks without breaking existing structure
 - Feel intuitive for someone familiar with file trees

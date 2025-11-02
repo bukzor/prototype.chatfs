@@ -35,7 +35,7 @@ Commands that perform single, well-defined API operations:
 
 ## See Also
 
-- [HACKING.md](../../HACKING.md#adding-a-new-plumbing-tool) - How to add a new
+- [../../HACKING.md#adding-a-new-plumbing-tool] - How to add a new
   plumbing tool
-- [docs/dev/technical-design.md](../../docs/dev/technical-design.md#plumbing-tools) -
+- [../../docs/dev/technical-design.md#plumbing-tools] -
   Architecture details

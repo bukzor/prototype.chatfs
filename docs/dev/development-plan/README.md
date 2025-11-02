@@ -22,8 +22,8 @@ Each document should:
 ## What Doesn't Belong Here
 
 - High-level milestone overview (stays in development-plan.md)
-- Design rationale (goes in docs/dev/rationale/)
-- Implementation details (goes in docs/dev/design/)
+- Design rationale (goes in docs/dev/design-rationale/)
+- Implementation details (goes in docs/dev/technical-design/)
 
 ## Guidelines
 

@@ -16,6 +16,7 @@ references.
 - **Working with LLM assistant?** → [../CLAUDE.md] - Quick reference guide
 
 **Recommended reading flow for new contributors:**
+
 1. [../HACKING.md] - Setup and conventions
 2. [dev/design-rationale.md] - Understand why
 3. [dev/technical-design.md] - Understand how

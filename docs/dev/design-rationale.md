@@ -49,9 +49,7 @@ wrappers) layers
 
 **Impact:** Affects all tool design, testing strategy, documentation structure
 
-See
-[rationale/plumbing-porcelain-split.md]
-for detailed analysis.
+See [plumbing-porcelain-split] for detailed analysis.
 
 ### JSONL for Data Interchange
 
@@ -134,8 +132,7 @@ integration
 
 **Impact:** Cache implementation, user experience, performance characteristics
 
-See [rationale/lazy-filesystem.md] for detailed
-analysis.
+See [lazy-filesystem] for detailed analysis.
 
 ### Unofficial API Instead of Official
 
@@ -173,8 +170,7 @@ Anthropic API
 
 **Impact:** Core functionality, maintenance burden, auth requirements
 
-See [rationale/unofficial-api.md] for ecosystem
-history and alternatives.
+See [unofficial-api] for ecosystem history and alternatives.
 
 ### Documentation-First Approach
 
@@ -211,9 +207,13 @@ history and alternatives.
 
 ## Related Documents
 
-- [technical-design.md] - What the system is
-  (implementation of these decisions)
-- [development-plan.md] - How we build it (milestones based
-  on these decisions)
-- [../../design-incubators/] - Unsolved problems being
-  explored
+- [technical-design.md] - What the system is (implementation of these decisions)
+- [development-plan.md] - How we build it (milestones based on these decisions)
+- [design-incubators] - Unsolved problems being explored
+
+[plumbing-porcelain-split]: design-rationale/plumbing-porcelain-split.md
+[lazy-filesystem]: design-rationale/lazy-filesystem.md
+[unofficial-api]: design-rationale/unofficial-api.md
+[technical-design.md]: technical-design.md
+[development-plan.md]: development-plan.md
+[design-incubators]: ../../design-incubators/

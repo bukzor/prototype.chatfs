@@ -21,8 +21,8 @@ Each document should:
 ## What Doesn't Belong Here
 
 - High-level architecture (stays in technical-design.md)
-- Why decisions were made (goes in docs/dev/rationale/)
-- Implementation plans (goes in docs/dev/plan/)
+- Why decisions were made (goes in docs/dev/design-rationale/)
+- Implementation plans (goes in docs/dev/development-plan/)
 
 ## Guidelines
 

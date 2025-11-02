@@ -5,12 +5,9 @@
 ## Current Focus
 
 - **Milestone:** [Milestone 0: Documentation Phase](docs/dev/development-plan.md#milestone-0) - **In Progress**
-- **Last Session:** [devlog/2025-11-02](docs/dev/devlog/2025-11-02.md)
-- **Blockers:** None (firming up design before M1)
+- **Last Session:** `ls docs/dev/devlog/ | tail`
 
-## Progress Summary
-
-See [docs/dev/devlog/] for session details.
+## High-Level Progress Summary
 
 **M0 Status:** Core documentation structure complete. Remaining: populate placeholder docs and refine design before M1.
 

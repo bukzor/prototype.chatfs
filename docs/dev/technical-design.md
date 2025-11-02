@@ -99,12 +99,9 @@ echo '{"uuid":"org-123"}' | chatfs-list-convos | jq
 
 - Input: Message records (JSONL)
 - Output: Markdown with YAML frontmatter (NOT JSONL)
-- Format: See
-  [technical-design/markdown-format.md]
+- Format: See [markdown-format]
 
-See
-[../../HACKING.md#adding-a-new-plumbing-tool]
-for implementation guide.
+See [adding-plumbing-tool] for implementation guide.
 
 ### Shared Libraries
 
@@ -129,8 +126,7 @@ messages = client.get_conversation(convo_uuid="...")
 - `list_conversations(org_uuid: str) → List[Conversation]`
 - `get_conversation(convo_uuid: str) → List[Message]`
 
-See [technical-design/api-reference.md] for
-full API documentation.
+See [provider-interface] for full API documentation.
 
 **lib/chatfs/cache.py** - Filesystem Cache
 
@@ -142,7 +138,7 @@ creation
 ```python
 from chatfs.cache import Cache
 
-cache = Cache(base_path="./claudefs")
+cache = Cache(base_path="./chatfs")
 cache.ensure_org_dir(org_name="Buck Evan")
 cache.write_conversation(path="...", messages=[...])
 cache.is_stale(path="...", remote_updated_at="...")
@@ -155,8 +151,7 @@ cache.is_stale(path="...", remote_updated_at="...")
 - `is_stale(path: str, remote_updated_at: datetime) → bool`
 - `create_stub(path: str, mtime: datetime) → None` - Empty file with mtime
 
-See [technical-design/caching-strategy.md]
-for staleness logic.
+See [cache-layer] for staleness logic.
 
 **lib/chatfs/models.py** - Data Structures
 
@@ -206,8 +201,7 @@ chatfs sync "Buck Evan/2025-10"     # Force refresh
 - Colors/formatting
 - Error messages
 
-See [technical-design/porcelain-design.md]
-for UX design.
+See [porcelain-layer] for UX design.
 
 ## Data Flow
 
@@ -342,7 +336,7 @@ created_at: ...
 ## Filesystem Cache Structure
 
 ```
-./claudefs/
+./chatfs/
 ├── .config.json                    # Session key, default org
 └── claude.ai/
     └── Buck Evan/                  # Organization name
@@ -372,8 +366,7 @@ created_at: ...
 - `chatfs-cat` checks staleness before reading
 - Regular `cat` bypasses check (shows cached data)
 
-See [technical-design/caching-strategy.md]
-for details.
+See [cache-layer] for details.
 
 ## Testing
 
@@ -406,7 +399,7 @@ ChatGPT, Gemini support:
 
 - Add `lib/chatfs/providers/` with provider-specific API clients
 - Plumbing tools gain `--provider` flag
-- Cache structure: `./claudefs/chatgpt/`, `./claudefs/gemini/`
+- Cache structure: `./chatfs/chatgpt/`, `./chatfs/gemini/`
 
 See [development-plan.md#milestone-2].
 
@@ -415,3 +408,12 @@ See [development-plan.md#milestone-2].
 - [design-rationale.md] - Why these design choices
 - [development-plan.md] - Implementation milestones
 - [technical-design/] - Detailed subsystem documentation
+
+[markdown-format]: technical-design/markdown-format.md
+[adding-plumbing-tool]: ../../HACKING.md#adding-a-new-plumbing-tool
+[provider-interface]: technical-design/provider-interface.md
+[cache-layer]: technical-design/cache-layer.md
+[porcelain-layer]: technical-design/porcelain-layer.md
+[design-rationale.md]: design-rationale.md
+[development-plan.md]: development-plan.md
+[technical-design/]: technical-design/

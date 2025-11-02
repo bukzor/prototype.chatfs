@@ -36,6 +36,6 @@ complete.
 
 ## See Also
 
-- [lib/chatfs/plumbing/](../plumbing/) - Low-level tools that porcelain wraps
+- [../plumbing/] - Low-level tools that porcelain wraps
 - [../../../docs/dev/development-plan.md] -
   Implementation roadmap
