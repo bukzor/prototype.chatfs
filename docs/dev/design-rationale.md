@@ -11,6 +11,27 @@
 This document explains the reasoning behind major architectural decisions for
 chatfs.
 
+## The Problem
+
+Your conversations on claude.ai (and ChatGPT, Gemini) are trapped in web UIs. You can't:
+
+- **grep** across conversation history
+- **pipe** conversations to other tools (analysis, LLMs, scripts)
+- **use them as data** sources for automation
+- **work offline** using standard tools
+
+The data is locked in browser tabs, inaccessible to the Unix toolchain.
+
+**Why existing solutions don't work:**
+
+- **Official Anthropic API:** Cannot access claude.ai conversations (separate systems - the API creates new chats, doesn't read existing ones)
+- **Browser extensions:** Manual one-shot exports, no incremental updates, no CLI access
+- **Copy-paste:** Doesn't scale, loses metadata, breaks on updates
+
+**What's needed:** Conversations as files in a filesystem, with lazy loading and standard tool compatibility.
+
+chatfs solves this by treating chat history as a lazily-loaded filesystem using composable JSONL plumbing tools.
+
 ## Core Decisions
 
 ### Plumbing/Porcelain Split

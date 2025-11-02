@@ -26,11 +26,16 @@ grep -r "authentication" ./chatfs/
 
 ## The Problem
 
-You have hundreds of conversations on claude.ai, but:
+Your conversations on claude.ai are trapped in a web UI. You can't:
 
-- Official Anthropic API cannot access claude.ai conversations (separate systems)
-- Browser extensions only do manual one-shot exports
-- No tool exists for incremental, on-demand, CLI-friendly conversation access
+- grep across conversation history
+- pipe conversations to other tools (analysis, LLMs, scripts)
+- use them as data sources
+- work with them offline using standard tools
+
+They're in browser tabs, not files - locked away from the Unix toolchain.
+
+**Technical constraints:** The official Anthropic API cannot access claude.ai conversations (separate systems). Browser extensions only do manual one-shot exports. chatfs solves this with lazy filesystem access.
 
 ## The Solution
 

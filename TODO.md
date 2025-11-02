@@ -107,7 +107,7 @@ All topics have natural homes in our doc structure:
 
 **Goal:** Solid foundation in main docs before elaborating subdirectories
 
-- [ ] Add Problem Statement to `design-rationale.md`
+- [x] Add Problem Statement to `design-rationale.md`
 
   - Why chatfs exists
   - What problem it solves
