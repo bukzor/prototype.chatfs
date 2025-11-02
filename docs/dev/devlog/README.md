@@ -4,6 +4,7 @@ Chronological record of development sessions.
 
 ## Recent Entries
 
+- [2025-11-02](2025-11-02.md) - Project rename: claifs → chatfs
 - [2025-11-01](2025-11-01.md) - Documentation review and consistency fixes
 - [2025-10-30](2025-10-30.md) - Documentation structure, plumbing/porcelain
   architecture, fork representation incubator
