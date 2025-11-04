@@ -193,19 +193,19 @@ lib/chatfs/layer/
 
 ### Step 1: Update core architecture docs with 4-layer spec
 
-- [ ] **technical-design.md** - REWRITE architecture section:
+- [x] **technical-design.md** - REWRITE architecture section:
   - Replace 3-layer diagram (API/Cache/CLI) with 4-layer diagram (native/vfs/cache/cli)
   - Update "Components" section to show all 4 layers with M#-TOKEN milestones
   - Update "Data Flow" to show M1-CLAUDE (native) → M2-VFS → M3-CACHE → M4-CLI
   - Update all command examples: chatfs-api-* → chatfs-vfs-*, add chatfs-claude-* examples
   - Update shared libraries section: api.py → client.py, clarify models defined at M2-VFS
 
-- [ ] **development-plan.md** - Insert M1-CLAUDE milestone:
+- [x] **development-plan.md** - Insert M1-CLAUDE milestone:
   - Add new M1-CLAUDE section BEFORE current M1 content
   - M1-CLAUDE scope: claude-native layer, investigate fork API, output raw JSONL
-  - Renumber subsequent milestones in this file only (reference for next step)
+  - Renumber subsequent milestones in this file only (M2-VFS, M3-CACHE, M4-CLI, M5-WRITE)
 
-- [ ] **STATUS.md** - Update current milestone reference if needed
+- [x] **STATUS.md** - Update current milestone reference to M0-DOCS
 
 ### Step 2: Milestone renaming across all docs (work backwards M3→M2→M1→M0)
 

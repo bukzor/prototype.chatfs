@@ -4,23 +4,23 @@
 
 ## Current Focus
 
-- **Milestone:** [Milestone 0: Documentation Phase](docs/dev/development-plan.md#milestone-0) - **In Progress**
+- **Milestone:** [Milestone 0: Documentation Phase (M0-DOCS)](docs/dev/development-plan.md#milestone-0-documentation-phase-m0-docs) - **In Progress**
 - **Last Session:** `ls docs/dev/devlog/ | tail`
 
 ## High-Level Progress Summary
 
-**M0 Status:** Core documentation structure complete. Remaining: populate placeholder docs and refine design before M1.
+**M0-DOCS Status:** Phase 1 complete (foundation docs validated). Now in Phase 1.25: evolving architecture from 3 to 4 layers.
 
 ## Next Session - Start Here
 
-**Milestone 0 in progress** - firming up design before M1 implementation.
+**Milestone 0-DOCS in progress** - evolving architecture to 4-layer model (M1-CLAUDE, M2-VFS, M3-CACHE, M4-CLI).
 
-**Current work:** [TODO.md] - Phase 1: Complete Level 1 foundation docs
-- [x] Problem Statement added to design-rationale.md and README.md
-- [ ] Review Design Philosophy (5 core decisions)
-- [ ] Review technical-design.md Architecture section
-- [ ] Review design-incubators/ for open questions
+**Current work:** [TODO.md] - Phase 1.25 Step 1: Update core architecture docs
+- [x] technical-design.md updated with 4-layer spec
+- [x] development-plan.md updated with M1-CLAUDE milestone inserted
+- [x] STATUS.md updated with M0-DOCS reference
+- [ ] Continue with Phase 1.25 Step 2: Milestone renaming across docs
 
-See [TODO.md] for detailed Phase 1-4 breakdown and [Milestone 0 deliverables](docs/dev/development-plan.md#milestone-0-documentation-phase) for high-level overview.
+See [TODO.md] for detailed Phase 1.25 breakdown and [Milestone 0-DOCS deliverables](docs/dev/development-plan.md#milestone-0-documentation-phase-m0-docs) for high-level overview.
 
 [TODO.md]: TODO.md
