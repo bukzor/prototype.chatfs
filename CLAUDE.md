@@ -24,16 +24,16 @@ Wrapped in `lib/chatfs/api.py`. Uses curl_cffi for Cloudflare bypass. Raw access
 
 ## Architecture Overview
 
-chatfs provides lazy filesystem access to chat conversations (claude.ai, ChatGPT). Built on plumbing/porcelain split: small JSONL tools (plumbing) compose with Unix tools, future nice UX wrappers (porcelain).
+chatfs provides lazy filesystem access to chat conversations (claude.ai, ChatGPT). Built on four-layer architecture: native → vfs → cache → cli.
 
 **Why JSONL:** Streaming-friendly, works with Unix tools now, easy capnproto migration later.
 
-**Key subsystems:**
+**Four layers:**
 
-- **API client** (`lib/chatfs/api.py`): Wraps unofficial-claude-api, handles auth. See [docs/dev/technical-design/provider-interface.md].
-- **Cache layer** (`lib/chatfs/cache.py`): Filesystem operations, mtime tracking, lazy creation (design TODO).
-- **Plumbing tools** (`lib/chatfs/plumbing/`): JSONL-based modules for raw operations. See [docs/dev/technical-design.md#plumbing-tools].
-- **Porcelain** (`lib/chatfs/porcelain/`, future): Human-friendly wrappers. See [docs/dev/technical-design/porcelain-layer.md].
+- **M1-CLAUDE** (`lib/chatfs/layer/native/claude/`): Direct Claude API wrapper, outputs raw JSONL. See [docs/dev/technical-design/provider-interface.md].
+- **M2-VFS** (`lib/chatfs/layer/vfs/`): Normalized JSONL across providers (Claude, ChatGPT). See [docs/dev/technical-design.md#m2-vfs-layer].
+- **M3-CACHE** (`lib/chatfs/layer/cache/`): Persistent storage with staleness tracking (future). See [docs/dev/technical-design.md#m3-cache-layer].
+- **M4-CLI** (`lib/chatfs/layer/cli/`, future): Human-friendly commands with colors, progress bars. See [docs/dev/technical-design/cli-layer.md].
 
 ## Data Flow
 
@@ -56,20 +56,27 @@ See [docs/dev/technical-design.md#data-flow] for details.
 
 ## Key Files
 
-- `lib/chatfs/plumbing/` - JSONL-based modules (list_orgs, list_convos, get_convo, render_md)
-- `lib/chatfs/api.py` - API client wrapper (wraps unofficial-claude-api)
-- `lib/chatfs/cache.py` - Filesystem cache (design TODO)
+- `lib/chatfs/layer/native/claude/` - M1-CLAUDE: Claude-native commands (list_orgs, list_convos, get_convo, render_md)
+- `lib/chatfs/layer/vfs/` - M2-VFS: Normalized JSONL commands (future)
+- `lib/chatfs/layer/cache/` - M3-CACHE: Persistent storage layer (future)
+- `lib/chatfs/layer/cli/` - M4-CLI: Human-friendly commands (future)
+- `lib/chatfs/client.py` - API client wrapper (wraps unofficial-claude-api)
 - `lib/chatfs/models.py` - Data structures (Org, Conversation, Message)
 - `docs/dev/` - Design documentation
-- `design-incubators/fork-representation/` - Unsolved fork representation problem
+- `design-incubators/fork-representation/` - Fork representation investigation
 
 ## Conventions
 
 **File naming:**
 
-- Plumbing modules: `lib/chatfs/plumbing/verb_noun.py` (e.g., `list_orgs.py`)
-- CLI commands (via packaging): `chatfs-verb-noun` (e.g., `chatfs-list-orgs`)
-- Libraries: `lib/chatfs/noun.py` (e.g., `lib/chatfs/cache.py`)
+- Native modules: `lib/chatfs/layer/native/claude/verb_noun.py` (e.g., `list_orgs.py`)
+- VFS modules: `lib/chatfs/layer/vfs/verb_noun.py` (e.g., `list_orgs.py`)
+- CLI commands (via packaging):
+  - M1-CLAUDE: `chatfs-claude-verb-noun` (e.g., `chatfs-claude-list-orgs`)
+  - M2-VFS: `chatfs-vfs-verb-noun` (e.g., `chatfs-vfs-list-orgs`)
+  - M3-CACHE: `chatfs-cache-verb-noun` (e.g., `chatfs-cache-list-orgs`)
+  - M4-CLI: `chatfs <subcommand>` (e.g., `chatfs ls`, `chatfs cat`)
+- Libraries: `lib/chatfs/noun.py` (e.g., `lib/chatfs/client.py`)
 - Design docs: `docs/dev/category/topic.md` (e.g., `docs/dev/technical-design/provider-interface.md`)
 
 **JSONL format:**
@@ -79,13 +86,19 @@ See [docs/dev/technical-design.md#data-flow] for details.
 - Streaming-friendly (process line-by-line)
 - Works with jq: `chatfs-list-orgs | jq -r '.name'`
 
-**Plumbing contract:**
+**JSONL layer contract (M1-CLAUDE, M2-VFS, M3-CACHE):**
 
 - Read JSONL from stdin
 - Write JSONL to stdout (except render-md → markdown)
 - Log errors to stderr
 - Exit 0 on success
 - No terminal dependencies (colors, progress bars)
+
+**CLI layer contract (M4-CLI):**
+
+- Path-based interface (not JSONL)
+- May use colors, progress bars, interactive prompts
+- Output for human consumption
 
 ## Testing
 

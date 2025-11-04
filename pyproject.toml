@@ -10,19 +10,30 @@ dependencies = [
 ]
 
 [project.scripts]
-# Plumbing commands (low-level JSONL tools)
-# NOTE: Entry points will be properly configured when applying template.python-project (M0 task)
-# Uncomment these as modules are implemented during M1:
-# chatfs-list-orgs = "chatfs.plumbing.list_orgs:main"
-# chatfs-list-convos = "chatfs.plumbing.list_convos:main"
-# chatfs-get-convo = "chatfs.plumbing.get_convo:main"
-# chatfs-render-md = "chatfs.plumbing.render_md:main"
+# M1-CLAUDE: Native layer commands (outputs raw Claude API data as JSONL)
+# NOTE: Entry points will be implemented during M1-CLAUDE
+# chatfs-claude-list-orgs = "chatfs.layer.native.claude.list_orgs:main"
+# chatfs-claude-list-convos = "chatfs.layer.native.claude.list_convos:main"
+# chatfs-claude-get-convo = "chatfs.layer.native.claude.get_convo:main"
+# chatfs-claude-render-md = "chatfs.layer.native.claude.render_md:main"
 
-# Porcelain commands (future - user-friendly wrappers)
-# chatfs-init = "chatfs.porcelain.init:main"
-# chatfs-ls = "chatfs.porcelain.ls:main"
-# chatfs-cat = "chatfs.porcelain.cat:main"
-# chatfs-sync = "chatfs.porcelain.sync:main"
+# M2-VFS: Normalized layer commands (provider-agnostic JSONL)
+# NOTE: Entry points will be implemented during M2-VFS
+# chatfs-vfs-list-orgs = "chatfs.layer.vfs.list_orgs:main"
+# chatfs-vfs-list-convos = "chatfs.layer.vfs.list_convos:main"
+# chatfs-vfs-get-convo = "chatfs.layer.vfs.get_convo:main"
+# chatfs-vfs-render-md = "chatfs.layer.vfs.render_md:main"
+
+# M3-CACHE: Cache layer commands (persistent storage with staleness tracking)
+# NOTE: Entry points will be implemented during M3-CACHE
+# chatfs-cache-list-orgs = "chatfs.layer.cache.list_orgs:main"
+# chatfs-cache-list-convos = "chatfs.layer.cache.list_convos:main"
+# chatfs-cache-get-convo = "chatfs.layer.cache.get_convo:main"
+# chatfs-cache-render-md = "chatfs.layer.cache.render_md:main"
+
+# M4-CLI: Human-friendly commands (colors, progress bars, path-based interface)
+# NOTE: Entry points will be implemented during M4-CLI
+# chatfs = "chatfs.layer.cli.main:main"  # Main command with subcommands (ls, cat, sync, etc.)
 
 [build-system]
 requires = ["hatchling"]
