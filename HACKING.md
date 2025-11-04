@@ -261,7 +261,7 @@ For detailed rationale on architectural choices, see:
 1. Check [STATUS.md] for current milestone
 2. Read relevant design docs
 3. Implement changes
-4. Test with plumbing pipeline
+4. Test with JSONL layer pipeline
 5. Update documentation if needed
 
 **For major changes:**

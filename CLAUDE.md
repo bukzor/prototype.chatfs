@@ -4,7 +4,7 @@
 
 ## Quick Reference
 
-**Testing plumbing modules** (commands available after M0-DOCS configures entry points):
+**Testing JSONL layer commands** (commands available after M0-DOCS configures entry points):
 
 M1-CLAUDE layer (claude-native, outputs raw API data):
 ```bash
@@ -14,11 +14,11 @@ echo '{"uuid":"convo-uuid"}' | chatfs-claude-get-convo | jq
 echo '{}' | chatfs-claude-list-orgs | head -n1 | chatfs-claude-list-convos | head -n1 | chatfs-claude-get-convo | chatfs-claude-render-md
 ```
 
-For _new_ plumbing, use `uv sync` to install.
+For newly added JSONL commands, use `uv sync` to install.
 Use echo + pipe + jq. Example: `echo '{"uuid":"abc"}' | chatfs-claude-list-convos | jq`. See [HACKING.md#running-tests].
 
 **Working with unofficial API:**
-Wrapped in `lib/chatfs/api.py`. Uses curl_cffi for Cloudflare bypass. Raw access: `from unofficial_claude_api import Client`. See [docs/dev/technical-design/provider-interface.md].
+Wrapped in `lib/chatfs/client.py`. Uses curl_cffi for Cloudflare bypass. Raw access: `from unofficial_claude_api import Client`. See [docs/dev/technical-design/provider-interface.md].
 
 **Current state:** See [STATUS.md] for milestone, blockers, and next actions.
 

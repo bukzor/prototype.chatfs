@@ -4,7 +4,7 @@
 
 **Status:** ⚠️ Pre-implementation - Technical details are soft and under
 discussion. Data structures, APIs, and implementation specifics will be refined
-during Milestone 1.
+during M1-CLAUDE.
 
 **Read this when:**
 

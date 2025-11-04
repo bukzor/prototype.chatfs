@@ -281,18 +281,18 @@ lib/chatfs/layer/
   - Existing: rename to `chatfs-vfs-*` (M2-VFS, was called "api" or "plumbing")
   - Future: `chatfs-cache-*` (M3-CACHE)
   - Future: `chatfs <subcommand>` (M4-CLI, no prefix)
-- [ ] Update all command examples in docs (partially done)
+- [x] Update all command examples in docs
 
 ### Documentation updates:
 - [x] **CLAUDE.md** - Update to 4-layer architecture + add "Working on Documentation" section
 - [x] **HACKING.md** - Update directory structure, command examples for 4 layers
 - [x] **README.md** - Update architecture description to 4 layers (done in Phase 1.25)
 - [x] **design-rationale.md** - Add historical note about plumbing/porcelain → layered architecture
-- [x] **design-rationale/plumbing-porcelain-split.md** - Rename to `layered-architecture.md`
-- [x] **development-plan.md** - Already updated in Phase 1.25
-- [x] **development-plan/milestone-1-plumbing.md** - Rename to `milestone-1-claude-native.md`
-- [x] **technical-design/porcelain-layer.md** - Rename to `cli-layer.md`
-- [x] **technical-design.md** - Update with 4-layer terminology
+- [x] **design-rationale/layered-architecture.md** - Renamed and updated content
+- [x] **development-plan.md** - Updated paths and terminology
+- [x] **development-plan/milestone-1-claude-native.md** - Renamed and updated content
+- [x] **technical-design/cli-layer.md** - Renamed and updated content
+- [x] **technical-design.md** - Updated with 4-layer terminology
 - [x] **lib/chatfs/layer/native/claude/__init__.py** - Create
 - [x] **lib/chatfs/layer/vfs/README.md** - Move from plumbing/ and update
 - [x] **lib/chatfs/layer/cache/__init__.py** - Create stub
@@ -306,9 +306,12 @@ lib/chatfs/layer/
 
 ### Verification:
 - [x] Run `git grep -E 'plumbing|porcelain'` to find any missed references
-- [x] Remaining references are appropriate (historical evolution notes)
+  - Fixed all non-historical references:
+    - [x] **development-plan.md:374** - Updated "porcelain features" → "M4-CLI features"
+    - [x] **CLAUDE.md:21** - Updated `lib/chatfs/api.py` → `lib/chatfs/client.py`
+    - [x] Fixed anchor references in layered-architecture.md, cli-layer.md, milestone-1-claude-native.md
 
-**Deliverable:** Phase 1.5 complete - all code and docs use 4-layer terminology consistently. Subdoc content updates deferred to Phase 2.
+**Deliverable:** Phase 1.5 complete - all code and docs use 4-layer terminology consistently. Subdoc content updates (TODO-marked files) intentionally deferred to Phase 2.
 
 ## Phase 2: Validate Level 2 (Elaborate Foundations - Subdirectories)
 

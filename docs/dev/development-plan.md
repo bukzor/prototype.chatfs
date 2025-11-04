@@ -308,9 +308,9 @@ before implementation
 **Deliverables:**
 
 - [ ] Fork representation decision (see design-incubators/fork-representation/)
-- [ ] `chatfs-append` command - Add message to conversation (entry point from `lib/chatfs/plumbing/append.py`)
-- [ ] `chatfs-fork` command - Fork conversation at message (entry point from `lib/chatfs/plumbing/fork.py`)
-- [ ] `chatfs-amend` command - Edit message in conversation (entry point from `lib/chatfs/plumbing/amend.py`)
+- [ ] `chatfs-vfs-append` command - Add message to conversation (entry point from `lib/chatfs/layer/vfs/append.py`)
+- [ ] `chatfs-vfs-fork` command - Fork conversation at message (entry point from `lib/chatfs/layer/vfs/fork.py`)
+- [ ] `chatfs-vfs-amend` command - Edit message in conversation (entry point from `lib/chatfs/layer/vfs/amend.py`)
 - [ ] Cache write operations with fork tracking
 - [ ] Tests for write operations
 
@@ -371,7 +371,7 @@ Features identified but not scheduled:
 - `chatfs-frontmatter-edit` - Modify while preserving formatting
 
 **Effort:** Medium (1 week) **Priority:** Low (only needed for advanced
-porcelain features)
+M4-CLI features)
 
 ## Tier 3: Maybe Later, Maybe Never
 
