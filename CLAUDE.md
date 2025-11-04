@@ -97,7 +97,7 @@ When you encounter docs marked with "Status: TODO":
   - M1-CLAUDE: `chatfs-claude-verb-noun` (e.g., `chatfs-claude-list-orgs`)
   - M2-VFS: `chatfs-vfs-verb-noun` (e.g., `chatfs-vfs-list-orgs`)
   - M3-CACHE: `chatfs-cache-verb-noun` (e.g., `chatfs-cache-list-orgs`)
-  - M4-CLI: `chatfs <subcommand>` (e.g., `chatfs ls`, `chatfs cat`)
+  - M4-CLI: `chatfs-ls`, `chatfs-cat`, etc. (future: `chatfs <subcommand>` as optional enhancement)
 - Libraries: `lib/chatfs/noun.py` (e.g., `lib/chatfs/client.py`)
 - Design docs: `docs/dev/category/topic.md` (e.g., `docs/dev/technical-design/provider-interface.md`)
 

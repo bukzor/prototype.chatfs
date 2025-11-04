@@ -257,9 +257,9 @@ before implementation
 
 **Deliverables:**
 
-- [ ] `chatfs ls` command - List conversations in org
-- [ ] `chatfs cat` command - Display conversation
-- [ ] `chatfs sync` command - Force refresh cache
+- [ ] `chatfs-ls` command - List conversations in org/directory
+- [ ] `chatfs-cat` command - Display conversation
+- [ ] `chatfs-sync` command - Force refresh cache
 - [ ] Path parsing (org name → org UUID lookup)
 - [ ] Progress bars for slow operations
 - [ ] Colors/formatting for terminal output
@@ -271,8 +271,9 @@ before implementation
 
 **Success Criteria:**
 
-- Human-friendly commands work:
-  `chatfs ls "Buck Evan"`, `chatfs cat "path/to/convo.md"`, `chatfs sync "Buck Evan/2025-10"`
+- Human-friendly commands work with filesystem-like paths:
+  - Absolute: `chatfs-ls //claude.ai/Buck\ Evan/2025-10`
+  - Relative: `cd ~/my-chats/claude.ai/Buck\ Evan && chatfs-ls 2025-10`
 - Path parsing works (org names, date ranges, conversation titles)
 - Progress bars show for slow operations
 - Colors/formatting work in terminal
@@ -283,7 +284,7 @@ before implementation
 
 **Deferred to M5-WRITE:**
 
-- Write operations (`chatfs append`, `chatfs fork`, `chatfs amend`)
+- Write operations (`chatfs-append`, `chatfs-fork`, `chatfs-amend`)
 
 **Implementation Notes:**
 
@@ -331,9 +332,9 @@ before implementation
 **Success Criteria:**
 
 - Can append message:
-  `chatfs append "convo-path" "message text"`
+  `chatfs-append //claude.ai/.../convo.md "message text"`
 - Can fork conversation:
-  `chatfs fork "convo-path" --name "try-alt"`
+  `chatfs-fork //claude.ai/.../convo.md --name "try-alt"`
 - Filesystem reflects fork structure (per chosen design)
 - Cache maintains fork relationships
 - Works across providers (if multi-provider implemented)

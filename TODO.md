@@ -178,7 +178,7 @@ lib/chatfs/layer/
 - M1-CLAUDE: `chatfs-claude-list-orgs`, `chatfs-claude-list-convos`, `chatfs-claude-get-convo`, `chatfs-claude-render-md`
 - M2-VFS: `chatfs-vfs-list-orgs`, `chatfs-vfs-list-convos`, `chatfs-vfs-get-convo`, `chatfs-vfs-render-md`
 - M3-CACHE: `chatfs-cache-list-orgs`, `chatfs-cache-list-convos`, `chatfs-cache-get-convo`, `chatfs-cache-render-md`
-- M4-CLI: `chatfs ls`, `chatfs cat`, `chatfs sync` (human-friendly, no JSONL)
+- M4-CLI: `chatfs-ls`, `chatfs-cat`, `chatfs-sync` (human-friendly, no JSONL)
 
 **Layer responsibilities:**
 - **M1-CLAUDE:** Stateless, outputs whatever claude.ai API returns as JSONL. No normalization, no decisions.
@@ -280,7 +280,7 @@ lib/chatfs/layer/
   - New: `chatfs-claude-*` commands (M1-CLAUDE)
   - Existing: rename to `chatfs-vfs-*` (M2-VFS, was called "api" or "plumbing")
   - Future: `chatfs-cache-*` (M3-CACHE)
-  - Future: `chatfs <subcommand>` (M4-CLI, no prefix)
+  - M4-CLI: `chatfs-ls`, `chatfs-cat`, etc. (future: `chatfs <subcommand>` as optional enhancement)
 - [x] Update all command examples in docs
 
 ### Documentation updates:

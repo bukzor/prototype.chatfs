@@ -12,7 +12,9 @@ CLI commands provide user-friendly wrappers around cache/VFS operations.
 - Format output for human consumption
 
 These are Python modules/packages that will become CLI commands via packaging
-(pyproject.toml entry points). Commands like `chatfs ls`, `chatfs cat`, `chatfs sync`.
+(pyproject.toml entry points). Commands like `chatfs-ls`, `chatfs-cat`, `chatfs-sync`.
+
+**Note:** Subcommand interface (`chatfs ls`) is a future optional enhancement.
 
 ## Contract
 

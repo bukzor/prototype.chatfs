@@ -11,18 +11,32 @@ See [STATUS.md] for current development state.
 ## What This Will Do
 
 ```bash
-# Browse conversations by date
-chatfs-ls "Buck Evan/2025-10-29"
+# Use absolute paths anywhere (// prefix)
+chatfs-ls //claude.ai/Buck\ Evan/2025-10-29
 # conversation-title-1.md
 # conversation-title-2.md
 
-# Read a conversation
-chatfs-cat "Buck Evan/2025-10-29/tshark-filtering.md"
-# (Fetches from claude.ai if stale, shows cached content if fresh)
+# Optional: Initialize cache directory to enable grep and relative paths
+chatfs-init ~/my-chats
+cd ~/my-chats
 
-# Search across conversations
-grep -r "authentication" ./chatfs/
+# Paths work like filesystem - relative to current directory
+chatfs-cat claude.ai/Buck\ Evan/2025-10-29/tshark-filtering.md
+
+# Navigate deeper, paths stay relative
+cd claude.ai/Buck\ Evan/2025-10-29/
+chatfs-cat tshark-filtering.md
+chatfs-ls .
+
+# Search across cached conversations with standard tools
+cd ~/my-chats
+grep -r "authentication" .
 ```
+
+**Path conventions:**
+- `//provider/...` = Absolute chatfs path (works anywhere)
+- Regular paths = Relative to cwd (only works inside `chatfs-init` directory)
+- Behaves like normal filesystem navigation
 
 ## The Problem
 
@@ -39,23 +53,26 @@ They're in browser tabs, not files - locked away from the Unix toolchain.
 
 ## The Solution
 
-chatfs creates a lazy filesystem where directories and files appear on-demand via explicit CLI commands:
+chatfs provides lazy access to conversations via CLI commands, with optional caching:
 
-- **Lazy loading:** Fetch only when accessed via CLI tools (e.g., `chatfs-ls`, `chatfs-cat`), never eagerly
-- **Staleness tracking:** Filesystem mtime tracks when conversations need refresh
-- **Plain files:** Just markdown - use cat/grep/ls normally when offline
-- **Git-like UX:** Familiar init/sync workflow
+- **Lazy loading:** Fetch only when you run `chatfs-ls` or `chatfs-cat`, never eagerly
+- **Optional caching:** `chatfs-init` creates cache directory where files are written as markdown
+- **Staleness tracking:** Cached file mtime tracks when conversations need refresh
+- **Standard tools:** Cached files work with grep/cat/ls - no special tools needed
+- **Git-like UX:** Familiar init/sync workflow (see [docs/dev/development-plan.md])
 
 ## Architecture
 
 Built on **four-layer architecture** (learn-then-abstract approach):
 
-- **M1-CLAUDE (native):** Direct Claude API wrapper, outputs raw JSONL
+- **M1-CLAUDE (native):** Direct claude.ai API wrapper (unofficial API), outputs raw JSONL
 - **M2-VFS (normalized):** Provider-agnostic schema based on M1-CLAUDE findings
-- **M3-CACHE (persistence):** Filesystem storage with staleness tracking
-- **M4-CLI (UX):** Human-friendly commands (chatfs ls, chatfs cat, etc.)
+- **M3-CACHE (persistence):** Writes markdown files to cache directory, staleness tracking
+- **M4-CLI (UX):** Human-friendly commands (`chatfs-init`, `chatfs-ls`, `chatfs-cat`, etc.)
 
-**Key principle:** Learn what the API gives us (M1-CLAUDE) before designing normalization (M2-VFS).
+**Key principle:** Learn what the claude.ai API gives us (M1-CLAUDE) before designing normalization (M2-VFS).
+
+**Implementation:** JSONL pipelines under the hood (M1-M3) produce markdown files (M3-CACHE output). Commands work without cache (stdout only) or with cache (persistent files).
 
 See [docs/dev/technical-design.md] for details.
 

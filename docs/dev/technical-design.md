@@ -46,9 +46,9 @@ chatfs is built in four layers, each implemented in separate milestones:
 ```
 ┌─────────────────────────────────────────┐
 │      CLI Layer (M4-CLI - Future)        │
-│   chatfs ls "Buck Evan/2025-10-29"      │
-│   chatfs cat "path/to/conversation.md"  │
-│   Commands: chatfs <subcommand>         │
+│   chatfs-ls //claude.ai/Buck\ Evan/...  │
+│   chatfs-cat //claude.ai/.../convo.md   │
+│   Commands: chatfs-ls, chatfs-cat, etc. │
 │   Modules: chatfs.layer.cli.*           │
 └─────────────────┬───────────────────────┘
                   │ Uses
@@ -321,7 +321,7 @@ See [cache-layer] for staleness logic and directory structure.
 ### CLI Layer (M4-CLI - Future)
 
 **Milestone:** M4-CLI
-**Commands:** `chatfs <subcommand>` (no prefix)
+**Commands:** `chatfs-ls`, `chatfs-cat`, `chatfs-sync`, etc.
 **Modules:** `chatfs.layer.cli.*`
 
 **Responsibility:** Human-friendly CLI wrappers with rich UX. Wraps M3-CACHE.
@@ -329,10 +329,22 @@ See [cache-layer] for staleness logic and directory structure.
 **Examples:**
 
 ```bash
-chatfs ls "Buck Evan"               # List conversations
-chatfs cat "path/to/convo.md"       # Read conversation
-chatfs sync "Buck Evan/2025-10"     # Force refresh
+# Absolute paths (// prefix, work anywhere)
+chatfs-ls //claude.ai/Buck\ Evan/2025-10-29
+chatfs-cat //claude.ai/Buck\ Evan/2025-10-29/tshark-filtering.md
+
+# Relative paths (filesystem-like, inside chatfs-init directory)
+chatfs-init ~/my-chats && cd ~/my-chats
+chatfs-ls claude.ai/Buck\ Evan/2025-10-29
+
+cd claude.ai/Buck\ Evan/2025-10-29/
+chatfs-cat tshark-filtering.md
+chatfs-ls .
 ```
+
+**Path semantics:** `//provider/...` = absolute, everything else = relative to cwd (like filesystem paths).
+
+**Note:** Subcommand interface (`chatfs ls` instead of `chatfs-ls`) is a future optional enhancement.
 
 **Implementation:** Wraps M3-CACHE layer tools (chatfs-cache-*), adds:
 

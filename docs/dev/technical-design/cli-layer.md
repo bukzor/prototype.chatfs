@@ -4,12 +4,14 @@
 
 This document will describe:
 
-- User-facing command design (chatfs ls, chatfs cat, chatfs sync)
-- Path parsing and resolution
+- User-facing command design (chatfs-ls, chatfs-cat, chatfs-sync, etc.)
+- Path parsing and resolution (absolute `//provider/...` vs relative paths)
 - Progress bars and terminal UI
 - Error messages and help text
 - Shell completion
 - How M4-CLI wraps M3-CACHE with human-friendly interface
+
+**Note:** Subcommand interface (`chatfs ls` instead of `chatfs-ls`) is a future optional enhancement.
 
 See
 [../technical-design.md#cli-layer-m4-cli---future]
