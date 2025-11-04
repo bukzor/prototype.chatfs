@@ -20,7 +20,7 @@ Use echo + pipe + jq. Example: `echo '{"uuid":"abc"}' | chatfs-claude-list-convo
 **Working with unofficial API:**
 Wrapped in `lib/chatfs/client.py`. Uses curl_cffi for Cloudflare bypass. Raw access: `from unofficial_claude_api import Client`. See [docs/dev/technical-design/provider-interface.md].
 
-**Current state:** See [STATUS.md] for milestone, blockers, and next actions.
+**Current state:** See [STATUS.md] for milestone, blockers, and next actions. Recent devlogs: [docs/dev/devlog/].
 
 ## Architecture Overview
 
