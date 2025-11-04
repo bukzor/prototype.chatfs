@@ -28,12 +28,16 @@ chatfs provides lazy filesystem access to chat conversations (claude.ai, ChatGPT
 
 **Why JSONL:** Streaming-friendly, works with Unix tools now, easy capnproto migration later.
 
-**Four layers:**
+**Important terminology notes:**
 
-- **M1-CLAUDE** (`lib/chatfs/layer/native/claude/`): Direct Claude API wrapper, outputs raw JSONL. See [docs/dev/technical-design/provider-interface.md].
-- **M2-VFS** (`lib/chatfs/layer/vfs/`): Normalized JSONL across providers (Claude, ChatGPT). See [docs/dev/technical-design.md#m2-vfs-layer].
-- **M3-CACHE** (`lib/chatfs/layer/cache/`): Persistent storage with staleness tracking (future). See [docs/dev/technical-design.md#m3-cache-layer].
-- **M4-CLI** (`lib/chatfs/layer/cli/`, future): Human-friendly commands with colors, progress bars. See [docs/dev/technical-design/cli-layer.md].
+- **M0-DOCS, M1-CLAUDE, M2-VFS, M3-CACHE, M4-CLI are milestone names** (not layer names). They happen to align with layer names for the first four milestones, but this is coincidental. Milestones will be completed and removed from the codebase.
+
+**Four layers (implemented across milestones):**
+
+- **native/claude** (`lib/chatfs/layer/native/claude/`, milestone M1-CLAUDE): Direct Claude API wrapper, outputs raw JSONL. See [docs/dev/technical-design/provider-interface.md].
+- **vfs** (`lib/chatfs/layer/vfs/`, milestone M2-VFS): Normalized JSONL across providers (Claude, ChatGPT). See [docs/dev/technical-design.md#vfs-layer].
+- **cache** (`lib/chatfs/layer/cache/`, milestone M3-CACHE): Persistent storage with staleness tracking (future). See [docs/dev/technical-design.md#cache-layer].
+- **cli** (`lib/chatfs/layer/cli/`, milestone M4-CLI, future): Human-friendly commands with colors, progress bars. See [docs/dev/technical-design/cli-layer.md].
 
 ## Data Flow
 
@@ -53,6 +57,24 @@ chatfs-render-md (stdin: message records)
 ```
 
 See [docs/dev/technical-design.md#data-flow] for details.
+
+## Working on Documentation
+
+**🚨 CRITICAL: TODO-marked docs require discussion before writing**
+
+When you encounter docs marked with "Status: TODO":
+
+1. **Never fill in TODO docs solo** - These require discussion with user first
+2. **Discuss concepts first** - Develop understanding through conversation
+3. **Only write after reaching certainty** - Discussion must establish clear understanding
+4. **Breadth-first approach** - Review main docs before filling in subdocs
+5. **May prove unnecessary** - Some breakdown docs might be deleted if main doc suffices
+
+**Subdoc creation policy:**
+
+- Only create subdocs when >100-200 lines or frequently referenced independently
+- Otherwise keep content in main doc
+- See [docs/dev/documentation-howto.md] for full guidelines
 
 ## Key Files
 

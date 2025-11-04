@@ -1,9 +1,9 @@
-# M0 Documentation Completion - TODO
+# M0-DOCS Documentation Completion - TODO
 
 **Project:** chatfs - lazy filesystem for chat conversations
-**Milestone:** M0 (Documentation Phase) - see [docs/dev/development-plan.md#milestone-0-documentation-phase]
+**Milestone:** M0-DOCS (Documentation Phase) - see [docs/dev/development-plan.md#milestone-0-documentation-phase]
 **Current Status:** See [STATUS.md]
-**Goal:** LLM-resumable documentation foundation before M1 implementation
+**Goal:** LLM-resumable documentation foundation before M1-CLAUDE implementation
 
 **Approach:** Discussion-based validation → Develop certainty → Evaluate/Correct/Rewrite
 
@@ -52,10 +52,10 @@ Level 0 (Root): chatfs - What is this project?
 │  └─ Data Formats (how things talk)
 │  │
 │  Open Questions branches:
-│  ├─ Fork representation (blocked M3)
+│  ├─ Fork representation (blocked M3-CACHE)
 │  └─ Write operation semantics
 │
-└─ Level 3: Component Details (Phase 3 - mostly deferred to M1)
+└─ Level 3: Component Details (Phase 3 - mostly deferred to M1-CLAUDE)
    │
    Data Flow branches:
    ├─ Provider → Models → JSONL pipeline
@@ -71,7 +71,7 @@ Level 0 (Root): chatfs - What is this project?
    ├─ JSONL schemas
    └─ Markdown format
 
-   Level 4: Implementation Specifics (deferred to M1+)
+   Level 4: Implementation Specifics (deferred to M1-CLAUDE+)
    │
    API Layer branches:
    ├─ Provider interface definition
@@ -143,7 +143,7 @@ All topics have natural homes in our doc structure:
   - Correct: Updated component descriptions, data flows (will complete in Phase 1.25)
 
 - [x] **Open Questions** (`design-incubators/README.md`)
-  - Discussion: Fork representation splits into 3 phases (M1/M2/M3), new provider-abstraction question
+  - Discussion: Fork representation splits into 3 phases (M1-CLAUDE/M2-VFS/M3-CACHE), new provider-abstraction question
   - Validate: Current docs conflate 3 distinct questions
   - Correct: Captured understanding in `docs/dev/open-questions-revision-notes.md` for integration after Phase 1.25
 
@@ -250,7 +250,7 @@ lib/chatfs/layer/
 **Source:** `docs/dev/open-questions-revision-notes.md` (created during Phase 1)
 
 ### Updates needed:
-- [x] **design-incubators/fork-representation/CLAUDE.md** - Add 3-phase structure (M1/M2/M3 split)
+- [x] **design-incubators/fork-representation/CLAUDE.md** - Add 3-phase structure (M1-CLAUDE/M2-VFS/M3-CACHE split)
 - [x] **design-incubators/fork-representation/README.md** - Update with milestone mapping
 - [x] **Create:** `design-incubators/fork-representation/api-investigation.md` template for M1-CLAUDE
 - [x] **Create:** `design-incubators/provider-abstraction/` new incubator
@@ -284,30 +284,31 @@ lib/chatfs/layer/
 - [ ] Update all command examples in docs (partially done)
 
 ### Documentation updates:
-- [x] **CLAUDE.md** - Update to 4-layer architecture (native/vfs/cache/cli)
-- [ ] **HACKING.md** - Update directory structure, command examples for 4 layers
+- [x] **CLAUDE.md** - Update to 4-layer architecture + add "Working on Documentation" section
+- [x] **HACKING.md** - Update directory structure, command examples for 4 layers
 - [x] **README.md** - Update architecture description to 4 layers (done in Phase 1.25)
 - [x] **design-rationale.md** - Add historical note about plumbing/porcelain → layered architecture
-- [x] **design-rationale/plumbing-porcelain-split.md** - Rename to `layered-architecture.md` + update for 4 layers (renamed, content update pending)
+- [x] **design-rationale/plumbing-porcelain-split.md** - Rename to `layered-architecture.md`
 - [x] **development-plan.md** - Already updated in Phase 1.25
-- [ ] **development-plan/milestone-1-plumbing.md** - Rename to `milestone-1-claude-native.md`
-- [x] **technical-design/porcelain-layer.md** - Rename to `cli-layer.md` (renamed, content update pending)
-- [ ] **technical-design.md** - Update with 4-layer terminology
-- [ ] **technical-design/vfs-layer.md** - Create for M2-VFS
+- [x] **development-plan/milestone-1-plumbing.md** - Rename to `milestone-1-claude-native.md`
+- [x] **technical-design/porcelain-layer.md** - Rename to `cli-layer.md`
+- [x] **technical-design.md** - Update with 4-layer terminology
 - [x] **lib/chatfs/layer/native/claude/__init__.py** - Create
 - [x] **lib/chatfs/layer/vfs/README.md** - Move from plumbing/ and update
 - [x] **lib/chatfs/layer/cache/__init__.py** - Create stub
 - [x] **lib/chatfs/layer/cli/README.md** - Move from porcelain/ and update
-- [ ] **lib/chatfs/__init__.py** - Update docstrings for 4 layers
+- [x] **lib/chatfs/__init__.py** - Update docstrings for 4 layers
 - [x] **lib/chatfs/layer/__init__.py** - Create
 - [x] **lib/chatfs/layer/native/__init__.py** - Create
 - [x] **lib/chatfs/layer/vfs/__init__.py** - Move from plumbing/ and update (moved, no edits needed)
 - [x] **lib/chatfs/layer/cli/__init__.py** - Move from porcelain/ and update (moved, no edits needed)
-- [ ] All devlog references (skip - historical)
+- [x] All devlog references (skip - historical)
 
 ### Verification:
-- [ ] Run `git grep -E 'plumbing|porcelain'` to find any missed references
-- [ ] Update any remaining stale references
+- [x] Run `git grep -E 'plumbing|porcelain'` to find any missed references
+- [x] Remaining references are appropriate (historical evolution notes)
+
+**Deliverable:** Phase 1.5 complete - all code and docs use 4-layer terminology consistently. Subdoc content updates deferred to Phase 2.
 
 ## Phase 2: Validate Level 2 (Elaborate Foundations - Subdirectories)
 
@@ -321,11 +322,11 @@ lib/chatfs/layer/
 
 ### Design Rationale Subdocs
 
-- [ ] **Plumbing/Porcelain Split** (`design-rationale/plumbing-porcelain-split.md`)
-  - Discussion: Why this decision? What alternatives exist? Real tradeoffs?
-  - Validate: Are the arguments sound? Any strawman alternatives?
-  - Correct: Strengthen weak arguments, add missing perspectives
-  - Delete?: If <100 lines and fully covered in main doc
+- [ ] **Layered Architecture** (`design-rationale/layered-architecture.md`)
+  - Discussion: Why four layers? Why learn-then-abstract approach?
+  - Validate: Currently has TODO status, needs content discussion
+  - Create/Correct: Fill in with rationale for 4-layer architecture evolution
+  - Delete?: If <100 lines and fully covered in design-rationale.md main doc
 
 - [ ] **JSONL Choice** (currently in main `design-rationale.md`, may need subdoc)
   - Discussion: Why JSONL specifically? What about msgpack, CSV, protobuf?
@@ -347,49 +348,55 @@ lib/chatfs/layer/
 
 - [ ] **Provider Interface** (`technical-design/provider-interface.md`)
   - Discussion: What's the actual abstraction? How will multi-provider work?
-  - Validate: Does design match M1/M2 plans?
+  - Validate: Does design match M1-CLAUDE/M2-VFS plans?
   - Correct: Clarify unofficial-claude-api wrapping vs future abstraction
 
 - [ ] **Cache Layer** (`technical-design/cache-layer.md`)
-  - Discussion: M1 scope? What's deferred? Directory structure?
-  - Validate: Is M1 scope clearly bounded?
+  - Discussion: M3-CACHE scope? What's deferred? Directory structure?
+  - Validate: Is M3-CACHE scope clearly bounded?
   - Correct: Mark staleness checking, lazy stubs as explicitly deferred
 
-- [ ] **Porcelain Layer** (`technical-design/porcelain-layer.md`)
-  - Discussion: What porcelain commands make sense? When to build them?
-  - Validate: Is it clear this is mostly post-M1?
-  - Correct: Add concrete examples, mark deferred scope
+- [ ] **CLI Layer** (`technical-design/cli-layer.md`)
+  - Discussion: What CLI commands make sense? When to build them?
+  - Validate: Currently has TODO status, needs content discussion
+  - Correct/Create: Add concrete examples, mark deferred scope (milestone M4-CLI)
+  - Delete?: If <100 lines and fully covered in technical-design.md main doc
+
+- [ ] **VFS Layer** (`technical-design/vfs-layer.md`)
+  - Discussion: Does this need separate doc or covered in technical-design.md?
+  - Decision: May not need this subdoc at all
+  - Action: Discuss during Phase 2 subdoc review, create only if needed
 
 - [ ] **Markdown Format** (`technical-design/markdown-format.md`)
   - Discussion: Exact format spec? Frontmatter fields? Obsidian compat?
   - Validate: Is format well-specified enough for implementation?
   - Correct: Add missing details, clarify ambiguities
 
-## Phase 3: Mark Deferred Details (Implementation Specifics for M1+)
+## Phase 3: Mark Deferred Details (Implementation Specifics for M1-CLAUDE+)
 
 **Goal:** Clearly mark what's intentionally deferred to implementation phase
 
 ### Workflow:
-1. **Discuss** what level of detail is appropriate for M0 (design phase)
-2. **Identify** implementation details that belong in M1 documentation
-3. **Mark clearly** as "TBD M1" or similar
+1. **Discuss** what level of detail is appropriate for M0-DOCS (design phase)
+2. **Identify** implementation details that belong in M1-CLAUDE documentation
+3. **Mark clearly** as "TBD M1-CLAUDE" or similar
 4. **Avoid** creating placeholder docs that add no value
 
 ### Deferred topics:
 
 - [ ] **JSONL Schemas**
-  - Discussion: Do we need placeholder now, or define during M1 implementation?
-  - Action: Add note to `technical-design.md` that schemas will be documented during M1
+  - Discussion: Do we need placeholder now, or define during M1-CLAUDE implementation?
+  - Action: Add note to `technical-design.md` that schemas will be documented during M1-CLAUDE
   - Avoid: Creating empty `jsonl-schemas.md` with just "TODO"
 
 - [ ] **Per-tool Implementation Details**
-  - Discussion: How much detail about list-orgs, list-convos, etc. belongs in M0?
+  - Discussion: How much detail about list-orgs, list-convos, etc. belongs in M0-DOCS?
   - Action: Mark tool details as "documented during implementation"
   - Avoid: Speculative implementation docs that will be wrong
 
 ## Phase 4: Validate Against Success Criteria
 
-**Goal:** Verify M0 achieves actual success criteria through critical evaluation, not mechanical checkbox completion
+**Goal:** Verify M0-DOCS achieves actual success criteria through critical evaluation, not mechanical checkbox completion
 
 ### Acceptance Tests (User-driven validation)
 
@@ -408,7 +415,7 @@ lib/chatfs/layer/
     - Subdocs only for >100-200 lines
   - Correct: Fix any violations
 
-- [ ] **M0 Success Criteria** (from development-plan.md)
+- [ ] **M0-DOCS Success Criteria** (from development-plan.md)
   - Discussion: Have we achieved the actual goals, not just checkboxes?
   - Validate:
     - Core docs exist AND are accurate (not just present)
@@ -421,7 +428,7 @@ lib/chatfs/layer/
 - [ ] **Remaining TODOs audit**
   - Run: `git grep -l "TODO\|Status:.*TODO" docs/`
   - Discussion: Which TODOs are acceptable vs problematic?
-  - Acceptable: Implementation details marked "TBD M1"
+  - Acceptable: Implementation details marked "TBD M1-CLAUDE"
   - Not acceptable: Unresolved design questions, vague placeholders in L1/L2
   - Action: Fix or remove unacceptable TODOs
 
@@ -431,17 +438,17 @@ lib/chatfs/layer/
   - Fix: Update any broken references
 
 - [ ] **Python project baseline**
-  - Discussion: What baseline configs are needed for M0 vs M1?
-  - M0 scope: Entry points defined (for M1 implementation)
-  - M1 scope: Actual tool installation/testing
+  - Discussion: What baseline configs are needed for M0-DOCS vs M1-CLAUDE?
+  - M0-DOCS scope: Entry points defined (for M1-CLAUDE implementation)
+  - M1-CLAUDE scope: Actual tool installation/testing
   - Action: Add pyproject.toml entry points, verify uv structure
 
 ### Session Closeout (End of session)
 
 - [ ] **Update STATUS.md**
-  - Discussion: Is M0 actually complete? What blockers remain?
+  - Discussion: Is M0-DOCS actually complete? What blockers remain?
   - Document: Validation results, remaining work
-  - Next actions: Either "Ready for M1" or "Continue M0 validation on X"
+  - Next actions: Either "Ready for M1-CLAUDE" or "Continue M0-DOCS validation on X"
 
 - [ ] **Create devlog entry**
   - Discussion: What was learned this session?
@@ -452,17 +459,17 @@ lib/chatfs/layer/
 
 ### Should we investigate fork representation now?
 
-**Option A:** Investigate API for fork representation before M0 completion
+**Option A:** Investigate API for fork representation before M0-DOCS completion
 
 - Pro: Might inform design decisions
-- Con: Not blocking M1 (read-only doesn't need forks)
+- Con: Not blocking M1-CLAUDE (read-only doesn't need forks)
 
-**Option B:** Defer to parallel investigation during M1 or before M3
+**Option B:** Defer to parallel investigation during M1-CLAUDE or before M3-CACHE
 
 - Pro: Faster to working MVP
 - Con: Might need refactoring later
 
-**Recommendation:** Defer. M1 is read-only and doesn't need fork handling.
+**Recommendation:** Defer. M1-CLAUDE is read-only and doesn't need fork handling.
 
 ### Delete unnecessary placeholder docs?
 

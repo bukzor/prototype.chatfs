@@ -30,17 +30,21 @@ uv sync
 claude-api/
 ├── lib/
 │   └── chatfs/             # Main chatfs package
-│       ├── plumbing/       # Low-level JSONL tools (modules)
-│       │   ├── list_orgs.py
-│       │   ├── list_convos.py
-│       │   ├── get_convo.py
-│       │   └── render_md.py
-│       ├── porcelain/      # User-facing commands (future)
-│       ├── api.py          # API client
-│       ├── cache.py        # Filesystem cache
-│       └── models.py       # Data structures
+│       ├── layer/
+│       │   ├── native/
+│       │   │   └── claude/  # M1-CLAUDE: Claude-native tools
+│       │   │       ├── list_orgs.py
+│       │   │       ├── list_convos.py
+│       │   │       ├── get_convo.py
+│       │   │       └── render_md.py
+│       │   ├── vfs/         # M2-VFS: Normalized JSONL tools (future)
+│       │   ├── cache/       # M3-CACHE: Persistent storage (future)
+│       │   └── cli/         # M4-CLI: Human-friendly commands (future)
+│       ├── client.py        # API client wrapper
+│       ├── cache.py         # Filesystem cache
+│       └── models.py        # Data structures
 └── docs/
-    └── dev/                # Design documentation
+    └── dev/                 # Design documentation
         └── reference-implementations/  # Reference code (git submodules)
 ```
 
@@ -49,45 +53,55 @@ architecture details.
 
 ## Running Tests
 
-**Note:** The testing commands shown below will work after M0 configures entry points in pyproject.toml. For now, these serve as reference for post-M0 testing workflow.
+**Note:** The testing commands shown below will work after M0-DOCS configures entry points in pyproject.toml. For now, these serve as reference for post-M0-DOCS testing workflow.
 
-**Test plumbing modules** (available after M0 entry point configuration):
+**Test M1-CLAUDE layer** (Claude-native, outputs raw API data):
 
 ```bash
 uv sync  # one-time setup, for new modules
-echo '{}' | chatfs-list-orgs | jq
+
+# List organizations
+echo '{}' | chatfs-claude-list-orgs | jq
 
 # List conversations for org
-echo '{"uuid":"org-uuid"}' | chatfs-list-convos | jq
+echo '{"uuid":"org-uuid"}' | chatfs-claude-list-convos | jq
 
-# After installation - use CLI commands
-chatfs-list-orgs | jq -r '.name'
+# Get conversation messages
+echo '{"uuid":"convo-uuid"}' | chatfs-claude-get-convo | jq
 
 # Pipe through entire flow
-chatfs-list-orgs | head -n 1 | \
-  chatfs-list-convos | head -n 5 | \
-  chatfs-get-convo | \
-  chatfs-render-md > output.md
+chatfs-claude-list-orgs | head -n 1 | \
+  chatfs-claude-list-convos | head -n 5 | \
+  chatfs-claude-get-convo | \
+  chatfs-claude-render-md > output.md
+```
+
+**Test M2-VFS layer** (normalized, future):
+
+```bash
+# Same tools, normalized JSONL schema
+chatfs-vfs-list-orgs | jq
+chatfs-vfs-list-convos | jq
 ```
 
 **Testing with jq:**
 
 ```bash
 # Extract specific fields
-chatfs-list-orgs | jq -r '.name'
+chatfs-claude-list-orgs | jq -r '.name'
 
 # Filter conversations
-chatfs-list-convos | jq 'select(.created_at > "2025-10")'
+chatfs-claude-list-convos | jq 'select(.created_at > "2025-10")'
 ```
 
 ## Common Tasks
 
-### Adding a New Plumbing Tool
+### Adding a New Layer Tool
 
-**Plumbing contract:**
+**JSONL layer contract** (M1-CLAUDE, M2-VFS, M3-CACHE):
 
 - Read JSONL from stdin (one JSON object per line)
-- Write JSONL to stdout
+- Write JSONL to stdout (except render-md → markdown)
 - Log errors to stderr
 - Exit 0 on success
 - No terminal dependencies (colors, progress bars, etc.)
@@ -97,7 +111,7 @@ chatfs-list-convos | jq 'select(.created_at > "2025-10")'
 ```python
 #!/usr/bin/env -S uv run
 """
-chatfs-example-tool - Does something useful
+chatfs-{layer}-example-tool - Does something useful
 
 Reads: {input_field: "value"}
 Writes: {output_field: "result"}
@@ -106,7 +120,7 @@ import sys
 import json
 
 def main():
-    """CLI entry point for chatfs-example-tool command."""
+    """CLI entry point for chatfs-{layer}-example-tool command."""
     for line in sys.stdin:
         input_obj = json.loads(line)
 
@@ -122,19 +136,23 @@ if __name__ == "__main__":
 
 **Steps:**
 
-1. Create module in `lib/chatfs/plumbing/example_tool.py`
-2. Add `main()` function as entry point
-3. Document input/output schema in module docstring
-4. Add entry point to `pyproject.toml` to create `chatfs-example-tool` command
-5. uv sync
-6. Test with: `echo '{"test":"data"}' | chatfs-example-tool`
+1. Choose layer: native/claude/, vfs/, or cache/
+2. Create module in `lib/chatfs/layer/{layer}/example_tool.py`
+3. Add `main()` function as entry point
+4. Document input/output schema in module docstring
+5. Add entry point to `pyproject.toml`:
+   - M1-CLAUDE: `chatfs-claude-example-tool`
+   - M2-VFS: `chatfs-vfs-example-tool`
+   - M3-CACHE: `chatfs-cache-example-tool`
+6. Run `uv sync`
+7. Test with: `echo '{"test":"data"}' | chatfs-{layer}-example-tool`
 
 ### Debugging API Issues
 
 **Enable verbose logging:**
 
 ```python
-# In lib/chatfs/api.py
+# In lib/chatfs/client.py
 import logging
 logging.basicConfig(level=logging.DEBUG)
 ```
@@ -142,8 +160,8 @@ logging.basicConfig(level=logging.DEBUG)
 **Inspect raw API responses:**
 
 ```bash
-# Use chatfs-get-convo and save raw JSON
-echo '{"uuid":"convo-uuid"}' | chatfs-get-convo > raw-response.jsonl
+# Use chatfs-claude-get-convo and save raw JSON
+echo '{"uuid":"convo-uuid"}' | chatfs-claude-get-convo > raw-response.jsonl
 jq -s '.' raw-response.jsonl > formatted.json
 ```
 
@@ -159,21 +177,30 @@ print(orgs)
 
 ### Understanding Data Flow
 
-**Plumbing pipeline:**
+**M1-CLAUDE pipeline** (Claude-native):
 
 ```
-chatfs-list-orgs
+chatfs-claude-list-orgs
   → {uuid, name, created_at, ...}
 
-chatfs-list-convos (stdin: org record)
+chatfs-claude-list-convos (stdin: org record)
   → {uuid, title, created_at, updated_at, org_uuid, ...}
 
-chatfs-get-convo (stdin: convo record)
+chatfs-claude-get-convo (stdin: convo record)
   → {type: "human", text: "...", created_at: "..."}
   → {type: "assistant", text: "...", created_at: "..."}
 
-chatfs-render-md (stdin: message records)
+chatfs-claude-render-md (stdin: message records)
   → Markdown output (not JSONL)
+```
+
+**M2-VFS pipeline** (normalized, future):
+
+```
+chatfs-vfs-list-orgs --provider=claude
+  → {uuid, name, created_at, ...}  # Normalized schema
+
+Same data flow, normalized JSONL across providers
 ```
 
 See
@@ -190,10 +217,18 @@ See [docs/dev/technical-design.md#filesystem-cache-structure] for detailed cache
 
 ## Architecture
 
-**Plumbing/Porcelain Split:**
+**Four-Layer Architecture:**
 
-- **Plumbing:** Raw functionality, JSONL I/O, scriptable
-- **Porcelain:** (Future) Nice UX, human-friendly paths, progress bars
+- **M1-CLAUDE (native):** Claude-native layer - outputs raw API data as JSONL, no normalization
+- **M2-VFS (normalized):** Virtual filesystem layer - normalized JSONL schema across providers (Claude, ChatGPT)
+- **M3-CACHE (persistence):** Cache/filesystem layer - persistent storage with staleness tracking
+- **M4-CLI (UX):** CLI layer - human-friendly commands with colors, progress bars, path-based interface
+
+**Why this layered approach?**
+
+- **Learn then abstract:** Can't design good abstraction (M2-VFS) without understanding concrete case (M1-CLAUDE)
+- **Clear separation:** Each layer has single responsibility
+- **Testable:** JSONL layers (M1-M3) are pure stdin/stdout, easy to test with echo and jq
 
 **Why JSONL?**
 
@@ -209,8 +244,7 @@ See [docs/dev/technical-design.md#filesystem-cache-structure] for detailed cache
 - Fetch on-demand keeps everything fast
 - Filesystem mtime tracks staleness
 
-See [docs/dev/design-rationale.md] for full
-reasoning.
+See [docs/dev/design-rationale.md] for full reasoning.
 
 ## Design Decisions
 

@@ -342,7 +342,7 @@ chatfs sync "Buck Evan/2025-10"     # Force refresh
 - Friendly error messages
 - Interactive prompts
 
-See [porcelain-layer] for UX design.
+See [cli-layer] for UX design.
 
 ## Data Flow
 
@@ -605,7 +605,7 @@ Add `chatfs` commands with human-friendly UX:
 - Progress bars, colors, interactive prompts
 - Error recovery and helpful messages
 
-See [porcelain-layer] for UX design.
+See [cli-layer] for UX design.
 
 ### M5-WRITE+: Advanced Features
 
@@ -645,7 +645,7 @@ See [development-plan.md] for milestone details.
 [markdown-format]: technical-design/markdown-format.md
 [provider-interface]: technical-design/provider-interface.md
 [cache-layer]: technical-design/cache-layer.md
-[porcelain-layer]: technical-design/porcelain-layer.md
+[cli-layer]: technical-design/cli-layer.md
 [design-rationale.md]: design-rationale.md
 [development-plan.md]: development-plan.md
 [technical-design/]: technical-design/
