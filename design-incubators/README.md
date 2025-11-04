@@ -34,3 +34,27 @@ Use an incubator when you find yourself saying:
 - "There are 3 ways to do this, and each has trade-offs..."
 - "I need to prototype this to understand the implications"
 - "This decision affects too many things to rush it"
+
+## Active Incubators
+
+### fork-representation/
+
+**Blocks:** M1-CLAUDE (Phase 1), M2-API (Phase 2), M3-CACHE (Phase 3)
+
+**Questions:**
+1. What does Claude API return for forked conversations?
+2. What should normalized API provide for forks across providers?
+3. How do we represent forks on disk?
+
+**Status:** Phase 1 (API investigation) needed for M1-CLAUDE
+
+### provider-abstraction-strategy/
+
+**Blocks:** M2-API implementation
+
+**Questions:**
+1. Should we support chat-only or chat + non-chat providers (Linear, GitHub, GCP)?
+2. What belongs in normalized layer vs provider-specific extensions?
+3. Chat-only abstraction, universal abstraction, or tiered approach?
+
+**Status:** Depends on M1-CLAUDE findings, needs research on other providers

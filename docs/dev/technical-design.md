@@ -8,49 +8,71 @@ during Milestone 1.
 
 **Read this when:**
 
-- Understanding how the system works
-- Implementing a new component
-- Debugging data flow issues
+- Understanding the three-layer architecture (API/Cache/CLI)
+- Implementing M1 API layer tools
+- Understanding data flow and component interactions
+- Planning M2/M3 implementation
 - Onboarding as a contributor
 
-This document describes what chatfs is and how it's architected.
+This document describes chatfs's architecture and milestone-based implementation plan.
 
 ## System Overview
 
-chatfs provides lazy filesystem access to claude.ai conversations through
-composable JSONL-based plumbing tools.
+chatfs provides programmatic access to claude.ai conversations through composable JSONL-based tools, built in three layers (API, Cache/FS, CLI).
 
-**Key characteristics:**
+**Current state (M1):**
+- Stateless API layer tools (`chatfs-api-*`)
+- No caching, no filesystem writes
+- Pure JSONL pipelines composing with Unix tools
 
-- **Lazy:** Files/directories created only when accessed via explicit CLI commands (not FUSE syscalls)
+**Future layers:**
+- **M2:** Cache/FS layer adds persistence, staleness checking, lazy loading
+- **M3:** CLI layer adds human-friendly UX with colors and progress bars
+
+**Design characteristics:**
+
 - **Composable:** Small tools that pipe together (Unix philosophy)
-- **Cached:** Filesystem stores conversation data, mtime tracks staleness
-- **Offline-friendly:** Cached files work without network
+- **Layered:** Three independent layers (API/Cache/CLI) with clear boundaries
+- **Progressive:** Each layer builds on the previous, each independently useful
 - **Future-proof:** JSONL → capnproto migration path
-- **FUSE-compatible:** Design maintains clear correlation between CLI commands and potential FUSE callbacks (secondary goal)
+- **Multi-provider ready:** Design supports ChatGPT, Gemini via provider abstraction
 
 ## Architecture
 
+chatfs is built in three layers, each implemented in separate milestones:
+
 ```
 ┌─────────────────────────────────────────┐
-│          Porcelain (Future)             │
+│      CLI Layer (M3 - Future)            │
 │   chatfs ls "Buck Evan/2025-10-29"      │
 │   chatfs cat "path/to/conversation.md"  │
+│   Commands: chatfs-*                    │
+│   Modules: chatfs.layer.cli.*           │
 └─────────────────┬───────────────────────┘
                   │ Uses
 ┌─────────────────▼───────────────────────┐
-│         Plumbing (JSONL I/O)            │
-│  chatfs-list-orgs                       │
-│  chatfs-list-convos                     │
-│  chatfs-get-convo                       │
-│  chatfs-render-md                       │
+│    Cache/FS Layer (M2 - Future)         │
+│   chatfs-cache-list-orgs                │
+│   chatfs-cache-list-convos              │
+│   chatfs-cache-get-convo                │
+│   Commands: chatfs-cache-*              │
+│   Modules: chatfs.layer.cache.*         │
+└─────────────────┬───────────────────────┘
+                  │ Uses
+┌─────────────────▼───────────────────────┐
+│       API Layer (M1 - Current)          │
+│   chatfs-api-list-orgs                  │
+│   chatfs-api-list-convos                │
+│   chatfs-api-get-convo                  │
+│   chatfs-api-render-md                  │
+│   Commands: chatfs-api-*                │
+│   Modules: chatfs.layer.api.*           │
 └─────────────────┬───────────────────────┘
                   │ Uses
 ┌─────────────────▼───────────────────────┐
 │        Shared Libraries                 │
-│  lib/chatfs/api.py     (API client)     │
-│  lib/chatfs/cache.py   (Filesystem)     │
-│  lib/chatfs/models.py  (Data structs)   │
+│  chatfs.client   (API wrapper)          │
+│  chatfs.models   (Data structures)      │
 └─────────────────┬───────────────────────┘
                   │ Uses
 ┌─────────────────▼───────────────────────┐
@@ -63,57 +85,82 @@ composable JSONL-based plumbing tools.
 └─────────────────────────────────────────┘
 ```
 
+**Layer responsibilities:**
+
+- **API Layer (M1):** Stateless JSONL tools, pure API calls, no filesystem interaction
+- **Cache/FS Layer (M2):** Filesystem persistence, staleness checking, lazy loading
+- **CLI Layer (M3):** Human-friendly commands, colors, progress bars, interactive features
+
+**Why three layers?**
+- Each layer independently useful (can use API layer directly with jq)
+- Clear milestone boundaries (M1→M2→M3)
+- Allows users to choose abstraction level based on needs
+
 ## Components
 
-### Plumbing Tools
+### API Layer (M1 - Current)
 
-**Responsibility:** Core data operations via JSONL stdin/stdout
+**Milestone:** M1
+**Commands:** `chatfs-api-*`
+**Modules:** `chatfs.layer.api.*`
+
+**Responsibility:** Stateless JSONL tools that call claude.ai API directly. No caching, no filesystem writes.
 
 **Interface:**
 
 ```bash
 # Read JSONL from stdin, write JSONL to stdout
-echo '{"uuid":"org-123"}' | chatfs-list-convos | jq
+echo '{"uuid":"org-123"}' | chatfs-api-list-convos | jq
 ```
 
 **Tools:**
 
-**chatfs-list-orgs**
+**chatfs-api-list-orgs** (`chatfs.layer.api.list_orgs`)
 
 - Input: None required (can accept `{}` empty object on stdin, but ignores it; starting point for pipelines)
 - Output: One JSON object per org per line
 - Schema: `{uuid, name, created_at, ...}`
+- Behavior: Calls API every time (no caching)
 
-**chatfs-list-convos**
+**chatfs-api-list-convos** (`chatfs.layer.api.list_convos`)
 
 - Input: Org record `{uuid, ...}`
 - Output: One JSON object per conversation per line
 - Schema: `{uuid, title, created_at, updated_at, org_uuid, ...}`
+- Behavior: Calls API every time (no caching)
 
-**chatfs-get-convo**
+**chatfs-api-get-convo** (`chatfs.layer.api.get_convo`)
 
 - Input: Conversation record `{uuid, ...}`
 - Output: One JSON object per message per line
 - Schema: `{type: "human"|"assistant", text, created_at, ...}`
+- Behavior: Calls API every time (no caching)
 
-**chatfs-render-md**
+**chatfs-api-render-md** (`chatfs.layer.api.render_md`)
 
 - Input: Message records (JSONL)
 - Output: Markdown with YAML frontmatter (NOT JSONL)
 - Format: See [markdown-format]
+- Behavior: Pure transformation, no API calls
 
-See [adding-plumbing-tool] for implementation guide.
+**Contract:**
+- Read JSONL from stdin (except list-orgs)
+- Write JSONL to stdout (except render-md → markdown)
+- Log errors to stderr
+- Exit 0 on success
+- No terminal dependencies (no colors, progress bars)
+- No filesystem interaction (stateless)
 
-### Shared Libraries
+### Shared Libraries (M1)
 
-**lib/chatfs/api.py** - API Client Wrapper
+**chatfs.client** - API Client Wrapper
 
 **Responsibility:** Wrap unofficial-claude-api, handle auth, normalize responses
 
 **Interface:**
 
 ```python
-from chatfs.api import Client
+from chatfs.client import Client
 
 client = Client()  # Uses CLAUDE_SESSION_KEY from env
 orgs = client.list_organizations()
@@ -129,32 +176,7 @@ messages = client.get_conversation(convo_uuid="...")
 
 See [provider-interface] for full API documentation.
 
-**lib/chatfs/cache.py** - Filesystem Cache
-
-**Responsibility:** Manage filesystem cache, track staleness via mtime, lazy
-creation
-
-**Interface:**
-
-```python
-from chatfs.cache import Cache
-
-cache = Cache(base_path="./chatfs")
-cache.ensure_org_dir(org_name="Buck Evan")
-cache.write_conversation(path="...", messages=[...])
-cache.is_stale(path="...", remote_updated_at="...")
-```
-
-**Key methods:**
-
-- `ensure_dir(path: str) → None` - Create directory if not exists
-- `write_conversation(path: str, messages: List[Message]) → None`
-- `is_stale(path: str, remote_updated_at: datetime) → bool`
-- `create_stub(path: str, mtime: datetime) → None` - Empty file with mtime
-
-See [cache-layer] for staleness logic.
-
-**lib/chatfs/models.py** - Data Structures
+**chatfs.models** - Data Structures
 
 **Responsibility:** Type definitions for org, conversation, message
 
@@ -183,9 +205,52 @@ class Message:
     uuid: str
 ```
 
-### Porcelain (Future)
+### Cache/FS Layer (M2 - Future)
 
-**Responsibility:** Human-friendly CLI wrappers
+**Milestone:** M2
+**Commands:** `chatfs-cache-*`
+**Modules:** `chatfs.layer.cache.*`
+
+**Responsibility:** Filesystem persistence, staleness checking, lazy directory creation
+
+**Examples:**
+
+```bash
+# Same interface as API layer, but with caching
+chatfs-cache-list-orgs | jq
+chatfs-cache-list-convos | jq
+chatfs-cache-get-convo | chatfs-api-render-md > conversation.md
+```
+
+**Implementation:** Wraps API layer tools, adds:
+
+- Filesystem writes to `./chatfs/` directory structure
+- Staleness checking via mtime comparison
+- Lazy directory/file creation
+- Cache invalidation based on `updated_at` fields
+
+**Shared library:**
+
+**chatfs.cache** - Filesystem Cache Manager
+
+```python
+from chatfs.cache import Cache
+
+cache = Cache(base_path="./chatfs")
+cache.ensure_org_dir(org_name="Buck Evan")
+cache.write_conversation(path="...", messages=[...])
+cache.is_stale(path="...", remote_updated_at="...")
+```
+
+See [cache-layer] for staleness logic and directory structure.
+
+### CLI Layer (M3 - Future)
+
+**Milestone:** M3
+**Commands:** `chatfs-*` (no prefix)
+**Modules:** `chatfs.layer.cli.*`
+
+**Responsibility:** Human-friendly CLI wrappers with rich UX
 
 **Examples:**
 
@@ -195,86 +260,83 @@ chatfs cat "path/to/convo.md"       # Read conversation
 chatfs sync "Buck Evan/2025-10"     # Force refresh
 ```
 
-**Implementation:** Uses plumbing tools under the hood, adds:
+**Implementation:** Wraps Cache layer tools, adds:
 
-- Path parsing (org name → org UUID)
-- Progress bars
-- Colors/formatting
-- Error messages
+- Path parsing (org name → org UUID lookup)
+- Progress bars for slow operations
+- Colors/formatting for terminal output
+- Friendly error messages
+- Interactive prompts
 
 See [porcelain-layer] for UX design.
 
 ## Data Flow
 
-### List Organizations
+### M1: API Layer (Stateless)
+
+**List Organizations**
 
 ```
-chatfs-list-orgs
+chatfs-api-list-orgs
   ↓
-Check cache: lib/chatfs/cache.Cache.is_stale(org_list)
-  ↓ (if stale or missing)
-lib/chatfs/api.Client.list_organizations()
+chatfs.client.Client.list_organizations()
   ↓
 unofficial-claude-api HTTP request
   ↓
 claude.ai API response
   ↓
-lib/chatfs/models.Org objects
+chatfs.models.Org objects
   ↓
-lib/chatfs/cache.Cache.write_org_list(orgs)
+Serialize to JSONL stdout
   ↓
-JSONL output: {"uuid": "...", "name": "Buck Evan", ...}
+Output: {"uuid": "...", "name": "Buck Evan", ...}
 ```
 
-### List Conversations for Org
+**List Conversations for Org**
 
 ```
-echo '{"uuid":"org-123"}' | chatfs-list-convos
+echo '{"uuid":"org-123"}' | chatfs-api-list-convos
   ↓
 Parse JSONL stdin → org_uuid
   ↓
-Check cache: lib/chatfs/cache.Cache.is_stale(convo_list, org_uuid)
-  ↓ (if stale or missing)
-lib/chatfs/api.Client.list_conversations(org_uuid)
+chatfs.client.Client.list_conversations(org_uuid)
   ↓
 unofficial-claude-api HTTP request
   ↓
 claude.ai API response
   ↓
-lib/chatfs/models.Conversation objects
+chatfs.models.Conversation objects
   ↓
-lib/chatfs/cache.Cache.write_convo_list(org_uuid, convos)
+Serialize to JSONL stdout
   ↓
-JSONL output: {"uuid": "...", "title": "...", "created_at": "...", ...}
+Output: {"uuid": "...", "title": "...", "created_at": "...", ...}
 ```
 
-### Get Conversation Messages
+**Get Conversation Messages**
 
 ```
-echo '{"uuid":"convo-456"}' | chatfs-get-convo
+echo '{"uuid":"convo-456"}' | chatfs-api-get-convo
   ↓
-Parse JSONL stdin → convo_uuid, updated_at
+Parse JSONL stdin → convo_uuid
   ↓
-Check cache: lib/chatfs/cache.Cache.is_stale(convo_path, updated_at)
-  ↓ (if stale or missing)
-lib/chatfs/api.Client.get_conversation(convo_uuid)
+chatfs.client.Client.get_conversation(convo_uuid)
   ↓
 unofficial-claude-api HTTP request
   ↓
 claude.ai API response
   ↓
-lib/chatfs/models.Message objects
+chatfs.models.Message objects
   ↓
-lib/chatfs/cache.Cache.write_conversation(path, messages, mtime=updated_at)
+Serialize to JSONL stdout
   ↓
-JSONL output: {"type": "human", "text": "...", ...}
-                {"type": "assistant", "text": "...", ...}
+Output: {"type": "human", "text": "...", ...}
+        {"type": "assistant", "text": "...", ...}
 ```
 
-### Render to Markdown
+**Render to Markdown**
 
 ```
-chatfs-get-convo | chatfs-render-md
+chatfs-api-get-convo | chatfs-api-render-md
   ↓
 Parse JSONL stdin → List[Message]
   ↓
@@ -292,6 +354,26 @@ created_at: ...
 
 **Claude:** Answer here
 ```
+
+### M2: Cache/FS Layer (With Persistence)
+
+**List Organizations (Cached)**
+
+```
+chatfs-cache-list-orgs
+  ↓
+chatfs.cache.Cache.is_stale("./chatfs/orgs.jsonl")
+  ↓ (if stale or missing)
+Call: chatfs-api-list-orgs (subprocess)
+  ↓
+Parse output, write to ./chatfs/orgs.jsonl
+  ↓
+Set mtime to current time
+  ↓
+Output cached JSONL
+```
+
+Similar pattern for `chatfs-cache-list-convos` and `chatfs-cache-get-convo`: check cache, call API layer if stale, write to filesystem, output JSONL.
 
 ## Data Structures
 
@@ -346,7 +428,11 @@ created_at: ...
 }
 ```
 
-## Filesystem Cache Structure
+## Filesystem Cache Structure (M2 - Future)
+
+**Milestone:** M2 (not implemented in M1)
+
+The Cache/FS layer will introduce persistent filesystem storage:
 
 ```
 ./chatfs/
@@ -376,45 +462,75 @@ created_at: ...
 
 - File mtime = conversation.updated_at from API
 - If `file.mtime < api.updated_at`, file is stale
-- `chatfs-cat` checks staleness before reading
-- Regular `cat` bypasses check (shows cached data)
+- `chatfs-cache-get-convo` checks staleness, re-fetches if needed
+- Direct filesystem reads (`cat`, Obsidian) bypass staleness check
 
-See [cache-layer] for details.
+See [cache-layer] for implementation details.
 
 ## Testing
 
-See [../../HACKING.md#running-tests] for testing approach and examples.
+**M1 API Layer testing:**
+
+```bash
+# Test individual tools
+echo '{}' | chatfs-api-list-orgs | jq
+
+# Test pipeline composition
+chatfs-api-list-orgs | head -n 1 | \
+  chatfs-api-list-convos | head -n 5 | \
+  chatfs-api-get-convo | \
+  chatfs-api-render-md > output.md
+```
+
+See [../../HACKING.md#running-tests] for full testing guide.
 
 ## Future Considerations
 
-### Capnproto Migration
+### M2: Cache/FS Layer
+
+Add `chatfs-cache-*` commands that wrap `chatfs-api-*` with:
+- Filesystem persistence to `./chatfs/` directory
+- Staleness checking via mtime
+- Lazy directory creation
+- Cache invalidation
+
+See [cache-layer] for design details.
+
+### M3: CLI Layer
+
+Add `chatfs` commands with human-friendly UX:
+- Path-based interface (no UUIDs)
+- Progress bars, colors, interactive prompts
+- Error recovery and helpful messages
+
+See [porcelain-layer] for UX design.
+
+### M4+: Advanced Features
+
+**Capnproto Migration**
 
 When capnshell exists:
-
 1. Define capnproto schemas for Org, Conversation, Message
-2. Swap JSONL serialization for capnproto in plumbing tools
-3. Porcelain layer unchanged (abstraction holds)
+2. Swap JSONL serialization for capnproto in API layer tools
+3. Cache and CLI layers unchanged (abstraction holds)
 
-### Write Operations
+**Write Operations**
 
-Not yet designed (see
-[../../design-incubators/fork-representation/]):
-
+Not yet designed (see [../../design-incubators/fork-representation/]):
 - Append to conversation
 - Fork conversation
 - Amend messages
 
-Blocked on fork representation decision.
+Blocked on fork representation decision (M3+ scope).
 
-### Multi-Provider Support
+**Multi-Provider Support**
 
 ChatGPT, Gemini support:
-
-- Add `lib/chatfs/providers/` with provider-specific API clients
-- Plumbing tools gain `--provider` flag
+- Add `chatfs.providers.*` with provider-specific API clients
+- API layer tools gain `--provider` flag
 - Cache structure: `./chatfs/chatgpt/`, `./chatfs/gemini/`
 
-See [development-plan.md#milestone-2].
+See [development-plan.md] for milestone details.
 
 ## Related Documents
 
@@ -423,7 +539,6 @@ See [development-plan.md#milestone-2].
 - [technical-design/] - Detailed subsystem documentation
 
 [markdown-format]: technical-design/markdown-format.md
-[adding-plumbing-tool]: ../../HACKING.md#adding-a-new-plumbing-tool
 [provider-interface]: technical-design/provider-interface.md
 [cache-layer]: technical-design/cache-layer.md
 [porcelain-layer]: technical-design/porcelain-layer.md

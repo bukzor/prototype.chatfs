@@ -6,24 +6,56 @@ Claude.ai conversations support forking: at any message, you can branch to
 explore alternative directions. Users often maintain 2-3 active forks per
 conversation, switching between them for different perspectives.
 
-**Challenge:** Represent this branching structure in a filesystem that:
+**Challenge:** Represent this branching structure across three layers of abstraction:
 
-- Supports lazy loading (don't fetch until accessed)
-- Feels natural for CLI tools (grep, cat, ls)
-- Preserves fork relationships and navigation
-- Enables future write operations (append, fork, amend)
+1. **What does the Claude API return?** (M1-CLAUDE: claude-native layer)
+2. **What should our normalized API provide?** (M2-API: standardized layer)
+3. **How do we represent forks on disk?** (M3-CACHE: filesystem layer)
 
-## What We Need to Learn First
+Each question builds on the previous answer. We can't normalize what we don't understand, and we can't persist what we haven't normalized.
 
-**Critical unknowns about Claude.ai fork API:**
+## Three-Phase Investigation
 
+### Phase 1: Claude API Investigation (M1-CLAUDE)
+
+**Question:** What does claude.ai actually return for forked conversations?
+
+**Critical unknowns:**
 1. How does the API represent forks? (parent_uuid? fork_point? ancestry chain?)
 2. What's in the conversation metadata for forked conversations?
 3. Can we list all forks from a parent conversation?
 4. How are forks identified? (separate UUID? same UUID + branch ID?)
+5. Do forked conversations appear in `list_conversations()`?
 
-**Action:** Investigate API responses for forked conversations before committing
-to filesystem design.
+**Action:** Investigate API responses for actual forked conversations (user has essential content on multiple forks)
+
+**Deliverable:** Document exact API behavior in `api-findings.md`
+
+### Phase 2: Normalized Schema Design (M2-API)
+
+**Question:** What should our provider-agnostic API provide?
+
+**Depends on:** Phase 1 findings + ChatGPT/other provider research
+
+**Critical unknowns:**
+1. What fork metadata is common across providers (Claude, ChatGPT, Linear)?
+2. How do we represent provider-specific fork features in normalized schema?
+3. What fork operations need to work across all providers?
+
+**Deliverable:** Normalized JSONL schema for forks that works across providers
+
+### Phase 3: Filesystem Representation (M3-CACHE)
+
+**Question:** How do we represent forks on disk?
+
+**Depends on:** Phase 2 normalized schema
+
+**Critical unknowns:**
+1. Flat naming? Nested directories? Git-like refs? (see candidate approaches below)
+2. How to make fork navigation obvious with standard Unix tools?
+3. How to support lazy loading while preserving fork relationships?
+
+**Deliverable:** `DECISION.md` with chosen filesystem layout
 
 ## Design Constraints
 
@@ -158,12 +190,21 @@ to filesystem design.
 
 ## Next Steps
 
-1. **API Investigation:** Use existing unofficial-claude-api to inspect forked
-   conversation responses
-2. **Create test data:** Find or create forked conversations on claude.ai
-3. **Document API structure:** Write down exact JSON fields for forks
-4. **Prototype approaches:** Implement Option A and Option B with real data
-5. **User testing:** Which feels better for grep/navigation?
+**Immediate (M1-CLAUDE):**
+1. Use existing unofficial-claude-api to inspect forked conversation responses
+2. User has forked conversations with essential content - investigate those
+3. Document exact JSON fields and relationships in `api-findings.md`
+4. Implement M1-CLAUDE layer that outputs whatever Claude returns
+
+**Later (M2-API):**
+5. Research how other providers (ChatGPT, Linear) handle similar concepts
+6. Design normalized schema that accommodates all providers
+7. See separate incubator: `provider-abstraction-strategy/`
+
+**Much Later (M3-CACHE):**
+8. Prototype filesystem approaches (Option A, B, C) with normalized schema
+9. User testing: which feels better for grep/navigation?
+10. Write `DECISION.md` with chosen approach
 
 ## Success Criteria
 

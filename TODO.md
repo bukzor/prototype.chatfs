@@ -137,15 +137,175 @@ All topics have natural homes in our doc structure:
   - Validate: Is the rationale for each decision sound?
   - Correct: Fix weak reasoning, add missing tradeoffs
 
-- [ ] **System Architecture** (`technical-design.md`)
-  - Discussion: What are the actual components? How do they interact?
-  - Validate: Does the architecture section match reality?
-  - Correct: Fix component descriptions, data flow inaccuracies
+- [x] **System Architecture** (`technical-design.md`)
+  - Discussion: Defined three-layer architecture, then evolved to four-layer (native/vfs/cache/cli)
+  - Validate: Corrected architecture to show layered structure
+  - Correct: Updated component descriptions, data flows (will complete in Phase 1.25)
 
-- [ ] **Open Questions** (`design-incubators/README.md`)
-  - Discussion: What are the actual unsolved problems?
-  - Validate: Is fork-representation correctly characterized?
-  - Correct: Add missing unknowns, remove resolved questions
+- [x] **Open Questions** (`design-incubators/README.md`)
+  - Discussion: Fork representation splits into 3 phases (M1/M2/M3), new provider-abstraction question
+  - Validate: Current docs conflate 3 distinct questions
+  - Correct: Captured understanding in `docs/dev/open-questions-revision-notes.md` for integration after Phase 1.25
+
+## Phase 1.25: Architecture Evolution (3 layers → 4 layers)
+
+**Goal:** Update architecture from 3 layers to 4 layers with M#-TOKEN milestone format
+
+**Why now:** Locks in architecture before terminology cleanup, minimizes total work
+
+**Rationale:** Can't design good abstraction (M2-VFS) without understanding concrete case (M1-CLAUDE). Inserting claude-native layer lets us learn what the API does before deciding how to normalize it.
+
+### Four-Layer Architecture Specification
+
+**Milestones:**
+- **M0-DOCS:** Documentation phase (current)
+- **M1-CLAUDE:** Claude-native layer - direct API wrapper, minimal abstraction
+- **M2-VFS:** Virtual filesystem layer - normalized view across providers
+- **M3-CACHE:** Cache/filesystem layer - persistent storage
+- **M4-CLI:** CLI layer - human-friendly UX
+
+**Directory structure:**
+```
+lib/chatfs/layer/
+├── native/
+│   └── claude/      # M1-CLAUDE
+├── vfs/             # M2-VFS
+├── cache/           # M3-CACHE
+└── cli/             # M4-CLI
+```
+
+**Command naming conventions:**
+- M1-CLAUDE: `chatfs-claude-list-orgs`, `chatfs-claude-list-convos`, `chatfs-claude-get-convo`, `chatfs-claude-render-md`
+- M2-VFS: `chatfs-vfs-list-orgs`, `chatfs-vfs-list-convos`, `chatfs-vfs-get-convo`, `chatfs-vfs-render-md`
+- M3-CACHE: `chatfs-cache-list-orgs`, `chatfs-cache-list-convos`, `chatfs-cache-get-convo`, `chatfs-cache-render-md`
+- M4-CLI: `chatfs ls`, `chatfs cat`, `chatfs sync` (human-friendly, no JSONL)
+
+**Layer responsibilities:**
+- **M1-CLAUDE:** Stateless, outputs whatever claude.ai API returns as JSONL. No normalization, no decisions.
+- **M2-VFS:** Normalized JSONL schema across providers. Takes `--provider` flag. No persistence.
+- **M3-CACHE:** Wraps M2-VFS, adds filesystem writes and staleness checking.
+- **M4-CLI:** Wraps M3-CACHE, adds colors, progress bars, path-based interface.
+
+**Shared libraries:**
+- `chatfs.client` - Wraps unofficial-claude-api (used by M1-CLAUDE)
+- `chatfs.models` - Normalized data models (defined at M2-VFS layer)
+- `chatfs.cache` - Filesystem cache manager (M3-CACHE)
+
+### Step 1: Update core architecture docs with 4-layer spec
+
+- [ ] **technical-design.md** - REWRITE architecture section:
+  - Replace 3-layer diagram (API/Cache/CLI) with 4-layer diagram (native/vfs/cache/cli)
+  - Update "Components" section to show all 4 layers with M#-TOKEN milestones
+  - Update "Data Flow" to show M1-CLAUDE (native) → M2-VFS → M3-CACHE → M4-CLI
+  - Update all command examples: chatfs-api-* → chatfs-vfs-*, add chatfs-claude-* examples
+  - Update shared libraries section: api.py → client.py, clarify models defined at M2-VFS
+
+- [ ] **development-plan.md** - Insert M1-CLAUDE milestone:
+  - Add new M1-CLAUDE section BEFORE current M1 content
+  - M1-CLAUDE scope: claude-native layer, investigate fork API, output raw JSONL
+  - Renumber subsequent milestones in this file only (reference for next step)
+
+- [ ] **STATUS.md** - Update current milestone reference if needed
+
+### Step 2: Milestone renaming across all docs (work backwards M3→M2→M1→M0)
+
+**Important:** Work backwards to avoid overwriting. After each step, verify the change worked.
+
+- [ ] **Find M3 references:** `git grep -l 'M3[^-]' docs/`
+  - Update each file: `M3` → `M4-CLI`
+  - Verify: `git grep 'M3[^-]' docs/` should show nothing (except devlogs)
+
+- [ ] **Find M2 references:** `git grep -l 'M2[^-]' docs/`
+  - Update each file: `M2` → `M3-CACHE`
+  - Verify: `git grep 'M2[^-]' docs/` should show nothing (except devlogs)
+
+- [ ] **Find M1 references:** `git grep -l 'M1[^-]' docs/`
+  - Update each file: `M1` → `M2-VFS`
+  - Context: Old M1 was "API layer", now called "VFS layer"
+  - Verify: `git grep 'M1[^-]' docs/` should show nothing (except devlogs)
+
+- [ ] **Find M0 references:** `git grep -l 'M0[^-]' docs/`
+  - Update each file: `M0` → `M0-DOCS`
+  - Verify: `git grep 'M0[^-]' docs/` should show nothing (except devlogs)
+
+- [ ] **Final verification:** Run `git grep -E 'M[0-9]([^-]|$)' docs/`
+  - Should find nothing except devlogs (historical refs are OK)
+  - If found elsewhere, update those files
+
+### Step 3: Add M1-CLAUDE references where needed
+
+- [ ] **technical-design.md** - Already updated in Step 1
+- [ ] **development-plan.md** - Already updated in Step 1
+- [ ] **CLAUDE.md** - Add M1-CLAUDE quick reference examples
+- [ ] **README.md** - Update architecture overview to mention M1-CLAUDE
+
+**Deliverable:** technical-design.md shows 4 layers with M#-TOKEN milestones, ready for Phase 1.5 terminology cleanup
+
+## Phase 1.4: Integrate Open Questions Understanding
+
+**Goal:** Apply insights from Phase 1 Open Questions discussion to design-incubators/
+
+**Why now:** Architecture is locked (4 layers), now we can map open questions to correct milestones
+
+**Source:** `docs/dev/open-questions-revision-notes.md` (created during Phase 1)
+
+### Updates needed:
+- [ ] **design-incubators/fork-representation/CLAUDE.md** - Add 3-phase structure (M1/M2/M3 split)
+- [ ] **design-incubators/fork-representation/README.md** - Update with milestone mapping
+- [ ] **Create:** `design-incubators/fork-representation/api-investigation.md` template for M1-CLAUDE
+- [ ] **Create:** `design-incubators/provider-abstraction/` new incubator
+- [ ] **Create:** `design-incubators/provider-abstraction/CLAUDE.md` - define the question
+- [ ] **Create:** `design-incubators/provider-abstraction/README.md` - investigation workflow
+- [ ] **Update:** `design-incubators/README.md` - add note about multi-phase incubators
+- [ ] **Delete:** `docs/dev/open-questions-revision-notes.md` (integrated)
+
+**Deliverable:** design-incubators/ reflects split fork question and new provider abstraction question
+
+## Phase 1.5: Terminology Cleanup (Plumbing/Porcelain → Layer Structure)
+
+**Goal:** Update all docs and code to use new four-layer terminology consistently
+
+**Why now:** Completing this before Phase 2 avoids double-work on subdocs that reference old terminology
+
+### Directory structure changes:
+- [ ] Create `lib/chatfs/layer/native/` directory
+- [ ] Create `lib/chatfs/layer/native/claude/` (M1-CLAUDE - new)
+- [ ] `lib/chatfs/plumbing/` → `lib/chatfs/layer/vfs/` (M2-VFS - renamed from old M1 "api")
+- [ ] Create `lib/chatfs/layer/cache/` stub (M3-CACHE placeholder)
+- [ ] `lib/chatfs/porcelain/` → `lib/chatfs/layer/cli/` (M4-CLI - renamed from old M3)
+- [ ] Update all imports in existing code
+
+### Command naming updates:
+- [ ] Update pyproject.toml entry points:
+  - New: `chatfs-claude-*` commands (M1-CLAUDE)
+  - Existing: rename to `chatfs-vfs-*` (M2-VFS, was called "api" or "plumbing")
+  - Future: `chatfs-cache-*` (M3-CACHE)
+  - Future: `chatfs <subcommand>` (M4-CLI, no prefix)
+- [ ] Update all command examples in docs
+
+### Documentation updates:
+- [ ] **CLAUDE.md** - Update to 4-layer architecture (native/vfs/cache/cli)
+- [ ] **HACKING.md** - Update directory structure, command examples for 4 layers
+- [ ] **README.md** - Update architecture description to 4 layers
+- [ ] **design-rationale.md** - Add historical note about plumbing/porcelain → layered architecture
+- [ ] **design-rationale/plumbing-porcelain-split.md** - Rename to `layered-architecture.md` + update for 4 layers
+- [ ] **development-plan.md** - Already updated in Phase 1.25
+- [ ] **development-plan/milestone-1-plumbing.md** - Rename to `milestone-1-claude-native.md`
+- [ ] **technical-design/porcelain-layer.md** - Rename to `cli-layer.md`
+- [ ] **technical-design/vfs-layer.md** - Create for M2-VFS
+- [ ] **lib/chatfs/layer/native/claude/README.md** - Create for M1-CLAUDE
+- [ ] **lib/chatfs/layer/vfs/README.md** - Move from plumbing/ and update
+- [ ] **lib/chatfs/layer/cache/README.md** - Create stub for M3-CACHE
+- [ ] **lib/chatfs/layer/cli/README.md** - Move from porcelain/ and update
+- [ ] **lib/chatfs/__init__.py** - Update docstrings for 4 layers
+- [ ] **lib/chatfs/layer/native/claude/__init__.py** - Create
+- [ ] **lib/chatfs/layer/vfs/__init__.py** - Move from plumbing/ and update
+- [ ] **lib/chatfs/layer/cli/__init__.py** - Move from porcelain/ and update
+- [ ] All devlog references (add notes where explaining historical decision)
+
+### Verification:
+- [ ] Run `git grep -E 'plumbing|porcelain'` to find any missed references
+- [ ] Update any remaining stale references
 
 ## Phase 2: Validate Level 2 (Elaborate Foundations - Subdirectories)
 
