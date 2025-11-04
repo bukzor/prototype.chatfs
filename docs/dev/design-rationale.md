@@ -30,14 +30,20 @@ The data is locked in browser tabs, inaccessible to the Unix toolchain.
 
 **What's needed:** Conversations as files in a filesystem, with lazy loading and standard tool compatibility.
 
-chatfs solves this by treating chat history as a lazily-loaded filesystem using composable JSONL plumbing tools.
+chatfs solves this by treating chat history as a lazily-loaded filesystem using composable JSONL layer tools.
 
 ## Core Decisions
 
-### Plumbing/Porcelain Split
+### Layered Architecture (Four Layers)
 
-**Decision:** Build as separate plumbing (JSONL tools) and porcelain (UX
-wrappers) layers
+**Decision:** Build as four-layer architecture: native → vfs → cache → cli
+
+**Layers:**
+
+- **M1-CLAUDE (native):** Direct API wrapper, outputs raw provider data as JSONL
+- **M2-VFS (normalized):** Provider-agnostic JSONL schema across providers
+- **M3-CACHE (persistence):** Filesystem storage with staleness tracking
+- **M4-CLI (UX):** Human-friendly commands with colors, progress bars
 
 **Alternatives Considered:**
 
@@ -47,12 +53,12 @@ wrappers) layers
   - Cons: Harder to compose with other tools, requires refactor for capnshell,
     doesn't inform future tool design
 
-- **Option B: Composable plumbing from day one** (separate JSONL-based programs)
+- **Option B: Composable JSONL layers** (separate programs at each abstraction level)
   - Pros: Works with jq/Unix tools immediately, cheap capnshell adapter, natural
-    integration with future AI tools, teaches what compositions matter
+    integration with future AI tools, learn-then-abstract approach
   - Cons: More programs to write, IPC overhead (minor)
 
-**Rationale:** Chose Option B because:
+**Rationale:** Chose Option B (evolved to 4 layers) because:
 
 1. **Useful immediately** - Composes with existing Unix tools (jq, grep, etc.)
 2. **Cheap capnshell migration** - Just swap serialization format (JSONL →
@@ -70,11 +76,13 @@ wrappers) layers
 
 **Impact:** Affects all tool design, testing strategy, documentation structure
 
-See [plumbing-porcelain-split] for detailed analysis.
+**Evolution:** Originally designed as plumbing/porcelain split (2 layers), evolved to 4 layers to support learn-then-abstract approach (build M1-CLAUDE before designing M2-VFS normalization).
+
+See [layered-architecture] for detailed analysis.
 
 ### JSONL for Data Interchange
 
-**Decision:** Use JSONL (JSON Lines) for stdin/stdout between plumbing tools
+**Decision:** Use JSONL (JSON Lines) for stdin/stdout between JSONL layers (M1-CLAUDE, M2-VFS, M3-CACHE)
 
 **Alternatives Considered:**
 
@@ -102,7 +110,7 @@ See [plumbing-porcelain-split] for detailed analysis.
 2. **Unix composability** - Works with jq, grep, head, tail now
 3. **Simple testing** - `echo '{"test":"data"}' | tool | jq`
 4. **Easy migration path** - When capnshell exists, swap JSONL → capnproto in
-   plumbing tools
+   JSONL layer tools (M1-CLAUDE, M2-VFS, M3-CACHE)
 5. **Deferred commitment** - Don't need capnshell working to make progress
 
 **Tradeoffs:**
@@ -111,7 +119,7 @@ See [plumbing-porcelain-split] for detailed analysis.
   validation yet)
 - **Gained:** Works today with existing tools, incremental migration path
 
-**Impact:** All plumbing tool I/O, testing strategy, future capnshell
+**Impact:** All JSONL layer I/O (M1-CLAUDE, M2-VFS, M3-CACHE), testing strategy, future capnshell
 integration
 
 ### Lazy Filesystem Model
@@ -216,7 +224,7 @@ See [unofficial-api] for ecosystem history and alternatives.
 1. **Multi-session project** - Will take weeks/months, documentation maintains
    continuity
 2. **LLM collaboration** - Claude needs explicit context across sessions
-3. **Design exploration** - Fork representation, porcelain UX, capnshell
+3. **Design exploration** - Fork representation, M4-CLI UX, capnshell
    integration need thought
 4. **Cheaper to change** - Easier to revise docs than refactor code
 
@@ -233,7 +241,7 @@ See [unofficial-api] for ecosystem history and alternatives.
 - [development-plan.md] - How we build it (milestones based on these decisions)
 - [design-incubators] - Unsolved problems being explored
 
-[plumbing-porcelain-split]: design-rationale/plumbing-porcelain-split.md
+[layered-architecture]: design-rationale/layered-architecture.md
 [lazy-filesystem]: design-rationale/lazy-filesystem.md
 [unofficial-api]: design-rationale/unofficial-api.md
 [technical-design.md]: technical-design.md
