@@ -268,40 +268,42 @@ lib/chatfs/layer/
 **Why now:** Completing this before Phase 2 avoids double-work on subdocs that reference old terminology
 
 ### Directory structure changes:
-- [ ] Create `lib/chatfs/layer/native/` directory
-- [ ] Create `lib/chatfs/layer/native/claude/` (M1-CLAUDE - new)
-- [ ] `lib/chatfs/plumbing/` → `lib/chatfs/layer/vfs/` (M2-VFS - renamed from old M1 "api")
-- [ ] Create `lib/chatfs/layer/cache/` stub (M3-CACHE placeholder)
-- [ ] `lib/chatfs/porcelain/` → `lib/chatfs/layer/cli/` (M4-CLI - renamed from old M3)
-- [ ] Update all imports in existing code
+- [x] Create `lib/chatfs/layer/native/` directory
+- [x] Create `lib/chatfs/layer/native/claude/` (M1-CLAUDE - new)
+- [x] `lib/chatfs/plumbing/` → `lib/chatfs/layer/vfs/` (M2-VFS - renamed from old M1 "api")
+- [x] Create `lib/chatfs/layer/cache/` stub (M3-CACHE placeholder)
+- [x] `lib/chatfs/porcelain/` → `lib/chatfs/layer/cli/` (M4-CLI - renamed from old M3)
+- [ ] Update all imports in existing code (none exist yet)
 
 ### Command naming updates:
-- [ ] Update pyproject.toml entry points:
+- [x] Update pyproject.toml entry points:
   - New: `chatfs-claude-*` commands (M1-CLAUDE)
   - Existing: rename to `chatfs-vfs-*` (M2-VFS, was called "api" or "plumbing")
   - Future: `chatfs-cache-*` (M3-CACHE)
   - Future: `chatfs <subcommand>` (M4-CLI, no prefix)
-- [ ] Update all command examples in docs
+- [ ] Update all command examples in docs (partially done)
 
 ### Documentation updates:
-- [ ] **CLAUDE.md** - Update to 4-layer architecture (native/vfs/cache/cli)
+- [x] **CLAUDE.md** - Update to 4-layer architecture (native/vfs/cache/cli)
 - [ ] **HACKING.md** - Update directory structure, command examples for 4 layers
-- [ ] **README.md** - Update architecture description to 4 layers
-- [ ] **design-rationale.md** - Add historical note about plumbing/porcelain → layered architecture
-- [ ] **design-rationale/plumbing-porcelain-split.md** - Rename to `layered-architecture.md` + update for 4 layers
-- [ ] **development-plan.md** - Already updated in Phase 1.25
+- [x] **README.md** - Update architecture description to 4 layers (done in Phase 1.25)
+- [x] **design-rationale.md** - Add historical note about plumbing/porcelain → layered architecture
+- [x] **design-rationale/plumbing-porcelain-split.md** - Rename to `layered-architecture.md` + update for 4 layers (renamed, content update pending)
+- [x] **development-plan.md** - Already updated in Phase 1.25
 - [ ] **development-plan/milestone-1-plumbing.md** - Rename to `milestone-1-claude-native.md`
-- [ ] **technical-design/porcelain-layer.md** - Rename to `cli-layer.md`
+- [x] **technical-design/porcelain-layer.md** - Rename to `cli-layer.md` (renamed, content update pending)
+- [ ] **technical-design.md** - Update with 4-layer terminology
 - [ ] **technical-design/vfs-layer.md** - Create for M2-VFS
-- [ ] **lib/chatfs/layer/native/claude/README.md** - Create for M1-CLAUDE
-- [ ] **lib/chatfs/layer/vfs/README.md** - Move from plumbing/ and update
-- [ ] **lib/chatfs/layer/cache/README.md** - Create stub for M3-CACHE
-- [ ] **lib/chatfs/layer/cli/README.md** - Move from porcelain/ and update
+- [x] **lib/chatfs/layer/native/claude/__init__.py** - Create
+- [x] **lib/chatfs/layer/vfs/README.md** - Move from plumbing/ and update
+- [x] **lib/chatfs/layer/cache/__init__.py** - Create stub
+- [x] **lib/chatfs/layer/cli/README.md** - Move from porcelain/ and update
 - [ ] **lib/chatfs/__init__.py** - Update docstrings for 4 layers
-- [ ] **lib/chatfs/layer/native/claude/__init__.py** - Create
-- [ ] **lib/chatfs/layer/vfs/__init__.py** - Move from plumbing/ and update
-- [ ] **lib/chatfs/layer/cli/__init__.py** - Move from porcelain/ and update
-- [ ] All devlog references (add notes where explaining historical decision)
+- [x] **lib/chatfs/layer/__init__.py** - Create
+- [x] **lib/chatfs/layer/native/__init__.py** - Create
+- [x] **lib/chatfs/layer/vfs/__init__.py** - Move from plumbing/ and update (moved, no edits needed)
+- [x] **lib/chatfs/layer/cli/__init__.py** - Move from porcelain/ and update (moved, no edits needed)
+- [ ] All devlog references (skip - historical)
 
 ### Verification:
 - [ ] Run `git grep -E 'plumbing|porcelain'` to find any missed references
