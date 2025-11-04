@@ -3,6 +3,16 @@
 This subdirectory focuses on solving one critical problem: **How to represent
 forked Claude.ai conversations in a lazy filesystem.**
 
+## Three-Phase Investigation
+
+Fork representation splits across three milestones:
+
+- **Phase 1 (M1-CLAUDE):** Investigate what Claude API returns → `api-investigation.md`
+- **Phase 2 (M2-VFS):** Define normalized fork schema → `../provider-abstraction/`
+- **Phase 3 (M3-CACHE):** Choose filesystem layout → This incubator's primary focus
+
+Each phase depends on the previous. We can't normalize what we don't understand (Phase 2 needs Phase 1), and we can't persist what we haven't normalized (Phase 3 needs Phase 2).
+
 ## Why This Matters
 
 Fork representation is a **foundation decision** that affects:
@@ -14,7 +24,10 @@ Fork representation is a **foundation decision** that affects:
 
 We must get this right before implementing write operations.
 
-## Investigation Phase
+## Phase 1: Claude API Investigation (M1-CLAUDE)
+
+**Milestone:** M1-CLAUDE implementation
+**Deliverable:** `api-investigation.md` documenting Claude API fork behavior
 
 ### Step 1: Understand the API
 
@@ -36,11 +49,27 @@ This will reveal:
 
 ### Step 2: Document Findings
 
-Create `api-findings.md` with:
+Create `api-investigation.md` with:
 
 - Raw JSON examples of forked conversations
 - Field descriptions
 - Relationship model (tree? graph? linked list?)
+
+## Phase 2: Normalized Schema Design (M2-VFS)
+
+**Milestone:** M2-VFS implementation
+**Deliverable:** See `../provider-abstraction/` incubator
+
+Phase 2 designs the normalized JSONL schema for forks that works across providers (Claude, ChatGPT, etc.). This depends on Phase 1 findings.
+
+**Key question:** How do we represent fork relationships in a provider-agnostic way?
+
+## Phase 3: Filesystem Layout (M3-CACHE)
+
+**Milestone:** M3-CACHE implementation
+**Deliverable:** `DECISION.md` with chosen filesystem approach
+
+This is the primary focus of this incubator. Once we have the normalized schema from Phase 2, we prototype and choose a filesystem layout.
 
 ### Step 3: Prototype Filesystem Layouts
 
@@ -87,11 +116,17 @@ Create `DECISION.md` with:
 
 ## Current Status
 
+**Phase 1 (M1-CLAUDE):**
 - [ ] API investigation (need forked conversation UUIDs)
-- [ ] Document API structure (`api-findings.md`)
-- [ ] Prototype Option A
-- [ ] Prototype Option B
-- [ ] Prototype Option C
+- [ ] Document API structure (`api-investigation.md`)
+
+**Phase 2 (M2-VFS):**
+- [ ] Normalized fork schema design (see `../provider-abstraction/`)
+
+**Phase 3 (M3-CACHE):**
+- [ ] Prototype Option A (flat naming)
+- [ ] Prototype Option B (nested directories)
+- [ ] Prototype Option C (git-like refs)
 - [ ] Score approaches
 - [ ] Make decision (`DECISION.md`)
 - [ ] Update parent README with chosen approach

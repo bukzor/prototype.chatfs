@@ -9,7 +9,7 @@ conversation, switching between them for different perspectives.
 **Challenge:** Represent this branching structure across three layers of abstraction:
 
 1. **What does the Claude API return?** (M1-CLAUDE: claude-native layer)
-2. **What should our normalized API provide?** (M2-API: standardized layer)
+2. **What should our normalized API provide?** (M2-VFS: normalized layer)
 3. **How do we represent forks on disk?** (M3-CACHE: filesystem layer)
 
 Each question builds on the previous answer. We can't normalize what we don't understand, and we can't persist what we haven't normalized.
@@ -29,9 +29,9 @@ Each question builds on the previous answer. We can't normalize what we don't un
 
 **Action:** Investigate API responses for actual forked conversations (user has essential content on multiple forks)
 
-**Deliverable:** Document exact API behavior in `api-findings.md`
+**Deliverable:** Document exact API behavior in `api-investigation.md`
 
-### Phase 2: Normalized Schema Design (M2-API)
+### Phase 2: Normalized Schema Design (M2-VFS)
 
 **Question:** What should our provider-agnostic API provide?
 
@@ -193,13 +193,13 @@ Each question builds on the previous answer. We can't normalize what we don't un
 **Immediate (M1-CLAUDE):**
 1. Use existing unofficial-claude-api to inspect forked conversation responses
 2. User has forked conversations with essential content - investigate those
-3. Document exact JSON fields and relationships in `api-findings.md`
+3. Document exact JSON fields and relationships in `api-investigation.md`
 4. Implement M1-CLAUDE layer that outputs whatever Claude returns
 
-**Later (M2-API):**
+**Later (M2-VFS):**
 5. Research how other providers (ChatGPT, Linear) handle similar concepts
 6. Design normalized schema that accommodates all providers
-7. See separate incubator: `provider-abstraction-strategy/`
+7. See separate incubator: `../provider-abstraction/`
 
 **Much Later (M3-CACHE):**
 8. Prototype filesystem approaches (Option A, B, C) with normalized schema

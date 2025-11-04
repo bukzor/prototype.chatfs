@@ -35,26 +35,29 @@ Use an incubator when you find yourself saying:
 - "I need to prototype this to understand the implications"
 - "This decision affects too many things to rush it"
 
+**Multi-phase incubators:** Some design problems span multiple milestones. For example, fork-representation splits into 3 phases (M1-CLAUDE API investigation, M2-VFS normalization, M3-CACHE filesystem layout). Each phase informs the next.
+
 ## Active Incubators
 
 ### fork-representation/
 
-**Blocks:** M1-CLAUDE (Phase 1), M2-API (Phase 2), M3-CACHE (Phase 3)
+**Blocks:** M1-CLAUDE (Phase 1), M2-VFS (Phase 2), M3-CACHE (Phase 3)
 
-**Questions:**
-1. What does Claude API return for forked conversations?
-2. What should normalized API provide for forks across providers?
-3. How do we represent forks on disk?
+**Multi-phase incubator** - splits across 3 milestones:
+
+**Phase 1 (M1-CLAUDE):** What does Claude API return for forked conversations?
+**Phase 2 (M2-VFS):** What should normalized API provide for forks across providers?
+**Phase 3 (M3-CACHE):** How do we represent forks on disk?
 
 **Status:** Phase 1 (API investigation) needed for M1-CLAUDE
 
-### provider-abstraction-strategy/
+### provider-abstraction/
 
-**Blocks:** M2-API implementation
+**Blocks:** M2-VFS implementation
 
 **Questions:**
-1. Should we support chat-only or chat + non-chat providers (Linear, GitHub, GCP)?
+1. Should we support chat-only or chat + non-chat providers (Linear, GitHub)?
 2. What belongs in normalized layer vs provider-specific extensions?
-3. Chat-only abstraction, universal abstraction, or tiered approach?
+3. Pure abstraction vs. abstraction+extensions approach?
 
 **Status:** Depends on M1-CLAUDE findings, needs research on other providers

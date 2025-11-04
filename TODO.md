@@ -250,14 +250,14 @@ lib/chatfs/layer/
 **Source:** `docs/dev/open-questions-revision-notes.md` (created during Phase 1)
 
 ### Updates needed:
-- [ ] **design-incubators/fork-representation/CLAUDE.md** - Add 3-phase structure (M1/M2/M3 split)
-- [ ] **design-incubators/fork-representation/README.md** - Update with milestone mapping
-- [ ] **Create:** `design-incubators/fork-representation/api-investigation.md` template for M1-CLAUDE
-- [ ] **Create:** `design-incubators/provider-abstraction/` new incubator
-- [ ] **Create:** `design-incubators/provider-abstraction/CLAUDE.md` - define the question
-- [ ] **Create:** `design-incubators/provider-abstraction/README.md` - investigation workflow
-- [ ] **Update:** `design-incubators/README.md` - add note about multi-phase incubators
-- [ ] **Delete:** `docs/dev/open-questions-revision-notes.md` (integrated)
+- [x] **design-incubators/fork-representation/CLAUDE.md** - Add 3-phase structure (M1/M2/M3 split)
+- [x] **design-incubators/fork-representation/README.md** - Update with milestone mapping
+- [x] **Create:** `design-incubators/fork-representation/api-investigation.md` template for M1-CLAUDE
+- [x] **Create:** `design-incubators/provider-abstraction/` new incubator
+- [x] **Create:** `design-incubators/provider-abstraction/CLAUDE.md` - define the question
+- [x] **Create:** `design-incubators/provider-abstraction/README.md` - investigation workflow
+- [x] **Update:** `design-incubators/README.md` - add note about multi-phase incubators
+- [x] **Delete:** `docs/dev/open-questions-revision-notes.md` (integrated)
 
 **Deliverable:** design-incubators/ reflects split fork question and new provider abstraction question
 
