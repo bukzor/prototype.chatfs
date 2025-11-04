@@ -48,10 +48,14 @@ chatfs creates a lazy filesystem where directories and files appear on-demand vi
 
 ## Architecture
 
-Built on **plumbing/porcelain** split:
+Built on **four-layer architecture** (learn-then-abstract approach):
 
-- **Plumbing:** Small JSONL-based tools for raw API operations
-- **Porcelain:** (Future) Nice CLI wrappers for human UX
+- **M1-CLAUDE (native):** Direct Claude API wrapper, outputs raw JSONL
+- **M2-VFS (normalized):** Provider-agnostic schema based on M1-CLAUDE findings
+- **M3-CACHE (persistence):** Filesystem storage with staleness tracking
+- **M4-CLI (UX):** Human-friendly commands (chatfs ls, chatfs cat, etc.)
+
+**Key principle:** Learn what the API gives us (M1-CLAUDE) before designing normalization (M2-VFS).
 
 See [docs/dev/technical-design.md] for details.
 

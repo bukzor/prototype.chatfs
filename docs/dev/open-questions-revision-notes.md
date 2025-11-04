@@ -166,7 +166,7 @@ Once technical-design.md shows 4-layer architecture with M#-TOKEN milestones:
 
 ## Notes for Future Me
 
-**Key realization:** We kept saying "fork representation blocks M1" but actually:
+**Key realization:** We kept saying "fork representation blocks M1-CLAUDE" but actually:
 - M1-CLAUDE doesn't need to represent forks, just output what API gives us
 - M2-VFS needs to normalize fork schema across providers
 - M3-CACHE needs to choose filesystem layout

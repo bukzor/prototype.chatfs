@@ -211,33 +211,33 @@ lib/chatfs/layer/
 
 **Important:** Work backwards to avoid overwriting. After each step, verify the change worked.
 
-- [ ] **Find M3 references:** `git grep -l 'M3[^-]' docs/`
+- [x] **Find M3 references:** `git grep -l 'M3[^-]' docs/`
   - Update each file: `M3` → `M4-CLI`
   - Verify: `git grep 'M3[^-]' docs/` should show nothing (except devlogs)
 
-- [ ] **Find M2 references:** `git grep -l 'M2[^-]' docs/`
+- [x] **Find M2 references:** `git grep -l 'M2[^-]' docs/`
   - Update each file: `M2` → `M3-CACHE`
   - Verify: `git grep 'M2[^-]' docs/` should show nothing (except devlogs)
 
-- [ ] **Find M1 references:** `git grep -l 'M1[^-]' docs/`
+- [x] **Find M1 references:** `git grep -l 'M1[^-]' docs/`
   - Update each file: `M1` → `M2-VFS`
   - Context: Old M1 was "API layer", now called "VFS layer"
   - Verify: `git grep 'M1[^-]' docs/` should show nothing (except devlogs)
 
-- [ ] **Find M0 references:** `git grep -l 'M0[^-]' docs/`
+- [x] **Find M0 references:** `git grep -l 'M0[^-]' docs/`
   - Update each file: `M0` → `M0-DOCS`
   - Verify: `git grep 'M0[^-]' docs/` should show nothing (except devlogs)
 
-- [ ] **Final verification:** Run `git grep -E 'M[0-9]([^-]|$)' docs/`
+- [x] **Final verification:** Run `git grep -E 'M[0-9]([^-]|$)' docs/`
   - Should find nothing except devlogs (historical refs are OK)
   - If found elsewhere, update those files
 
 ### Step 3: Add M1-CLAUDE references where needed
 
-- [ ] **technical-design.md** - Already updated in Step 1
-- [ ] **development-plan.md** - Already updated in Step 1
-- [ ] **CLAUDE.md** - Add M1-CLAUDE quick reference examples
-- [ ] **README.md** - Update architecture overview to mention M1-CLAUDE
+- [x] **technical-design.md** - Already updated in Step 1
+- [x] **development-plan.md** - Already updated in Step 1
+- [x] **CLAUDE.md** - Add M1-CLAUDE quick reference examples
+- [x] **README.md** - Update architecture overview to mention M1-CLAUDE
 
 **Deliverable:** technical-design.md shows 4 layers with M#-TOKEN milestones, ready for Phase 1.5 terminology cleanup
 

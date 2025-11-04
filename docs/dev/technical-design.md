@@ -607,7 +607,7 @@ Add `chatfs` commands with human-friendly UX:
 
 See [porcelain-layer] for UX design.
 
-### M5+: Advanced Features
+### M5-WRITE+: Advanced Features
 
 **Capnproto Migration**
 
@@ -623,7 +623,7 @@ Not yet designed (see [../../design-incubators/fork-representation/]):
 - Fork conversation
 - Amend messages
 
-Blocked on fork representation decision (M5+ scope).
+Blocked on fork representation decision (M5-WRITE+ scope).
 
 **Multi-Provider Support**
 

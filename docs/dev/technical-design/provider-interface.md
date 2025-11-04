@@ -9,12 +9,12 @@ API as exposed by st1vms/unofficial-claude-api.
 
 **Read this when:**
 
-- Implementing API client wrapper (during M1)
+- Implementing API client wrapper (during M1-CLAUDE)
 - Debugging API issues
 - Understanding conversation data structures
 - Investigating fork representation
 
-**To populate during M0:**
+**To populate during M0-DOCS:**
 
 1. Make real API calls using st1vms/unofficial-claude-api
 2. Document actual request/response formats

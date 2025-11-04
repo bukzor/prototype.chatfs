@@ -4,7 +4,7 @@
 
 This document will contain:
 
-- Detailed task breakdown for M1 deliverables
+- Detailed task breakdown for M1-CLAUDE deliverables
 - Implementation order and dependencies
 - Testing strategy for each component
 - Session planning (which tasks per session)
@@ -15,5 +15,5 @@ See
 [../development-plan.md#milestone-1-read-only-plumbing]
 for overview.
 
-**When to create:** At start of M1 implementation, after M0 (documentation) is
+**When to create:** At start of M1-CLAUDE implementation, after M0-DOCS (documentation) is
 complete.

@@ -46,7 +46,7 @@ before implementation
 - [ ] Apply template.python-project baseline configurations
   - [ ] pyproject.toml entry points for CLI commands
 - [ ] Investigate fork representation via API
-- [ ] Review and finalize M0 - ready for M1?
+- [ ] Review and finalize M0-DOCS - ready for M1-CLAUDE?
 
 **Dependencies:** None
 
@@ -319,7 +319,7 @@ before implementation
 - M1-CLAUDE (Fork API investigation completed)
 - M2-VFS (Normalized schema includes fork representation)
 - M3-CACHE (Cache layer exists for persistence)
-- Fork representation design resolved (3 phases: M1/M2/M3 investigations complete)
+- Fork representation design resolved (3 phases: M1-CLAUDE/M2-VFS/M3-CACHE investigations complete)
 
 **Blockers:**
 
