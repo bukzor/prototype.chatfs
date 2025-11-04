@@ -261,63 +261,31 @@ lib/chatfs/layer/
 
 **Deliverable:** design-incubators/ reflects split fork question and new provider abstraction question
 
-## Phase 1.5: Terminology Cleanup (Plumbing/Porcelain → Layer Structure)
+## Phase 1.5: Terminology Cleanup (Plumbing/Porcelain → Layer Structure) ✓ COMPLETE
 
-**Goal:** Update all docs and code to use new four-layer terminology consistently
+**Completed:** 2025-11-04 (Session 5)
 
-**Why now:** Completing this before Phase 2 avoids double-work on subdocs that reference old terminology
+**Outcome:** All code and docs use 4-layer terminology consistently. Command examples updated for path conventions (absolute `//provider/...` vs relative paths).
 
-### Directory structure changes:
-- [x] Create `lib/chatfs/layer/native/` directory
-- [x] Create `lib/chatfs/layer/native/claude/` (M1-CLAUDE - new)
-- [x] `lib/chatfs/plumbing/` → `lib/chatfs/layer/vfs/` (M2-VFS - renamed from old M1 "api")
-- [x] Create `lib/chatfs/layer/cache/` stub (M3-CACHE placeholder)
-- [x] `lib/chatfs/porcelain/` → `lib/chatfs/layer/cli/` (M4-CLI - renamed from old M3)
-- [ ] Update all imports in existing code (none exist yet)
+## Phase 2: Breadth-First Documentation Validation
 
-### Command naming updates:
-- [x] Update pyproject.toml entry points:
-  - New: `chatfs-claude-*` commands (M1-CLAUDE)
-  - Existing: rename to `chatfs-vfs-*` (M2-VFS, was called "api" or "plumbing")
-  - Future: `chatfs-cache-*` (M3-CACHE)
-  - M4-CLI: `chatfs-ls`, `chatfs-cat`, etc. (future: `chatfs <subcommand>` as optional enhancement)
-- [x] Update all command examples in docs
+**Goal:** Validate all existing docs breadth-first (Level 0 → Level 1 → Level 2), correcting rough drafts through discussion
 
-### Documentation updates:
-- [x] **CLAUDE.md** - Update to 4-layer architecture + add "Working on Documentation" section
-- [x] **HACKING.md** - Update directory structure, command examples for 4 layers
-- [x] **README.md** - Update architecture description to 4 layers (done in Phase 1.25)
-- [x] **design-rationale.md** - Add historical note about plumbing/porcelain → layered architecture
-- [x] **design-rationale/layered-architecture.md** - Renamed and updated content
-- [x] **development-plan.md** - Updated paths and terminology
-- [x] **development-plan/milestone-1-claude-native.md** - Renamed and updated content
-- [x] **technical-design/cli-layer.md** - Renamed and updated content
-- [x] **technical-design.md** - Updated with 4-layer terminology
-- [x] **lib/chatfs/layer/native/claude/__init__.py** - Create
-- [x] **lib/chatfs/layer/vfs/README.md** - Move from plumbing/ and update
-- [x] **lib/chatfs/layer/cache/__init__.py** - Create stub
-- [x] **lib/chatfs/layer/cli/README.md** - Move from porcelain/ and update
-- [x] **lib/chatfs/__init__.py** - Update docstrings for 4 layers
-- [x] **lib/chatfs/layer/__init__.py** - Create
-- [x] **lib/chatfs/layer/native/__init__.py** - Create
-- [x] **lib/chatfs/layer/vfs/__init__.py** - Move from plumbing/ and update (moved, no edits needed)
-- [x] **lib/chatfs/layer/cli/__init__.py** - Move from porcelain/ and update (moved, no edits needed)
-- [x] All devlog references (skip - historical)
+**Current Status:** In progress - validating Level 1 docs
 
-### Verification:
-- [x] Run `git grep -E 'plumbing|porcelain'` to find any missed references
-  - Fixed all non-historical references:
-    - [x] **development-plan.md:374** - Updated "porcelain features" → "M4-CLI features"
-    - [x] **CLAUDE.md:21** - Updated `lib/chatfs/api.py` → `lib/chatfs/client.py`
-    - [x] Fixed anchor references in layered-architecture.md, cli-layer.md, milestone-1-claude-native.md
+**Completed:**
+- [x] **Level 0: README.md** - Updated command examples, added path convention docs (absolute vs relative)
 
-**Deliverable:** Phase 1.5 complete - all code and docs use 4-layer terminology consistently. Subdoc content updates (TODO-marked files) intentionally deferred to Phase 2.
+**In Progress:**
+- [ ] **Level 1: Core Documentation** - Main doc bodies
+  - [ ] design-rationale.md - Problem Space + Design Philosophy
+  - [ ] technical-design.md - System Architecture
+  - [ ] design-incubators/README.md - Open Questions
 
-## Phase 2: Validate Level 2 (Elaborate Foundations - Subdirectories)
+**Pending:**
+- [ ] **Level 2: Subdocs** - Elaborate foundations through discussion
 
-**Goal:** Validate/correct detailed rationale and design docs through discussion
-
-### Workflow per subdoc:
+### Level 2 Workflow (after Level 1 complete):
 1. **Discuss** the concept in depth with user
 2. **Read** existing rough-draft subdoc
 3. **Evaluate** for technical accuracy, completeness, weak arguments
