@@ -1,20 +1,20 @@
 # Claude.ai Unofficial API Reference
 
-**Last Updated:** 2025-11-01
+- Last Updated -- 2025-11-01
 
-**Status:** 📝 Reference doc - Will be populated during Milestone 0 (design phase)
+- Status -- 📝 Reference doc - Will be populated during Milestone 0 (design phase)
 
 This document will serve as the canonical reference for the unofficial claude.ai
 API as exposed by st1vms/unofficial-claude-api.
 
-**Read this when:**
+#### Read this when
 
 - Implementing API client wrapper (during M1-CLAUDE)
 - Debugging API issues
 - Understanding conversation data structures
 - Investigating fork representation
 
-**To populate during M0-DOCS:**
+#### To populate during M0-DOCS
 
 1. Make real API calls using st1vms/unofficial-claude-api
 2. Document actual request/response formats
@@ -24,16 +24,16 @@ API as exposed by st1vms/unofficial-claude-api.
 
 ## API Client Library
 
-**Repository:** https://github.com/st1vms/unofficial-claude-api (Python)
+- Repository -- https://github.com/st1vms/unofficial-claude-api (Python)
 
-**Why this one:**
+#### Why this one
 
 - Uses curl_cffi for Cloudflare TLS fingerprinting bypass
 - Most recent working implementation (last push June 2025)
 - 181 stars (community-vetted)
 - Full conversation access API
 
-**Installation:**
+#### Installation
 
 ```bash
 # Vendored in unofficial-claude-api/ subdirectory
@@ -42,14 +42,14 @@ API as exposed by st1vms/unofficial-claude-api.
 
 ## Authentication
 
-**Session Key:**
+#### Session Key
 
 - Obtained from claude.ai browser cookies
 - Cookie name: `sessionKey`
 - Format: `sk-ant-...`
 - Stored in `.env` file: `CLAUDE_SESSION_KEY=sk-ant-...`
 
-**How to get:**
+#### How to get
 
 1. Log into claude.ai in browser
 2. Open DevTools → Application → Cookies
@@ -58,18 +58,17 @@ API as exposed by st1vms/unofficial-claude-api.
 
 ## API Endpoints
 
-**Note:** These are inferred from unofficial-claude-api library. Need to verify
-with real calls.
+- Note -- These are inferred from unofficial-claude-api library. Need to verify with real calls.
 
 ### List Organizations
 
-**Client method:** `client.list_organizations()`
+- Client method -- `client.list_organizations()`
 
-**Request:** (TBD - investigate)
+- Request -- (TBD - investigate)
 
-**Response:** (TBD - investigate)
+- Response -- (TBD - investigate)
 
-**Expected fields:**
+#### Expected fields
 
 ```json
 {
@@ -87,13 +86,13 @@ with real calls.
 
 ### List Conversations
 
-**Client method:** `client.list_conversations(org_uuid="...")`
+- Client method -- `client.list_conversations(org_uuid="...")`
 
-**Request:** (TBD - investigate)
+- Request -- (TBD - investigate)
 
-**Response:** (TBD - investigate)
+- Response -- (TBD - investigate)
 
-**Expected fields:**
+#### Expected fields
 
 ```json
 {
@@ -117,13 +116,13 @@ with real calls.
 
 ### Get Conversation
 
-**Client method:** `client.get_conversation(convo_uuid="...")`
+- Client method -- `client.get_conversation(convo_uuid="...")`
 
-**Request:** (TBD - investigate)
+- Request -- (TBD - investigate)
 
-**Response:** (TBD - investigate)
+- Response -- (TBD - investigate)
 
-**Expected message structure:**
+#### Expected message structure
 
 ```json
 {
