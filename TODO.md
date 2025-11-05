@@ -303,11 +303,12 @@ lib/chatfs/layer/
 
 **Completed:**
 - [x] **Level 0: README.md** - Updated command examples, added path convention docs (absolute vs relative)
+- [x] **Level 1: Core Documentation** - Main doc bodies
+  - [x] design-rationale.md - Problem Space + Design Philosophy (solid, no changes needed)
+  - [x] technical-design.md - System Architecture (fixed diagram flow, layer vs milestone naming, reorganized components)
 
 **In Progress:**
-- [ ] **Level 1: Core Documentation** - Main doc bodies
-  - [ ] design-rationale.md - Problem Space + Design Philosophy
-  - [ ] technical-design.md - System Architecture
+- [ ] **Level 1: Core Documentation** - Remaining doc
   - [ ] design-incubators/README.md - Open Questions
 
 **Pending:**
