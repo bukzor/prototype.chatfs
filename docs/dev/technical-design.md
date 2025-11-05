@@ -452,7 +452,7 @@ Set mtime to current time
 Output cached JSONL
 ```
 
-Similar pattern for `chatfs-cache-list-convos` and `chatfs-cache-get-convo`: check cache, call M2-VFS layer if stale, write to filesystem, output JSONL.
+Similar pattern for `chatfs-cache-list-convos` and `chatfs-cache-get-convo`: check cache, call `vfs` layer if stale, write to filesystem, output JSONL.
 
 ## Data Structures
 
@@ -613,8 +613,8 @@ See [cli-layer] for UX design.
 
 When capnshell exists:
 1. Define capnproto schemas for Org, Conversation, Message
-2. Swap JSONL serialization for capnproto in M1-CLAUDE/M2-VFS tools
-3. M3-CACHE and M4-CLI layers unchanged (abstraction holds)
+2. Swap JSONL serialization for capnproto in `native/claude`/`vfs` tools
+3. `cache` and `cli` layers unchanged (abstraction holds)
 
 **Write Operations**
 
@@ -627,11 +627,11 @@ Blocked on fork representation decision (M5-WRITE+ scope).
 
 **Multi-Provider Support**
 
-Handled by M2-VFS layer (see design-incubators/provider-abstraction-strategy/):
-- M1-CLAUDE native layer exists
-- Add M1-CHATGPT native layer for ChatGPT
-- Add M1-GEMINI native layer for Gemini
-- M2-VFS layer normalizes across all native layers
+Handled by `vfs` layer (see design-incubators/provider-abstraction-strategy/):
+- `native/claude` layer exists (M1-CLAUDE milestone)
+- Add `native/chatgpt` layer for ChatGPT (future milestone)
+- Add `native/gemini` layer for Gemini (future milestone)
+- `vfs` layer normalizes across all native layers
 - Cache structure: `./chatfs/chatgpt/`, `./chatfs/gemini/`, `./chatfs/claude.ai/`
 
 See [development-plan.md] for milestone details.
