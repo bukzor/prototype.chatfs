@@ -25,10 +25,10 @@ chatfs provides programmatic access to claude.ai conversations through composabl
 - Next: M1-CLAUDE (claude-native layer)
 
 **Planned layers:**
-- **M1-CLAUDE:** Claude-native layer - direct API wrapper, outputs raw Claude data as JSONL
-- **M2-VFS:** Virtual filesystem layer - normalized schema across providers (Claude, ChatGPT, etc.)
-- **M3-CACHE:** Cache/filesystem layer - adds persistence, staleness checking, lazy loading
-- **M4-CLI:** CLI layer - human-friendly UX with colors and progress bars
+- **`native/claude` (M1-CLAUDE):** Direct API wrapper, outputs raw Claude data as JSONL
+- **`vfs` (M2-VFS):** Normalized schema across providers (Claude, ChatGPT, etc.)
+- **`cache` (M3-CACHE):** Adds persistence, staleness checking, lazy loading
+- **`cli` (M4-CLI):** Human-friendly UX with colors and progress bars
 
 **Design characteristics:**
 
@@ -43,23 +43,15 @@ chatfs provides programmatic access to claude.ai conversations through composabl
 
 chatfs is built in four layers, each implemented in separate milestones:
 
+**Data flow:**
+
 ```
 ┌─────────────────────────────────────────┐
 │         claude.ai API                   │
-└─────────────────┬───────────────────────┘
-                  │ HTTP/TLS
-┌─────────────────▼───────────────────────┐
 │    unofficial-claude-api (Vendored)     │
 │    st1vms Python client                 │
 └─────────────────┬───────────────────────┘
-                  │
-┌─────────────────▼───────────────────────┐
-│        Shared Libraries                 │
-│  chatfs.client   (Claude API wrapper)   │
-│  chatfs.models   (M2-VFS data models)   │
-│  chatfs.cache    (M3-CACHE manager)     │
-└─────────────────┬───────────────────────┘
-                  │
+                  │ HTTP/TLS
 ┌─────────────────▼───────────────────────┐
 │   Native Layer (M1-CLAUDE - Next)       │
 │   chatfs-claude-list-orgs               │
@@ -69,7 +61,7 @@ chatfs is built in four layers, each implemented in separate milestones:
 │   Commands: chatfs-claude-*             │
 │   Modules: chatfs.layer.native.claude.* │
 └─────────────────┬───────────────────────┘
-                  │
+                  │ Raw API responses
 ┌─────────────────▼───────────────────────┐
 │    VFS Layer (M2-VFS - Future)          │
 │   chatfs-vfs-list-orgs --provider X     │
@@ -79,7 +71,7 @@ chatfs is built in four layers, each implemented in separate milestones:
 │   Commands: chatfs-vfs-*                │
 │   Modules: chatfs.layer.vfs.*           │
 └─────────────────┬───────────────────────┘
-                  │
+                  │ Virtual FS
 ┌─────────────────▼───────────────────────┐
 │    Cache/FS Layer (M3-CACHE - Future)   │
 │   chatfs-cache-list-orgs                │
@@ -88,7 +80,7 @@ chatfs is built in four layers, each implemented in separate milestones:
 │   Commands: chatfs-cache-*              │
 │   Modules: chatfs.layer.cache.*         │
 └─────────────────┬───────────────────────┘
-                  │
+                  │ Lazy, Cached FS
 ┌─────────────────▼───────────────────────┐
 │      CLI Layer (M4-CLI - Future)        │
 │   chatfs-ls //claude.ai/Buck\ Evan/...  │
@@ -98,25 +90,24 @@ chatfs is built in four layers, each implemented in separate milestones:
 └─────────────────────────────────────────┘
 ```
 
-**Data flow:** Top to bottom (API → unofficial-claude-api → M1-CLAUDE → M2-VFS → M3-CACHE → M4-CLI)
-
 **Layer responsibilities:**
 
-- **M1-CLAUDE (Native):** Stateless, outputs whatever claude.ai returns as JSONL. No normalization, no decisions.
-- **M2-VFS (Virtual FS):** Normalized JSONL schema across providers (Claude, ChatGPT, etc.). Takes `--provider` flag.
-- **M3-CACHE (Cache/FS):** Filesystem persistence, staleness checking, lazy loading. Wraps M2-VFS.
-- **M4-CLI (CLI):** Human-friendly commands, colors, progress bars, interactive features. Wraps M3-CACHE.
+- **`native/claude`:** Stateless, outputs whatever claude.ai returns as JSONL. No normalization, no decisions.
+- **`vfs`:** Normalized JSONL schema across providers (Claude, ChatGPT, etc.). Takes `--provider` flag.
+- **`cache`:** Filesystem persistence, staleness checking, lazy loading. Wraps `vfs`.
+- **`cli`:** Human-friendly commands, colors, progress bars, interactive features. Wraps `cache`.
 
 **Why four layers?**
 - Each layer independently useful (can use any layer directly with jq/Unix tools)
 - Clear milestone boundaries (M1-CLAUDE→M2-VFS→M3-CACHE→M4-CLI)
-- Learn-then-abstract: M1-CLAUDE (concrete Claude API) informs M2-VFS (abstract schema) design
+- Learn-then-abstract: `native/claude` (concrete Claude API) informs `vfs` (abstract schema) design
 - Allows users to choose abstraction level based on needs
 
 ## Components
 
 ### Native Layer (M1-CLAUDE - Next)
 
+**Layer:** `native/claude`
 **Milestone:** M1-CLAUDE
 **Commands:** `chatfs-claude-*`
 **Modules:** `chatfs.layer.native.claude.*`
@@ -166,10 +157,32 @@ echo '{"uuid":"org-123"}' | chatfs-claude-list-convos | jq
 - No filesystem interaction (stateless)
 - **Minimal abstraction:** Output whatever Claude API returns, don't normalize
 
-**Purpose:** Learn what Claude API actually returns before designing M2-VFS normalized schema.
+**Purpose:** Learn what Claude API actually returns before designing `vfs` layer's normalized schema.
+
+**API Client:**
+
+The `native/claude` layer includes an API client wrapper:
+
+```python
+from chatfs.layer.native.claude.client import ClaudeClient
+
+client = ClaudeClient()  # Uses CLAUDE_SESSION_KEY from env
+orgs = client.list_organizations()
+convos = client.list_conversations(org_uuid="...")
+messages = client.get_conversation(convo_uuid="...")
+```
+
+**Key methods:**
+
+- `list_organizations() → List[Dict]` (returns raw API response)
+- `list_conversations(org_uuid: str) → List[Dict]`
+- `get_conversation(convo_uuid: str) → List[Dict]`
+
+See [provider-interface] for full API documentation.
 
 ### VFS Layer (M2-VFS - Future)
 
+**Layer:** `vfs`
 **Milestone:** M2-VFS
 **Commands:** `chatfs-vfs-*`
 **Modules:** `chatfs.layer.vfs.*`
@@ -223,38 +236,13 @@ echo '{"uuid":"org-123"}' | chatfs-vfs-list-convos | jq
 - No filesystem interaction (stateless)
 - **Normalized schema:** Provider-agnostic data structures
 
-### Shared Libraries
+**Normalized Models:**
 
-**chatfs.client** - Claude API Client Wrapper (M1-CLAUDE)
-
-**Responsibility:** Wrap unofficial-claude-api, handle auth. Used by M1-CLAUDE layer.
-
-**Interface:**
+The `vfs` layer owns the normalized data structures:
 
 ```python
-from chatfs.client import ClaudeClient
+from chatfs.layer.vfs.models import Org, Conversation, Message
 
-client = ClaudeClient()  # Uses CLAUDE_SESSION_KEY from env
-orgs = client.list_organizations()
-convos = client.list_conversations(org_uuid="...")
-messages = client.get_conversation(convo_uuid="...")
-```
-
-**Key methods:**
-
-- `list_organizations() → List[Dict]` (returns raw API response)
-- `list_conversations(org_uuid: str) → List[Dict]`
-- `get_conversation(convo_uuid: str) → List[Dict]`
-
-See [provider-interface] for full API documentation.
-
-**chatfs.models** - Normalized Data Structures (M2-VFS)
-
-**Responsibility:** Type definitions for normalized schema. Defined at M2-VFS layer.
-
-**Structures:**
-
-```python
 @dataclass
 class Org:
     uuid: str
@@ -279,54 +267,52 @@ class Message:
     uuid: str
 ```
 
-**chatfs.cache** - Filesystem Cache Manager (M3-CACHE)
-
-**Responsibility:** Filesystem operations, staleness checking. Used by M3-CACHE layer.
-
-```python
-from chatfs.cache import Cache
-
-cache = Cache(base_path="./chatfs")
-cache.ensure_org_dir(org_name="Buck Evan")
-cache.write_conversation(path="...", messages=[...])
-cache.is_stale(path="...", remote_updated_at="...")
-```
-
-See [cache-layer] for implementation details.
-
 ### Cache/FS Layer (M3-CACHE - Future)
 
+**Layer:** `cache`
 **Milestone:** M3-CACHE
 **Commands:** `chatfs-cache-*`
 **Modules:** `chatfs.layer.cache.*`
 
-**Responsibility:** Filesystem persistence, staleness checking, lazy directory creation. Wraps M2-VFS.
+**Responsibility:** Filesystem persistence, staleness checking, lazy directory creation. Wraps `vfs` layer.
 
 **Examples:**
 
 ```bash
-# Same interface as VFS layer, but with caching
+# Same interface as vfs layer, but with caching
 chatfs-cache-list-orgs | jq
 chatfs-cache-list-convos | jq
 chatfs-cache-get-convo | chatfs-vfs-render-md > conversation.md
 ```
 
-**Implementation:** Wraps M2-VFS layer tools (chatfs-vfs-*), adds:
+**Implementation:** Wraps `vfs` layer tools (chatfs-vfs-*), adds:
 
 - Filesystem writes to `./chatfs/` directory structure
 - Staleness checking via mtime comparison
 - Lazy directory/file creation
 - Cache invalidation based on `updated_at` fields
 
+**Cache utilities:**
+
+```python
+from chatfs.layer.cache.manager import CacheManager
+
+cache = CacheManager(base_path="./chatfs")
+cache.ensure_org_dir(org_name="Buck Evan")
+cache.write_conversation(path="...", messages=[...])
+cache.is_stale(path="...", remote_updated_at="...")
+```
+
 See [cache-layer] for staleness logic and directory structure.
 
 ### CLI Layer (M4-CLI - Future)
 
+**Layer:** `cli`
 **Milestone:** M4-CLI
 **Commands:** `chatfs-ls`, `chatfs-cat`, `chatfs-sync`, etc.
 **Modules:** `chatfs.layer.cli.*`
 
-**Responsibility:** Human-friendly CLI wrappers with rich UX. Wraps M3-CACHE.
+**Responsibility:** Human-friendly CLI wrappers with rich UX. Wraps `cache` layer.
 
 **Examples:**
 
@@ -348,7 +334,7 @@ chatfs-ls .
 
 **Note:** Subcommand interface (`chatfs ls` instead of `chatfs-ls`) is a future optional enhancement.
 
-**Implementation:** Wraps M3-CACHE layer tools (chatfs-cache-*), adds:
+**Implementation:** Wraps `cache` layer tools (chatfs-cache-*), adds:
 
 - Path parsing (org name → org UUID lookup)
 - Progress bars for slow operations
