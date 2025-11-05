@@ -32,21 +32,7 @@
       - Keep/restore bolding only for: critical warnings, key terms on first use
 
 
----
-
-**M0-DOCS workflow:**
-1. **Discuss** concepts with user to develop deep understanding
-2. **Validate** existing rough-draft content for accuracy/completeness
-3. **Correct** what's wrong or misleading
-4. **Create** missing content with confidence
-
-NOT: Mechanical fill-in-the-blanks. Reach certainty before making changes.
-
-See [CLAUDE.md#working-on-documentation] for general documentation editing principles (80% confidence threshold, discussion over speculation, breadth-first validation).
-
 ## Documentation Dependency Tree
-
-**Strategy:** Breadth-first traversal - complete each level before descending to next
 
 ```
 Level 0 (Root): chatfs - What is this project?
@@ -140,14 +126,6 @@ All topics have natural homes in our doc structure:
 **One gap identified:** JSONL schemas may need a new `technical-design/jsonl-schemas.md` (stub in Phase 3)
 
 ## Phase 1: Validate Level 1 (Foundation - Main Doc Bodies)
-
-**Goal:** Develop certainty about foundational concepts through discussion, then validate/correct main docs
-
-### Workflow per topic:
-1. **Discuss** with user to develop understanding
-2. **Read** existing rough-draft content
-3. **Evaluate** accuracy/completeness
-4. **Correct/Rewrite** with confidence
 
 ### Topics to validate:
 
@@ -369,14 +347,6 @@ lib/chatfs/layer/
   - Correct: Add missing details, clarify ambiguities
 
 ## Phase 3: Mark Deferred Details (Implementation Specifics for M1-CLAUDE+)
-
-**Goal:** Clearly mark what's intentionally deferred to implementation phase
-
-### Workflow:
-1. **Discuss** what level of detail is appropriate for M0-DOCS (design phase)
-2. **Identify** implementation details that belong in M1-CLAUDE documentation
-3. **Mark clearly** as "TBD M1-CLAUDE" or similar
-4. **Avoid** creating placeholder docs that add no value
 
 ### Deferred topics:
 

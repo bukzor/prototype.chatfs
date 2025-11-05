@@ -69,6 +69,17 @@ See [docs/dev/technical-design.md#data-flow] for details.
 - **Discussion over speculation** - When uncertain about concepts or design decisions, discuss with user to develop understanding before writing. Don't guess.
 - **Breadth-first validation** - Review higher-level docs before diving into subdocs. Subdocs may not be needed if main doc covers it well.
 
+**Validation workflow for existing docs:**
+1. Discuss concepts with user to develop understanding
+2. Read existing content
+3. Evaluate accuracy/completeness
+4. Correct/rewrite with confidence
+
+**Handling implementation details:**
+- Clearly mark what's intentionally deferred to implementation phases
+- Avoid creating placeholder docs that add no value
+- Prefer "TBD in M1-CLAUDE" markers over empty TODO stubs
+
 **TODO-marked docs:**
 
 When you encounter docs marked with "Status: TODO":
