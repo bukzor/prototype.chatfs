@@ -183,7 +183,7 @@ before implementation
 
 **Status:** Blocked (depends on M2-VFS completion)
 
-**Goal:** Add filesystem persistence, staleness checking, and lazy loading. Wrap M2-VFS layer with caching.
+**Goal:** Add filesystem persistence, staleness checking, and lazy loading. Wrap `vfs` layer (M2-VFS) with caching.
 
 **Deliverables:**
 
@@ -253,7 +253,7 @@ before implementation
 
 **Status:** Blocked (depends on M3-CACHE completion)
 
-**Goal:** Build human-friendly CLI wrappers with rich UX. Wrap M3-CACHE layer with colors, progress bars, path-based interface.
+**Goal:** Build human-friendly CLI wrappers with rich UX. Wrap `cache` layer (M3-CACHE) with colors, progress bars, path-based interface.
 
 **Deliverables:**
 

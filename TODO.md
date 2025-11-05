@@ -11,15 +11,15 @@
 
 ## Global Cleanup Tasks (Separate Sessions)
 
-- [ ] Fix Layer Naming Globally
+- [x] Fix Layer Naming Globally
 
   **Issue:** Docs inconsistently use milestone names (M1-CLAUDE, M2-VFS) when referring to layers instead of layer names (`native`, `vfs`).
 
-  **Action needed:**
-  - Scan all docs for incorrect usage: "M1-CLAUDE layer", "M2-VFS layer", etc.
-  - Replace with correct layer names: `native` layer, `vfs` layer, etc.
-  - Keep milestone names only for: section headers, development phases, "implemented in M1-CLAUDE"
-  - Files to check: All docs/, CLAUDE.md, HACKING.md, README.md
+  **Completed:** Fixed all instances across docs/, CLAUDE.md, HACKING.md, development-plan.md, fork-representation/CLAUDE.md
+  - Replaced "M1-CLAUDE layer" → "`native/claude` layer"
+  - Replaced "M2-VFS layer" → "`vfs` layer"
+  - Replaced "M3-CACHE layer" → "`cache` layer"
+  - Milestone names kept only for: section headers, development phases, "implemented in M1-CLAUDE"
 
 - [ ] Remove Excessive Bolding
 

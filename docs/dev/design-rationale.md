@@ -1,8 +1,8 @@
 # Design Rationale
 
-**Last Updated:** 2025-11-01
+Last Updated — 2025-11-01
 
-**Read this when:**
+#### Read this when
 
 - Questioning why a design decision was made
 - Considering changing a core architectural choice
@@ -22,13 +22,13 @@ Your conversations on claude.ai (and ChatGPT, Gemini) are trapped in web UIs. Yo
 
 The data is locked in browser tabs, inaccessible to the Unix toolchain.
 
-**Why existing solutions don't work:**
+#### Why existing solutions don't work
 
-- **Official Anthropic API:** Cannot access claude.ai conversations (separate systems - the API creates new chats, doesn't read existing ones)
-- **Browser extensions:** Manual one-shot exports, no incremental updates, no CLI access
-- **Copy-paste:** Doesn't scale, loses metadata, breaks on updates
+- Official Anthropic API: Cannot access claude.ai conversations (separate systems - the API creates new chats, doesn't read existing ones)
+- Browser extensions: Manual one-shot exports, no incremental updates, no CLI access
+- Copy-paste: Doesn't scale, loses metadata, breaks on updates
 
-**What's needed:** Conversations as files in a filesystem, with lazy loading and standard tool compatibility.
+What's needed — Conversations as files in a filesystem, with lazy loading and standard tool compatibility.
 
 chatfs solves this by treating chat history as a lazily-loaded filesystem using composable JSONL layer tools.
 
@@ -36,16 +36,16 @@ chatfs solves this by treating chat history as a lazily-loaded filesystem using 
 
 ### Layered Architecture (Four Layers)
 
-**Decision:** Build as four-layer architecture: native → vfs → cache → cli
+Decision — Build as four-layer architecture: native → vfs → cache → cli
 
-**Layers:**
+#### Layers
 
 - **M1-CLAUDE (native):** Direct API wrapper, outputs raw provider data as JSONL
 - **M2-VFS (normalized):** Provider-agnostic JSONL schema across providers
 - **M3-CACHE (persistence):** Filesystem storage with staleness tracking
 - **M4-CLI (UX):** Human-friendly commands with colors, progress bars
 
-**Alternatives Considered:**
+#### Alternatives Considered
 
 - **Option A: Monolithic CLI** (like `chatfs ls`, `chatfs cat` with subcommands)
 
@@ -58,7 +58,9 @@ chatfs solves this by treating chat history as a lazily-loaded filesystem using 
     integration with future AI tools, learn-then-abstract approach
   - Cons: More programs to write, IPC overhead (minor)
 
-**Rationale:** Chose Option B (evolved to 4 layers) because:
+#### Rationale
+
+Chose Option B (evolved to 4 layers) because:
 
 1. **Useful immediately** - Composes with existing Unix tools (jq, grep, etc.)
 2. **Cheap capnshell migration** - Just swap serialization format (JSONL →
@@ -69,22 +71,22 @@ chatfs solves this by treating chat history as a lazily-loaded filesystem using 
    (aider-ng)
 5. **Aligns with project philosophy** - "DIY/composable" tools
 
-**Tradeoffs:**
+#### Tradeoffs
 
-- **Gave up:** Speed to MVP (more programs to write)
-- **Gained:** Flexibility, composition, learning, future-proofing
+- Gave up: Speed to MVP (more programs to write)
+- Gained: Flexibility, composition, learning, future-proofing
 
-**Impact:** Affects all tool design, testing strategy, documentation structure
+Impact — Affects all tool design, testing strategy, documentation structure
 
-**Evolution:** Originally designed as plumbing/porcelain split (2 layers), evolved to 4 layers to support learn-then-abstract approach (build M1-CLAUDE before designing M2-VFS normalization).
+Evolution — Originally designed as plumbing/porcelain split (2 layers), evolved to 4 layers to support learn-then-abstract approach (build M1-CLAUDE before designing M2-VFS normalization).
 
 See [layered-architecture] for detailed analysis.
 
 ### JSONL for Data Interchange
 
-**Decision:** Use JSONL (JSON Lines) for stdin/stdout between JSONL layers (M1-CLAUDE, M2-VFS, M3-CACHE)
+Decision — Use JSONL (JSON Lines) for stdin/stdout between JSONL layers (M1-CLAUDE, M2-VFS, M3-CACHE)
 
-**Alternatives Considered:**
+#### Alternatives Considered
 
 - **Option A: Plain JSON**
 
@@ -103,7 +105,9 @@ See [layered-architecture] for detailed analysis.
   - Cons: Requires capnshell to be useful, can't use with existing Unix tools,
     premature optimization
 
-**Rationale:** Chose Option B because:
+#### Rationale
+
+Chose Option B because:
 
 1. **Streaming** - Process conversations as messages arrive (one JSON object per
    line)
@@ -113,20 +117,18 @@ See [layered-architecture] for detailed analysis.
    JSONL layer tools (M1-CLAUDE, M2-VFS, M3-CACHE)
 5. **Deferred commitment** - Don't need capnshell working to make progress
 
-**Tradeoffs:**
+#### Tradeoffs
 
-- **Gave up:** Slight efficiency (text vs binary), type safety (no schema
-  validation yet)
-- **Gained:** Works today with existing tools, incremental migration path
+- Gave up: Slight efficiency (text vs binary), type safety (no schema validation yet)
+- Gained: Works today with existing tools, incremental migration path
 
-**Impact:** All JSONL layer I/O (M1-CLAUDE, M2-VFS, M3-CACHE), testing strategy, future capnshell
-integration
+Impact — All JSONL layer I/O (M1-CLAUDE, M2-VFS, M3-CACHE), testing strategy, future capnshell integration
 
 ### Lazy Filesystem Model
 
-**Decision:** Create files/directories on-demand, track staleness via mtime
+Decision — Create files/directories on-demand, track staleness via mtime
 
-**Alternatives Considered:**
+#### Alternatives Considered
 
 - **Option A: Eager sync** (fetch all conversations upfront)
 
@@ -145,7 +147,9 @@ integration
   - Cons: Requires root/FUSE kernel module, breaks offline access, complex
     implementation
 
-**Rationale:** Chose Option B because:
+#### Rationale
+
+Chose Option B because:
 
 1. **Scales** - Works for 10 conversations or 10,000
 2. **Fast** - Only pay for what you use (explicit CLI calls, not syscalls)
@@ -154,22 +158,20 @@ integration
 5. **No special dependencies** - Just Python + files
 6. **FUSE-compatible** - Design maintains clear correlation between CLI commands and potential FUSE callbacks (secondary requirement)
 
-**Tradeoffs:**
+#### Tradeoffs
 
-- **Gave up:** Simplicity (empty stubs, staleness logic), slight disk usage
-  (metadata files)
-- **Gained:** Performance, scalability, offline access, no FUSE dependency
+- Gave up: Simplicity (empty stubs, staleness logic), slight disk usage (metadata files)
+- Gained: Performance, scalability, offline access, no FUSE dependency
 
-**Impact:** Cache implementation, user experience, performance characteristics
+Impact — Cache implementation, user experience, performance characteristics
 
 See [lazy-filesystem] for detailed analysis.
 
 ### Unofficial API Instead of Official
 
-**Decision:** Use unofficial claude.ai API (st1vms) instead of official
-Anthropic API
+Decision — Use unofficial claude.ai API (st1vms) instead of official Anthropic API
 
-**Alternatives Considered:**
+#### Alternatives Considered
 
 - **Option A: Official Anthropic API** (https://api.anthropic.com)
 
@@ -184,7 +186,9 @@ Anthropic API
   - Cons: Unmaintained, could break, requires session key, uses curl_cffi for
     Cloudflare bypass
 
-**Rationale:** Chose Option B because:
+#### Rationale
+
+Chose Option B because:
 
 1. **Solves the problem** - Official API **cannot access claude.ai
    conversations**
@@ -193,20 +197,20 @@ Anthropic API
 3. **Serves our niche** - We need conversation access, not chatbot building
 4. **Acceptable risk** - Unmaintained but stable (three years of observed stability; internal APIs appear notably stable)
 
-**Tradeoffs:**
+#### Tradeoffs
 
-- **Gave up:** Reliability guarantees, official support
-- **Gained:** Actual access to claude.ai conversations (the entire point)
+- Gave up: Reliability guarantees, official support
+- Gained: Actual access to claude.ai conversations (the entire point)
 
-**Impact:** Core functionality, maintenance burden, auth requirements
+Impact — Core functionality, maintenance burden, auth requirements
 
 See [unofficial-api] for ecosystem history and alternatives.
 
 ### Documentation-First Approach
 
-**Decision:** Build comprehensive documentation before implementing code
+Decision — Build comprehensive documentation before implementing code
 
-**Alternatives Considered:**
+#### Alternatives Considered
 
 - **Option A: Code first, document later**
 
@@ -219,7 +223,9 @@ See [unofficial-api] for ecosystem history and alternatives.
     easier to change design before code exists
   - Cons: Slower to first working code, possible over-design
 
-**Rationale:** Chose Option B because:
+#### Rationale
+
+Chose Option B because:
 
 1. **Multi-session project** - Will take weeks/months, documentation maintains
    continuity
@@ -228,12 +234,12 @@ See [unofficial-api] for ecosystem history and alternatives.
    integration need thought
 4. **Cheaper to change** - Easier to revise docs than refactor code
 
-**Tradeoffs:**
+#### Tradeoffs
 
-- **Gave up:** Quick prototype dopamine, learning from implementation mistakes
-- **Gained:** Clear direction, session continuity, explicit rationale
+- Gave up: Quick prototype dopamine, learning from implementation mistakes
+- Gained: Clear direction, session continuity, explicit rationale
 
-**Impact:** Project timeline, session workflow, design quality
+Impact — Project timeline, session workflow, design quality
 
 ## Related Documents
 

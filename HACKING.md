@@ -55,7 +55,7 @@ architecture details.
 
 **Note:** The testing commands shown below will work after M0-DOCS configures entry points in pyproject.toml. For now, these serve as reference for post-M0-DOCS testing workflow.
 
-**Test M1-CLAUDE layer** (Claude-native, outputs raw API data):
+**Test M1-CLAUDE commands** (`native/claude` layer, outputs raw API data):
 
 ```bash
 uv sync  # one-time setup, for new modules
@@ -76,7 +76,7 @@ chatfs-claude-list-orgs | head -n 1 | \
   chatfs-claude-render-md > output.md
 ```
 
-**Test M2-VFS layer** (normalized, future):
+**Test M2-VFS commands** (`vfs` layer, normalized, future):
 
 ```bash
 # Same tools, normalized JSONL schema

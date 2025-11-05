@@ -6,7 +6,7 @@
 
 **Testing JSONL layer commands** (commands available after M0-DOCS configures entry points):
 
-M1-CLAUDE layer (claude-native, outputs raw API data):
+**M1-CLAUDE commands** (`native/claude` layer, outputs raw API data):
 ```bash
 echo '{}' | chatfs-claude-list-orgs | jq
 echo '{"uuid":"org-uuid"}' | chatfs-claude-list-convos | jq

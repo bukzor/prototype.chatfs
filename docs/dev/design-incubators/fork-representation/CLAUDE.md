@@ -194,7 +194,7 @@ Each question builds on the previous answer. We can't normalize what we don't un
 1. Use existing unofficial-claude-api to inspect forked conversation responses
 2. User has forked conversations with essential content - investigate those
 3. Document exact JSON fields and relationships in `api-investigation.md`
-4. Implement M1-CLAUDE layer that outputs whatever Claude returns
+4. Implement `native/claude` layer (M1-CLAUDE) that outputs whatever Claude returns
 
 **Later (M2-VFS):**
 5. Research how other chat providers (ChatGPT, Gemini) handle similar concepts
