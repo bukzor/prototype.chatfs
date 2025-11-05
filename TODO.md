@@ -9,6 +9,34 @@
 
 **IMPORTANT:** Existing docs are rough drafts written by Claude with minimal oversight. Do NOT treat them as authoritative. Your task is to:
 
+## Global Cleanup Tasks (Separate Sessions)
+
+### 1. Fix Layer Naming Globally
+
+**Issue:** Docs inconsistently use milestone names (M1-CLAUDE, M2-VFS) when referring to layers instead of layer names (`native/claude`, `vfs`).
+
+**Action needed:**
+- Scan all docs for incorrect usage: "M1-CLAUDE layer", "M2-VFS layer", etc.
+- Replace with correct layer names: `native/claude` layer, `vfs` layer, etc.
+- Keep milestone names only for: section headers, development phases, "implemented in M1-CLAUDE"
+- Files to check: All docs/, CLAUDE.md, HACKING.md, README.md
+
+**Scope:** Global search and replace across all documentation
+
+### 2. Remove Excessive Bolding
+
+**Issue:** Too much bold text reduces impact and readability.
+
+**Action needed:**
+- Remove most bolding from documentation
+- Use headers (`##`, `###`) for section headers
+- Use emdash (`--`) for line-item headers/labels
+- Keep bolding only for: critical warnings, key terms on first use
+
+**Scope:** All markdown files in docs/, root level docs
+
+---
+
 1. **Discuss** concepts with the user to develop deep understanding
 2. **Validate** existing content for accuracy/completeness
 3. **Correct** what's wrong or misleading
