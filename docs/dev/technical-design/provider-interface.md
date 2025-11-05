@@ -144,7 +144,7 @@ with real calls.
 ## Fork Representation
 
 **Status:** Under investigation in
-[../../../design-incubators/fork-representation/]
+[../../design-incubators/fork-representation/]
 
 Key unknowns: How does the API represent forks? Are they separate conversations
 or branches within one conversation?
@@ -228,7 +228,7 @@ conversation metadata fields 11. [ ] Document all message metadata fields
 ## Related Documents
 
 - [../technical-design.md] - How we wrap this API
-- [../../../design-incubators/fork-representation/] -
+- [../../design-incubators/fork-representation/] -
   Fork design exploration
 - [../design-rationale.md#unofficial-api-instead-of-official] -
   Why unofficial API

@@ -127,7 +127,7 @@ See [CLAUDE.md#working-on-documentation] for documentation topic locations.
   - Validate: Corrected architecture to show layered structure
   - Correct: Updated component descriptions, data flows (will complete in Phase 1.25)
 
-- [x] **Open Questions** (`design-incubators/README.md`)
+- [x] **Open Questions** (`docs/dev/design-incubators/README.md`)
   - Discussion: Fork representation splits into 3 phases (M1-CLAUDE/M2-VFS/M3-CACHE), new provider-abstraction question
   - Validate: Current docs conflate 3 distinct questions
   - Correct: Captured understanding in `docs/dev/open-questions-revision-notes.md` for integration after Phase 1.25
@@ -228,23 +228,23 @@ lib/chatfs/layer/
 
 ## Phase 1.4: Integrate Open Questions Understanding
 
-**Goal:** Apply insights from Phase 1 Open Questions discussion to design-incubators/
+**Goal:** Apply insights from Phase 1 Open Questions discussion to docs/dev/design-incubators/
 
 **Why now:** Architecture is locked (4 layers), now we can map open questions to correct milestones
 
 **Source:** `docs/dev/open-questions-revision-notes.md` (created during Phase 1)
 
 ### Updates needed:
-- [x] **design-incubators/fork-representation/CLAUDE.md** - Add 3-phase structure (M1-CLAUDE/M2-VFS/M3-CACHE split)
-- [x] **design-incubators/fork-representation/README.md** - Update with milestone mapping
-- [x] **Create:** `design-incubators/fork-representation/api-investigation.md` template for M1-CLAUDE
-- [x] **Create:** `design-incubators/provider-abstraction/` new incubator
-- [x] **Create:** `design-incubators/provider-abstraction/CLAUDE.md` - define the question
-- [x] **Create:** `design-incubators/provider-abstraction/README.md` - investigation workflow
-- [x] **Update:** `design-incubators/README.md` - add note about multi-phase incubators
+- [x] **docs/dev/design-incubators/fork-representation/CLAUDE.md** - Add 3-phase structure (M1-CLAUDE/M2-VFS/M3-CACHE split)
+- [x] **docs/dev/design-incubators/fork-representation/README.md** - Update with milestone mapping
+- [x] **Create:** `docs/dev/design-incubators/fork-representation/api-investigation.md` template for M1-CLAUDE
+- [x] **Create:** `docs/dev/design-incubators/provider-abstraction/` new incubator
+- [x] **Create:** `docs/dev/design-incubators/provider-abstraction/CLAUDE.md` - define the question
+- [x] **Create:** `docs/dev/design-incubators/provider-abstraction/README.md` - investigation workflow
+- [x] **Update:** `docs/dev/design-incubators/README.md` - add note about multi-phase incubators
 - [x] **Delete:** `docs/dev/open-questions-revision-notes.md` (integrated)
 
-**Deliverable:** design-incubators/ reflects split fork question and new provider abstraction question
+**Deliverable:** docs/dev/design-incubators/ reflects split fork question and new provider abstraction question
 
 ## Phase 1.5: Terminology Cleanup (Plumbing/Porcelain → Layer Structure) ✓ COMPLETE
 
@@ -266,7 +266,7 @@ lib/chatfs/layer/
 
 **In Progress:**
 - [ ] **Level 1: Core Documentation** - Remaining doc
-  - [ ] design-incubators/README.md - Open Questions
+  - [ ] docs/dev/design-incubators/README.md - Open Questions
 
 **Pending:**
 - [ ] **Level 2: Subdocs** - Elaborate foundations through discussion

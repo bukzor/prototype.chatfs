@@ -122,7 +122,7 @@ When you encounter docs marked with "Status: TODO":
 - `lib/chatfs/client.py` - API client wrapper (wraps unofficial-claude-api)
 - `lib/chatfs/models.py` - Data structures (Org, Conversation, Message)
 - `docs/dev/` - Design documentation
-- `design-incubators/fork-representation/` - Fork representation investigation
+- `docs/dev/design-incubators/fork-representation/` - Fork representation investigation
 
 ## Conventions
 

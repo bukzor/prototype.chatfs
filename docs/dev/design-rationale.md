@@ -246,4 +246,4 @@ See [unofficial-api] for ecosystem history and alternatives.
 [unofficial-api]: design-rationale/unofficial-api.md
 [technical-design.md]: technical-design.md
 [development-plan.md]: development-plan.md
-[design-incubators]: ../../design-incubators/
+[design-incubators]: design-incubators/

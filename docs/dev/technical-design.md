@@ -589,7 +589,7 @@ When capnshell exists:
 
 ### Write Operations
 
-Not yet designed (see [../../design-incubators/fork-representation/]):
+Not yet designed (see [design-incubators/fork-representation/]):
 - Append to conversation
 - Fork conversation
 - Amend messages

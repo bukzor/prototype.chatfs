@@ -254,7 +254,7 @@ For detailed rationale on architectural choices, see:
   decisions
 - [docs/dev/technical-design.md] - System
   architecture
-- [design-incubators/] - Unsolved problems being explored
+- [docs/dev/design-incubators/] - Unsolved problems being explored
 
 ## Contributing Workflow
 
@@ -266,6 +266,6 @@ For detailed rationale on architectural choices, see:
 
 **For major changes:**
 
-- Discuss in design-incubators/ first
+- Discuss in docs/dev/design-incubators/ first
 - Prototype multiple approaches
 - Document decision rationale
