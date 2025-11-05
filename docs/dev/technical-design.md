@@ -8,8 +8,8 @@ during M1-CLAUDE.
 
 **Read this when:**
 
-- Understanding the four-layer architecture (Native/VFS/Cache/CLI)
-- Implementing M1-CLAUDE (claude-native layer) or M2-VFS (normalized layer) tools
+- Understanding the four-layer architecture (`native`, `vfs`, `cache`, `cli`)
+- Implementing M1-CLAUDE (`native/claude` layer) or M2-VFS (`vfs` layer) tools
 - Understanding data flow and component interactions
 - Planning M2-VFS/M3-CACHE/M4-CLI implementation
 - Onboarding as a contributor
@@ -576,47 +576,18 @@ chatfs-vfs-list-orgs | head -n 1 | \
 
 See [../../HACKING.md#running-tests] for full testing guide.
 
-## Future Considerations
+## Beyond the Four Layers (M5-WRITE+)
 
-### M2-VFS: Virtual Filesystem Layer
+Advanced features beyond the core four-layer architecture, planned for M5-WRITE and later milestones.
 
-Add `chatfs-vfs-*` commands that normalize across providers:
-- Wrap M1-CLAUDE (chatfs-claude-*) tools with normalization layer
-- Add provider abstraction for ChatGPT, Gemini
-- Define normalized JSONL schema based on M1-CLAUDE findings
-- `--provider` flag to select provider
-
-See design-incubators/provider-abstraction-strategy/ for abstraction design.
-
-### M3-CACHE: Cache/FS Layer
-
-Add `chatfs-cache-*` commands that wrap `chatfs-vfs-*` with:
-- Filesystem persistence to `./chatfs/` directory
-- Staleness checking via mtime
-- Lazy directory creation
-- Cache invalidation
-
-See [cache-layer] for design details.
-
-### M4-CLI: CLI Layer
-
-Add `chatfs` commands with human-friendly UX:
-- Path-based interface (no UUIDs)
-- Progress bars, colors, interactive prompts
-- Error recovery and helpful messages
-
-See [cli-layer] for UX design.
-
-### M5-WRITE+: Advanced Features
-
-**Capnproto Migration**
+### Capnproto Migration
 
 When capnshell exists:
 1. Define capnproto schemas for Org, Conversation, Message
 2. Swap JSONL serialization for capnproto in `native/claude`/`vfs` tools
 3. `cache` and `cli` layers unchanged (abstraction holds)
 
-**Write Operations**
+### Write Operations
 
 Not yet designed (see [../../design-incubators/fork-representation/]):
 - Append to conversation
@@ -625,7 +596,7 @@ Not yet designed (see [../../design-incubators/fork-representation/]):
 
 Blocked on fork representation decision (M5-WRITE+ scope).
 
-**Multi-Provider Support**
+### Multi-Provider Support
 
 Handled by `vfs` layer (see design-incubators/provider-abstraction-strategy/):
 - `native/claude` layer exists (M1-CLAUDE milestone)
