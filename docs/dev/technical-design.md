@@ -45,32 +45,21 @@ chatfs is built in four layers, each implemented in separate milestones:
 
 ```
 ┌─────────────────────────────────────────┐
-│      CLI Layer (M4-CLI - Future)        │
-│   chatfs-ls //claude.ai/Buck\ Evan/...  │
-│   chatfs-cat //claude.ai/.../convo.md   │
-│   Commands: chatfs-ls, chatfs-cat, etc. │
-│   Modules: chatfs.layer.cli.*           │
+│         claude.ai API                   │
 └─────────────────┬───────────────────────┘
-                  │ Uses
+                  │ HTTP/TLS
 ┌─────────────────▼───────────────────────┐
-│    Cache/FS Layer (M3-CACHE - Future)   │
-│   chatfs-cache-list-orgs                │
-│   chatfs-cache-list-convos              │
-│   chatfs-cache-get-convo                │
-│   Commands: chatfs-cache-*              │
-│   Modules: chatfs.layer.cache.*         │
+│    unofficial-claude-api (Vendored)     │
+│    st1vms Python client                 │
 └─────────────────┬───────────────────────┘
-                  │ Uses
+                  │
 ┌─────────────────▼───────────────────────┐
-│    VFS Layer (M2-VFS - Future)          │
-│   chatfs-vfs-list-orgs --provider X     │
-│   chatfs-vfs-list-convos                │
-│   chatfs-vfs-get-convo                  │
-│   chatfs-vfs-render-md                  │
-│   Commands: chatfs-vfs-*                │
-│   Modules: chatfs.layer.vfs.*           │
+│        Shared Libraries                 │
+│  chatfs.client   (Claude API wrapper)   │
+│  chatfs.models   (M2-VFS data models)   │
+│  chatfs.cache    (M3-CACHE manager)     │
 └─────────────────┬───────────────────────┘
-                  │ Uses
+                  │
 ┌─────────────────▼───────────────────────┐
 │   Native Layer (M1-CLAUDE - Next)       │
 │   chatfs-claude-list-orgs               │
@@ -80,23 +69,36 @@ chatfs is built in four layers, each implemented in separate milestones:
 │   Commands: chatfs-claude-*             │
 │   Modules: chatfs.layer.native.claude.* │
 └─────────────────┬───────────────────────┘
-                  │ Uses
+                  │
 ┌─────────────────▼───────────────────────┐
-│        Shared Libraries                 │
-│  chatfs.client   (Claude API wrapper)   │
-│  chatfs.models   (M2-VFS data models)   │
-│  chatfs.cache    (M3-CACHE manager)     │
+│    VFS Layer (M2-VFS - Future)          │
+│   chatfs-vfs-list-orgs --provider X     │
+│   chatfs-vfs-list-convos                │
+│   chatfs-vfs-get-convo                  │
+│   chatfs-vfs-render-md                  │
+│   Commands: chatfs-vfs-*                │
+│   Modules: chatfs.layer.vfs.*           │
 └─────────────────┬───────────────────────┘
-                  │ Uses
+                  │
 ┌─────────────────▼───────────────────────┐
-│    unofficial-claude-api (Vendored)     │
-│    st1vms Python client                 │
+│    Cache/FS Layer (M3-CACHE - Future)   │
+│   chatfs-cache-list-orgs                │
+│   chatfs-cache-list-convos              │
+│   chatfs-cache-get-convo                │
+│   Commands: chatfs-cache-*              │
+│   Modules: chatfs.layer.cache.*         │
 └─────────────────┬───────────────────────┘
-                  │ HTTP/TLS
+                  │
 ┌─────────────────▼───────────────────────┐
-│         claude.ai API                   │
+│      CLI Layer (M4-CLI - Future)        │
+│   chatfs-ls //claude.ai/Buck\ Evan/...  │
+│   chatfs-cat //claude.ai/.../convo.md   │
+│   Commands: chatfs-ls, chatfs-cat, etc. │
+│   Modules: chatfs.layer.cli.*           │
 └─────────────────────────────────────────┘
 ```
+
+**Data flow:** Top to bottom (API → unofficial-claude-api → M1-CLAUDE → M2-VFS → M3-CACHE → M4-CLI)
 
 **Layer responsibilities:**
 
