@@ -69,18 +69,17 @@ See [docs/dev/technical-design.md#data-flow] for details.
 - **Discussion over speculation** - When uncertain about concepts or design decisions, discuss with user to develop understanding before writing. Don't guess.
 - **Breadth-first validation** - Review higher-level docs before diving into subdocs. Subdocs may not be needed if main doc covers it well.
 
-**Validation workflow for existing docs:**
-1. Discuss concepts with user to develop understanding
-2. Read existing content
-3. Evaluate accuracy/completeness
-4. Correct/rewrite with confidence
+**Documentation workflows:**
 
-**Handling implementation details:**
-- Clearly mark what's intentionally deferred to implementation phases
-- Avoid creating placeholder docs that add no value
-- Prefer "TBD in M1-CLAUDE" markers over empty TODO stubs
+General validation workflow:
+1. **Discuss** concepts with user to develop deep understanding
+2. **Read** existing content
+3. **Evaluate** accuracy/completeness
+4. **Correct/Rewrite** with confidence
 
-**TODO-marked docs:**
+NOT: Mechanical fill-in-the-blanks. Reach certainty before making changes.
+
+**Handling TODO-marked docs:**
 
 When you encounter docs marked with "Status: TODO":
 1. **Never fill in TODO docs solo** - These require discussion with user first
@@ -89,10 +88,30 @@ When you encounter docs marked with "Status: TODO":
 4. **May prove unnecessary** - Some breakdown docs might be deleted if main doc suffices
 
 **Subdoc creation policy:**
-
 - Only create subdocs when >100-200 lines or frequently referenced independently
 - Otherwise keep content in main doc
 - See [docs/dev/documentation-howto.md] for full guidelines
+
+**Deferring implementation details:**
+- Clearly mark what's intentionally deferred to implementation phases
+- Mark as "TBD in M1-CLAUDE" or similar (not empty TODO stubs)
+- Avoid creating placeholder docs that add no value
+- Discuss what level of detail is appropriate for design phase vs implementation phase
+
+**Where documentation topics live:**
+
+| Topic Layer                  | Doc Location                                             |
+| ---------------------------- | -------------------------------------------------------- |
+| L0: Project concept          | README.md                                                |
+| L1: Problem Space            | design-rationale.md (intro)                              |
+| L1: Design Philosophy        | design-rationale.md (core decisions)                     |
+| L1: Architecture             | technical-design.md#architecture                         |
+| L1: Open Questions           | design-incubators/                                       |
+| L2: Rationale details        | design-rationale/*.md                                    |
+| L2: Architecture elaboration | technical-design.md (sections)                           |
+| L2: Data Formats             | technical-design/*.md                                    |
+| L3: Component interfaces     | technical-design/*.md subdocs                            |
+| L4: Implementation specifics | technical-design/*.md OR development-plan/milestone-*.md |
 
 ## Key Files
 

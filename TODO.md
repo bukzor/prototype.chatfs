@@ -51,7 +51,7 @@ Level 0 (Root): chatfs - What is this project?
 │  └─ Want local filesystem access (Obsidian, grep, etc)
 │  │
 │  Design Philosophy branches:
-│  ├─ Plumbing/Porcelain split (why)
+│  ├─ Layered architecture (why)
 │  ├─ JSONL choice (why)
 │  ├─ Lazy loading strategy (why)
 │  └─ Unofficial APIs (why)
@@ -72,10 +72,10 @@ Level 0 (Root): chatfs - What is this project?
    └─ Cache interaction points
    │
    Component Structure branches:
-   ├─ API/Provider Layer
-   ├─ Cache Layer
-   ├─ Plumbing Layer
-   └─ Porcelain Layer
+   ├─ native layer family
+   ├─ vfs layer
+   ├─ cache layer
+   └─ cli layer
    │
    Data Formats branches:
    ├─ JSONL schemas
@@ -83,17 +83,17 @@ Level 0 (Root): chatfs - What is this project?
 
    Level 4: Implementation Specifics (deferred to M1-CLAUDE+)
    │
-   API Layer branches:
+   native layer branches:
    ├─ Provider interface definition
-   ├─ Claude provider specifics
-   └─ ChatGPT provider specifics
+   ├─ native/claude specifics
+   └─ native/chatgpt specifics
    │
-   Cache Layer branches:
+   cache layer branches:
    ├─ Directory structure
    ├─ Staleness checking
    └─ Lazy stub creation
    │
-   Plumbing Layer branches:
+   vfs layer branches:
    ├─ Tool contract (stdin/stdout)
    ├─ list-orgs implementation
    ├─ list-convos implementation
@@ -106,24 +106,7 @@ Level 0 (Root): chatfs - What is this project?
    └─ Message record fields
 ```
 
-## Where Topics Live
-
-All topics have natural homes in our doc structure:
-
-| Topic Layer                  | Doc Location                                             | ✓   |
-| ---------------------------- | -------------------------------------------------------- | --- |
-| L0: Project concept          | README.md                                                | ✓   |
-| L1: Problem Space            | design-rationale.md (intro)                              | ✓   |
-| L1: Design Philosophy        | design-rationale.md (core decisions)                     | ✓   |
-| L1: Architecture             | technical-design.md#architecture                         | ✓   |
-| L1: Open Questions           | design-incubators/                                       | ✓   |
-| L2: Rationale details        | design-rationale/rationale/\*.md                         | ✓   |
-| L2: Architecture elaboration | technical-design.md (sections)                           | ✓   |
-| L2: Data Formats             | technical-design/\*.md                                   | ✓   |
-| L3: Component interfaces     | technical-design/\*.md subdocs                           | ✓   |
-| L4: Implementation specifics | technical-design/_.md OR development-plan/milestone-_.md | ✓   |
-
-**One gap identified:** JSONL schemas may need a new `technical-design/jsonl-schemas.md` (stub in Phase 3)
+See [CLAUDE.md#working-on-documentation] for documentation topic locations.
 
 ## Phase 1: Validate Level 1 (Foundation - Main Doc Bodies)
 
