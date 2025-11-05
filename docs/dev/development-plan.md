@@ -175,7 +175,7 @@ before implementation
 5. **Optional:** Implement M1-CHATGPT native layer for ChatGPT
 6. **Optional:** Implement normalization for ChatGPT → VFS schema
 7. Test full pipeline end-to-end with both providers
-8. Resolve design-incubators/provider-abstraction-strategy/ decisions
+8. Resolve design-incubators/chat-provider-normalization/ and multi-domain-support/ decisions
 
 **Next Milestone:** M3-CACHE (Cache/filesystem layer)
 

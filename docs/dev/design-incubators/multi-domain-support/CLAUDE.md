@@ -4,7 +4,9 @@
 
 chatfs started as "claude.ai conversations as filesystem" but the concept generalizes: **any structured API data could benefit from Unix tool composability**.
 
-**Question:** How do we design M2-API (normalized layer) to support diverse providers while keeping the abstraction useful?
+**Question:** Should we expand chatfs beyond chat providers, and if so, how?
+
+**Note:** This is a strategic/scope question. For technical details on normalizing chat providers specifically, see `../chat-provider-normalization/`.
 
 ## Two Categories of Providers
 
@@ -40,21 +42,21 @@ chatfs started as "claude.ai conversations as filesystem" but the concept genera
 ### 1. Should we support both categories?
 
 **Option A: Chat-only abstraction**
-- M2-API normalizes across Claude/ChatGPT/Gemini
+- M2-VFS normalizes across Claude/ChatGPT/Gemini only
 - Non-chat providers get separate projects (linear-fs, github-fs, gcp-fs)
 - Pro: Focused, clean abstraction for one problem domain
 - Con: Misses opportunity for code/tool reuse
 
 **Option B: Universal abstraction**
-- M2-API provides generic "entity/relationship" schema
+- M2-VFS provides generic "entity/relationship" schema
 - All providers map to common model
 - Pro: Maximum reuse, one set of cache/CLI tools
 - Con: Abstraction likely too generic to be useful (lowest common denominator)
 
 **Option C: Tiered abstraction**
-- M2-API-Chat for conversation providers (Claude, ChatGPT, Gemini)
-- M2-API-Issues for ticket/issue providers (Linear, GitHub)
-- M2-API-Cloud for resource providers (GCP, AWS)
+- M2-VFS-Chat for conversation providers (Claude, ChatGPT, Gemini)
+- M2-VFS-Issues for ticket/issue providers (Linear, GitHub)
+- M2-VFS-Cloud for resource providers (GCP, AWS)
 - Each tier has appropriate abstraction, shares cache/CLI infrastructure
 - Pro: Right level of abstraction per domain
 - Con: More upfront design, multiple schemas to maintain
@@ -79,7 +81,7 @@ chatfs started as "claude.ai conversations as filesystem" but the concept genera
 ### 3. How do we handle provider-specific extensions?
 
 **Approach A: Strict schema**
-- M2-API defines exact fields
+- M2-VFS defines exact fields
 - Provider layers must fit into schema or drop data
 - Pro: Consistent, predictable
 - Con: Loses valuable provider-specific features
@@ -104,8 +106,8 @@ chatfs started as "claude.ai conversations as filesystem" but the concept genera
 - [ ] Research ChatGPT API/unofficial client for conversation structure
 - [ ] Research Gemini API for conversation structure
 - [ ] Identify common fields vs provider-specific
-- [ ] Design normalized conversation/message schema
-- [ ] Prototype M2-API with 2 providers to validate
+- [ ] Design normalized conversation/message schema (see chat-provider-normalization/)
+- [ ] Prototype M2-VFS with 2 chat providers to validate
 
 ### For Category 2 (Non-chat providers):
 
@@ -129,11 +131,12 @@ The chosen approach should:
 ## Blocking Relationships
 
 **This incubator blocks:**
-- M2-API implementation (need to know what to normalize)
-- Multi-provider support decisions
+- Long-term architecture decisions (what domains to support)
+- Non-chat provider development (if we decide to support them)
 
 **This incubator depends on:**
 - M1-CLAUDE findings (need concrete data from at least one provider)
+- chat-provider-normalization experience (how hard is Category 1 abstraction?)
 - fork-representation Phase 1 (forks are a key differentiator between providers)
 
 ## Related

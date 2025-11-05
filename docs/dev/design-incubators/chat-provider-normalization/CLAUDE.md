@@ -1,18 +1,14 @@
-# Provider Abstraction Strategy
+# Chat Provider Normalization Strategy
 
 ## The Core Problem
 
-How do we design M2-VFS to abstract across fundamentally different APIs?
+How do we design M2-VFS to normalize across chat LLM providers?
 
-**Chat providers (Claude, ChatGPT):**
+**Chat providers (Claude, ChatGPT, Gemini):**
 - Organizations → Conversations → Messages
-- Forks/branches
+- Forks/branches (Claude-specific?)
 - Streaming responses
-
-**Project tracking (Linear, GitHub):**
-- Projects → Tickets/Issues → Comments
-- Relationships: blocks, depends-on, relates-to
-- State transitions
+- Message types and metadata
 
 ## Why This Matters
 
@@ -43,28 +39,14 @@ This is why M1-CLAUDE (native) must come before M2-VFS (normalized abstraction).
 **Depends on:**
 - M1-CLAUDE findings (what does Claude return?)
 - ChatGPT research (how do they handle forks?)
-- Linear research (do task relationships map to forks?)
+- Gemini research (fork support?)
 
 **Questions:**
-- Do all providers support forks, or is this Claude-specific?
+- Do all chat providers support forks, or is this Claude-specific?
 - Should VFS expose provider-specific features?
 - How do we represent fork relationships in JSONL?
 
-### 3. Should Linear even use the same VFS layer?
-
-**Option A: Unified VFS**
-- One normalized schema for all providers
-- Chat messages and task comments use same format
-- Maximum abstraction, but may be awkward
-
-**Option B: Separate abstractions**
-- chatfs-vfs for chat providers
-- taskfs-vfs for project tracking
-- Different tools, cleaner abstractions
-
-**Question:** Is the similarity between chats and tasks real, or superficial?
-
-### 4. Do we need provider capability detection?
+### 3. Do we need provider capability detection?
 
 If providers have different features, M2-VFS might need:
 - Capability flags (supports_forks, supports_streaming, etc.)
@@ -84,8 +66,8 @@ If providers have different features, M2-VFS might need:
 ### Phase 2: Analyze Patterns
 
 1. What patterns exist in Claude API?
-2. What's Claude-specific vs. likely universal?
-3. How do other chat providers structure similar data?
+2. What's Claude-specific vs. likely universal across chat providers?
+3. How do other chat providers (ChatGPT, Gemini) structure similar data?
 
 **Deliverable:** Pattern analysis document
 
@@ -93,7 +75,7 @@ If providers have different features, M2-VFS might need:
 
 1. Create normalized schema informed by M1-CLAUDE findings
 2. Design provider abstraction based on real use cases
-3. Validate design against planned providers (Claude, ChatGPT, Linear)
+3. Validate design against chat providers (Claude, ChatGPT, Gemini)
 
 **Deliverable:** M2-VFS specification and implementation
 
@@ -108,10 +90,9 @@ If providers have different features, M2-VFS might need:
 
 ## Deferred Decisions (Until M1-CLAUDE complete)
 
-- Exact normalized JSONL schemas
+- Exact normalized JSONL schemas for chat providers
 - Provider capability detection strategy
 - Extension mechanism for provider-specific features
-- Whether Linear should use same VFS
 
 ## Success Criteria
 

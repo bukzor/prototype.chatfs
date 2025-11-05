@@ -197,9 +197,9 @@ Each question builds on the previous answer. We can't normalize what we don't un
 4. Implement M1-CLAUDE layer that outputs whatever Claude returns
 
 **Later (M2-VFS):**
-5. Research how other providers (ChatGPT, Linear) handle similar concepts
-6. Design normalized schema that accommodates all providers
-7. See separate incubator: `../provider-abstraction/`
+5. Research how other chat providers (ChatGPT, Gemini) handle similar concepts
+6. Design normalized schema that accommodates all chat providers
+7. See separate incubator: `../chat-provider-normalization/`
 
 **Much Later (M3-CACHE):**
 8. Prototype filesystem approaches (Option A, B, C) with normalized schema

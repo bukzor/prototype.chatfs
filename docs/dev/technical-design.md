@@ -598,7 +598,7 @@ Blocked on fork representation decision (M5-WRITE+ scope).
 
 ### Multi-Provider Support
 
-Handled by `vfs` layer (see design-incubators/provider-abstraction-strategy/):
+Handled by `vfs` layer (see design-incubators/chat-provider-normalization/ and multi-domain-support/):
 - `native/claude` layer exists (M1-CLAUDE milestone)
 - Add `native/chatgpt` layer for ChatGPT (future milestone)
 - Add `native/gemini` layer for Gemini (future milestone)

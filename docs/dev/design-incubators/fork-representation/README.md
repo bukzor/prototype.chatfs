@@ -8,7 +8,7 @@ forked Claude.ai conversations in a lazy filesystem.**
 Fork representation splits across three milestones:
 
 - **Phase 1 (M1-CLAUDE):** Investigate what Claude API returns → `api-investigation.md`
-- **Phase 2 (M2-VFS):** Define normalized fork schema → `../provider-abstraction/`
+- **Phase 2 (M2-VFS):** Define normalized fork schema → `../chat-provider-normalization/`
 - **Phase 3 (M3-CACHE):** Choose filesystem layout → This incubator's primary focus
 
 Each phase depends on the previous. We can't normalize what we don't understand (Phase 2 needs Phase 1), and we can't persist what we haven't normalized (Phase 3 needs Phase 2).
@@ -58,9 +58,9 @@ Create `api-investigation.md` with:
 ## Phase 2: Normalized Schema Design (M2-VFS)
 
 **Milestone:** M2-VFS implementation
-**Deliverable:** See `../provider-abstraction/` incubator
+**Deliverable:** See `../chat-provider-normalization/` incubator
 
-Phase 2 designs the normalized JSONL schema for forks that works across providers (Claude, ChatGPT, etc.). This depends on Phase 1 findings.
+Phase 2 designs the normalized JSONL schema for forks that works across chat providers (Claude, ChatGPT, Gemini). This depends on Phase 1 findings.
 
 **Key question:** How do we represent fork relationships in a provider-agnostic way?
 
@@ -121,7 +121,7 @@ Create `DECISION.md` with:
 - [ ] Document API structure (`api-investigation.md`)
 
 **Phase 2 (M2-VFS):**
-- [ ] Normalized fork schema design (see `../provider-abstraction/`)
+- [ ] Normalized fork schema design (see `../chat-provider-normalization/`)
 
 **Phase 3 (M3-CACHE):**
 - [ ] Prototype Option A (flat naming)

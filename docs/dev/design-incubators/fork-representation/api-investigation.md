@@ -104,5 +104,5 @@ TODO: Add actual JSON showing sibling forks
 After completing this investigation:
 
 1. Use findings to inform M2-VFS normalized schema design
-2. See `../provider-abstraction/` for cross-provider normalization
+2. See `../chat-provider-normalization/` for cross-provider normalization
 3. Eventually inform M3-CACHE filesystem layout decisions

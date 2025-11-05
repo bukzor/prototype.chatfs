@@ -1,10 +1,13 @@
-# Provider Abstraction Design
+# Chat Provider Normalization
 
-This incubator focuses on: **How to design M2-VFS to abstract across different chat/project APIs while preserving their unique features.**
+This incubator focuses on: **How to design M2-VFS to normalize across chat LLM
+providers (Claude, ChatGPT, Gemini) while preserving their unique features.**
 
 ## Why This Matters
 
-M2-VFS is the **normalized layer** that sits between provider-specific native layers (M1-CLAUDE, M1-CHATGPT) and the cache/UI layers. Getting the abstraction wrong would:
+M2-VFS is the **normalized layer** that sits between provider-specific native
+layers (M1-CLAUDE, M1-CHATGPT) and the cache/UI layers. Getting the abstraction
+wrong would:
 
 - Force awkward mappings from native APIs
 - Lose important provider-specific features
@@ -21,15 +24,16 @@ M2-VFS is the **normalized layer** that sits between provider-specific native la
 2. Output whatever Claude returns, make no normalization decisions
 3. Document everything thoroughly
 
-**Rationale:** We need to understand what APIs actually provide before designing how to normalize them.
+**Rationale:** We need to understand what APIs actually provide before designing
+how to normalize them.
 
 ### Step 2: Analyze Patterns
 
 After M1-CLAUDE complete:
 
 1. What patterns emerged?
-2. What feels Claude-specific vs. universal?
-3. Research other providers (ChatGPT, Linear)
+2. What feels Claude-specific vs. universal across chat providers?
+3. Research other chat providers (ChatGPT, Gemini)
 4. Look for common abstractions
 
 ### Step 3: Design Normalized Schema
@@ -44,6 +48,7 @@ With concrete examples in hand:
 ### Step 4: Document Decision
 
 Create `DECISION.md` with:
+
 - Chosen abstraction strategy
 - Normalized JSONL schemas
 - Provider interface specification
@@ -61,17 +66,20 @@ Create `DECISION.md` with:
 
 ## Related Incubators
 
-- **fork-representation/** - Phase 2 (normalized fork schema) depends on this incubator
-- **fork-representation/** - Phase 1 (Claude API investigation) informs this incubator
+- **fork-representation/** - Phase 2 (normalized fork schema) depends on this
+  incubator
+- **fork-representation/** - Phase 1 (Claude API investigation) informs this
+  incubator
+- **multi-domain-support/** - Strategic decision on whether to support non-chat
+  providers
 
 ## Critical Questions
 
 See [CLAUDE.md](./CLAUDE.md) for detailed questions, including:
 
 1. Should M2-VFS support provider-specific extensions?
-2. How do we normalize fork representation across providers?
-3. Should Linear use the same VFS layer as chat providers?
-4. Do we need provider capability detection?
+2. How do we normalize fork representation across chat providers?
+3. Do we need provider capability detection?
 
 ## Files
 

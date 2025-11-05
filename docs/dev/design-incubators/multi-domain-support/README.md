@@ -1,8 +1,10 @@
-# Provider Abstraction Strategy Investigation
+# Multi-Domain Provider Support
 
 ## Problem Statement
 
-How do we design M2-API (normalized layer) to support multiple data providers while keeping the abstraction useful and not overly generic?
+**Strategic decision:** Should chatfs support only chat LLM providers (Claude/ChatGPT/Gemini), or also extend to other domains (Linear/GitHub/AWS/GCP)?
+
+This is about scope and architecture strategy, not the technical details of normalization (see `chat-provider-normalization/` for that).
 
 ## Current Status
 
@@ -29,10 +31,11 @@ How do we design M2-API (normalized layer) to support multiple data providers wh
 ## Deliverables
 
 When resolved:
-- `DECISION.md` - Chosen abstraction approach with rationale
-- `schema.md` - Normalized JSONL schema specification
-- Update `technical-design.md` with M2-API design
+- `DECISION.md` - Chosen scope strategy with rationale (chat-only, universal, or tiered)
+- Update `technical-design.md` with long-term architecture strategy
+- If tiered: Define tier boundaries and shared infrastructure
 
 ## Related Incubators
 
-- [fork-representation/] - Fork models vary significantly between providers
+- **chat-provider-normalization/** - Technical design for normalizing chat providers (Category 1)
+- **fork-representation/** - Fork models vary significantly between providers

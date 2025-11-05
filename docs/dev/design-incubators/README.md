@@ -51,13 +51,24 @@ Use an incubator when you find yourself saying:
 
 **Status:** Phase 1 (API investigation) needed for M1-CLAUDE
 
-### provider-abstraction/
+### chat-provider-normalization/
 
 **Blocks:** M2-VFS implementation
 
 **Questions:**
-1. Should we support chat-only or chat + non-chat providers (Linear, GitHub)?
-2. What belongs in normalized layer vs provider-specific extensions?
-3. Pure abstraction vs. abstraction+extensions approach?
+1. How to normalize across chat LLM providers (Claude, ChatGPT, Gemini)?
+2. Pure abstraction vs. abstraction+extensions approach?
+3. How to handle provider-specific features (forks, streaming)?
 
-**Status:** Depends on M1-CLAUDE findings, needs research on other providers
+**Status:** Depends on M1-CLAUDE findings, needs research on ChatGPT/Gemini
+
+### multi-domain-support/
+
+**Blocks:** Long-term architecture strategy
+
+**Questions:**
+1. Should chatfs support only chat providers or expand to Linear/GitHub/AWS/GCP?
+2. If expanding: chat-only, universal abstraction, or tiered abstraction?
+3. How much code can be shared across domains?
+
+**Status:** Strategic decision, depends on M1-CLAUDE + chat provider normalization experience
