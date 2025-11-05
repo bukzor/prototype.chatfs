@@ -21,15 +21,17 @@
   - Replaced "M3-CACHE layer" → "`cache` layer"
   - Milestone names kept only for: section headers, development phases, "implemented in M1-CLAUDE"
 
-- [ ] Remove Excessive Bolding
+- [ ] Remove Excessive Bolding (In Progress)
 
   **Issue:** Too much bold text reduces impact and readability.
 
-  **Action needed:**
-  - [ ] Replace bolded section headers with section headers: `##`, `###`
-  - [ ] Replace bolded line-item headers/labels with emdash-delimiting
-  - [ ] Remove most bolding from documentation
-      - Keep/restore bolding only for: critical warnings, key terms on first use
+  **Progress:**
+  - [x] technical-design.md - All bolding fixed
+  - [x] design-rationale.md - All bolding fixed
+  - [ ] development-plan.md - Needs completion
+  - [ ] Other docs/ files - Need survey and fixes
+
+  **Pattern:** Replace bolded metadata labels with emdash format (e.g., "**Status:**" → "Status —"), replace bolded section headers with proper markdown headers (####). Keep bolding only for emphasis in definitions/lists.
 
 
 ## Documentation Dependency Tree
