@@ -63,15 +63,19 @@ See [docs/dev/technical-design.md#data-flow] for details.
 
 ## Working on Documentation
 
-**🚨 CRITICAL: TODO-marked docs require discussion before writing**
+**Documentation editing principles:**
+
+- **80% confidence threshold** - Make edits when reasonably confident. Do NOT over-hedge or seek permission for routine edits. Edit first, discuss if uncertain.
+- **Discussion over speculation** - When uncertain about concepts or design decisions, discuss with user to develop understanding before writing. Don't guess.
+- **Breadth-first validation** - Review higher-level docs before diving into subdocs. Subdocs may not be needed if main doc covers it well.
+
+**TODO-marked docs:**
 
 When you encounter docs marked with "Status: TODO":
-
 1. **Never fill in TODO docs solo** - These require discussion with user first
 2. **Discuss concepts first** - Develop understanding through conversation
 3. **Only write after reaching certainty** - Discussion must establish clear understanding
-4. **Breadth-first approach** - Review main docs before filling in subdocs
-5. **May prove unnecessary** - Some breakdown docs might be deleted if main doc suffices
+4. **May prove unnecessary** - Some breakdown docs might be deleted if main doc suffices
 
 **Subdoc creation policy:**
 

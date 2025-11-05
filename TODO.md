@@ -11,42 +11,38 @@
 
 ## Global Cleanup Tasks (Separate Sessions)
 
-### 1. Fix Layer Naming Globally
+- [ ] Fix Layer Naming Globally
 
-**Issue:** Docs inconsistently use milestone names (M1-CLAUDE, M2-VFS) when referring to layers instead of layer names (`native/claude`, `vfs`).
+  **Issue:** Docs inconsistently use milestone names (M1-CLAUDE, M2-VFS) when referring to layers instead of layer names (`native`, `vfs`).
 
-**Action needed:**
-- Scan all docs for incorrect usage: "M1-CLAUDE layer", "M2-VFS layer", etc.
-- Replace with correct layer names: `native/claude` layer, `vfs` layer, etc.
-- Keep milestone names only for: section headers, development phases, "implemented in M1-CLAUDE"
-- Files to check: All docs/, CLAUDE.md, HACKING.md, README.md
+  **Action needed:**
+  - Scan all docs for incorrect usage: "M1-CLAUDE layer", "M2-VFS layer", etc.
+  - Replace with correct layer names: `native` layer, `vfs` layer, etc.
+  - Keep milestone names only for: section headers, development phases, "implemented in M1-CLAUDE"
+  - Files to check: All docs/, CLAUDE.md, HACKING.md, README.md
 
-**Scope:** Global search and replace across all documentation
+- [ ] Remove Excessive Bolding
 
-### 2. Remove Excessive Bolding
+  **Issue:** Too much bold text reduces impact and readability.
 
-**Issue:** Too much bold text reduces impact and readability.
+  **Action needed:**
+  - [ ] Replace bolded section headers with section headers: `##`, `###`
+  - [ ] Replace bolded line-item headers/labels with emdash-delimiting
+  - [ ] Remove most bolding from documentation
+      - Keep/restore bolding only for: critical warnings, key terms on first use
 
-**Action needed:**
-- Remove most bolding from documentation
-- Use headers (`##`, `###`) for section headers
-- Use emdash (`--`) for line-item headers/labels
-- Keep bolding only for: critical warnings, key terms on first use
-
-**Scope:** All markdown files in docs/, root level docs
 
 ---
 
-1. **Discuss** concepts with the user to develop deep understanding
-2. **Validate** existing content for accuracy/completeness
+**M0-DOCS workflow:**
+1. **Discuss** concepts with user to develop deep understanding
+2. **Validate** existing rough-draft content for accuracy/completeness
 3. **Correct** what's wrong or misleading
 4. **Create** missing content with confidence
 
-**NOT:** Mechanical fill-in-the-blanks. You must reach certainty before making changes.
+NOT: Mechanical fill-in-the-blanks. Reach certainty before making changes.
 
-**Editing Guideline:** Make edits at 80% confidence. Do NOT over-hedge or seek permission for edits when you have reasonable confidence. Edit first, discuss if uncertain.
-
-**Structure fixed:** Files moved, renamed, all links updated (2025-11-02)
+See [CLAUDE.md#working-on-documentation] for general documentation editing principles (80% confidence threshold, discussion over speculation, breadth-first validation).
 
 ## Documentation Dependency Tree
 
