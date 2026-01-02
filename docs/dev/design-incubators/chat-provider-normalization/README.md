@@ -1,7 +1,7 @@
 # Chat Provider Normalization
 
 This incubator focuses on: **How to design M2-VFS to normalize across chat LLM
-providers (Claude, ChatGPT, Gemini) while preserving their unique features.**
+providers (Claude, ChatGPT, Google AI Studio) while preserving their unique features.**
 
 ## Why This Matters
 
@@ -33,7 +33,7 @@ After M1-CLAUDE complete:
 
 1. What patterns emerged?
 2. What feels Claude-specific vs. universal across chat providers?
-3. Research other chat providers (ChatGPT, Gemini)
+3. Research other chat providers (ChatGPT, Google AI Studio)
 4. Look for common abstractions
 
 ### Step 3: Design Normalized Schema

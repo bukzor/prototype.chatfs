@@ -1,8 +1,8 @@
 # Technical Design
 
-Last Updated — 2025-11-01
+- Last Updated -- 2025-11-01
 
-Status — ⚠️ Pre-implementation - Technical details are soft and under
+- Status -- ⚠️ Pre-implementation - Technical details are soft and under
 discussion. Data structures, APIs, and implementation specifics will be refined
 during M1-CLAUDE.
 
@@ -20,7 +20,7 @@ This document describes chatfs's architecture and milestone-based implementation
 
 chatfs provides programmatic access to claude.ai conversations through composable JSONL-based tools, built in four layers (Native, VFS, Cache, CLI).
 
-Current state (M0-DOCS) — Documentation phase - no implementation yet. Next: M1-CLAUDE (claude-native layer).
+- Current state (M0-DOCS) -- Documentation phase - no implementation yet. Next: M1-CLAUDE (claude-native layer).
 
 #### Planned layers
 - **`native/claude` (M1-CLAUDE):** Direct API wrapper, outputs raw Claude data as JSONL
@@ -30,12 +30,12 @@ Current state (M0-DOCS) — Documentation phase - no implementation yet. Next: M
 
 #### Design characteristics
 
-- Composable — Small tools that pipe together (Unix philosophy)
-- Layered — Four independent layers with clear boundaries and responsibilities
-- Progressive — Each layer builds on the previous, each independently useful
-- Learn-then-abstract — M1-CLAUDE (concrete) informs M2-VFS (abstract) design
-- Future-proof — JSONL → capnproto migration path
-- Multi-provider ready — M2-VFS normalizes across Claude, ChatGPT, Gemini
+- Composable -- Small tools that pipe together (Unix philosophy)
+- Layered -- Four independent layers with clear boundaries and responsibilities
+- Progressive -- Each layer builds on the previous, each independently useful
+- Learn-then-abstract -- M1-CLAUDE (concrete) informs M2-VFS (abstract) design
+- Future-proof -- JSONL → capnproto migration path
+- Multi-provider ready -- M2-VFS normalizes across Claude (claude.ai), ChatGPT (chat.openai.com), Google AI Studio (aistudio.google.com)
 
 ## Architecture
 
@@ -106,12 +106,12 @@ chatfs is built in four layers, each implemented in separate milestones:
 
 ### Native Layer (M1-CLAUDE - Next)
 
-Layer — `native/claude`
-Milestone — M1-CLAUDE
-Commands — `chatfs-claude-*`
-Modules — `chatfs.layer.native.claude.*`
+- Layer -- `native/claude`
+- Milestone -- M1-CLAUDE
+- Commands -- `chatfs-claude-*`
+- Modules -- `chatfs.layer.native.claude.*`
 
-Responsibility — Direct wrapper around claude.ai API. Outputs whatever Claude returns as JSONL, with minimal processing. No normalization decisions.
+- Responsibility -- Direct wrapper around claude.ai API. Outputs whatever Claude returns as JSONL, with minimal processing. No normalization decisions.
 
 #### Interface
 
@@ -157,7 +157,7 @@ echo '{"uuid":"org-123"}' | chatfs-claude-list-convos | jq
 - No filesystem interaction (stateless)
 - Minimal abstraction: Output whatever Claude API returns, don't normalize
 
-Purpose — Learn what Claude API actually returns before designing `vfs` layer's normalized schema.
+- Purpose -- Learn what Claude API actually returns before designing `vfs` layer's normalized schema.
 
 #### API Client
 
@@ -182,12 +182,12 @@ See [provider-interface] for full API documentation.
 
 ### VFS Layer (M2-VFS - Future)
 
-Layer — `vfs`
-Milestone — M2-VFS
-Commands — `chatfs-vfs-*`
-Modules — `chatfs.layer.vfs.*`
+- Layer -- `vfs`
+- Milestone -- M2-VFS
+- Commands -- `chatfs-vfs-*`
+- Modules -- `chatfs.layer.vfs.*`
 
-Responsibility — Normalized JSONL schema across providers (Claude, ChatGPT, etc.). Stateless, no filesystem writes.
+- Responsibility -- Normalized JSONL schema across providers (Claude, ChatGPT, etc.). Stateless, no filesystem writes.
 
 #### Interface
 
@@ -270,12 +270,12 @@ class Message:
 
 ### Cache/FS Layer (M3-CACHE - Future)
 
-Layer — `cache`
-Milestone — M3-CACHE
-Commands — `chatfs-cache-*`
-Modules — `chatfs.layer.cache.*`
+- Layer -- `cache`
+- Milestone -- M3-CACHE
+- Commands -- `chatfs-cache-*`
+- Modules -- `chatfs.layer.cache.*`
 
-Responsibility — Filesystem persistence, staleness checking, lazy directory creation. Wraps `vfs` layer.
+- Responsibility -- Filesystem persistence, staleness checking, lazy directory creation. Wraps `vfs` layer.
 
 #### Examples
 
@@ -310,12 +310,12 @@ See [cache-layer] for staleness logic and directory structure.
 
 ### CLI Layer (M4-CLI - Future)
 
-Layer — `cli`
-Milestone — M4-CLI
-Commands — `chatfs-ls`, `chatfs-cat`, `chatfs-sync`, etc.
-Modules — `chatfs.layer.cli.*`
+- Layer -- `cli`
+- Milestone -- M4-CLI
+- Commands -- `chatfs-ls`, `chatfs-cat`, `chatfs-sync`, etc.
+- Modules -- `chatfs.layer.cli.*`
 
-Responsibility — Human-friendly CLI wrappers with rich UX. Wraps `cache` layer.
+- Responsibility -- Human-friendly CLI wrappers with rich UX. Wraps `cache` layer.
 
 #### Examples
 
@@ -333,9 +333,9 @@ chatfs-cat tshark-filtering.md
 chatfs-ls .
 ```
 
-Path semantics — `//provider/...` = absolute, everything else = relative to cwd (like filesystem paths).
+- Path semantics -- `//provider/...` = absolute, everything else = relative to cwd (like filesystem paths).
 
-Note — Subcommand interface (`chatfs ls` instead of `chatfs-ls`) is a future optional enhancement.
+- Note -- Subcommand interface (`chatfs ls` instead of `chatfs-ls`) is a future optional enhancement.
 
 #### Implementation
 
@@ -514,7 +514,7 @@ One JSON object per line:
 
 ## Filesystem Cache Structure (M3-CACHE - Future)
 
-Milestone — M3-CACHE (not implemented in M1-CLAUDE or M2-VFS)
+- Milestone -- M3-CACHE (not implemented in M1-CLAUDE or M2-VFS)
 
 The Cache/FS layer will introduce persistent filesystem storage:
 
@@ -605,10 +605,10 @@ Blocked on fork representation decision (M5-WRITE+ scope).
 
 Handled by `vfs` layer (see design-incubators/chat-provider-normalization/ and multi-domain-support/):
 - `native/claude` layer exists (M1-CLAUDE milestone)
-- Add `native/chatgpt` layer for ChatGPT (future milestone)
-- Add `native/gemini` layer for Gemini (future milestone)
+- Add `native/chatgpt` layer for ChatGPT (chat.openai.com) (future milestone)
+- Add `native/gemini` layer for Google AI Studio (aistudio.google.com) (future milestone)
 - `vfs` layer normalizes across all native layers
-- Cache structure: `./chatfs/chatgpt/`, `./chatfs/gemini/`, `./chatfs/claude.ai/`
+- Cache structure: `./chatfs/chatgpt.com/`, `./chatfs/aistudio.google.com/`, `./chatfs/claude.ai/`
 
 See [development-plan.md] for milestone details.
 

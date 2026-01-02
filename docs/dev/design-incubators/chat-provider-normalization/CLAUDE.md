@@ -4,7 +4,7 @@
 
 How do we design M2-VFS to normalize across chat LLM providers?
 
-**Chat providers (Claude, ChatGPT, Gemini):**
+**Chat providers (Claude, ChatGPT, Google AI Studio):**
 - Organizations → Conversations → Messages
 - Forks/branches (Claude-specific?)
 - Streaming responses
@@ -39,7 +39,7 @@ This is why M1-CLAUDE (native) must come before M2-VFS (normalized abstraction).
 **Depends on:**
 - M1-CLAUDE findings (what does Claude return?)
 - ChatGPT research (how do they handle forks?)
-- Gemini research (fork support?)
+- Google AI Studio research (fork support?)
 
 **Questions:**
 - Do all chat providers support forks, or is this Claude-specific?
@@ -67,7 +67,7 @@ If providers have different features, M2-VFS might need:
 
 1. What patterns exist in Claude API?
 2. What's Claude-specific vs. likely universal across chat providers?
-3. How do other chat providers (ChatGPT, Gemini) structure similar data?
+3. How do other chat providers (ChatGPT, Google AI Studio) structure similar data?
 
 **Deliverable:** Pattern analysis document
 
@@ -75,7 +75,7 @@ If providers have different features, M2-VFS might need:
 
 1. Create normalized schema informed by M1-CLAUDE findings
 2. Design provider abstraction based on real use cases
-3. Validate design against chat providers (Claude, ChatGPT, Gemini)
+3. Validate design against chat providers (Claude, ChatGPT, Google AI Studio)
 
 **Deliverable:** M2-VFS specification and implementation
 

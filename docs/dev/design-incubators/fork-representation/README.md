@@ -60,7 +60,7 @@ Create `api-investigation.md` with:
 **Milestone:** M2-VFS implementation
 **Deliverable:** See `../chat-provider-normalization/` incubator
 
-Phase 2 designs the normalized JSONL schema for forks that works across chat providers (Claude, ChatGPT, Gemini). This depends on Phase 1 findings.
+Phase 2 designs the normalized JSONL schema for forks that works across chat providers (Claude, ChatGPT, Google AI Studio). This depends on Phase 1 findings.
 
 **Key question:** How do we represent fork relationships in a provider-agnostic way?
 

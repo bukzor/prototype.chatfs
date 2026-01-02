@@ -1,6 +1,6 @@
 # Development Plan
 
-Last Updated — 2025-11-01
+- Last Updated -- 2025-11-01
 
 #### Read this when
 
@@ -27,9 +27,9 @@ M0-DOCS: Documentation → M1-CLAUDE: Native → M2-VFS: Normalized → M3-CACHE
 
 ## Milestone 0: Documentation Phase (M0-DOCS)
 
-Status — In Progress (firming up design)
+- Status -- In Progress (firming up design)
 
-Goal — Establish project structure, design foundation, and documentation before implementation
+- Goal -- Establish project structure, design foundation, and documentation before implementation
 
 #### Deliverables
 
@@ -47,7 +47,7 @@ Goal — Establish project structure, design foundation, and documentation befor
 - [ ] Investigate fork representation via API
 - [ ] Review and finalize M0-DOCS - ready for M1-CLAUDE?
 
-Dependencies — None
+- Dependencies -- None
 
 #### Success Criteria
 
@@ -56,15 +56,15 @@ Dependencies — None
 - Clear entry points for future sessions (STATUS.md, devlog/)
 - LLM can resume work by reading CLAUDE.md → STATUS.md → latest devlog
 
-Estimated Effort — 1-2 sessions
+- Estimated Effort -- 1-2 sessions
 
-Next Milestone — M1-CLAUDE (Claude-native layer implementation)
+- Next Milestone -- M1-CLAUDE (Claude-native layer implementation)
 
 ## Milestone 1: Claude-Native Layer (M1-CLAUDE)
 
-Status — Blocked (depends on M0-DOCS completion)
+- Status -- Blocked (depends on M0-DOCS completion)
 
-Goal — Build direct wrapper around claude.ai API. Output raw Claude data as JSONL with minimal abstraction. Learn what Claude API actually returns before designing normalized schema.
+- Goal -- Build direct wrapper around claude.ai API. Output raw Claude data as JSONL with minimal abstraction. Learn what Claude API actually returns before designing normalized schema.
 
 #### Deliverables
 
@@ -77,7 +77,7 @@ Goal — Build direct wrapper around claude.ai API. Output raw Claude data as JS
 - [ ] Session key setup docs
 - [ ] Fork API investigation: Document what Claude API returns for forked conversations
 
-Dependencies — M0-DOCS (Documentation)
+- Dependencies -- M0-DOCS (Documentation)
 
 #### Success Criteria
 
@@ -88,9 +88,9 @@ Dependencies — M0-DOCS (Documentation)
 - Manual testing with real claude.ai account works
 - Fork API behavior documented in design-incubators/fork-representation/api-findings.md
 
-Estimated Effort — 2 weeks
+- Estimated Effort -- 2 weeks
 
-Key Principle — Output whatever Claude API returns. No normalization decisions. This layer exists to learn what the API does before designing M2-VFS normalized schema.
+- Key Principle -- Output whatever Claude API returns. No normalization decisions. This layer exists to learn what the API does before designing M2-VFS normalized schema.
 
 #### Deferred to M2-VFS
 - Normalized data models
@@ -113,13 +113,13 @@ Key Principle — Output whatever Claude API returns. No normalization decisions
 7. Document findings in design-incubators/fork-representation/api-findings.md
 8. Test full pipeline end-to-end
 
-Next Milestone — M2-VFS (Virtual filesystem layer with normalization)
+- Next Milestone -- M2-VFS (Virtual filesystem layer with normalization)
 
 ## Milestone 2: Virtual Filesystem Layer (M2-VFS)
 
-Status — Blocked (depends on M1-CLAUDE completion)
+- Status -- Blocked (depends on M1-CLAUDE completion)
 
-Goal — Build normalized JSONL schema across providers (Claude, ChatGPT, etc.). Design abstraction based on M1-CLAUDE findings. Still stateless (no filesystem writes).
+- Goal -- Build normalized JSONL schema across providers (Claude, ChatGPT, etc.). Design abstraction based on M1-CLAUDE findings. Still stateless (no filesystem writes).
 
 #### Deliverables
 
@@ -132,7 +132,7 @@ Goal — Build normalized JSONL schema across providers (Claude, ChatGPT, etc.).
 - [ ] Optional: M1-CHATGPT native layer for ChatGPT (if multi-provider desired)
 - [ ] Integration tests (full pipeline)
 
-Dependencies — M1-CLAUDE (Claude-native layer completed)
+- Dependencies -- M1-CLAUDE (Claude-native layer completed)
 
 #### Success Criteria
 
@@ -144,7 +144,7 @@ Dependencies — M1-CLAUDE (Claude-native layer completed)
 - If multi-provider: ChatGPT support works with same tools
 - Manual testing with real claude.ai account works
 
-Estimated Effort — 2 weeks
+- Estimated Effort -- 2 weeks
 
 #### Deferred to M3-CACHE
 
@@ -163,7 +163,7 @@ Estimated Effort — 2 weeks
 
 #### Implementation Notes
 
-Key design decision — Based on M1-CLAUDE findings, design normalized schema.
+- Key design decision -- Based on M1-CLAUDE findings, design normalized schema.
 
 #### Key tasks
 
@@ -176,13 +176,13 @@ Key design decision — Based on M1-CLAUDE findings, design normalized schema.
 7. Test full pipeline end-to-end with both providers
 8. Resolve design-incubators/chat-provider-normalization/ and multi-domain-support/ decisions
 
-Next Milestone — M3-CACHE (Cache/filesystem layer)
+- Next Milestone -- M3-CACHE (Cache/filesystem layer)
 
 ## Milestone 3: Cache/Filesystem Layer (M3-CACHE)
 
-Status — Blocked (depends on M2-VFS completion)
+- Status -- Blocked (depends on M2-VFS completion)
 
-Goal — Add filesystem persistence, staleness checking, and lazy loading. Wrap `vfs` layer (M2-VFS) with caching.
+- Goal -- Add filesystem persistence, staleness checking, and lazy loading. Wrap `vfs` layer (M2-VFS) with caching.
 
 #### Deliverables
 
@@ -196,7 +196,7 @@ Goal — Add filesystem persistence, staleness checking, and lazy loading. Wrap 
 - [ ] Lazy directory/file creation
 - [ ] Tests for cache operations
 
-Dependencies — M2-VFS (Virtual filesystem layer)
+- Dependencies -- M2-VFS (Virtual filesystem layer)
 
 #### Success Criteria
 
@@ -208,7 +208,7 @@ Dependencies — M2-VFS (Virtual filesystem layer)
 - Lazy directory creation on first access
 - Manual testing shows cache working correctly
 
-Estimated Effort — 1 week
+- Estimated Effort -- 1 week
 
 #### Deferred to M4-CLI
 
@@ -246,13 +246,13 @@ Estimated Effort — 1 week
         └── .uuid-index.json
 ```
 
-Next Milestone — M4-CLI (CLI layer)
+- Next Milestone -- M4-CLI (CLI layer)
 
 ## Milestone 4: CLI Layer (M4-CLI)
 
-Status — Blocked (depends on M3-CACHE completion)
+- Status -- Blocked (depends on M3-CACHE completion)
 
-Goal — Build human-friendly CLI wrappers with rich UX. Wrap `cache` layer (M3-CACHE) with colors, progress bars, path-based interface.
+- Goal -- Build human-friendly CLI wrappers with rich UX. Wrap `cache` layer (M3-CACHE) with colors, progress bars, path-based interface.
 
 #### Deliverables
 
@@ -266,7 +266,7 @@ Goal — Build human-friendly CLI wrappers with rich UX. Wrap `cache` layer (M3-
 - [ ] Interactive prompts (if needed)
 - [ ] Tests for CLI commands
 
-Dependencies — M3-CACHE (Cache/filesystem layer)
+- Dependencies -- M3-CACHE (Cache/filesystem layer)
 
 #### Success Criteria
 
@@ -279,7 +279,7 @@ Dependencies — M3-CACHE (Cache/filesystem layer)
 - Friendly error messages guide user
 - Manual testing with real account works smoothly
 
-Estimated Effort — 1 week
+- Estimated Effort -- 1 week
 
 #### Deferred to M5-WRITE
 
@@ -297,13 +297,13 @@ Estimated Effort — 1 week
 6. Add friendly error messages
 7. Test CLI UX with real users
 
-Next Milestone — M5-WRITE (Write operations, blocked on fork representation)
+- Next Milestone -- M5-WRITE (Write operations, blocked on fork representation)
 
 ## Milestone 5: Write Operations (M5-WRITE)
 
-Status — Blocked (fork representation undecided)
+- Status -- Blocked (fork representation undecided)
 
-Goal — Support appending, forking, amending conversations
+- Goal -- Support appending, forking, amending conversations
 
 #### Deliverables
 
@@ -338,7 +338,7 @@ Goal — Support appending, forking, amending conversations
 - Cache maintains fork relationships
 - Works across providers (if multi-provider implemented)
 
-Estimated Effort — TBD (depends on fork complexity)
+- Estimated Effort -- TBD (depends on fork complexity)
 
 #### Deferred
 
@@ -350,7 +350,7 @@ Estimated Effort — TBD (depends on fork complexity)
 
 Must resolve design-incubators/fork-representation/ (all 3 phases) first.
 
-Next Milestone — TBD (polish, additional features, or maintenance)
+- Next Milestone -- TBD (polish, additional features, or maintenance)
 
 ## Tier 2: Maybe Soon, Maybe Later
 
@@ -362,7 +362,7 @@ Features identified but not scheduled:
 - Test wikilinks between conversations
 - Graph view support
 
-Effort — Low (may be free if format already compatible)
+- Effort -- Low (may be free if format already compatible)
 
 ### Frontmatter CLI Suite
 
@@ -370,21 +370,35 @@ Effort — Low (may be free if format already compatible)
 - `chatfs-frontmatter-write` - Update frontmatter fields
 - `chatfs-frontmatter-edit` - Modify while preserving formatting
 
-Effort — Medium (1 week)
-Priority — Low (only needed for advanced M4-CLI features)
+- Effort -- Medium (1 week)
+- Priority -- Low (only needed for advanced M4-CLI features)
 
 ## Tier 3: Maybe Later, Maybe Never
 
 Ideas deferred indefinitely:
 
-- Gemini provider support
+**Additional LLM chat providers:**
+- Google AI Studio (aistudio.google.com) - developer-focused Gemini interface
+- Gemini (gemini.google.com) - Google's consumer Gemini interface
+- Grok (x.com/i/grok) - xAI
+- Perplexity (perplexity.ai) - AI search/chat
+- DeepSeek (chat.deepseek.com)
+- Mistral Le Chat (chat.mistral.ai)
+- Microsoft Copilot (copilot.microsoft.com)
+- Meta AI (meta.ai)
+- Poe (poe.com) - multi-model aggregator
+- HuggingChat (huggingface.co/chat) - open-source models
+- Pi (pi.ai) - Inflection AI
+- You.com (you.com)
+
+**Other features:**
 - Vector database / knowledge store integration
 - LLM-assisted conversation analysis
 - Collaborative second-brain features (wiki articles + chats)
 - Graph analysis on conversation links
 - Persistent watch command for eager updates
 
-Rationale — Nice-to-have, not core functionality. Re-evaluate after M1-CLAUDE through M4-CLI complete.
+- Rationale -- Nice-to-have, not core functionality. Re-evaluate after M1-CLAUDE through M4-CLI complete.
 
 ## Decision Points
 
@@ -400,7 +414,7 @@ Rationale — Nice-to-have, not core functionality. Re-evaluate after M1-CLAUDE 
 - Pros: May inform M1-CLAUDE implementation
 - Cons: Fork investigation is part of M1-CLAUDE scope anyway
 
-Recommendation — Start M1-CLAUDE immediately. Fork API investigation is part of M1-CLAUDE deliverables. Read-only doesn't need fork representation decisions.
+- Recommendation -- Start M1-CLAUDE immediately. Fork API investigation is part of M1-CLAUDE deliverables. Read-only doesn't need fork representation decisions.
 
 ### After M1-CLAUDE: Full M2-VFS or MVP First?
 
@@ -414,7 +428,7 @@ Recommendation — Start M1-CLAUDE immediately. Fork API investigation is part o
 - Pros: Faster to working stack (M1-CLAUDE → M2-VFS → M3-CACHE → M4-CLI)
 - Cons: Need to add multi-provider support later
 
-Recommendation — M2-VFS Claude-only first (normalize Claude data). Add ChatGPT support later as needed.
+- Recommendation -- M2-VFS Claude-only first (normalize Claude data). Add ChatGPT support later as needed.
 
 ### After M2-VFS: Add Cache or Skip to CLI?
 
@@ -428,7 +442,7 @@ Recommendation — M2-VFS Claude-only first (normalize Claude data). Add ChatGPT
 - Pros: Human-friendly UX sooner
 - Cons: No persistence (always fresh API calls), slower operations
 
-Recommendation — Follow planned order (M3-CACHE then M4-CLI). Persistence is important for usability.
+- Recommendation -- Follow planned order (M3-CACHE then M4-CLI). Persistence is important for usability.
 
 ### Capnshell Integration?
 
@@ -439,7 +453,7 @@ If capnshell exists:
 3. Test in capnshell
 4. Keep JSONL for human debugging
 
-Timeline — TBD (depends on capnshell progress)
+- Timeline -- TBD (depends on capnshell progress)
 
 ## Maintenance Plan
 

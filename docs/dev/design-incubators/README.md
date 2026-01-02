@@ -56,11 +56,11 @@ Use an incubator when you find yourself saying:
 **Blocks:** M2-VFS implementation
 
 **Questions:**
-1. How to normalize across chat LLM providers (Claude, ChatGPT, Gemini)?
+1. How to normalize across chat LLM providers (Claude, ChatGPT, Google AI Studio)?
 2. Pure abstraction vs. abstraction+extensions approach?
 3. How to handle provider-specific features (forks, streaming)?
 
-**Status:** Depends on M1-CLAUDE findings, needs research on ChatGPT/Gemini
+**Status:** Depends on M1-CLAUDE findings, needs research on ChatGPT/Google AI Studio
 
 ### multi-domain-support/
 

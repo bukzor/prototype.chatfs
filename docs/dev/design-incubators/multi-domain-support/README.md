@@ -2,7 +2,7 @@
 
 ## Problem Statement
 
-**Strategic decision:** Should chatfs support only chat LLM providers (Claude/ChatGPT/Gemini), or also extend to other domains (Linear/GitHub/AWS/GCP)?
+**Strategic decision:** Should chatfs support only chat LLM providers (Claude/ChatGPT/Google AI Studio), or also extend to other domains (Linear/GitHub/AWS/GCP)?
 
 This is about scope and architecture strategy, not the technical details of normalization (see `chat-provider-normalization/` for that).
 
@@ -16,7 +16,7 @@ This is about scope and architecture strategy, not the technical details of norm
 ## Investigation Approach
 
 1. **M1-CLAUDE first:** Get concrete Claude API data
-2. **Research comparable providers:** ChatGPT, Gemini structure
+2. **Research comparable providers:** ChatGPT, Google AI Studio structure
 3. **Research non-chat providers:** Linear, GitHub, cloud APIs
 4. **Evaluate abstraction approaches:** Chat-only vs universal vs tiered
 5. **Design schema:** Based on concrete provider data

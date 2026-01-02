@@ -36,8 +36,8 @@ chatfs provides lazy filesystem access to chat conversations (claude.ai, ChatGPT
 
 - **native** - Provider-specific API wrappers (`lib/chatfs/layer/native/*/`):
   - `native/claude` (M1-CLAUDE): Direct claude.ai API wrapper, outputs raw JSONL. See [docs/dev/technical-design/provider-interface.md].
-  - `native/chatgpt` (future): ChatGPT API wrapper
-  - `native/gemini` (future): Gemini API wrapper
+  - `native/chatgpt` (future): ChatGPT API wrapper (chat.openai.com)
+  - `native/gemini` (future): Google AI Studio API wrapper (aistudio.google.com)
 - **vfs** (`lib/chatfs/layer/vfs/`, milestone M2-VFS): Normalized JSONL across providers. See [docs/dev/technical-design.md#vfs-layer].
 - **cache** (`lib/chatfs/layer/cache/`, milestone M3-CACHE): Persistent storage with staleness tracking (future). See [docs/dev/technical-design.md#cache-layer].
 - **cli** (`lib/chatfs/layer/cli/`, milestone M4-CLI, future): Human-friendly commands with colors, progress bars. See [docs/dev/technical-design/cli-layer.md].

@@ -133,7 +133,7 @@ API as exposed by st1vms/unofficial-claude-api.
 }
 ```
 
-**Critical questions for fork representation:**
+#### Critical questions for fork representation
 
 - Do messages include parent_uuid or fork_point?
 - Is there an ancestry field?
@@ -142,8 +142,7 @@ API as exposed by st1vms/unofficial-claude-api.
 
 ## Fork Representation
 
-**Status:** Under investigation in
-[../../design-incubators/fork-representation/]
+- Status -- Under investigation in [../../design-incubators/fork-representation/]
 
 Key unknowns: How does the API represent forks? Are they separate conversations
 or branches within one conversation?
@@ -155,7 +154,7 @@ data is available.
 
 ### Organization
 
-**Fields:** (TBD - verify with real API call)
+#### Fields (TBD - verify with real API call)
 
 - `uuid` (string) - Unique identifier
 - `name` (string) - Display name
@@ -164,7 +163,7 @@ data is available.
 
 ### Conversation
 
-**Fields:** (TBD - verify with real API call)
+#### Fields (TBD - verify with real API call)
 
 - `uuid` (string) - Unique identifier
 - `title` (string) - Conversation title
@@ -176,7 +175,7 @@ data is available.
 
 ### Message
 
-**Fields:** (TBD - verify with real API call)
+#### Fields (TBD - verify with real API call)
 
 - `type` ("human" | "assistant")
 - `text` (string) - Message content
@@ -186,13 +185,13 @@ data is available.
 
 ## Error Handling
 
-**Questions:**
+#### Questions
 
 - What HTTP status codes for auth failure?
 - Rate limiting?
 - Malformed request errors?
 
-**Need to test:**
+#### Need to test
 
 - Invalid session key
 - Non-existent conversation UUID
@@ -209,20 +208,26 @@ From st1vms/unofficial-claude-api:
 
 ## Investigation TODO
 
-**High priority:**
+#### High priority
 
 1. [ ] Document actual list_organizations() request/response
 2. [ ] Document actual list_conversations() request/response
 3. [ ] Document actual get_conversation() request/response
-4. [ ] **Investigate fork representation in API** (critical for write
-       operations)
+4. [ ] Investigate fork representation in API (critical for write operations)
 
-**Medium priority:** 5. [ ] Document pagination for conversations 6. [ ]
-Document error responses 7. [ ] Test rate limiting behavior 8. [ ] Document
-message attachments (if any)
+#### Medium priority
 
-**Low priority:** 9. [ ] Document all org metadata fields 10. [ ] Document all
-conversation metadata fields 11. [ ] Document all message metadata fields
+5. [ ] Document pagination for conversations
+6. [ ]
+Document error responses
+7. [ ] Test rate limiting behavior
+8. [ ] Document message attachments (if any)
+
+#### Low priority
+
+9. [ ] Document all org metadata fields
+10. [ ] Document all conversation metadata fields
+11. [ ] Document all message metadata fields
 
 ## Related Documents
 

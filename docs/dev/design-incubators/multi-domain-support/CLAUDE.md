@@ -17,7 +17,7 @@ chatfs started as "claude.ai conversations as filesystem" but the concept genera
 **Candidates:**
 - Claude (claude.ai)
 - ChatGPT (chat.openai.com)
-- Gemini (gemini.google.com)
+- Google AI Studio (aistudio.google.com)
 
 **Challenge:** Subtle differences (fork models, message types, metadata fields)
 
@@ -42,7 +42,7 @@ chatfs started as "claude.ai conversations as filesystem" but the concept genera
 ### 1. Should we support both categories?
 
 **Option A: Chat-only abstraction**
-- M2-VFS normalizes across Claude/ChatGPT/Gemini only
+- M2-VFS normalizes across Claude/ChatGPT/Google AI Studio only
 - Non-chat providers get separate projects (linear-fs, github-fs, gcp-fs)
 - Pro: Focused, clean abstraction for one problem domain
 - Con: Misses opportunity for code/tool reuse
@@ -54,7 +54,7 @@ chatfs started as "claude.ai conversations as filesystem" but the concept genera
 - Con: Abstraction likely too generic to be useful (lowest common denominator)
 
 **Option C: Tiered abstraction**
-- M2-VFS-Chat for conversation providers (Claude, ChatGPT, Gemini)
+- M2-VFS-Chat for conversation providers (Claude, ChatGPT, Google AI Studio)
 - M2-VFS-Issues for ticket/issue providers (Linear, GitHub)
 - M2-VFS-Cloud for resource providers (GCP, AWS)
 - Each tier has appropriate abstraction, shares cache/CLI infrastructure
@@ -104,7 +104,7 @@ chatfs started as "claude.ai conversations as filesystem" but the concept genera
 
 - [ ] Document Claude API structure (from M1-CLAUDE investigation)
 - [ ] Research ChatGPT API/unofficial client for conversation structure
-- [ ] Research Gemini API for conversation structure
+- [ ] Research Google AI Studio API for conversation structure
 - [ ] Identify common fields vs provider-specific
 - [ ] Design normalized conversation/message schema (see chat-provider-normalization/)
 - [ ] Prototype M2-VFS with 2 chat providers to validate

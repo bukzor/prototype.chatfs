@@ -1,6 +1,6 @@
 # Design Rationale
 
-Last Updated — 2025-11-01
+- Last Updated -- 2025-11-01
 
 #### Read this when
 
@@ -13,7 +13,7 @@ chatfs.
 
 ## The Problem
 
-Your conversations on claude.ai (and ChatGPT, Gemini) are trapped in web UIs. You can't:
+Your conversations on claude.ai (and ChatGPT, Gemini, Grok, Perplexity, etc.) are trapped in web UIs. You can't:
 
 - **grep** across conversation history
 - **pipe** conversations to other tools (analysis, LLMs, scripts)
@@ -28,7 +28,7 @@ The data is locked in browser tabs, inaccessible to the Unix toolchain.
 - Browser extensions: Manual one-shot exports, no incremental updates, no CLI access
 - Copy-paste: Doesn't scale, loses metadata, breaks on updates
 
-What's needed — Conversations as files in a filesystem, with lazy loading and standard tool compatibility.
+- What's needed -- Conversations as files in a filesystem, with lazy loading and standard tool compatibility.
 
 chatfs solves this by treating chat history as a lazily-loaded filesystem using composable JSONL layer tools.
 
@@ -36,7 +36,7 @@ chatfs solves this by treating chat history as a lazily-loaded filesystem using 
 
 ### Layered Architecture (Four Layers)
 
-Decision — Build as four-layer architecture: native → vfs → cache → cli
+- Decision -- Build as four-layer architecture: native → vfs → cache → cli
 
 #### Layers
 
@@ -76,15 +76,15 @@ Chose Option B (evolved to 4 layers) because:
 - Gave up: Speed to MVP (more programs to write)
 - Gained: Flexibility, composition, learning, future-proofing
 
-Impact — Affects all tool design, testing strategy, documentation structure
+- Impact -- Affects all tool design, testing strategy, documentation structure
 
-Evolution — Originally designed as plumbing/porcelain split (2 layers), evolved to 4 layers to support learn-then-abstract approach (build M1-CLAUDE before designing M2-VFS normalization).
+- Evolution -- Originally designed as plumbing/porcelain split (2 layers), evolved to 4 layers to support learn-then-abstract approach (build M1-CLAUDE before designing M2-VFS normalization).
 
 See [layered-architecture] for detailed analysis.
 
 ### JSONL for Data Interchange
 
-Decision — Use JSONL (JSON Lines) for stdin/stdout between JSONL layers (M1-CLAUDE, M2-VFS, M3-CACHE)
+- Decision -- Use JSONL (JSON Lines) for stdin/stdout between JSONL layers (M1-CLAUDE, M2-VFS, M3-CACHE)
 
 #### Alternatives Considered
 
@@ -122,11 +122,11 @@ Chose Option B because:
 - Gave up: Slight efficiency (text vs binary), type safety (no schema validation yet)
 - Gained: Works today with existing tools, incremental migration path
 
-Impact — All JSONL layer I/O (M1-CLAUDE, M2-VFS, M3-CACHE), testing strategy, future capnshell integration
+- Impact -- All JSONL layer I/O (M1-CLAUDE, M2-VFS, M3-CACHE), testing strategy, future capnshell integration
 
 ### Lazy Filesystem Model
 
-Decision — Create files/directories on-demand, track staleness via mtime
+- Decision -- Create files/directories on-demand, track staleness via mtime
 
 #### Alternatives Considered
 
@@ -163,13 +163,13 @@ Chose Option B because:
 - Gave up: Simplicity (empty stubs, staleness logic), slight disk usage (metadata files)
 - Gained: Performance, scalability, offline access, no FUSE dependency
 
-Impact — Cache implementation, user experience, performance characteristics
+- Impact -- Cache implementation, user experience, performance characteristics
 
 See [lazy-filesystem] for detailed analysis.
 
 ### Unofficial API Instead of Official
 
-Decision — Use unofficial claude.ai API (st1vms) instead of official Anthropic API
+- Decision -- Use unofficial claude.ai API (st1vms) instead of official Anthropic API
 
 #### Alternatives Considered
 
@@ -202,13 +202,13 @@ Chose Option B because:
 - Gave up: Reliability guarantees, official support
 - Gained: Actual access to claude.ai conversations (the entire point)
 
-Impact — Core functionality, maintenance burden, auth requirements
+- Impact -- Core functionality, maintenance burden, auth requirements
 
 See [unofficial-api] for ecosystem history and alternatives.
 
 ### Documentation-First Approach
 
-Decision — Build comprehensive documentation before implementing code
+- Decision -- Build comprehensive documentation before implementing code
 
 #### Alternatives Considered
 
@@ -239,7 +239,7 @@ Chose Option B because:
 - Gave up: Quick prototype dopamine, learning from implementation mistakes
 - Gained: Clear direction, session continuity, explicit rationale
 
-Impact — Project timeline, session workflow, design quality
+- Impact -- Project timeline, session workflow, design quality
 
 ## Related Documents
 
