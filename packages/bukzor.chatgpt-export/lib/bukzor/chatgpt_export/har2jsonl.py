@@ -8,33 +8,50 @@ import sys
 from collections.abc import Iterator
 from pathlib import Path
 
+from .types import JsonObj
+
 CONVERSATION_URL_PATTERN = re.compile(r"/backend-api/conversation/[0-9a-f-]+$")
 
 
-def is_conversation_entry(entry: dict) -> bool:
+def is_conversation_entry(entry: JsonObj) -> bool:
     """Check if HAR entry is a conversation fetch."""
-    url = entry.get("request", {}).get("url", "")
+    request = entry.get("request")
+    if not isinstance(request, dict):
+        return False
+    url = request.get("url", "")
+    assert isinstance(url, str), url
     return bool(CONVERSATION_URL_PATTERN.search(url))
 
 
-def decode_response_body(content: dict) -> str:
+def decode_response_body(content: JsonObj) -> str:
     """Decode HAR response content, handling base64 encoding."""
     text = content.get("text", "")
+    assert isinstance(text, str), text
     if content.get("encoding") == "base64":
         return base64.b64decode(text).decode("utf-8")
     return text
 
 
-def extract_conversations(har: dict) -> Iterator[dict]:
+def extract_conversations(har: JsonObj) -> Iterator[JsonObj]:
     """Yield conversation JSON objects from HAR data."""
-    entries = har.get("log", {}).get("entries", [])
+    log = har.get("log")
+    if not isinstance(log, dict):
+        return
+    entries = log.get("entries", [])
+    assert isinstance(entries, list), entries
     for entry in entries:
+        assert isinstance(entry, dict), entry
         if not is_conversation_entry(entry):
             continue
-        content = entry.get("response", {}).get("content", {})
+        response = entry.get("response")
+        assert isinstance(response, dict), response
+        content = response.get("content")
+        assert isinstance(content, dict), content
         body = decode_response_body(content)
         if body:
-            yield json.loads(body)
+            result = json.loads(body)
+            assert isinstance(result, dict), type(result)
+            yield result
 
 
 def main() -> None:

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Splat a ChatGPT export JSON into messages/ and conversations/ directories."""
 
-import copy
 import json
 import os
 import shutil
@@ -11,6 +10,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
+
+from .types import JsonObj
 
 MARKDOWN_PLACEHOLDER = "$MARKDOWN"
 
@@ -23,12 +24,14 @@ class Conversation:
     path: list[str]  # node_ids from root to leaf
 
 
-def load_conversation(path: Path) -> dict:
+def load_conversation(path: Path) -> JsonObj:
     with path.open() as f:
-        return json.load(f)
+        result: JsonObj = json.load(f)
+    assert isinstance(result, dict), type(result)
+    return result
 
 
-def format_timestamp(unix_ts: float | Decimal | str) -> str:
+def format_timestamp(unix_ts: Decimal | str) -> str:
     """Format timestamp as ISO 8601 with nanoseconds, like `date -Ins`."""
     unix_ts = Decimal(unix_ts)
     dt = datetime.fromtimestamp(int(unix_ts)).astimezone()
@@ -36,92 +39,115 @@ def format_timestamp(unix_ts: float | Decimal | str) -> str:
     return dt.strftime(f"%Y-%m-%dT%H:%M:%S,{fractional}%z")
 
 
-def build_tree(mapping: dict) -> dict[str, list[str]]:
+def build_tree(mapping: JsonObj) -> dict[str, list[str]]:
     """Return {parent_id: [child_ids]} for tree traversal."""
     tree: dict[str, list[str]] = {}
     for node_id, node in mapping.items():
+        assert isinstance(node, dict), (node_id, node)
         parent = node.get("parent")
         if parent is not None:
+            assert isinstance(parent, str), parent
             tree.setdefault(parent, []).append(node_id)
     return tree
 
 
-def get_node_timestamp(node: dict, default: float = 0.0) -> float:
+def get_node_timestamp(node: JsonObj, default: float = 0.0) -> float:
     """Extract create_time from node's message, or default if absent."""
     msg = node.get("message")
     if msg is None:
         return default
-    return msg.get("create_time") or default
+    assert isinstance(msg, dict), msg
+    create_time = msg.get("create_time")
+    if not create_time:
+        return default
+    assert isinstance(create_time, (int, float)), create_time
+    return float(create_time)
 
 
-def compute_min_timestamp(mapping: dict) -> float:
+def compute_min_timestamp(mapping: JsonObj) -> float:
     """Find the earliest non-null timestamp across all nodes."""
-    timestamps = [
-        msg.get("create_time")
-        for node in mapping.values()
-        if (msg := node.get("message")) and msg.get("create_time")
-    ]
+    timestamps: list[float] = []
+    for node in mapping.values():
+        assert isinstance(node, dict), node
+        msg = node.get("message")
+        if msg is None:
+            continue
+        assert isinstance(msg, dict), msg
+        create_time = msg.get("create_time")
+        if create_time:
+            assert isinstance(create_time, (int, float)), create_time
+            timestamps.append(float(create_time))
     return min(timestamps) if timestamps else 0.0
 
 
-def get_node_role(node: dict) -> str:
+def get_node_role(node: JsonObj) -> str:
     """Extract role from node's message, or 'root' if no message."""
     msg = node.get("message")
     if msg is None:
         return "root"
+    assert isinstance(msg, dict), msg
     author = msg.get("author")
     if author is None:
         return "unknown"
-    return author.get("role", "unknown")
+    assert isinstance(author, dict), author
+    role = author.get("role", "unknown")
+    assert isinstance(role, str), role
+    return role
 
 
-def extract_text_content(node: dict) -> str | None:
+def extract_text_content(node: JsonObj) -> str | None:
     """Extract text content from node's message, if present."""
     msg = node.get("message")
     if msg is None:
         return None
+    assert isinstance(msg, dict), msg
     content = msg.get("content")
     if content is None:
         return None
+    assert isinstance(content, dict), content
     if content.get("content_type") != "text":
         return None
     parts = content.get("parts", [])
+    assert isinstance(parts, list), parts
     if not parts:
         return None
     return "\n".join(str(p) for p in parts if p)
 
 
-def node_filename(node_id: str, timestamp: float, role: str) -> str:
+def node_filename(node_id: str, timestamp: Decimal | str, role: str) -> str:
     """Generate filename with ISO timestamp and role."""
     ts_str = format_timestamp(timestamp)
     return f"{ts_str}.{role}.{node_id}"
 
 
-def write_message(node: dict, dest: Path, text_content: str | None) -> None:
+def write_message(node: JsonObj, dest: Path, text_content: str | None) -> None:
     """Write node JSON and optional markdown file to messages/."""
     dest.parent.mkdir(parents=True, exist_ok=True)
 
     if text_content:
         md_path = dest.with_suffix(".md")
         md_path.write_text(text_content)
-        node = copy.deepcopy(node)
-        node["message"]["content"]["parts"] = [MARKDOWN_PLACEHOLDER]
+        msg = node["message"]
+        assert isinstance(msg, dict), msg
+        content = msg["content"]
+        assert isinstance(content, dict), content
+        node = {**node, "message": {**msg, "content": {**content, "parts": [MARKDOWN_PLACEHOLDER]}}}
 
     with dest.open("w") as f:
         json.dump(node, f, indent=2)
 
 
-def find_roots(mapping: dict) -> list[str]:
+def find_roots(mapping: JsonObj) -> list[str]:
     """Find nodes with no parent (roots of the tree)."""
     return [
         node_id
         for node_id, node in mapping.items()
-        if node.get("parent") is None
+        if isinstance(node, dict) and node.get("parent") is None
     ]
 
 
 def enumerate_conversations(
-    mapping: dict,
+    mapping: JsonObj,
     tree: dict[str, list[str]],
     node_id: str,
     conv_id: str,
@@ -134,9 +160,11 @@ def enumerate_conversations(
     continues with the same conv_id; later children get their own IDs.
     """
     path = path + [node_id]
+    node = mapping[node_id]
+    assert isinstance(node, dict), (node_id, node)
     children = sorted(
         tree.get(node_id, []),
-        key=lambda c: get_node_timestamp(mapping[c], min_ts),
+        key=lambda c: get_node_timestamp(_get_node(mapping, c), min_ts),
     )
 
     if not children:
@@ -150,13 +178,21 @@ def enumerate_conversations(
         yield from enumerate_conversations(mapping, tree, child, child, path, min_ts)
 
 
-def write_all_messages(mapping: dict, messages_dir: Path, min_ts: float) -> dict[str, str]:
+def _get_node(mapping: JsonObj, node_id: str) -> JsonObj:
+    """Get a node from the mapping, asserting it's a dict."""
+    node = mapping[node_id]
+    assert isinstance(node, dict), (node_id, node)
+    return node
+
+
+def write_all_messages(mapping: JsonObj, messages_dir: Path, min_ts: float) -> dict[str, str]:
     """Write all messages to messages/, return {node_id: basename}."""
-    basenames = {}
+    basenames: dict[str, str] = {}
     for node_id, node in mapping.items():
+        assert isinstance(node, dict), (node_id, node)
         timestamp = get_node_timestamp(node, min_ts)
         role = get_node_role(node)
-        basename = node_filename(node_id, timestamp, role)
+        basename = node_filename(node_id, Decimal(str(timestamp)), role)
         basenames[node_id] = basename
         text_content = extract_text_content(node)
         write_message(node, messages_dir / f"{basename}.json", text_content)
@@ -205,6 +241,7 @@ def main() -> None:
     data = load_conversation(src)
 
     mapping = data["mapping"]
+    assert isinstance(mapping, dict), type(mapping)
     tree = build_tree(mapping)
     roots = find_roots(mapping)
     assert len(roots) == 1, f"Expected 1 root, got {len(roots)}: {roots}"

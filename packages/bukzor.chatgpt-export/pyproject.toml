@@ -10,7 +10,7 @@ chatgpt-har2jsonl = "bukzor.chatgpt_export.har2jsonl:main"
 splat-chatgpt = "bukzor.chatgpt_export.splat:main"
 
 [project.optional-dependencies]
-dev = ["pytest"]
+dev = ["pytest", "pytest-pyright", "pyright>=1.1.405"]
 
 [build-system]
 requires = ["hatchling"]
@@ -22,3 +22,15 @@ packages = ["lib/bukzor"]
 [tool.pytest.ini_options]
 python_classes = ["Describe*", "When*", "Test*"]
 python_functions = ["it_*", "test_*"]
+[tool.pyright]
+typeCheckingMode = "strict"
+analyzeUnannotatedFunctions = true
+reportIncompatibleMethodOverride = "error"
+pythonVersion = "3.13"
+enableTypeIgnoreComments = true
+reportPrivateUsage = "warning"
+reportConstantRedefinition = "error"
+reportIncompatibleVariableOverride = "error"
+reportMissingImports = "error"
+reportMissingTypeStubs = false
+exclude = [".venv", "__pycache__", "typesafety"]

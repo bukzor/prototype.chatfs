@@ -74,9 +74,51 @@ Two-phase approach:
 - [ ] STATUS.md retired (content absorbed into devlog/development-plan.md)
 - [ ] Fresh agent can orient via `llm-collab-session-start` pattern
 
+## How to Execute
+
+This task spans two git repositories. Execute phases in separate sessions.
+
+### Phase 1: Skills Repo
+
+**Location:** `~/.claude/skills/`
+
+```bash
+cd ~/.claude/skills && claude
+```
+
+Run `/session-start`. If the skill evolution tasks aren't surfaced, the session should:
+1. Create `~/.claude/skills/.claude/todo.kb/` with a root-level task
+2. Reference the existing skill-specific subtasks:
+   - `llm.kb/.claude/todo.kb/2026-01-02-000-complete-d-to-kb-rename.md`
+   - `llm-collab/.claude/todo.kb/2025-12-11-000-update-skeleton-...md`
+
+**Recommended order:** llm-collab skeleton first (makes llm.kb rename simpler).
+
+**Verification (run from any directory):**
+```bash
+# llm.kb: No .d/ directories in complete-example
+ls -d ~/.claude/skills/llm.kb/complete-example/*.d/ 2>/dev/null && echo "INCOMPLETE" || echo "DONE"
+
+# llm.kb: ADR status updated to Accepted
+grep -A1 "^## Status" ~/.claude/skills/llm.kb/docs/adr/2025-12-03-000-*.md
+```
+
+### Phase 2: prototype.chatfs
+
+**Location:** This repo
+**Precondition:** Phase 1 verification passes
+
+Run `/session-start` here. Execute subtasks:
+1. `2026-01-02-001-migrate-todo-to-subtask-format.md`
+2. `2026-01-02-002-apply-skill-conventions-post-evolution.md`
+
+### Parallel Work
+
+`2026-01-02-001-migrate-todo-to-subtask-format.md` (TODO.md migration) can proceed in parallel with Phase 1 — no dependency on skill evolution.
+
 ## Notes
 
-**Timeline:** Skills are a monorepo; changes to one affect all three.
+**Cross-repo coordination:** Skills repo subtasks have `related-effort` links back to this parent task for context on why the work matters.
 
 **Cross-references:**
 - llm.kb ADR on `.d → .kb`: `docs/adr/2025-12-03-000-pivot-from-d-to-kb-naming-convention.md`

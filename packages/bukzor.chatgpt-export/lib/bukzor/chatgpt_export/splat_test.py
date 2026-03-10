@@ -3,19 +3,15 @@
 from decimal import Decimal
 
 from . import splat as M
+from .types import JsonObj, JsonValue
 
 
 class DescribeFormatTimestamp:
     def it_formats_as_iso8601(self):
-        result = M.format_timestamp(0.0)
+        result = M.format_timestamp(Decimal(0))
         # Should contain date, time, and timezone offset
         assert "1970" in result or "1969" in result  # depends on local tz
         assert "T" in result
-
-    def it_includes_fractional_seconds(self):
-        # float loses precision: 123456789 → 123456717
-        result = M.format_timestamp(1234567890.123456789)
-        assert ",123456717" in result
 
     def it_preserves_nanoseconds_with_decimal(self):
         result = M.format_timestamp(Decimal("1234567890.123456789"))
@@ -28,7 +24,7 @@ class DescribeFormatTimestamp:
 
 class DescribeBuildTree:
     def it_maps_parents_to_children(self):
-        mapping = {
+        mapping: JsonObj = {
             "root": {},
             "child1": {"parent": "root"},
             "child2": {"parent": "root"},
@@ -37,7 +33,7 @@ class DescribeBuildTree:
         assert set(tree["root"]) == {"child1", "child2"}
 
     def it_handles_root_nodes_without_parent(self):
-        mapping = {
+        mapping: JsonObj = {
             "root": {},
             "child": {"parent": "root"},
         }
@@ -49,7 +45,7 @@ class DescribeBuildTree:
 
 class DescribeGetNodeTimestamp:
     def it_extracts_create_time(self):
-        node = {"message": {"create_time": 1700000000.0}}
+        node: JsonObj = {"message": {"create_time": 1700000000.0}}
         assert M.get_node_timestamp(node) == 1700000000.0
 
     def it_returns_default_when_no_message(self):
@@ -57,13 +53,13 @@ class DescribeGetNodeTimestamp:
         assert M.get_node_timestamp({}, default=42.0) == 42.0
 
     def it_returns_default_when_create_time_is_null(self):
-        node = {"message": {"create_time": None}}
+        node: JsonObj = {"message": {"create_time": None}}
         assert M.get_node_timestamp(node) == 0.0
 
 
 class DescribeComputeMinTimestamp:
     def it_finds_earliest_timestamp(self):
-        mapping = {
+        mapping: JsonObj = {
             "a": {"message": {"create_time": 300.0}},
             "b": {"message": {"create_time": 100.0}},
             "c": {"message": {"create_time": 200.0}},
@@ -71,7 +67,7 @@ class DescribeComputeMinTimestamp:
         assert M.compute_min_timestamp(mapping) == 100.0
 
     def it_returns_zero_when_no_timestamps(self):
-        mapping = {
+        mapping: JsonObj = {
             "a": {},
             "b": {"message": {}},
             "c": {"message": {"create_time": None}},
@@ -81,7 +77,7 @@ class DescribeComputeMinTimestamp:
 
 class DescribeGetNodeRole:
     def it_extracts_role_from_author(self):
-        node = {"message": {"author": {"role": "assistant"}}}
+        node: JsonObj = {"message": {"author": {"role": "assistant"}}}
         assert M.get_node_role(node) == "assistant"
 
     def it_returns_root_when_no_message(self):
@@ -93,7 +89,7 @@ class DescribeGetNodeRole:
 
 class DescribeExtractTextContent:
     def it_joins_text_parts(self):
-        node = {
+        node: JsonObj = {
             "message": {
                 "content": {
                     "content_type": "text",
@@ -107,7 +103,7 @@ class DescribeExtractTextContent:
         assert M.extract_text_content({}) is None
 
     def it_returns_none_for_non_text_content(self):
-        node = {
+        node: JsonObj = {
             "message": {
                 "content": {
                     "content_type": "code",
@@ -118,7 +114,7 @@ class DescribeExtractTextContent:
         assert M.extract_text_content(node) is None
 
     def it_returns_none_when_parts_are_empty(self):
-        node = {
+        node: JsonObj = {
             "message": {
                 "content": {
                     "content_type": "text",
@@ -128,10 +124,22 @@ class DescribeExtractTextContent:
         }
         assert M.extract_text_content(node) is None
 
+    def it_preserves_empty_string_parts(self):
+        """Empty strings between parts should produce blank lines, not be dropped."""
+        node: JsonObj = {
+            "message": {
+                "content": {
+                    "content_type": "text",
+                    "parts": ["Hello", "", "World"],
+                }
+            }
+        }
+        assert M.extract_text_content(node) == "Hello\n\nWorld"
+
 
 class DescribeNodeFilename:
     def it_combines_timestamp_role_and_id(self):
-        result = M.node_filename("abc123", 1700000000.0, "user")
+        result = M.node_filename("abc123", Decimal("1700000000.0"), "user")
         assert "user" in result
         assert "abc123" in result
         assert result.endswith(".user.abc123")
@@ -139,14 +147,14 @@ class DescribeNodeFilename:
 
 class DescribeFindRoots:
     def it_finds_nodes_without_parent(self):
-        mapping = {
+        mapping: JsonObj = {
             "root": {},
             "child": {"parent": "root"},
         }
         assert M.find_roots(mapping) == ["root"]
 
     def it_returns_empty_list_when_all_have_parents(self):
-        mapping = {
+        mapping: JsonObj = {
             "a": {"parent": "x"},
             "b": {"parent": "y"},
         }
@@ -154,11 +162,11 @@ class DescribeFindRoots:
 
 
 class DescribeEnumerateConversations:
-    def _mapping_with_timestamps(self, nodes):
+    def _mapping_with_timestamps(self, nodes: dict[str, dict[str, JsonValue]]) -> JsonObj:
         """Build a mapping from {id: {parent, timestamp}} shorthand."""
-        mapping = {}
+        mapping: JsonObj = {}
         for node_id, info in nodes.items():
-            node = {}
+            node: JsonObj = {}
             if "parent" in info:
                 node["parent"] = info["parent"]
             if "ts" in info:
@@ -189,10 +197,10 @@ class DescribeEnumerateConversations:
         assert len(convos) == 2
 
     class WhenForking:
-        def _mapping_with_timestamps(self, nodes):
-            mapping = {}
+        def _mapping_with_timestamps(self, nodes: dict[str, dict[str, JsonValue]]) -> JsonObj:
+            mapping: JsonObj = {}
             for node_id, info in nodes.items():
-                node = {}
+                node: JsonObj = {}
                 if "parent" in info:
                     node["parent"] = info["parent"]
                 if "ts" in info:

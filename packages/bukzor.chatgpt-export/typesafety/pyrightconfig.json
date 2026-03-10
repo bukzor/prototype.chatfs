@@ -1,0 +1,4 @@
+{
+  "extends": "../pyproject.toml",
+  "exclude": [".venv", "__pycache__"]
+}
