@@ -66,14 +66,13 @@ def main() -> None:
         har = json.load(f)
 
     conversations = list(extract_conversations(har))
+    assert len(conversations) == 1, f"Expected 1 conversation, got {len(conversations)}"
 
     with dest.open("w") as f:
         json.dump(conversations[0], f)
 
     print(f"Wrote {dest}", file=sys.stderr)
     print(dest)
-
-    assert len(conversations) == 1, f"Expected 1 conversation, got {len(conversations)}"
 
 
 if __name__ == "__main__":

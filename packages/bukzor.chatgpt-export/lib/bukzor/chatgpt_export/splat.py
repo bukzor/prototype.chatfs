@@ -111,7 +111,7 @@ def extract_text_content(node: JsonObj) -> str | None:
     assert isinstance(parts, list), parts
     if not parts:
         return None
-    return "\n".join(str(p) for p in parts if p)
+    return "\n".join(str(p) for p in parts if p is not None)
 
 
 def node_filename(node_id: str, timestamp: Decimal | str, role: str) -> str:

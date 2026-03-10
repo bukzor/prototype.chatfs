@@ -161,21 +161,22 @@ class DescribeFindRoots:
         assert M.find_roots(mapping) == []
 
 
-class DescribeEnumerateConversations:
-    def _mapping_with_timestamps(self, nodes: dict[str, dict[str, JsonValue]]) -> JsonObj:
-        """Build a mapping from {id: {parent, timestamp}} shorthand."""
-        mapping: JsonObj = {}
-        for node_id, info in nodes.items():
-            node: JsonObj = {}
-            if "parent" in info:
-                node["parent"] = info["parent"]
-            if "ts" in info:
-                node["message"] = {"create_time": info["ts"]}
-            mapping[node_id] = node
-        return mapping
+def _mapping_with_timestamps(nodes: dict[str, dict[str, JsonValue]]) -> JsonObj:
+    """Build a mapping from {id: {parent, timestamp}} shorthand."""
+    mapping: JsonObj = {}
+    for node_id, info in nodes.items():
+        node: JsonObj = {}
+        if "parent" in info:
+            node["parent"] = info["parent"]
+        if "ts" in info:
+            node["message"] = {"create_time": info["ts"]}
+        mapping[node_id] = node
+    return mapping
 
+
+class DescribeEnumerateConversations:
     def it_yields_single_conversation_for_linear_tree(self):
-        mapping = self._mapping_with_timestamps({
+        mapping = _mapping_with_timestamps({
             "root": {"ts": 1.0},
             "a": {"parent": "root", "ts": 2.0},
             "b": {"parent": "a", "ts": 3.0},
@@ -187,7 +188,7 @@ class DescribeEnumerateConversations:
         assert convos[0].id == "root"
 
     def it_yields_multiple_conversations_at_forks(self):
-        mapping = self._mapping_with_timestamps({
+        mapping = _mapping_with_timestamps({
             "root": {"ts": 1.0},
             "a": {"parent": "root", "ts": 2.0},
             "b": {"parent": "root", "ts": 3.0},
@@ -197,19 +198,8 @@ class DescribeEnumerateConversations:
         assert len(convos) == 2
 
     class WhenForking:
-        def _mapping_with_timestamps(self, nodes: dict[str, dict[str, JsonValue]]) -> JsonObj:
-            mapping: JsonObj = {}
-            for node_id, info in nodes.items():
-                node: JsonObj = {}
-                if "parent" in info:
-                    node["parent"] = info["parent"]
-                if "ts" in info:
-                    node["message"] = {"create_time": info["ts"]}
-                mapping[node_id] = node
-            return mapping
-
         def it_continues_original_id_on_earliest_child(self):
-            mapping = self._mapping_with_timestamps({
+            mapping = _mapping_with_timestamps({
                 "root": {"ts": 1.0},
                 "early": {"parent": "root", "ts": 2.0},
                 "late": {"parent": "root", "ts": 3.0},
@@ -220,7 +210,7 @@ class DescribeEnumerateConversations:
             assert earliest_conv.id == "root"
 
         def it_assigns_fork_id_to_later_children(self):
-            mapping = self._mapping_with_timestamps({
+            mapping = _mapping_with_timestamps({
                 "root": {"ts": 1.0},
                 "early": {"parent": "root", "ts": 2.0},
                 "late": {"parent": "root", "ts": 3.0},
