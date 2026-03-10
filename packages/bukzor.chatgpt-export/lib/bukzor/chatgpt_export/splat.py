@@ -5,7 +5,7 @@ import json
 import os
 import shutil
 import sys
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from decimal import Decimal
@@ -17,17 +17,73 @@ MARKDOWN_PLACEHOLDER = "$MARKDOWN"
 
 
 @dataclass
-class Conversation:
-    """A linear path through the message tree."""
+class Message:
+    """A parsed message from the ChatGPT export."""
 
-    id: str  # node_id where this conversation diverged (or root if linear)
-    path: list[str]  # node_ids from root to leaf
+    uuid: str
+    timestamp: Decimal
+    role: str
+    text_content: str | None
+    raw: JsonObj  # original JSON node
+
+    def __str__(self) -> str:
+        ts_str = format_timestamp(self.timestamp)
+        return f"{ts_str}.{self.role}.{self.uuid}"
+
+    def write(self, messages_dir: Path) -> None:
+        """Write this message's .json and optional .md to messages_dir."""
+        basename = str(self)
+        prepared = prepare_message(self.raw, self.text_content)
+        with (messages_dir / f"{basename}.json").open("w") as f:
+            json.dump(prepared, f, indent=2)
+        if self.text_content:
+            (messages_dir / f"{basename}.md").write_text(self.text_content)
+
+
+@dataclass
+class ConversationLink:
+    """An entry in the conversation tree: one or more messages at a sequence position."""
+
+    path: tuple[str, ...]  # dir components relative to conversations/
+    seq: int
+    messages: list[Message]
+
+    @property
+    def role(self) -> str:
+        roles = set(m.role for m in self.messages)
+        if len(roles) == 1:
+            return next(iter(roles))
+        return "fork"
+
+    def __str__(self) -> str:
+        return f"{self.seq:03d}.{self.role}"
+
+    def write(self, conversations_dir: Path, messages_dir: Path) -> None:
+        """Write this link to the filesystem."""
+        conv_dir = conversations_dir / Path(*self.path) if self.path else conversations_dir
+        conv_dir.mkdir(parents=True, exist_ok=True)
+        link_name = str(self)
+
+        if len(self.messages) == 1:
+            # Single message: create symlinks
+            msg = self.messages[0]
+            basename = str(msg)
+            rel_messages = os.path.relpath(messages_dir, conv_dir)
+            (conv_dir / f"{link_name}.json").symlink_to(f"{rel_messages}/{basename}.json")
+            if msg.text_content:
+                (conv_dir / f"{link_name}.md").symlink_to(f"{rel_messages}/{basename}.md")
+        else:
+            # Fork: create directory with branch subdirectories
+            fork_dir = conv_dir / link_name
+            fork_dir.mkdir(parents=True, exist_ok=True)
+            for msg in self.messages:
+                (fork_dir / str(msg)).mkdir(parents=True, exist_ok=True)
 
 
 def load_conversation(path: Path) -> JsonObj:
     with path.open() as f:
         result: JsonObj = json.load(f)
-    assert isinstance(result, dict), type(result)
+    assert isinstance(result, Mapping), type(result)
     return result
 
 
@@ -42,69 +98,41 @@ def format_timestamp(unix_ts: Decimal | str) -> str:
 def build_tree(mapping: JsonObj) -> dict[str, list[str]]:
     """Return {parent_id: [child_ids]} for tree traversal."""
     tree: dict[str, list[str]] = {}
-    for node_id, node in mapping.items():
-        assert isinstance(node, dict), (node_id, node)
-        parent = node.get("parent")
+    for msg_id, msg in mapping.items():
+        assert isinstance(msg, Mapping), (msg_id, msg)
+        parent = msg.get("parent")
         if parent is not None:
             assert isinstance(parent, str), parent
-            tree.setdefault(parent, []).append(node_id)
+            tree.setdefault(parent, []).append(msg_id)
     return tree
 
 
-def get_node_timestamp(node: JsonObj, default: float = 0.0) -> float:
-    """Extract create_time from node's message, or default if absent."""
-    msg = node.get("message")
-    if msg is None:
-        return default
-    assert isinstance(msg, dict), msg
-    create_time = msg.get("create_time")
-    if not create_time:
-        return default
-    assert isinstance(create_time, (int, float)), create_time
-    return float(create_time)
-
-
 def compute_min_timestamp(mapping: JsonObj) -> float:
-    """Find the earliest non-null timestamp across all nodes."""
+    """Find the earliest non-null timestamp across all messages."""
     timestamps: list[float] = []
-    for node in mapping.values():
-        assert isinstance(node, dict), node
-        msg = node.get("message")
-        if msg is None:
+    for msg in mapping.values():
+        assert isinstance(msg, Mapping), msg
+        inner = msg.get("message")
+        if inner is None:
             continue
-        assert isinstance(msg, dict), msg
-        create_time = msg.get("create_time")
+        assert isinstance(inner, Mapping), inner
+        create_time = inner.get("create_time")
         if create_time:
             assert isinstance(create_time, (int, float)), create_time
             timestamps.append(float(create_time))
     return min(timestamps) if timestamps else 0.0
 
 
-def get_node_role(node: JsonObj) -> str:
-    """Extract role from node's message, or 'root' if no message."""
-    msg = node.get("message")
-    if msg is None:
-        return "root"
-    assert isinstance(msg, dict), msg
-    author = msg.get("author")
-    if author is None:
-        return "unknown"
-    assert isinstance(author, dict), author
-    role = author.get("role", "unknown")
-    assert isinstance(role, str), role
-    return role
-
-
-def extract_text_content(node: JsonObj) -> str | None:
-    """Extract text content from node's message, if present."""
-    msg = node.get("message")
-    if msg is None:
+def extract_text_content(raw: JsonObj) -> str | None:
+    """Extract text content from a raw message node, if present."""
+    inner = raw.get("message")
+    if inner is None:
         return None
-    assert isinstance(msg, dict), msg
-    content = msg.get("content")
+    assert isinstance(inner, Mapping), inner
+    content = inner.get("content")
     if content is None:
         return None
-    assert isinstance(content, dict), content
+    assert isinstance(content, Mapping), content
     if content.get("content_type") != "text":
         return None
     parts = content.get("parts", [])
@@ -117,129 +145,102 @@ def extract_text_content(node: JsonObj) -> str | None:
     return "\n".join(filtered)
 
 
-def node_filename(node_id: str, timestamp: Decimal | str, role: str) -> str:
-    """Generate filename with ISO timestamp and role."""
-    ts_str = format_timestamp(timestamp)
-    return f"{ts_str}.{role}.{node_id}"
-
-
-def prepare_message(node: JsonObj, text_content: str | None) -> JsonObj:
-    """Return node with text parts replaced by MARKDOWN_PLACEHOLDER, or unchanged."""
-    if not text_content:
-        return node
-    msg = node["message"]
-    assert isinstance(msg, dict), msg
-    content = msg["content"]
-    assert isinstance(content, dict), content
-    return {**node, "message": {**msg, "content": {**content, "parts": [MARKDOWN_PLACEHOLDER]}}}
-
-
-def write_message(node: JsonObj, dest: Path, text_content: str | None) -> None:
-    """Write node JSON and optional markdown file to messages/."""
-    dest.parent.mkdir(parents=True, exist_ok=True)
-
-    if text_content:
-        md_path = dest.with_suffix(".md")
-        md_path.write_text(text_content)
-
-    prepared = prepare_message(node, text_content)
-    with dest.open("w") as f:
-        json.dump(prepared, f, indent=2)
+def parse_messages(mapping: JsonObj, min_ts: float) -> dict[str, Message]:
+    """Parse raw JSON mapping into Message objects."""
+    messages: dict[str, Message] = {}
+    for msg_id, raw in mapping.items():
+        assert isinstance(raw, Mapping), (msg_id, raw)
+        inner = raw.get("message")
+        if inner is None:
+            timestamp = Decimal(str(min_ts))
+            role = "root"
+        else:
+            assert isinstance(inner, Mapping), inner
+            create_time = inner.get("create_time")
+            if create_time:
+                assert isinstance(create_time, (int, float)), create_time
+                timestamp = Decimal(str(float(create_time)))
+            else:
+                timestamp = Decimal(str(min_ts))
+            author = inner.get("author")
+            if author is None:
+                role = "unknown"
+            else:
+                assert isinstance(author, Mapping), author
+                role = author.get("role", "unknown")
+                assert isinstance(role, str), role
+        messages[msg_id] = Message(
+            uuid=msg_id,
+            timestamp=timestamp,
+            role=role,
+            text_content=extract_text_content(raw),
+            raw=raw,
+        )
+    return messages
 
 
 def find_roots(mapping: JsonObj) -> list[str]:
-    """Find nodes with no parent (roots of the tree)."""
+    """Find messages with no parent (roots of the tree)."""
     return [
-        node_id
-        for node_id, node in mapping.items()
-        if isinstance(node, dict) and node.get("parent") is None
+        msg_id
+        for msg_id, msg in mapping.items()
+        if isinstance(msg, Mapping) and msg.get("parent") is None
     ]
 
 
-def enumerate_conversations(
-    mapping: JsonObj,
+def enumerate_conversation_links(
+    msg_id: str,
     tree: dict[str, list[str]],
-    node_id: str,
-    conv_id: str,
-    path: list[str],
-    min_ts: float,
-) -> Iterator[Conversation]:
-    """Walk tree from root, yielding Conversation for each leaf.
-
-    conv_id is set to root initially. At forks, the earliest child (by timestamp)
-    continues with the same conv_id; later children get their own IDs.
-    """
-    path = path + [node_id]
-    node = mapping[node_id]
-    assert isinstance(node, dict), (node_id, node)
+    messages: dict[str, Message],
+    seq: int,
+    path: tuple[str, ...],
+) -> Iterator[ConversationLink]:
+    """Pure recursive enumeration of conversation tree as ConversationLinks."""
+    msg = messages[msg_id]
     children = sorted(
-        tree.get(node_id, []),
-        key=lambda c: get_node_timestamp(_get_node(mapping, c), min_ts),
+        tree.get(msg_id, []),
+        key=lambda c: float(messages[c].timestamp),
     )
 
-    if not children:
-        yield Conversation(id=conv_id, path=path)
-        return
-
-    # First child continues the original conversation
-    yield from enumerate_conversations(mapping, tree, children[0], conv_id, path, min_ts)
-    # Later children are forks, get their own IDs
-    for child in children[1:]:
-        yield from enumerate_conversations(mapping, tree, child, child, path, min_ts)
-
-
-def _get_node(mapping: JsonObj, node_id: str) -> JsonObj:
-    """Get a node from the mapping, asserting it's a dict."""
-    node = mapping[node_id]
-    assert isinstance(node, dict), (node_id, node)
-    return node
-
-
-def write_all_messages(mapping: JsonObj, messages_dir: Path, min_ts: float) -> dict[str, str]:
-    """Write all messages to messages/, return {node_id: basename}."""
-    basenames: dict[str, str] = {}
-    for node_id, node in mapping.items():
-        assert isinstance(node, dict), (node_id, node)
-        timestamp = get_node_timestamp(node, min_ts)
-        role = get_node_role(node)
-        basename = node_filename(node_id, Decimal(str(timestamp)), role)
-        basenames[node_id] = basename
-        text_content = extract_text_content(node)
-        write_message(node, messages_dir / f"{basename}.json", text_content)
-    return basenames
+    if len(children) <= 1:
+        # Leaf or linear: single-message link
+        yield ConversationLink(path=path, seq=seq, messages=[msg])
+        if children:
+            yield from enumerate_conversation_links(
+                children[0], tree, messages, seq + 1, path
+            )
+    else:
+        # Fork: yield the current message, then yield the fork link
+        yield ConversationLink(path=path, seq=seq, messages=[msg])
+        fork_children = [messages[c] for c in children]
+        fork_link = ConversationLink(path=path, seq=seq + 1, messages=fork_children)
+        yield fork_link
+        # Recurse into each branch
+        fork_name = str(fork_link)
+        for child in children:
+            branch_name = str(messages[child])
+            branch_path = path + (fork_name, branch_name)
+            yield from enumerate_conversation_links(
+                child, tree, messages, seq + 1, branch_path
+            )
 
 
-def write_conversation_symlinks(
-    path: list[str],
-    basenames: dict[str, str],
-    conv_dir: Path,
-    messages_dir: Path,
-) -> None:
-    """Create symlinks in conversation dir pointing to messages/.
+def prepare_message(raw: JsonObj, text_content: str | None) -> JsonObj:
+    """Return raw node with text parts replaced by MARKDOWN_PLACEHOLDER, or unchanged."""
+    if not text_content:
+        return raw
+    inner = raw["message"]
+    assert isinstance(inner, Mapping), inner
+    content = inner["content"]
+    assert isinstance(content, Mapping), content
+    return {**raw, "message": {**inner, "content": {**content, "parts": [MARKDOWN_PLACEHOLDER]}}}
 
-    Symlink names are prefixed with zero-padded sequence numbers to ensure
-    correct ordering via glob/ls, since ChatGPT timestamps don't preserve
-    causality (assistant create_time often precedes user message).
-    """
-    conv_dir.mkdir(parents=True, exist_ok=True)
-    rel_messages = os.path.relpath(messages_dir, conv_dir)
 
-    # Zero-pad to handle conversations up to 999 messages
-    width = 3
-
-    for seq, node_id in enumerate(path):
-        basename = basenames[node_id]
-        seq_prefix = f"{seq:0{width}d}."
-
-        # Symlink .json
-        json_link = conv_dir / f"{seq_prefix}{basename}.json"
-        json_target = f"{rel_messages}/{basename}.json"
-        json_link.symlink_to(json_target)
-        # Symlink .md if it exists
-        md_src = messages_dir / f"{basename}.md"
-        if md_src.exists():
-            md_link = conv_dir / f"{seq_prefix}{basename}.md"
-            md_link.symlink_to(f"{rel_messages}/{basename}.md")
+def write_all_messages(messages: dict[str, Message], messages_dir: Path) -> None:
+    """Write all messages to messages/."""
+    messages_dir.mkdir(parents=True, exist_ok=True)
+    for msg in messages.values():
+        msg.write(messages_dir)
 
 
 def main() -> None:
@@ -251,7 +252,7 @@ def main() -> None:
     data = load_conversation(src)
 
     mapping = data["mapping"]
-    assert isinstance(mapping, dict), type(mapping)
+    assert isinstance(mapping, Mapping), type(mapping)
     tree = build_tree(mapping)
     roots = find_roots(mapping)
     assert len(roots) == 1, f"Expected 1 root, got {len(roots)}: {roots}"
@@ -265,19 +266,17 @@ def main() -> None:
         shutil.rmtree(base_dir)
 
     min_ts = compute_min_timestamp(mapping)
+    messages = parse_messages(mapping, min_ts)
 
     # Write all messages
-    basenames = write_all_messages(mapping, messages_dir, min_ts)
+    write_all_messages(messages, messages_dir)
 
-    # Find all conversations and write symlinks
-    conv_count = 0
-    for conv in enumerate_conversations(mapping, tree, roots[0], roots[0], [], min_ts):
-        conv_name = basenames[conv.id]
-        conv_dir = conversations_dir / conv_name
-        write_conversation_symlinks(conv.path, basenames, conv_dir, messages_dir)
-        conv_count += 1
+    # Write conversation tree
+    conversations_dir.mkdir(parents=True, exist_ok=True)
+    for link in enumerate_conversation_links(roots[0], tree, messages, 0, ()):
+        link.write(conversations_dir, messages_dir)
 
-    print(f"Wrote {len(mapping)} messages, {conv_count} conversations to {base_dir}")
+    print(f"Wrote {len(messages)} messages to {base_dir}")
 
 
 if __name__ == "__main__":
