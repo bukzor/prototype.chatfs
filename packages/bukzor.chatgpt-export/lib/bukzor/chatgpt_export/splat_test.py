@@ -136,6 +136,50 @@ class DescribeExtractTextContent:
         }
         assert M.extract_text_content(node) == "Hello\n\nWorld"
 
+    def it_returns_none_when_all_parts_are_none(self):
+        """All-None parts means no text content, not empty string."""
+        node: JsonObj = {
+            "message": {
+                "content": {
+                    "content_type": "text",
+                    "parts": [None, None],
+                }
+            }
+        }
+        assert M.extract_text_content(node) is None
+
+
+class DescribePrepareMessage:
+    def it_replaces_text_parts_with_placeholder(self):
+        node: JsonObj = {
+            "message": {
+                "content": {
+                    "content_type": "text",
+                    "parts": ["Hello", "World"],
+                }
+            }
+        }
+        result = M.prepare_message(node, "Hello\nWorld")
+        content = result["message"]["content"]  # type: ignore[index]
+        assert content["parts"] == [M.MARKDOWN_PLACEHOLDER]  # type: ignore[index]
+
+    def it_returns_node_unchanged_when_no_text(self):
+        node: JsonObj = {"message": {"content": {"content_type": "code", "parts": ["x"]}}}
+        result = M.prepare_message(node, None)
+        assert result is node
+
+    def it_does_not_mutate_original_node(self):
+        node: JsonObj = {
+            "message": {
+                "content": {
+                    "content_type": "text",
+                    "parts": ["Hello"],
+                }
+            }
+        }
+        M.prepare_message(node, "Hello")
+        assert node["message"]["content"]["parts"] == ["Hello"]  # type: ignore[index]
+
 
 class DescribeNodeFilename:
     def it_combines_timestamp_role_and_id(self):

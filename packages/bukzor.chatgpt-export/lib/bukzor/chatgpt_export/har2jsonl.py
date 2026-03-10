@@ -60,18 +60,18 @@ def main() -> None:
         sys.exit(1)
 
     src = Path(sys.argv[1])
-    dest = src.with_suffix(".json")
+    dest = src.with_suffix(".jsonl")
 
     with src.open() as f:
         har = json.load(f)
 
-    conversations = list(extract_conversations(har))
-    assert len(conversations) == 1, f"Expected 1 conversation, got {len(conversations)}"
-
+    count = 0
     with dest.open("w") as f:
-        json.dump(conversations[0], f)
+        for conversation in extract_conversations(har):
+            f.write(json.dumps(conversation) + "\n")
+            count += 1
 
-    print(f"Wrote {dest}", file=sys.stderr)
+    print(f"Wrote {count} conversations to {dest}", file=sys.stderr)
     print(dest)
 
 

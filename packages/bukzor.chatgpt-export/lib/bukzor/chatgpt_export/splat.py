@@ -7,7 +7,7 @@ import shutil
 import sys
 from collections.abc import Iterator
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 from pathlib import Path
 
@@ -34,7 +34,7 @@ def load_conversation(path: Path) -> JsonObj:
 def format_timestamp(unix_ts: Decimal | str) -> str:
     """Format timestamp as ISO 8601 with nanoseconds, like `date -Ins`."""
     unix_ts = Decimal(unix_ts)
-    dt = datetime.fromtimestamp(int(unix_ts)).astimezone()
+    dt = datetime.fromtimestamp(int(unix_ts), tz=timezone.utc).astimezone()
     fractional = f"{unix_ts % 1:.9f}"[2:]  # nanoseconds
     return dt.strftime(f"%Y-%m-%dT%H:%M:%S,{fractional}%z")
 
@@ -111,13 +111,27 @@ def extract_text_content(node: JsonObj) -> str | None:
     assert isinstance(parts, list), parts
     if not parts:
         return None
-    return "\n".join(str(p) for p in parts if p is not None)
+    filtered = [str(p) for p in parts if p is not None]
+    if not filtered:
+        return None
+    return "\n".join(filtered)
 
 
 def node_filename(node_id: str, timestamp: Decimal | str, role: str) -> str:
     """Generate filename with ISO timestamp and role."""
     ts_str = format_timestamp(timestamp)
     return f"{ts_str}.{role}.{node_id}"
+
+
+def prepare_message(node: JsonObj, text_content: str | None) -> JsonObj:
+    """Return node with text parts replaced by MARKDOWN_PLACEHOLDER, or unchanged."""
+    if not text_content:
+        return node
+    msg = node["message"]
+    assert isinstance(msg, dict), msg
+    content = msg["content"]
+    assert isinstance(content, dict), content
+    return {**node, "message": {**msg, "content": {**content, "parts": [MARKDOWN_PLACEHOLDER]}}}
 
 
 def write_message(node: JsonObj, dest: Path, text_content: str | None) -> None:
@@ -127,14 +141,10 @@ def write_message(node: JsonObj, dest: Path, text_content: str | None) -> None:
     if text_content:
         md_path = dest.with_suffix(".md")
         md_path.write_text(text_content)
-        msg = node["message"]
-        assert isinstance(msg, dict), msg
-        content = msg["content"]
-        assert isinstance(content, dict), content
-        node = {**node, "message": {**msg, "content": {**content, "parts": [MARKDOWN_PLACEHOLDER]}}}
 
+    prepared = prepare_message(node, text_content)
     with dest.open("w") as f:
-        json.dump(node, f, indent=2)
+        json.dump(prepared, f, indent=2)
 
 
 def find_roots(mapping: JsonObj) -> list[str]:
