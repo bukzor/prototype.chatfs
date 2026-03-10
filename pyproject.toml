@@ -5,6 +5,7 @@ description = "Lazy filesystem for chat conversations (claude.ai, ChatGPT)"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+    "bukzor.chatgpt-export",
     "python-dotenv>=1.2.1",
     "sseclient-py>=1.8.0",
 ]
@@ -35,6 +36,15 @@ dependencies = [
 # NOTE: Entry points will be implemented during M4-CLI
 # chatfs = "chatfs.layer.cli.main:main"  # Main command with subcommands (ls, cat, sync, etc.)
 
+[dependency-groups]
+dev = ["bukzor.chatgpt-export[dev]"]
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.uv.workspace]
+members = ["packages/*"]
+
+[tool.uv.sources]
+bukzor-chatgpt-export = { workspace = true }

@@ -1,0 +1,24 @@
+[project]
+name = "bukzor.chatgpt-export"
+version = "0.1.0"
+description = "Extract and splat ChatGPT conversations from HAR exports"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+chatgpt-har2jsonl = "bukzor.chatgpt_export.har2jsonl:main"
+splat-chatgpt = "bukzor.chatgpt_export.splat:main"
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["lib/bukzor"]
+
+[tool.pytest.ini_options]
+python_classes = ["Describe*", "When*", "Test*"]
+python_functions = ["it_*", "test_*"]
