@@ -29,6 +29,13 @@ Wrapped in `lib/chatfs/client.py`. Uses curl_cffi for Cloudflare bypass. Raw acc
 
 **Current state:** See [STATUS.md] for milestone, blockers, and next actions. Recent devlogs: [docs/dev/devlog/].
 
+## Design Knowledge
+
+See `docs/dev/background.kb/` for foundational context and `docs/dev/technical-policy.kb/`
+for architectural constraints (opaque extractor boundary, 7 invariants, etc.).
+For how to create and maintain design knowledge, see
+`~/.claude/skills/llm-collab/references/how-to-document-design-knowledge.md`.
+
 ## Architecture Overview
 
 chatfs provides lazy filesystem access to chat conversations (claude.ai, ChatGPT). Built on four-layer architecture: native → vfs → cache → cli.

@@ -14,6 +14,21 @@ conversation, switching between them for different perspectives.
 
 Each question builds on the previous answer. We can't normalize what we don't understand, and we can't persist what we haven't normalized.
 
+## Prior Art: chatgpt-splat "Rotate 90 Degrees" Layout
+
+The ChatGPT splat tool already implements a fork representation for ChatGPT
+conversations (see `packages/bukzor.chatgpt-export/lib/bukzor/chatgpt_export/splat.py`
+and `docs/dev/background.kb/canonical-conversation-graph.md`).
+
+**Key insight:** Linear chains are flat siblings; forks create subdirectories.
+This avoids unnecessary nesting while naturally representing fork-of-fork. The
+approach is closest to **Option B (Nested Directories)** from the candidate
+approaches below, but with the refinement that nesting only occurs at actual
+fork points.
+
+This may inform Phase 3 decisions, though Claude's fork model may differ from
+ChatGPT's.
+
 ## Three-Phase Investigation
 
 ### Phase 1: Claude API Investigation (M1-CLAUDE)

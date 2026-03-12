@@ -72,3 +72,26 @@ Use an incubator when you find yourself saying:
 3. How much code can be shared across domains?
 
 **Status:** Strategic decision, depends on M1-CLAUDE + chat provider normalization experience
+
+### playwright-har-capture/
+
+**Blocks:** BB1 (capture pipeline)
+
+**Subproject:** Cleanroom toy project to learn Playwright HAR capture against a
+local-only app. Produces reusable components for browser lifecycle, HAR recording,
+network idle detection, and content encoding handling.
+
+**Milestones:** M0 (manual baseline) → M1 (HAR capture) → M2 (triggered refresh) → M3 (extraction) → M4 (markdown emission) → M5 (adversarial cases)
+
+**Status:** Design complete, not yet started
+
+### fuser-vfs/
+
+**Blocks:** Filesystem mount layer
+
+**Subproject:** Learn FUSE filesystem mechanics using fuser. Produces a reusable
+VFS crate for serving cached content as a mounted filesystem.
+
+**Milestones:** M1 (static read-only mount) → M2 (dynamic cache updates) → M3 (procfs control plane, future/unscheduled)
+
+**Status:** Design complete, not yet started
