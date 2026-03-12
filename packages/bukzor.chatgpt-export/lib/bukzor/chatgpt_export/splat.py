@@ -117,7 +117,7 @@ def compute_min_timestamp(mapping: JsonObj) -> float:
             continue
         assert isinstance(inner, Mapping), inner
         create_time = inner.get("create_time")
-        if create_time:
+        if create_time is not None:
             assert isinstance(create_time, (int, float)), create_time
             timestamps.append(float(create_time))
     return min(timestamps) if timestamps else 0.0
@@ -157,7 +157,7 @@ def parse_messages(mapping: JsonObj, min_ts: float) -> dict[str, Message]:
         else:
             assert isinstance(inner, Mapping), inner
             create_time = inner.get("create_time")
-            if create_time:
+            if create_time is not None:
                 assert isinstance(create_time, (int, float)), create_time
                 timestamp = Decimal(str(float(create_time)))
             else:
@@ -181,11 +181,12 @@ def parse_messages(mapping: JsonObj, min_ts: float) -> dict[str, Message]:
 
 def find_roots(mapping: JsonObj) -> list[str]:
     """Find messages with no parent (roots of the tree)."""
-    return [
-        msg_id
-        for msg_id, msg in mapping.items()
-        if isinstance(msg, Mapping) and msg.get("parent") is None
-    ]
+    roots: list[str] = []
+    for msg_id, msg in mapping.items():
+        assert isinstance(msg, Mapping), (msg_id, msg)
+        if msg.get("parent") is None:
+            roots.append(msg_id)
+    return roots
 
 
 def enumerate_conversation_links(
@@ -236,13 +237,6 @@ def prepare_message(raw: JsonObj, text_content: str | None) -> JsonObj:
     return {**raw, "message": {**inner, "content": {**content, "parts": [MARKDOWN_PLACEHOLDER]}}}
 
 
-def write_all_messages(messages: dict[str, Message], messages_dir: Path) -> None:
-    """Write all messages to messages/."""
-    messages_dir.mkdir(parents=True, exist_ok=True)
-    for msg in messages.values():
-        msg.write(messages_dir)
-
-
 def main() -> None:
     if len(sys.argv) != 2:
         print(f"Usage: {sys.argv[0]} <chatgpt-export.json>", file=sys.stderr)
@@ -269,7 +263,9 @@ def main() -> None:
     messages = parse_messages(mapping, min_ts)
 
     # Write all messages
-    write_all_messages(messages, messages_dir)
+    messages_dir.mkdir(parents=True, exist_ok=True)
+    for msg in messages.values():
+        msg.write(messages_dir)
 
     # Write conversation tree
     conversations_dir.mkdir(parents=True, exist_ok=True)
