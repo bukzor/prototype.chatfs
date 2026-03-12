@@ -23,4 +23,4 @@
 
 ## Later
 
-- (none)
+- [ ] har2jsonl.py should use idiomatic json (`.json` module instead of stdlib `json`)

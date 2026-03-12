@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from . import har2jsonl as M
-from .types import JsonObj, JsonValue
+from .json import JsonObj, JsonValue
 
 
 def _har(entries: list[JsonValue]) -> JsonObj:

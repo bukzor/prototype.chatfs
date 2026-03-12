@@ -22,6 +22,7 @@ packages = ["lib/bukzor"]
 [tool.pytest.ini_options]
 python_classes = ["Describe*", "When*", "Test*"]
 python_functions = ["it_*", "test_*"]
+
 [tool.pyright]
 typeCheckingMode = "strict"
 analyzeUnannotatedFunctions = true

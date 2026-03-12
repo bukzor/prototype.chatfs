@@ -2,13 +2,13 @@
 """Extract ChatGPT conversations from HAR files to JSONL."""
 
 import base64
-import json
 import re
 import sys
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from pathlib import Path
 
-from .types import JsonObj
+from . import json
+from .json import JsonObj
 
 CONVERSATION_URL_PATTERN = re.compile(r"/backend-api/conversation/[0-9a-f-]+$")
 
@@ -64,6 +64,7 @@ def main() -> None:
 
     with src.open() as f:
         har = json.load(f)
+    assert isinstance(har, Mapping), type(har)
 
     count = 0
     with dest.open("w") as f:

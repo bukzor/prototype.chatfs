@@ -43,6 +43,10 @@ dev = ["bukzor.chatgpt-export[dev]"]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+[tool.pytest.ini_options]
+python_classes = ["Describe*", "When*", "Test*"]
+python_functions = ["it_*", "test_*"]
+
 [tool.uv.workspace]
 members = ["packages/*"]
 

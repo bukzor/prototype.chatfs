@@ -4,7 +4,7 @@ from collections.abc import Mapping
 from decimal import Decimal
 
 from . import splat as M
-from .types import JsonObj
+from .json import JsonObj
 
 
 class DescribeMessage:
@@ -19,7 +19,7 @@ class DescribeMessage:
         result = str(msg)
         assert "user" in result
         assert "abc123" in result
-        assert result.endswith(".user.abc123")
+        assert result.endswith(".user.abc123.root")
 
     def it_preserves_nanoseconds(self):
         msg = M.Message(
@@ -36,21 +36,21 @@ class DescribeConversationLink:
     def it_formats_as_seq_dot_role(self):
         msg = M.Message(uuid="x", timestamp=Decimal(0), role="user", text_content=None, raw={})
         link = M.ConversationLink(path=(), seq=95, messages=[msg])
-        assert str(link) == "095.user"
+        assert str(link) == "095.user.root"
 
     def it_uses_shared_role_for_same_role_messages(self):
         m1 = M.Message(uuid="a", timestamp=Decimal(1), role="user", text_content=None, raw={})
         m2 = M.Message(uuid="b", timestamp=Decimal(2), role="user", text_content=None, raw={})
         link = M.ConversationLink(path=(), seq=5, messages=[m1, m2])
         assert link.role == "user"
-        assert str(link) == "005.user"
+        assert str(link) == "005.user.root"
 
     def it_uses_fork_for_mixed_role_messages(self):
         m1 = M.Message(uuid="a", timestamp=Decimal(1), role="user", text_content=None, raw={})
         m2 = M.Message(uuid="b", timestamp=Decimal(2), role="assistant", text_content=None, raw={})
         link = M.ConversationLink(path=(), seq=5, messages=[m1, m2])
         assert link.role == "fork"
-        assert str(link) == "005.fork"
+        assert str(link) == "005.fork.root"
 
 
 class DescribeFormatTimestamp:
@@ -91,11 +91,18 @@ class DescribeBuildTree:
 class DescribeComputeMinTimestamp:
     def it_finds_earliest_timestamp(self):
         mapping: JsonObj = {
-            "a": {"message": {"create_time": 300.0}},
-            "b": {"message": {"create_time": 100.0}},
-            "c": {"message": {"create_time": 200.0}},
+            "a": {"message": {"create_time": Decimal("300.0")}},
+            "b": {"message": {"create_time": Decimal("100.0")}},
+            "c": {"message": {"create_time": Decimal("200.0")}},
         }
-        assert M.compute_min_timestamp(mapping) == 100.0
+        assert M.compute_min_timestamp(mapping) == Decimal("100.0")
+
+    def it_handles_integer_timestamps(self):
+        mapping: JsonObj = {
+            "a": {"message": {"create_time": 300}},
+            "b": {"message": {"create_time": 100}},
+        }
+        assert M.compute_min_timestamp(mapping) == Decimal(100)
 
     def it_returns_zero_when_no_timestamps(self):
         mapping: JsonObj = {
@@ -103,7 +110,7 @@ class DescribeComputeMinTimestamp:
             "b": {"message": {}},
             "c": {"message": {"create_time": None}},
         }
-        assert M.compute_min_timestamp(mapping) == 0.0
+        assert M.compute_min_timestamp(mapping) == Decimal(0)
 
 
 class DescribeExtractTextContent:
@@ -167,6 +174,30 @@ class DescribeExtractTextContent:
         }
         assert M.extract_text_content(raw) is None
 
+    def it_returns_none_for_single_empty_string_part(self):
+        """A single empty-string part means no meaningful content."""
+        raw: JsonObj = {
+            "message": {
+                "content": {
+                    "content_type": "text",
+                    "parts": [""],
+                }
+            }
+        }
+        assert M.extract_text_content(raw) is None
+
+    def it_returns_none_for_all_empty_string_parts(self):
+        """Multiple empty-string parts means no meaningful content."""
+        raw: JsonObj = {
+            "message": {
+                "content": {
+                    "content_type": "text",
+                    "parts": ["", ""],
+                }
+            }
+        }
+        assert M.extract_text_content(raw) is None
+
 
 class DescribePrepareMessage:
     def it_replaces_text_parts_with_placeholder(self):
@@ -178,7 +209,7 @@ class DescribePrepareMessage:
                 }
             }
         }
-        result = M.prepare_message(raw, "Hello\nWorld")
+        result = M.prepare_message(raw)
         inner = result["message"]
         assert isinstance(inner, Mapping)
         content = inner["content"]
@@ -187,7 +218,24 @@ class DescribePrepareMessage:
 
     def it_returns_raw_unchanged_when_no_text(self):
         raw: JsonObj = {"message": {"content": {"content_type": "code", "parts": ["x"]}}}
-        result = M.prepare_message(raw, None)
+        result = M.prepare_message(raw)
+        assert result is raw
+
+    def it_returns_raw_unchanged_when_no_message(self):
+        raw: JsonObj = {"id": "root"}
+        result = M.prepare_message(raw)
+        assert result is raw
+
+    def it_returns_raw_unchanged_for_empty_parts(self):
+        raw: JsonObj = {
+            "message": {
+                "content": {
+                    "content_type": "text",
+                    "parts": [""],
+                }
+            }
+        }
+        result = M.prepare_message(raw)
         assert result is raw
 
     def it_does_not_mutate_original(self):
@@ -199,7 +247,7 @@ class DescribePrepareMessage:
                 }
             }
         }
-        M.prepare_message(raw, "Hello")
+        M.prepare_message(raw)
         inner = raw["message"]
         assert isinstance(inner, Mapping)
         content = inner["content"]
@@ -248,7 +296,7 @@ class DescribeEnumerateConversationLinks:
 
     def _make_mapping(self, spec: dict[str, dict[str, object]]) -> JsonObj:
         """Build a JsonObj mapping from {id: {parent, ts, role}} shorthand."""
-        from .types import JsonValue
+        from .json import JsonValue
 
         mapping: dict[str, JsonValue] = {}
         for msg_id, info in spec.items():
@@ -270,7 +318,7 @@ class DescribeEnumerateConversationLinks:
         tree = M.build_tree(self._make_mapping(spec))
         links = list(M.enumerate_conversation_links("root", tree, messages, 0, ()))
         assert len(links) == 3
-        assert [str(l) for l in links] == ["000.root", "001.user", "002.assistant"]
+        assert [str(l) for l in links] == ["000.root.root", "001.user.root", "002.assistant.root"]
         assert all(l.path == () for l in links)
         assert links[0].messages[0] is messages["root"]
         assert links[1].messages[0] is messages["a"]
@@ -306,6 +354,6 @@ class DescribeEnumerateConversationLinks:
         assert len(branch_links) == 2
         # Each branch path starts with the fork link name
         for bl in branch_links:
-            assert bl.path[0] == "001.user"
+            assert bl.path[0] == "001.user.root"
         assert branch_links[0].messages[0] is messages["a"]
         assert branch_links[1].messages[0] is messages["b"]
