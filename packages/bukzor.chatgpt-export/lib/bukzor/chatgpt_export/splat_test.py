@@ -316,7 +316,7 @@ class DescribeEnumerateConversationLinks:
         }
         messages = self._make_messages(spec)
         tree = M.build_tree(self._make_mapping(spec))
-        links = list(M.enumerate_conversation_links("root", tree, messages, 0, ()))
+        links = list(M.enumerate_conversation_links(messages, tree, "root"))
         assert len(links) == 3
         assert [str(l) for l in links] == ["000.root.root", "001.user.root", "002.assistant.root"]
         assert all(l.path == () for l in links)
@@ -332,28 +332,35 @@ class DescribeEnumerateConversationLinks:
         }
         messages = self._make_messages(spec)
         tree = M.build_tree(self._make_mapping(spec))
-        links = list(M.enumerate_conversation_links("root", tree, messages, 0, ()))
-        # root link, fork link, then branch links
-        fork_links = [l for l in links if len(l.messages) > 1]
-        assert len(fork_links) == 1
-        assert fork_links[0].seq == 1
-        assert fork_links[0].role == "user"
-        assert fork_links[0].messages[0] is messages["a"]
-        assert fork_links[0].messages[1] is messages["b"]
+        links = list(M.enumerate_conversation_links(messages, tree, "root"))
+        # root link, then fork link — children are leaves so no branch links
+        assert len(links) == 2
+        assert links[0].messages[0] is messages["root"]
+        fork = links[1]
+        assert fork.seq == 1
+        assert fork.role == "user"
+        assert fork.messages[0] is messages["a"]
+        assert fork.messages[1] is messages["b"]
 
     def it_nests_branch_paths(self):
         spec: dict[str, dict[str, object]] = {
             "root": {"ts": 1.0, "role": "root"},
             "a": {"parent": "root", "ts": 2.0, "role": "user"},
             "b": {"parent": "root", "ts": 3.0, "role": "user"},
+            "a1": {"parent": "a", "ts": 4.0, "role": "assistant"},
+            "b1": {"parent": "b", "ts": 5.0, "role": "assistant"},
         }
         messages = self._make_messages(spec)
         tree = M.build_tree(self._make_mapping(spec))
-        links = list(M.enumerate_conversation_links("root", tree, messages, 0, ()))
+        links = list(M.enumerate_conversation_links(messages, tree, "root"))
+        # root link, fork link [a, b], then a1 in branch a, b1 in branch b
+        assert len(links) == 4
         branch_links = [l for l in links if l.path != ()]
         assert len(branch_links) == 2
-        # Each branch path starts with the fork link name
-        for bl in branch_links:
-            assert bl.path[0] == "001.user.root"
-        assert branch_links[0].messages[0] is messages["a"]
-        assert branch_links[1].messages[0] is messages["b"]
+        fork = links[1]
+        fork_name = str(fork)
+        # Each branch path is (fork_name, branch_message_name)
+        assert branch_links[0].path == (fork_name, str(messages["a"]))
+        assert branch_links[0].messages[0] is messages["a1"]
+        assert branch_links[1].path == (fork_name, str(messages["b"]))
+        assert branch_links[1].messages[0] is messages["b1"]

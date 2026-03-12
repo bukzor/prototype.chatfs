@@ -5,34 +5,32 @@ anthropic-skill-ownership: llm-subtask
 # chatgpt-splat: fork semantics discussion and tests
 
 **Priority:** Low
-**Complexity:** Medium
-**Context:** `packages/bukzor.chatgpt-export/lib/bukzor/chatgpt_export/splat.py:191`
+**Complexity:** Low (resolved in session 2026-03-12)
 
-## Problem Statement
+## Resolution
 
-Two related issues with fork representation need discussion:
+The fork semantics were resolved by refactoring `enumerate_conversation_links`
+to a children-first, stack-based traversal. Key decisions:
 
-### #12: Child message appears in two ConversationLinks
+- **Fork link is sole representative.** The multi-message ConversationLink
+  holds the fork children. No separate single-message links are emitted for
+  those children. Branches continue from each child's children.
 
-At a fork, child message `a` appears in:
-1. The fork link's `messages` list (creates branch directory via `ConversationLink.write()`)
-2. Its own single-message link inside the branch (creates symlinks)
+- **Fork write creates symlinks.** `ConversationLink.write()` for forks now
+  creates branch subdirectories AND symlinks for each child message (not just
+  directories). Each branch dir gets `{link_name}.json` and optional
+  `{link_name}.md` symlinks pointing to the message in `messages/`.
 
-This means a consumer iterating all links would see message `a` twice. The fork link creates "scaffolding" (directories) while the branch link creates "content" (symlinks). This works but is an implicit contract — `ConversationLink` doesn't distinguish these roles.
+- **No dual representation.** A message appears in exactly one ConversationLink.
+  Consumers iterating all links see each message exactly once.
 
-### #2: Fork write naming
+- **ConversationLink is the stack item.** The traversal uses ConversationLink
+  directly as its stack type — no separate _StackItem needed. `_child_links`
+  takes a parent link and yields child links.
 
-`ConversationLink.write()` for forks creates directories + subdirectories, but "write" undersells the scaffolding role. May warrant clearer naming or documentation.
+## Remaining
 
-## Open Questions
-
-- Should `ConversationLink` have a `kind` field (e.g., "link" vs "fork") to make the dual role explicit?
-- Should consumers be expected to filter fork links, or should the API prevent double-counting?
-- Would splitting into separate types (Link vs Fork) be cleaner than one type with implicit roles?
-- Are there downstream use cases that would break with the current design?
-
-## Implementation Steps
-
-- [ ] Discuss design tradeoffs with user
-- [ ] Add tests that make fork behavior explicit (verify what appears where)
-- [ ] Decide on and implement any naming/structural changes
+- [ ] Could add more fork-specific tests (nested forks, forks with mixed leaf/non-leaf children)
+- [x] ~~Discuss design tradeoffs with user~~ (done)
+- [x] ~~Add tests that make fork behavior explicit~~ (done: `it_yields_fork_link_at_branch_point`, `it_nests_branch_paths`)
+- [x] ~~Decide on and implement structural changes~~ (done)

@@ -97,11 +97,21 @@ class ConversationLink:
             if msg.text_content is not None:
                 (conv_dir / f"{link_name}.md").symlink_to(f"{rel_messages}/{basename}.md")
         else:
-            # Fork: create directory with branch subdirectories
+            # Fork: create branch subdirectories with symlinks
             fork_dir = conv_dir / link_name
             fork_dir.mkdir(parents=True, exist_ok=True)
             for msg in self.messages:
-                (fork_dir / str(msg)).mkdir(parents=True, exist_ok=True)
+                branch_dir = fork_dir / str(msg)
+                branch_dir.mkdir(parents=True, exist_ok=True)
+                basename = str(msg)
+                rel_messages = os.path.relpath(messages_dir, branch_dir)
+                (branch_dir / f"{link_name}.json").symlink_to(
+                    f"{rel_messages}/{basename}.json"
+                )
+                if msg.text_content is not None:
+                    (branch_dir / f"{link_name}.md").symlink_to(
+                        f"{rel_messages}/{basename}.md"
+                    )
 
 
 def load_conversation(path: Path) -> JsonObj:
@@ -343,41 +353,45 @@ def find_roots(mapping: JsonObj) -> list[str]:
     return roots
 
 
-def enumerate_conversation_links(
-    msg_id: str,
+def _sorted_children(
     tree: dict[str, list[str]],
     messages: dict[str, Message],
-    seq: int,
-    path: tuple[str, ...],
-) -> Iterator[ConversationLink]:
-    """Pure recursive enumeration of conversation tree as ConversationLinks."""
-    msg = messages[msg_id]
-    children = sorted(
-        tree.get(msg_id, []),
-        key=lambda c: float(messages[c].timestamp),
+    msg: Message,
+) -> list[Message]:
+    return sorted(
+        [messages[c] for c in tree.get(msg.uuid, [])],
+        key=lambda c: float(c.timestamp),
     )
 
-    if len(children) <= 1:
-        # Leaf or linear: single-message link
-        yield ConversationLink(path=path, seq=seq, messages=[msg])
-        if children:
-            yield from enumerate_conversation_links(
-                children[0], tree, messages, seq + 1, path
-            )
-    else:
-        # Fork: yield the current message, then yield the fork link
-        yield ConversationLink(path=path, seq=seq, messages=[msg])
-        fork_children = [messages[c] for c in children]
-        fork_link = ConversationLink(path=path, seq=seq + 1, messages=fork_children)
-        yield fork_link
-        # Recurse into each branch
-        fork_name = str(fork_link)
-        for child in children:
-            branch_name = str(messages[child])
-            branch_path = path + (fork_name, branch_name)
-            yield from enumerate_conversation_links(
-                child, tree, messages, seq + 1, branch_path
-            )
+
+def _child_links(
+    messages: dict[str, Message],
+    tree: dict[str, list[str]],
+    parent: ConversationLink,
+) -> Iterator[ConversationLink]:
+    """Given a link, return the next links to process."""
+    is_fork = len(parent.messages) > 1
+    for child in reversed(parent.messages):
+        next_children = _sorted_children(tree, messages, child)
+        if next_children:
+            if is_fork:
+                path = parent.path + (str(parent), str(child))
+            else:
+                path = parent.path
+            yield ConversationLink(path, parent.seq + 1, next_children)
+
+
+def enumerate_conversation_links(
+    messages: dict[str, Message],
+    tree: dict[str, list[str]],
+    root: str,
+) -> Iterator[ConversationLink]:
+    """Stack-based enumeration of conversation tree as ConversationLinks."""
+    stack = [ConversationLink((), 0, [messages[root]])]
+    while stack:
+        link = stack.pop()
+        yield link
+        stack.extend(_child_links(messages, tree, link))
 
 
 def prepare_message(raw: JsonObj) -> JsonObj:
@@ -414,8 +428,9 @@ def main() -> None:
     mapping = data["mapping"]
     assert isinstance(mapping, Mapping), type(mapping)
     tree = build_tree(mapping)
-    roots = find_roots(mapping)
-    assert len(roots) == 1, f"Expected 1 root, got {len(roots)}: {roots}"
+    root = find_roots(mapping)
+    assert len(root) == 1, f"Expected 1 root, got {len(root)}: {root}"
+    root = root[0]
 
     base_dir = src.with_suffix(".splat")
     messages_dir = base_dir / "messages"
@@ -435,7 +450,7 @@ def main() -> None:
 
     # Write conversation tree
     conversations_dir.mkdir(parents=True, exist_ok=True)
-    for link in enumerate_conversation_links(roots[0], tree, messages, 0, ()):
+    for link in enumerate_conversation_links(messages, tree, root):
         link.write(conversations_dir, messages_dir)
 
     print(f"Wrote {len(messages)} messages to {base_dir}")
