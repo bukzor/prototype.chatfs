@@ -59,25 +59,19 @@ class Message:
 
 @dataclass
 class ConversationLink:
-    """An entry in the conversation tree: one or more messages at a sequence position."""
+    """An entry in the conversation tree: a single message at a sequence position."""
 
     path: tuple[str, ...]  # dir components relative to conversations/
     seq: int
-    messages: list[Message]
+    message: Message
 
     @property
     def role(self) -> str:
-        roles = set(m.role for m in self.messages)
-        if len(roles) == 1:
-            return next(iter(roles))
-        return "fork"
+        return self.message.role
 
     @property
     def content_type(self) -> str:
-        types = set(m.content_type for m in self.messages)
-        if len(types) == 1:
-            return next(iter(types))
-        return "mixed"
+        return self.message.content_type
 
     def __str__(self) -> str:
         return f"{self.seq:03d}.{self.role}.{self.content_type}"
@@ -87,31 +81,11 @@ class ConversationLink:
         conv_dir = conversations_dir / Path(*self.path) if self.path else conversations_dir
         conv_dir.mkdir(parents=True, exist_ok=True)
         link_name = str(self)
-
-        if len(self.messages) == 1:
-            # Single message: create symlinks
-            msg = self.messages[0]
-            basename = str(msg)
-            rel_messages = os.path.relpath(messages_dir, conv_dir)
-            (conv_dir / f"{link_name}.json").symlink_to(f"{rel_messages}/{basename}.json")
-            if msg.text_content is not None:
-                (conv_dir / f"{link_name}.md").symlink_to(f"{rel_messages}/{basename}.md")
-        else:
-            # Fork: create branch subdirectories with symlinks
-            fork_dir = conv_dir / link_name
-            fork_dir.mkdir(parents=True, exist_ok=True)
-            for msg in self.messages:
-                branch_dir = fork_dir / str(msg)
-                branch_dir.mkdir(parents=True, exist_ok=True)
-                basename = str(msg)
-                rel_messages = os.path.relpath(messages_dir, branch_dir)
-                (branch_dir / f"{link_name}.json").symlink_to(
-                    f"{rel_messages}/{basename}.json"
-                )
-                if msg.text_content is not None:
-                    (branch_dir / f"{link_name}.md").symlink_to(
-                        f"{rel_messages}/{basename}.md"
-                    )
+        basename = str(self.message)
+        rel_messages = os.path.relpath(messages_dir, conv_dir)
+        (conv_dir / f"{link_name}.json").symlink_to(f"{rel_messages}/{basename}.json")
+        if self.message.text_content is not None:
+            (conv_dir / f"{link_name}.md").symlink_to(f"{rel_messages}/{basename}.md")
 
 
 def load_conversation(path: Path) -> JsonObj:
@@ -360,8 +334,12 @@ def _sorted_children(
 ) -> list[Message]:
     return sorted(
         [messages[c] for c in tree.get(msg.uuid, [])],
-        key=lambda c: float(c.timestamp),
+        key=lambda c: c.timestamp,
     )
+
+
+def assert_unique(items: list[object], label: str = "") -> None:
+    assert len(set(items)) == len(items), f"Duplicate in {label}: {items}"
 
 
 def _child_links(
@@ -370,15 +348,20 @@ def _child_links(
     parent: ConversationLink,
 ) -> Iterator[ConversationLink]:
     """Given a link, return the next links to process."""
-    is_fork = len(parent.messages) > 1
-    for child in reversed(parent.messages):
-        next_children = _sorted_children(tree, messages, child)
-        if next_children:
-            if is_fork:
-                path = parent.path + (str(parent), str(child))
-            else:
-                path = parent.path
-            yield ConversationLink(path, parent.seq + 1, next_children)
+    next_children = _sorted_children(tree, messages, parent.message)
+    assert_unique(
+        [m.timestamp for m in next_children],
+        f"timestamps at seq {parent.seq + 1}",
+    )
+    is_fork = len(next_children) > 1
+    for child in reversed(next_children):
+        if is_fork:
+            link = ConversationLink(parent.path, parent.seq + 1, child)
+            ts = format_timestamp(child.timestamp)
+            path = parent.path + (f"{link}.{ts}",)
+        else:
+            path = parent.path
+        yield ConversationLink(path, parent.seq + 1, child)
 
 
 def enumerate_conversation_links(
@@ -387,7 +370,7 @@ def enumerate_conversation_links(
     root: str,
 ) -> Iterator[ConversationLink]:
     """Stack-based enumeration of conversation tree as ConversationLinks."""
-    stack = [ConversationLink((), 0, [messages[root]])]
+    stack = [ConversationLink((), 0, messages[root])]
     while stack:
         link = stack.pop()
         yield link

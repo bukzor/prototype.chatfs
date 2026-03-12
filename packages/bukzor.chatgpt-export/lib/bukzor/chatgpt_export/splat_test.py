@@ -35,22 +35,8 @@ class DescribeMessage:
 class DescribeConversationLink:
     def it_formats_as_seq_dot_role(self):
         msg = M.Message(uuid="x", timestamp=Decimal(0), role="user", text_content=None, raw={})
-        link = M.ConversationLink(path=(), seq=95, messages=[msg])
+        link = M.ConversationLink(path=(), seq=95, message=msg)
         assert str(link) == "095.user.root"
-
-    def it_uses_shared_role_for_same_role_messages(self):
-        m1 = M.Message(uuid="a", timestamp=Decimal(1), role="user", text_content=None, raw={})
-        m2 = M.Message(uuid="b", timestamp=Decimal(2), role="user", text_content=None, raw={})
-        link = M.ConversationLink(path=(), seq=5, messages=[m1, m2])
-        assert link.role == "user"
-        assert str(link) == "005.user.root"
-
-    def it_uses_fork_for_mixed_role_messages(self):
-        m1 = M.Message(uuid="a", timestamp=Decimal(1), role="user", text_content=None, raw={})
-        m2 = M.Message(uuid="b", timestamp=Decimal(2), role="assistant", text_content=None, raw={})
-        link = M.ConversationLink(path=(), seq=5, messages=[m1, m2])
-        assert link.role == "fork"
-        assert str(link) == "005.fork.root"
 
 
 class DescribeFormatTimestamp:
@@ -320,11 +306,11 @@ class DescribeEnumerateConversationLinks:
         assert len(links) == 3
         assert [str(l) for l in links] == ["000.root.root", "001.user.root", "002.assistant.root"]
         assert all(l.path == () for l in links)
-        assert links[0].messages[0] is messages["root"]
-        assert links[1].messages[0] is messages["a"]
-        assert links[2].messages[0] is messages["b"]
+        assert links[0].message is messages["root"]
+        assert links[1].message is messages["a"]
+        assert links[2].message is messages["b"]
 
-    def it_yields_fork_link_at_branch_point(self):
+    def it_splits_fork_into_separate_links(self):
         spec: dict[str, dict[str, object]] = {
             "root": {"ts": 1.0, "role": "root"},
             "a": {"parent": "root", "ts": 2.0, "role": "user"},
@@ -333,14 +319,14 @@ class DescribeEnumerateConversationLinks:
         messages = self._make_messages(spec)
         tree = M.build_tree(self._make_mapping(spec))
         links = list(M.enumerate_conversation_links(messages, tree, "root"))
-        # root link, then fork link — children are leaves so no branch links
-        assert len(links) == 2
-        assert links[0].messages[0] is messages["root"]
-        fork = links[1]
-        assert fork.seq == 1
-        assert fork.role == "user"
-        assert fork.messages[0] is messages["a"]
-        assert fork.messages[1] is messages["b"]
+        # root link, then one link per fork child (leaves, so no further links)
+        assert len(links) == 3
+        assert links[0].message is messages["root"]
+        # Each fork child is a separate link at seq 1 with timestamp-suffixed path
+        assert links[1].seq == 1
+        assert links[1].message is messages["a"]
+        assert links[2].seq == 1
+        assert links[2].message is messages["b"]
 
     def it_nests_branch_paths(self):
         spec: dict[str, dict[str, object]] = {
@@ -353,14 +339,19 @@ class DescribeEnumerateConversationLinks:
         messages = self._make_messages(spec)
         tree = M.build_tree(self._make_mapping(spec))
         links = list(M.enumerate_conversation_links(messages, tree, "root"))
-        # root link, fork link [a, b], then a1 in branch a, b1 in branch b
-        assert len(links) == 4
+        # root, fork child a, a1 in branch a, fork child b, b1 in branch b
+        assert len(links) == 5
         branch_links = [l for l in links if l.path != ()]
-        assert len(branch_links) == 2
-        fork = links[1]
-        fork_name = str(fork)
-        # Each branch path is (fork_name, branch_message_name)
-        assert branch_links[0].path == (fork_name, str(messages["a"]))
-        assert branch_links[0].messages[0] is messages["a1"]
-        assert branch_links[1].path == (fork_name, str(messages["b"]))
-        assert branch_links[1].messages[0] is messages["b1"]
+        assert len(branch_links) == 4  # both fork children + their descendants
+        # Fork children have timestamp-suffixed paths
+        ts_a = M.format_timestamp(messages["a"].timestamp)
+        ts_b = M.format_timestamp(messages["b"].timestamp)
+        fork_a = [l for l in links if l.message is messages["a"]][0]
+        fork_b = [l for l in links if l.message is messages["b"]][0]
+        assert fork_a.path == (f"001.user.root.{ts_a}",)
+        assert fork_b.path == (f"001.user.root.{ts_b}",)
+        # Children inherit the fork path
+        child_a1 = [l for l in links if l.message is messages["a1"]][0]
+        child_b1 = [l for l in links if l.message is messages["b1"]][0]
+        assert child_a1.path == fork_a.path
+        assert child_b1.path == fork_b.path
