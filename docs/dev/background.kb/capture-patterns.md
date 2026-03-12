@@ -1,13 +1,19 @@
+---
+source:
+  - conversations.cleaned/02-architecture-convergence/094.assistant.text.md
+---
+
 # Five Capture Patterns (BB1 Implementation Options)
 
 Five viable patterns for the browser-side capture component emerged during
 design. All use Playwright/Puppeteer. Listed from cleanest UX to most
 policy-safe:
 
-**Pattern 1 — Inject UI button, read from page state (recommended)**
+**Pattern 1 — Inject UI button, read from page state**
 `addInitScript` injects a floating "Export" button. On click, injected JS pulls
-conversation from app state, serializes it, passes payload to Rust daemon via
-`exposeFunction`. No HAR, no downloads folder, no clipboard.
+conversation from app state, serializes it, triggers a download or copies to
+clipboard. Alternatively, use `exposeFunction` to hand the payload directly to
+the daemon (recommended handoff — avoids downloads folder and clipboard).
 
 **Pattern 2 — Inject UI button, export from DOM**
 Button walks rendered DOM, builds best-effort transcript. More stable to

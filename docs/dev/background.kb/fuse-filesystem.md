@@ -1,3 +1,8 @@
+---
+source:
+  - conversations.cleaned/05-fuse-implementation-details/159.assistant.text.md
+---
+
 # FUSE (Filesystem in Userspace)
 
 FUSE allows implementing filesystem behavior in a normal process rather than

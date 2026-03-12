@@ -1,3 +1,9 @@
+---
+source:
+  - conversations.cleaned/06-design-spec-project-handoff/167.assistant.text.md#4
+  - conversations.cleaned/05-fuse-implementation-details/159.assistant.text.md
+---
+
 # Work-Enqueueing Model
 
 FUSE handlers must stay fast. Expensive work (BB pipelines, user interaction,

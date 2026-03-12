@@ -1,13 +1,16 @@
 ---
 why:
   - design-spec
+source:
+  - conversations.cleaned/06-design-spec-project-handoff/178.assistant.text.md
+  - extracted/03-architectural-invariants.md
 ---
 
 # Architectural Invariants
 
 Seven constraints that define the architecture. Breaking any breaks the design.
 
-1. **Black-box boundary:** BB1 capture + BB2 extract + BB3 emit are opaque,
+1. **Black-box boundary:** BB1 capture + BB2 pluck + BB3 emit are opaque,
    assumed to exist
 2. **No work on `read()`:** Cached-only reads; explicit triggers (`touch` /
    `control` write)

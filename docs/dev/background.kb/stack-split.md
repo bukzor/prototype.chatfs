@@ -1,6 +1,12 @@
-# Stack Split: Rust + Node/Playwright Sidecar
+---
+source:
+  - conversations.cleaned/02-architecture-convergence/094.assistant.text.md
+---
 
-The system is split across two language runtimes:
+# Stack Split: Rust + Node/Playwright Sidecar (Proposed)
+
+ChatGPT's recommended split across two language runtimes (not yet decided —
+user was "leaning toward rust" but tech stack is open):
 
 **Rust owns:** FUSE filesystem, cache layer, canonical format, markdown
 generation, file watching (`notify` crate), orchestration, provider plugin

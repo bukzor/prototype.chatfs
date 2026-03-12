@@ -1,6 +1,8 @@
 ---
 why:
   - architectural-invariants
+source:
+  - conversations.cleaned/06-design-spec-project-handoff/167.assistant.text.md#5
 ---
 
 # Atomic Cache Updates

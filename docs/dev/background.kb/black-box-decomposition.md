@@ -1,10 +1,16 @@
+---
+source:
+  - conversations.cleaned/04-system-decomposition-sync-design/127.assistant.text.md
+  - extracted/04-bb-decomposition.md
+---
+
 # Black Box Decomposition (BB1 / BB2 / BB3)
 
 The capture-to-rendering pipeline is decomposed into three opaque components:
 
 - **BB1 (capture):** Given a conversation reference, produces a capture artifact
   (HAR, trace, or similar). Involves browser automation and network interception.
-- **BB2 (extract):** Consumes the capture artifact, outputs structured
+- **BB2 (pluck):** Consumes the capture artifact, outputs structured
   conversation data (`extracted.json`) — messages, IDs, parent pointers,
   timestamps, branches.
 - **BB3 (emit):** Consumes structured data, writes rendered files (`.md`) and

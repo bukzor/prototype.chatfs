@@ -2,6 +2,8 @@
 why:
   - architectural-invariants
   - no-work-on-read
+source:
+  - conversations.cleaned/04-system-decomposition-sync-design/133.assistant.text.md
 ---
 
 # Sync Control Plane (Procfs/Sysfs Style)

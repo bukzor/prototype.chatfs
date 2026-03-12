@@ -1,3 +1,9 @@
+---
+source:
+  - conversations.cleaned/02-architecture-convergence/077.assistant.text.md
+  - conversations.cleaned/03-opaque-extractor-convention/112.assistant.text.md
+---
+
 # Policy-Safe Automation Boundary
 
 The architecture's separation of "live mount" from "sync" is not just a

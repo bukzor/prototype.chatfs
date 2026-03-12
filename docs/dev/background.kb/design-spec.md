@@ -1,3 +1,9 @@
+---
+source:
+  - conversations.cleaned/06-design-spec-project-handoff/167.assistant.text.md
+  - extracted/02-design-spec-9-section.md
+---
+
 # Design Spec (9-Section Synthesis)
 
 A comprehensive architecture document produced during a 2026-03-04 ChatGPT

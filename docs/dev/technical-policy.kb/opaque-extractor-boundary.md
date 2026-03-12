@@ -1,6 +1,9 @@
 ---
 why:
   - architectural-invariants
+source:
+  - conversations.cleaned/03-opaque-extractor-convention/112.assistant.text.md
+  - extracted/05-opaque-extractor-boundary.md
 ---
 
 # Opaque Extractor Boundary

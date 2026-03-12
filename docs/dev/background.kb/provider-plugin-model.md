@@ -1,3 +1,8 @@
+---
+source:
+  - conversations.cleaned/06-design-spec-project-handoff/167.assistant.text.md#2
+---
+
 # Provider Plugin Model
 
 chatfs is provider-agnostic. Each chat service (Claude, ChatGPT, Gemini, etc.)

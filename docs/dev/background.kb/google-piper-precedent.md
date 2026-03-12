@@ -1,3 +1,8 @@
+---
+source:
+  - conversations.cleaned/05-fuse-implementation-details/143.assistant.text.md
+---
+
 # Google Piper Precedent
 
 Google's monorepo (Piper/google3) uses FUSE-based workspace mounts that are

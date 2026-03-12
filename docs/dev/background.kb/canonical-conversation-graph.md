@@ -1,3 +1,8 @@
+---
+source:
+  - conversations.cleaned/06-design-spec-project-handoff/167.assistant.text.md#1
+---
+
 # Canonical Conversation Graph Format
 
 Conversations are modeled as trees with forks, not linear sequences. The

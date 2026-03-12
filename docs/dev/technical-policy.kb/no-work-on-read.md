@@ -1,6 +1,9 @@
 ---
 why:
   - architectural-invariants
+source:
+  - conversations.cleaned/04-system-decomposition-sync-design/133.assistant.text.md
+  - conversations.cleaned/06-design-spec-project-handoff/167.assistant.text.md#4
 ---
 
 # No Expensive Work on read()
