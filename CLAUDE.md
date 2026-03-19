@@ -7,7 +7,7 @@ depends:
 
 # chatfs - Development Guide for Claude
 
-**Last Updated:** 2026-01-02
+**Last Updated:** 2026-03-19
 
 ## Quick Reference
 
@@ -38,7 +38,11 @@ For how to create and maintain design knowledge, see
 
 ## Architecture Overview
 
-chatfs provides lazy filesystem access to chat conversations (claude.ai, ChatGPT). Built on four-layer architecture: native → vfs → cache → cli.
+chatfs provides lazy filesystem access to chat conversations (claude.ai, ChatGPT). Polyglot Python/Rust repo.
+
+**Python side:** Four-layer JSONL pipeline (native → vfs → cache → cli) for provider API access and data normalization.
+
+**Rust side:** `chatfs-fuser` crate — idiomatic wrapper around the `fuser` crate. Cargo workspace at repo root.
 
 **Why JSONL:** Streaming-friendly, works with Unix tools now, easy capnproto migration later.
 
@@ -129,6 +133,7 @@ When you encounter docs marked with "Status: TODO":
 
 ## Key Files
 
+- `packages/` - Polyglot workspace members (Python packages, Rust crates)
 - `lib/chatfs/layer/native/claude/` - M1-CLAUDE: Claude-native commands (list_orgs, list_convos, get_convo, render_md)
 - `lib/chatfs/layer/vfs/` - M2-VFS: Normalized JSONL commands (future)
 - `lib/chatfs/layer/cache/` - M3-CACHE: Persistent storage layer (future)
