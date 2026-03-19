@@ -1,3 +1,24 @@
 [workspace]
 resolver = "2"
 members = ["packages/chatfs-fuser"]
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+missing_debug_implementations = "warn"
+unreachable_pub = "warn"
+
+[workspace.lints.clippy]
+# Pedantic group — opt in, then selectively allow what's noisy
+pedantic = { level = "warn", priority = -1 }
+# Restriction lints — individually chosen
+clone_on_ref_ptr = "warn"
+dbg_macro = "warn"
+empty_structs_with_brackets = "warn"
+exit = "warn"
+get_unwrap = "warn"
+print_stderr = "warn"
+print_stdout = "warn"
+rest_pat_in_fully_bound_structs = "warn"
+todo = "warn"
+unimplemented = "warn"
+unwrap_used = "warn"

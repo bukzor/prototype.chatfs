@@ -12,29 +12,24 @@
 //! ```
 
 use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::Arc;
 
 use chatfs_fuser::prelude::*;
 
 fn main() -> Result<()> {
-    let hit_count = AtomicU64::new(0);
+    let hit_count = Arc::new(AtomicU64::new(0));
 
     let fs = FilesystemBuilder::new()
-        .file("time.txt", move || {
-            chrono::Local::now().to_rfc3339() + "\n"
+        .file("time.txt", || {
+            format!("{:?}\n", std::time::SystemTime::now())
         })
         .dir("counters", move |d| {
-            // Called when the directory is listed.
-            d.file("hits.txt")
-             .file("misses.txt")
-        }, move |path| {
-            // Called when a file within this dir is read.
-            match path.file_name() {
-                "hits.txt" => {
-                    let n = hit_count.fetch_add(1, Ordering::Relaxed);
-                    format!("{n}\n")
-                }
-                _ => String::new(),
-            }
+            let hit_count = Arc::clone(&hit_count);
+            d.file("hits.txt", move || {
+                let n = hit_count.fetch_add(1, Ordering::Relaxed);
+                format!("{n}\n")
+            })
+            .file("misses.txt", String::new);
         })
         .build()?;
 

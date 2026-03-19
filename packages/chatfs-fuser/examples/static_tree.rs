@@ -1,6 +1,4 @@
-//! Static content as the degenerate case — &str coerces to a constant closure.
-//!
-//! Shows that the same `.file()` API accepts both closures and string literals.
+//! Static content as the degenerate case — closures return constant strings.
 //!
 //! ```bash
 //! cargo run --example static_tree -- /tmp/tree_fs
@@ -12,11 +10,10 @@ use chatfs_fuser::prelude::*;
 
 fn main() -> Result<()> {
     let fs = FilesystemBuilder::new()
-        // Static string — degenerate case, same API.
-        .file("README.md", "# My Project\n")
+        .file("README.md", || "# My Project\n")
         .dir("docs", |d| {
-            d.file("guide.md", "# User Guide\n\nGetting started...\n")
-             .file("api.md", "# API Reference\n")
+            d.file("guide.md", || "# User Guide\n\nGetting started...\n")
+             .file("api.md", || "# API Reference\n");
         })
         .build()?;
 

@@ -1,6 +1,8 @@
-use crate::{Filesystem, IntoContentSource, Result};
+use crate::{File, Filesystem, Result};
 
 /// Builds a filesystem tree from files, directories, and symlinks.
+#[derive(Debug)]
+#[must_use]
 pub struct FilesystemBuilder {
     // TODO: tree representation
 }
@@ -8,8 +10,15 @@ pub struct FilesystemBuilder {
 /// Builds the contents of a single directory.
 ///
 /// Same API as `FilesystemBuilder` minus `.build()`.
+#[derive(Debug)]
 pub struct DirBuilder {
     // TODO: entries
+}
+
+impl Default for FilesystemBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl FilesystemBuilder {
@@ -17,12 +26,16 @@ impl FilesystemBuilder {
         todo!()
     }
 
-    /// Add a read-only file with content from any `IntoContentSource`.
-    pub fn file(self, _name: &str, _content: impl IntoContentSource) -> Self {
+    /// Add a file. The closure is called on each read.
+    pub fn file<F, R>(self, _name: &str, _read: F) -> Self
+    where
+        F: Fn() -> R,
+        R: Into<File>,
+    {
         todo!()
     }
 
-    /// Add a symlink whose target is produced by a closure.
+    /// Add a symlink. The closure produces the target path.
     pub fn symlink(self, _name: &str, _target: impl Fn() -> String) -> Self {
         todo!()
     }
@@ -42,20 +55,28 @@ impl FilesystemBuilder {
     ) -> Self
     where
         L: Fn() -> Vec<String>,
-        T: Fn(&str, &mut DirBuilder),
+        T: Fn(String, &mut DirBuilder),
     {
         todo!()
     }
 
     /// Consume the builder and produce a mountable `Filesystem`.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the filesystem tree is invalid.
     pub fn build(self) -> Result<Filesystem> {
         todo!()
     }
 }
 
 impl DirBuilder {
-    /// Add a read-only file.
-    pub fn file(&mut self, _name: &str, _content: impl IntoContentSource) -> &mut Self {
+    /// Add a file. The closure is called on each read.
+    pub fn file<F, R>(&mut self, _name: &str, _read: F) -> &mut Self
+    where
+        F: Fn() -> R,
+        R: Into<File>,
+    {
         todo!()
     }
 

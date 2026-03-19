@@ -11,7 +11,7 @@ use chatfs_fuser::prelude::*;
 fn main() -> Result<()> {
     let fs = FilesystemBuilder::new()
         .file("time.txt", || {
-            chrono::Local::now().to_rfc3339() + "\n"
+            format!("{:?}\n", std::time::SystemTime::now())
         })
         .build()?;
 

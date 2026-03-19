@@ -1,16 +1,18 @@
+// Stubs — bodies will be filled in as we implement.
+#![allow(clippy::todo)]
+// Structs will get fields as we implement.
+#![allow(clippy::empty_structs_with_brackets)]
+
 mod builder;
-mod content;
 mod error;
+mod file;
 mod filesystem;
 
 pub use builder::{DirBuilder, FilesystemBuilder};
-pub use content::{FileContent, IntoContentSource};
 pub use error::{Error, Result};
+pub use file::File;
 pub use filesystem::Filesystem;
 
 pub mod prelude {
-    pub use crate::{
-        DirBuilder, FileContent, Filesystem, FilesystemBuilder, IntoContentSource,
-        Error, Result,
-    };
+    pub use crate::{DirBuilder, File, Filesystem, FilesystemBuilder, Error, Result};
 }
