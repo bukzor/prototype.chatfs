@@ -2,6 +2,9 @@
 uv.lock
 pnpm-lock.yaml
 
+# Rust
+target/
+
 # Python
 __pycache__/
 *.py[cod]
