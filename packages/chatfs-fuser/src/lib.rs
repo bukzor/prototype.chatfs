@@ -1,14 +1,16 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
+mod builder;
+mod content;
+mod error;
+mod filesystem;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+pub use builder::{DirBuilder, FilesystemBuilder};
+pub use content::{FileContent, IntoContentSource};
+pub use error::{Error, Result};
+pub use filesystem::Filesystem;
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
+pub mod prelude {
+    pub use crate::{
+        DirBuilder, FileContent, Filesystem, FilesystemBuilder, IntoContentSource,
+        Error, Result,
+    };
 }
