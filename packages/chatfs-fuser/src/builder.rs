@@ -57,6 +57,23 @@ impl Default for FilesystemBuilder {
     }
 }
 
+/// Wrap entries in nested directories for a slash-separated path.
+/// e.g. `wrap_in_path("sys/vm", entries)` → `("sys", Dir{[("vm", Dir{entries})]})`
+fn wrap_in_path(path: &str, entries: Vec<(String, BuilderEntry)>) -> (String, BuilderEntry) {
+    let parts: Vec<&str> = path.split('/').filter(|s| !s.is_empty()).collect();
+    assert!(!parts.is_empty(), "dir() name must not be empty");
+
+    // Build from inside out: leaf dir contains the entries,
+    // each outer segment wraps the previous in a new dir.
+    let mut entry = BuilderEntry::Dir { entries };
+    for &segment in parts[1..].iter().rev() {
+        entry = BuilderEntry::Dir {
+            entries: vec![(segment.to_owned(), entry)],
+        };
+    }
+    (parts[0].to_owned(), entry)
+}
+
 /// Assign inodes recursively, returning the inode for this entry.
 fn flatten(
     entry: BuilderEntry,
@@ -118,33 +135,64 @@ impl FilesystemBuilder {
     }
 
     /// Add a directory with fixed structure.
+    ///
+    /// `name` may contain `/` to create intermediate directories,
+    /// e.g. `dir("sys/vm", ...)` creates `sys/` containing `vm/`.
     pub fn dir(mut self, name: &str, build: impl FnOnce(&mut DirBuilder)) -> Self {
         let mut dir = DirBuilder {
             entries: Vec::new(),
         };
         build(&mut dir);
-        self.entries.push((
-            name.to_owned(),
-            BuilderEntry::Dir {
-                entries: dir.entries,
-            },
-        ));
+        let entry = wrap_in_path(name, dir.entries);
+        self.entries.push(entry);
         self
     }
 
     /// Add a dynamic directory: entries listed by `list_fn`,
     /// subtree templated by `template_fn` for each entry.
+    ///
+    /// `list_fn` is called once at build time to get entry names.
+    /// `template_fn` is called once per entry at build time to build its subtree.
+    ///
+    /// If `name` is `"/"`, entries are merged into the current directory level.
+    /// Otherwise, entries are placed inside a new directory with the given name.
     pub fn dir_each<L, T>(
-        self,
-        _name: &str,
-        _list_fn: L,
-        _template_fn: T,
+        mut self,
+        name: &str,
+        list_fn: L,
+        template_fn: T,
     ) -> Self
     where
         L: Fn() -> Vec<String>,
         T: Fn(String, &mut DirBuilder),
     {
-        todo!()
+        let items = list_fn();
+        let mut child_entries = Vec::new();
+        for item in items {
+            let mut dir = DirBuilder {
+                entries: Vec::new(),
+            };
+            template_fn(item.clone(), &mut dir);
+            child_entries.push((
+                item,
+                BuilderEntry::Dir {
+                    entries: dir.entries,
+                },
+            ));
+        }
+
+        if name == "/" {
+            // Merge into current level
+            self.entries.extend(child_entries);
+        } else {
+            self.entries.push((
+                name.to_owned(),
+                BuilderEntry::Dir {
+                    entries: child_entries,
+                },
+            ));
+        }
+        self
     }
 
     /// Consume the builder and produce a mountable `Filesystem`.
@@ -195,18 +243,14 @@ impl DirBuilder {
         self
     }
 
-    /// Add a nested directory.
+    /// Add a nested directory (supports slash-separated paths).
     pub fn dir(&mut self, name: &str, build: impl FnOnce(&mut DirBuilder)) -> &mut Self {
         let mut dir = DirBuilder {
             entries: Vec::new(),
         };
         build(&mut dir);
-        self.entries.push((
-            name.to_owned(),
-            BuilderEntry::Dir {
-                entries: dir.entries,
-            },
-        ));
+        let entry = wrap_in_path(name, dir.entries);
+        self.entries.push(entry);
         self
     }
 }

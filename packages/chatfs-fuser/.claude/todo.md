@@ -13,10 +13,11 @@ Goals are examples that work end-to-end. Each item is one commit.
     - stub API fix: `mount(&self)` → `mount(self)` (fuser consumes the impl)
 - [x] `cargo run --example static_tree` — nested directories
 - [x] `cargo run --example dynamic` — closures in directories (worked with no changes)
-- [ ] `cargo run --example procfs` — full feature set
-  - [ ] Symlinks in fuser bridge
-  - [ ] mtime/mode passthrough from File metadata
-  - [ ] dir_each (dynamic directory templates)
+- [x] `cargo run --example procfs` — full feature set
+  - [x] Symlinks in fuser bridge
+  - [x] mtime/mode passthrough from File metadata (worked from initial impl)
+  - [x] dir_each (build-time expansion, `/` merges into parent)
+  - [x] Slash-separated paths in dir() (e.g. `dir("sys/vm", ...)`)
 
 End state: a working FUSE wrapper that chatfs can mount for its org/convo/message
 hierarchy. Good enough to use, improve incrementally from there.
