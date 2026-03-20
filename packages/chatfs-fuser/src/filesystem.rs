@@ -4,6 +4,7 @@ use std::path::Path;
 use crate::Result;
 use crate::fuse_impl::FuseFs;
 use crate::node::Node;
+use crate::node_ops::NodeOps;
 
 /// A built filesystem, ready to mount.
 pub struct Filesystem {
@@ -32,7 +33,8 @@ impl Filesystem {
     pub fn mount(self, path: impl AsRef<Path>) -> Result<()> {
         let path = path.as_ref();
         std::fs::create_dir_all(path)?;
-        let fuse_fs = FuseFs::new(self.nodes);
+        let ops = NodeOps::new(self.nodes);
+        let fuse_fs = FuseFs::new(ops);
         fuser::mount2(fuse_fs, path, &fuser::Config::default())?;
         Ok(())
     }

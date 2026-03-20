@@ -4,6 +4,7 @@ mod file;
 mod filesystem;
 mod fuse_impl;
 mod node;
+mod node_ops;
 
 pub use builder::{DirBuilder, FilesystemBuilder};
 pub use error::{Error, Result};
