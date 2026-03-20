@@ -7,15 +7,10 @@ source:
 
 # dir_each Composition
 
-The framework does not provide a `dir_each(list_fn, template_fn)` primitive.
-Callers who need the list+template pattern compose it in their `Dir` callback:
+`FilesystemBuilder::dir_each` is a convenience method, not a primitive.
+It composes over `.dir()` — calling `list_fn()` at build time and adding
+one `.dir()` per item. The implementation is ~15 lines of pure composition.
 
-```rust
-.dir("orgs", move || {
-    list_orgs().into_iter().map(|org| {
-        (org.clone(), make_org_subtree(&org))
-    }).collect()
-})
-```
-
-This is ordinary Rust composition, not a framework concern.
+For truly dynamic directories (children evaluated on each access, not at
+build time), construct a `PathSegment::Dir` directly with a closure that
+returns fresh children each call. See the `procfs` example.
