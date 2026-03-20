@@ -29,14 +29,14 @@ hierarchy. Good enough to use, improve incrementally from there.
   - `impl Filesystem` becomes a trivial adapter (no logic to test)
 - [x] Unit tests: builder tree construction (no FUSE needed)
 - [x] Unit tests: node-tree operations (depends on refactor above)
-- [ ] Integration tests: real FUSE mounts for the four examples
+- [x] Integration tests: real FUSE mounts for the four examples
 
 See `TESTING.md` for detailed test plan.
 
 ## Known limitations (revisit with user)
 
-- [ ] `getattr` calls the read closure on every stat — wasteful for expensive closures
-  - Could cache file size, or use a fixed size and let reads determine actual length
+- [x] `getattr` calls the read closure on every stat — by design
+  - Applications that care should cache in their callback; FUSE TTL covers the common case
 - [ ] `dir_each` evaluates `list_fn` at build time, not readdir time
   - Truly dynamic directories need lazy inode allocation (interior mutability on node map)
 - [ ] `readdir` `..` entry always reports inode 1 (root) regardless of actual parent
