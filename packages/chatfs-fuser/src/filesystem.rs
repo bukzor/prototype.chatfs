@@ -1,27 +1,27 @@
-use std::collections::HashMap;
 use std::path::Path;
 
 use crate::Result;
 use crate::fuse_impl::FuseFs;
-use crate::node::Node;
 use crate::node_ops::NodeOps;
+use crate::path_segment::PathSegment;
 
 /// A built filesystem, ready to mount.
 pub struct Filesystem {
-    pub(crate) nodes: HashMap<u64, Node>,
+    pub root: PathSegment,
 }
 
 impl std::fmt::Debug for Filesystem {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Filesystem")
-            .field("nodes", &self.nodes)
+            .field("root", &self.root)
             .finish()
     }
 }
 
 impl Filesystem {
-    pub(crate) fn new(nodes: HashMap<u64, Node>) -> Self {
-        Self { nodes }
+    #[must_use]
+    pub fn new(root: PathSegment) -> Self {
+        Self { root }
     }
 
     /// Mount at `path` and block until unmounted.
@@ -33,7 +33,7 @@ impl Filesystem {
     pub fn mount(self, path: impl AsRef<Path>) -> Result<()> {
         let path = path.as_ref();
         std::fs::create_dir_all(path)?;
-        let ops = NodeOps::new(self.nodes);
+        let ops = NodeOps::new(self.root);
         let fuse_fs = FuseFs::new(ops);
         fuser::mount2(fuse_fs, path, &fuser::Config::default())?;
         Ok(())

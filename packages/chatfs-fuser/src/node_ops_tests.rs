@@ -8,7 +8,7 @@ const GID: u32 = 1000;
 
 /// Helper: build and return a `NodeOps`.
 fn build(builder: FilesystemBuilder) -> NodeOps {
-    NodeOps::new(builder.build().expect("build failed").nodes)
+    NodeOps::new(builder.build().expect("build failed").root)
 }
 
 // --- lookup ---
@@ -31,8 +31,11 @@ fn lookup_missing() {
 #[test]
 fn lookup_not_a_dir() {
     let ops = build(FilesystemBuilder::new().file("f", || "data"));
-    // inode 2 is the file, not a directory
-    assert!(ops.do_lookup(2, "child", UID, GID).is_err());
+    // First, lookup to assign an inode to the file
+    let (attr, _) = ops.do_lookup(1, "f", UID, GID).unwrap();
+    let file_ino = u64::from(attr.ino);
+    // Now try to look up a child of the file
+    assert!(ops.do_lookup(file_ino, "child", UID, GID).is_err());
 }
 
 // --- getattr ---
@@ -51,10 +54,13 @@ fn getattr_root() -> Result<(), Errno> {
 #[test]
 fn getattr_file() -> Result<(), Errno> {
     let ops = build(FilesystemBuilder::new().file("f", || "hello"));
-    let attr = ops.do_getattr(2, UID, GID)?;
+    // Lookup first to assign inode
+    let (attr, _) = ops.do_lookup(1, "f", UID, GID)?;
+    let file_ino = u64::from(attr.ino);
+    let attr = ops.do_getattr(file_ino, UID, GID)?;
     assert_eq!(attr.kind, FileType::RegularFile);
     assert_eq!(attr.size, 5);
-    assert_eq!(attr.perm, 0o444); // default
+    assert_eq!(attr.perm, 0o444);
     Ok(())
 }
 
@@ -63,7 +69,9 @@ fn getattr_file_custom_mode() -> Result<(), Errno> {
     let ops = build(
         FilesystemBuilder::new().file("f", || crate::File::new("x").mode(0o644)),
     );
-    let attr = ops.do_getattr(2, UID, GID)?;
+    let (attr, _) = ops.do_lookup(1, "f", UID, GID)?;
+    let file_ino = u64::from(attr.ino);
+    let attr = ops.do_getattr(file_ino, UID, GID)?;
     assert_eq!(attr.perm, 0o644);
     Ok(())
 }
@@ -71,9 +79,11 @@ fn getattr_file_custom_mode() -> Result<(), Errno> {
 #[test]
 fn getattr_symlink() -> Result<(), Errno> {
     let ops = build(FilesystemBuilder::new().symlink("link", || "/target".to_owned()));
-    let attr = ops.do_getattr(2, UID, GID)?;
+    let (attr, _) = ops.do_lookup(1, "link", UID, GID)?;
+    let link_ino = u64::from(attr.ino);
+    let attr = ops.do_getattr(link_ino, UID, GID)?;
     assert_eq!(attr.kind, FileType::Symlink);
-    assert_eq!(attr.size, 7); // "/target"
+    assert_eq!(attr.size, 7);
     Ok(())
 }
 
@@ -88,7 +98,9 @@ fn getattr_missing() {
 #[test]
 fn read_full() -> Result<(), Errno> {
     let ops = build(FilesystemBuilder::new().file("f", || "hello world"));
-    let data = ops.do_read(2, 0, 1024)?;
+    let (attr, _) = ops.do_lookup(1, "f", UID, GID)?;
+    let ino = u64::from(attr.ino);
+    let data = ops.do_read(ino, 0, 1024)?;
     assert_eq!(data, b"hello world");
     Ok(())
 }
@@ -96,7 +108,9 @@ fn read_full() -> Result<(), Errno> {
 #[test]
 fn read_offset() -> Result<(), Errno> {
     let ops = build(FilesystemBuilder::new().file("f", || "hello world"));
-    let data = ops.do_read(2, 6, 1024)?;
+    let (attr, _) = ops.do_lookup(1, "f", UID, GID)?;
+    let ino = u64::from(attr.ino);
+    let data = ops.do_read(ino, 6, 1024)?;
     assert_eq!(data, b"world");
     Ok(())
 }
@@ -104,7 +118,9 @@ fn read_offset() -> Result<(), Errno> {
 #[test]
 fn read_past_end() -> Result<(), Errno> {
     let ops = build(FilesystemBuilder::new().file("f", || "hi"));
-    let data = ops.do_read(2, 100, 1024)?;
+    let (attr, _) = ops.do_lookup(1, "f", UID, GID)?;
+    let ino = u64::from(attr.ino);
+    let data = ops.do_read(ino, 100, 1024)?;
     assert!(data.is_empty());
     Ok(())
 }
@@ -112,7 +128,9 @@ fn read_past_end() -> Result<(), Errno> {
 #[test]
 fn read_partial() -> Result<(), Errno> {
     let ops = build(FilesystemBuilder::new().file("f", || "hello world"));
-    let data = ops.do_read(2, 0, 5)?;
+    let (attr, _) = ops.do_lookup(1, "f", UID, GID)?;
+    let ino = u64::from(attr.ino);
+    let data = ops.do_read(ino, 0, 5)?;
     assert_eq!(data, b"hello");
     Ok(())
 }
@@ -128,15 +146,20 @@ fn read_not_a_file() {
 #[test]
 fn readlink_valid() -> Result<(), Errno> {
     let ops = build(FilesystemBuilder::new().symlink("link", || "/target".to_owned()));
-    let data = ops.do_readlink(2)?;
+    let (attr, _) = ops.do_lookup(1, "link", UID, GID)?;
+    let ino = u64::from(attr.ino);
+    let data = ops.do_readlink(ino)?;
     assert_eq!(data, b"/target");
     Ok(())
 }
 
 #[test]
-fn readlink_not_symlink() {
+fn readlink_not_symlink() -> Result<(), Errno> {
     let ops = build(FilesystemBuilder::new().file("f", || "data"));
-    assert!(ops.do_readlink(2).is_err());
+    let (attr, _) = ops.do_lookup(1, "f", UID, GID)?;
+    let ino = u64::from(attr.ino);
+    assert!(ops.do_readlink(ino).is_err());
+    Ok(())
 }
 
 // --- readdir ---
@@ -184,7 +207,10 @@ fn readdir_types() -> Result<(), Errno> {
 }
 
 #[test]
-fn readdir_not_a_dir() {
+fn readdir_not_a_dir() -> Result<(), Errno> {
     let ops = build(FilesystemBuilder::new().file("f", || "data"));
-    assert!(ops.do_readdir(2, 0).is_err());
+    let (attr, _) = ops.do_lookup(1, "f", UID, GID)?;
+    let ino = u64::from(attr.ino);
+    assert!(ops.do_readdir(ino, 0).is_err());
+    Ok(())
 }

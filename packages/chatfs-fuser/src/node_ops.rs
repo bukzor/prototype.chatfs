@@ -1,18 +1,24 @@
-use std::collections::HashMap;
+use std::sync::Mutex;
 use std::time::SystemTime;
 
 use fuser::{Errno, FileAttr, FileType, Generation, INodeNo};
 
-use crate::node::Node;
+use crate::inode_table::InodeTable;
+use crate::path_segment::PathSegment;
+use crate::resolve::{Resolved, resolve_and_read};
 
 /// Pure node-tree operations — testable without FUSE.
 pub(crate) struct NodeOps {
-    nodes: HashMap<u64, Node>,
+    root: PathSegment,
+    table: Mutex<InodeTable>,
 }
 
 impl NodeOps {
-    pub(crate) fn new(nodes: HashMap<u64, Node>) -> Self {
-        Self { nodes }
+    pub(crate) fn new(root: PathSegment) -> Self {
+        Self {
+            root,
+            table: Mutex::new(InodeTable::new()),
+        }
     }
 
     pub(crate) fn do_lookup(
@@ -22,25 +28,43 @@ impl NodeOps {
         uid: u32,
         gid: u32,
     ) -> Result<(FileAttr, Generation), Errno> {
-        let Node::Dir { children } = self.nodes.get(&parent_ino).ok_or(Errno::ENOENT)? else {
-            return Err(Errno::ENOENT);
+        let table = self.table.lock().expect("inode table lock poisoned");
+        let parent_path = table.path_of(parent_ino).ok_or(Errno::ENOENT)?;
+        let child_path = if parent_path == "/" {
+            format!("/{name}")
+        } else {
+            format!("{parent_path}/{name}")
         };
-        let &child_ino = children.get(name).ok_or(Errno::ENOENT)?;
-        let node = self.nodes.get(&child_ino).ok_or(Errno::ENOENT)?;
-        let attr = Self::node_attr(child_ino, node, uid, gid);
+        drop(table);
+
+        // Resolve to verify the path exists and get its type
+        let resolved = resolve_and_read(&self.root, &child_path)?;
+
+        let mut table = self.table.lock().expect("inode table lock poisoned");
+        let child_ino = table.ensure_ino(&child_path);
+        let attr = Self::resolved_attr(child_ino, &resolved, uid, gid);
         Ok((attr, Generation(0)))
     }
 
     pub(crate) fn do_getattr(&self, ino: u64, uid: u32, gid: u32) -> Result<FileAttr, Errno> {
-        let node = self.nodes.get(&ino).ok_or(Errno::ENOENT)?;
-        Ok(Self::node_attr(ino, node, uid, gid))
+        let table = self.table.lock().expect("inode table lock poisoned");
+        let path = table.path_of(ino).ok_or(Errno::ENOENT)?.to_owned();
+        drop(table);
+
+        let resolved = resolve_and_read(&self.root, &path)?;
+        Ok(Self::resolved_attr(ino, &resolved, uid, gid))
     }
 
     pub(crate) fn do_read(&self, ino: u64, offset: u64, size: u32) -> Result<Vec<u8>, Errno> {
-        let Node::File { read } = self.nodes.get(&ino).ok_or(Errno::ENOENT)? else {
+        let table = self.table.lock().expect("inode table lock poisoned");
+        let path = table.path_of(ino).ok_or(Errno::ENOENT)?.to_owned();
+        drop(table);
+
+        let resolved = resolve_and_read(&self.root, &path)?;
+        let Resolved::File(file) = resolved else {
             return Err(Errno::ENOENT);
         };
-        let file = read();
+
         let data = file.data.as_bytes();
         let offset = usize::try_from(offset).unwrap_or(usize::MAX);
         if offset >= data.len() {
@@ -53,10 +77,15 @@ impl NodeOps {
     }
 
     pub(crate) fn do_readlink(&self, ino: u64) -> Result<Vec<u8>, Errno> {
-        let Node::Symlink { target } = self.nodes.get(&ino).ok_or(Errno::ENOENT)? else {
+        let table = self.table.lock().expect("inode table lock poisoned");
+        let path = table.path_of(ino).ok_or(Errno::ENOENT)?.to_owned();
+        drop(table);
+
+        let resolved = resolve_and_read(&self.root, &path)?;
+        let Resolved::Symlink(target) = resolved else {
             return Err(Errno::ENOENT);
         };
-        Ok(target().into_bytes())
+        Ok(target.into_bytes())
     }
 
     pub(crate) fn do_readdir(
@@ -64,30 +93,46 @@ impl NodeOps {
         ino: u64,
         offset: u64,
     ) -> Result<Vec<(u64, FileType, String)>, Errno> {
-        let Node::Dir { children } = self.nodes.get(&ino).ok_or(Errno::ENOENT)? else {
-            return Err(Errno::ENOENT);
+        let table = self.table.lock().expect("inode table lock poisoned");
+        let path = table.path_of(ino).ok_or(Errno::ENOENT)?.to_owned();
+        let parent_ino = table.parent_ino(&path).unwrap_or(ino);
+        drop(table);
+
+        let resolved = resolve_and_read(&self.root, &path)?;
+        let Resolved::Dir(children) = resolved else {
+            return Err(Errno::ENOTDIR);
         };
 
         let mut entries: Vec<(u64, FileType, String)> = Vec::new();
         entries.push((ino, FileType::Directory, ".".to_owned()));
-        entries.push((1, FileType::Directory, "..".to_owned()));
+        entries.push((parent_ino, FileType::Directory, "..".to_owned()));
 
-        let mut sorted_children: Vec<_> = children.iter().collect();
-        sorted_children.sort_by_key(|(name, _)| (*name).clone());
-        for (name, child_ino) in &sorted_children {
-            let child_ino = **child_ino;
-            if let Some(node) = self.nodes.get(&child_ino) {
-                entries.push((child_ino, Self::file_type(node), (*name).clone()));
-            }
+        let mut sorted_names: Vec<&String> = children.keys().collect();
+        sorted_names.sort();
+
+        let mut table = self.table.lock().expect("inode table lock poisoned");
+        for name in sorted_names {
+            let child_path = if path == "/" {
+                format!("/{name}")
+            } else {
+                format!("{path}/{name}")
+            };
+            let child_ino = table.ensure_ino(&child_path);
+            let file_type = match &children[name] {
+                PathSegment::Dir { .. } => FileType::Directory,
+                PathSegment::File { .. } => FileType::RegularFile,
+                PathSegment::Symlink { .. } => FileType::Symlink,
+            };
+            entries.push((child_ino, file_type, name.clone()));
         }
 
         let skip = usize::try_from(offset).unwrap_or(usize::MAX);
         Ok(entries.into_iter().skip(skip).collect())
     }
 
-    fn node_attr(ino: u64, node: &Node, uid: u32, gid: u32) -> FileAttr {
-        match node {
-            Node::Dir { .. } => FileAttr {
+    fn resolved_attr(ino: u64, resolved: &Resolved, uid: u32, gid: u32) -> FileAttr {
+        match resolved {
+            Resolved::Dir(_) => FileAttr {
                 ino: INodeNo(ino),
                 size: 0,
                 blocks: 0,
@@ -104,11 +149,10 @@ impl NodeOps {
                 blksize: 512,
                 flags: 0,
             },
-            Node::File { read } => {
-                let file = read();
+            Resolved::File(file) => {
                 let size = file.data.len() as u64;
                 let mtime = file.mtime.unwrap_or(SystemTime::UNIX_EPOCH);
-                #[allow(clippy::cast_possible_truncation)] // mode fits in u16 by construction
+                #[expect(clippy::cast_possible_truncation, reason = "mode fits in u16 by construction")]
                 let perm = file.mode.map_or(0o444, |m| m as u16);
                 FileAttr {
                     ino: INodeNo(ino),
@@ -128,34 +172,23 @@ impl NodeOps {
                     flags: 0,
                 }
             }
-            Node::Symlink { target } => {
-                let t = target();
-                FileAttr {
-                    ino: INodeNo(ino),
-                    size: t.len() as u64,
-                    blocks: 0,
-                    atime: SystemTime::UNIX_EPOCH,
-                    mtime: SystemTime::UNIX_EPOCH,
-                    ctime: SystemTime::UNIX_EPOCH,
-                    crtime: SystemTime::UNIX_EPOCH,
-                    kind: FileType::Symlink,
-                    perm: 0o777,
-                    nlink: 1,
-                    uid,
-                    gid,
-                    rdev: 0,
-                    blksize: 512,
-                    flags: 0,
-                }
-            }
-        }
-    }
-
-    fn file_type(node: &Node) -> FileType {
-        match node {
-            Node::Dir { .. } => FileType::Directory,
-            Node::File { .. } => FileType::RegularFile,
-            Node::Symlink { .. } => FileType::Symlink,
+            Resolved::Symlink(target) => FileAttr {
+                ino: INodeNo(ino),
+                size: target.len() as u64,
+                blocks: 0,
+                atime: SystemTime::UNIX_EPOCH,
+                mtime: SystemTime::UNIX_EPOCH,
+                ctime: SystemTime::UNIX_EPOCH,
+                crtime: SystemTime::UNIX_EPOCH,
+                kind: FileType::Symlink,
+                perm: 0o777,
+                nlink: 1,
+                uid,
+                gid,
+                rdev: 0,
+                blksize: 512,
+                flags: 0,
+            },
         }
     }
 }

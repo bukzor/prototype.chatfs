@@ -1,12 +1,13 @@
 use std::collections::HashMap;
+use std::sync::Arc;
 
-use crate::node::Node;
+use crate::path_segment::PathSegment;
 use crate::{File, Filesystem, Result};
 
 type ReadFn = Box<dyn Fn() -> File + Send + Sync>;
 type TargetFn = Box<dyn Fn() -> String + Send + Sync>;
 
-/// A tree entry before inode assignment.
+/// A tree entry before conversion to `PathSegment`.
 enum BuilderEntry {
     File { read: ReadFn },
     Dir { entries: Vec<(String, BuilderEntry)> },
@@ -74,31 +75,24 @@ fn wrap_in_path(path: &str, entries: Vec<(String, BuilderEntry)>) -> (String, Bu
     (parts[0].to_owned(), entry)
 }
 
-/// Assign inodes recursively, returning the inode for this entry.
-fn flatten(
-    entry: BuilderEntry,
-    next_ino: &mut u64,
-    nodes: &mut HashMap<u64, Node>,
-) -> u64 {
-    let ino = *next_ino;
-    *next_ino += 1;
+/// Convert a `BuilderEntry` tree into a `PathSegment` tree.
+///
+/// Static dirs become `PathSegment::Dir` whose `read` closure returns a
+/// cloned `HashMap` of the children (Clone is cheap — Arc refcount bumps).
+fn convert(entry: BuilderEntry) -> PathSegment {
     match entry {
-        BuilderEntry::File { read } => {
-            nodes.insert(ino, Node::File { read });
-        }
-        BuilderEntry::Symlink { target } => {
-            nodes.insert(ino, Node::Symlink { target });
-        }
+        BuilderEntry::File { read } => PathSegment::File { read: Arc::from(read) },
+        BuilderEntry::Symlink { target } => PathSegment::Symlink { read: Arc::from(target) },
         BuilderEntry::Dir { entries } => {
-            let mut children = HashMap::new();
-            for (name, child) in entries {
-                let child_ino = flatten(child, next_ino, nodes);
-                children.insert(name, child_ino);
+            let children: HashMap<String, PathSegment> = entries
+                .into_iter()
+                .map(|(name, child)| (name, convert(child)))
+                .collect();
+            PathSegment::Dir {
+                read: Arc::new(move || children.clone()),
             }
-            nodes.insert(ino, Node::Dir { children });
         }
     }
-    ino
 }
 
 impl FilesystemBuilder {
@@ -148,49 +142,29 @@ impl FilesystemBuilder {
         self
     }
 
-    /// Add a dynamic directory: entries listed by `list_fn`,
-    /// subtree templated by `template_fn` for each entry.
+    /// Expand `list_fn` items into directories via `template_fn`.
     ///
     /// `list_fn` is called once at build time to get entry names.
     /// `template_fn` is called once per entry at build time to build its subtree.
     ///
     /// If `name` is `"/"`, entries are merged into the current directory level.
     /// Otherwise, entries are placed inside a new directory with the given name.
-    pub fn dir_each<L, T>(
-        mut self,
-        name: &str,
-        list_fn: L,
-        template_fn: T,
-    ) -> Self
+    pub fn dir_each<L, T>(mut self, name: &str, list_fn: L, template_fn: T) -> Self
     where
         L: Fn() -> Vec<String>,
         T: Fn(String, &mut DirBuilder),
     {
         let items = list_fn();
-        let mut child_entries = Vec::new();
-        for item in items {
-            let mut dir = DirBuilder {
-                entries: Vec::new(),
-            };
-            template_fn(item.clone(), &mut dir);
-            child_entries.push((
-                item,
-                BuilderEntry::Dir {
-                    entries: dir.entries,
-                },
-            ));
-        }
-
         if name == "/" {
-            // Merge into current level
-            self.entries.extend(child_entries);
+            for item in items {
+                self = self.dir(&item, |d| template_fn(item.clone(), d));
+            }
         } else {
-            self.entries.push((
-                name.to_owned(),
-                BuilderEntry::Dir {
-                    entries: child_entries,
-                },
-            ));
+            self = self.dir(name, |d| {
+                for item in items {
+                    d.dir(&item, |inner| template_fn(item.clone(), inner));
+                }
+            });
         }
         self
     }
@@ -201,18 +175,10 @@ impl FilesystemBuilder {
     ///
     /// Returns an error if the filesystem tree is invalid.
     pub fn build(self) -> Result<Filesystem> {
-        let mut nodes: HashMap<u64, Node> = HashMap::new();
-        let mut next_ino: u64 = 2; // root is 1
-
-        let mut children = HashMap::new();
-        for (name, entry) in self.entries {
-            let ino = flatten(entry, &mut next_ino, &mut nodes);
-            children.insert(name, ino);
-        }
-
-        nodes.insert(1, Node::Dir { children });
-
-        Ok(Filesystem::new(nodes))
+        let root = convert(BuilderEntry::Dir {
+            entries: self.entries,
+        });
+        Ok(Filesystem::new(root))
     }
 }
 

@@ -10,7 +10,6 @@ pub(crate) struct InodeTable {
     next_ino: u64,
 }
 
-#[cfg_attr(not(test), expect(dead_code, reason = "wired up when NodeOps switches to PathSegment"))]
 impl InodeTable {
     /// Create a new table with root (ino=1) pre-registered.
     pub(crate) fn new() -> Self {

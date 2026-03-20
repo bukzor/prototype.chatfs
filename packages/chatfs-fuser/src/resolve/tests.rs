@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::sync::Arc;
 
 use fuser::Errno;
 
@@ -6,19 +7,19 @@ use crate::path_segment::PathSegment;
 use super::{Resolved, resolve_and_read};
 
 fn make_test_tree() -> PathSegment {
-    PathSegment::Dir { read: Box::new(|| {
+    PathSegment::Dir { read: Arc::new(|| {
         let mut children = HashMap::new();
         children.insert("README.md".to_owned(), PathSegment::File {
-            read: Box::new(|| "# hello\n".into()),
+            read: Arc::new(|| "# hello\n".into()),
         });
         children.insert("link".to_owned(), PathSegment::Symlink {
-            read: Box::new(|| "/target".to_owned()),
+            read: Arc::new(|| "/target".to_owned()),
         });
         children.insert("docs".to_owned(), PathSegment::Dir {
-            read: Box::new(|| {
+            read: Arc::new(|| {
                 let mut inner = HashMap::new();
                 inner.insert("api.md".to_owned(), PathSegment::File {
-                    read: Box::new(|| "# API\n".into()),
+                    read: Arc::new(|| "# API\n".into()),
                 });
                 inner
             }),

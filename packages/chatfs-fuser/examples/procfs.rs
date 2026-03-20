@@ -5,7 +5,7 @@
 //!
 //! ```bash
 //! cargo run --example procfs -- /tmp/proc
-//! ls /tmp/proc/             # => self@  uptime  meminfo  sys/  1/  42/  ...
+//! ls /tmp/proc/             # => self@  uptime  meminfo  sys/  1/  42/
 //! readlink /tmp/proc/self   # => 42  (current pid)
 //! cat /tmp/proc/uptime      # => "12345.67 98765.43\n"
 //! cat /tmp/proc/1/status    # => "Pid: 1\n"
@@ -34,7 +34,7 @@ fn main() -> Result<()> {
             d.file("swappiness", || read_sysctl("vm.swappiness"));
         })
 
-        // Dynamic directory listing: entries computed at readdir time.
+        // Dynamic directory listing: entries computed at build time.
         .dir_each("/", list_pids, |pid, d| {
             let pid2 = pid.clone();
             let pid3 = pid.clone();
