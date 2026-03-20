@@ -1,6 +1,8 @@
 use std::collections::HashMap;
+use std::path::Path;
 
 use crate::Result;
+use crate::fuse_impl::FuseFs;
 use crate::node::Node;
 
 /// A built filesystem, ready to mount.
@@ -27,7 +29,11 @@ impl Filesystem {
     ///
     /// Returns `Error::Mount` if the mountpoint is invalid or mounting fails.
     /// Returns `Error::Io` on underlying I/O failures.
-    pub fn mount(self, _path: &str) -> Result<()> {
-        todo!()
+    pub fn mount(self, path: impl AsRef<Path>) -> Result<()> {
+        let path = path.as_ref();
+        std::fs::create_dir_all(path)?;
+        let fuse_fs = FuseFs::new(self.nodes);
+        fuser::mount2(fuse_fs, path, &fuser::Config::default())?;
+        Ok(())
     }
 }
