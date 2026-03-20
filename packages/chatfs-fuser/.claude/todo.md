@@ -11,7 +11,7 @@ Goals are examples that work end-to-end. Each item is one commit.
   - [x] fuser bridge (`fuse_impl.rs`): `impl fuser::Filesystem` (lookup, getattr, readdir, read)
   - [x] Wire `mount(self, path)` → `fuser::mount2`, mkdir mountpoint
     - stub API fix: `mount(&self)` → `mount(self)` (fuser consumes the impl)
-- [ ] `cargo run --example static_tree` — nested directories
+- [x] `cargo run --example static_tree` — nested directories
 - [ ] `cargo run --example dynamic` — closures in directories
 - [ ] `cargo run --example procfs` — full feature set
   - [ ] Symlinks in fuser bridge
