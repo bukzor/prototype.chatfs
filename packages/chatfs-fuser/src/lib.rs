@@ -7,6 +7,7 @@ mod builder;
 mod error;
 mod file;
 mod filesystem;
+mod fuse_impl;
 mod node;
 
 pub use builder::{DirBuilder, FilesystemBuilder};
