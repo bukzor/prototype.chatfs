@@ -23,7 +23,7 @@ impl NodeOps {
 
     pub(crate) fn do_lookup(
         &self,
-        parent_ino: u64,
+        parent_ino: INodeNo,
         name: &str,
         uid: u32,
         gid: u32,
@@ -46,7 +46,7 @@ impl NodeOps {
         Ok((attr, Generation(0)))
     }
 
-    pub(crate) fn do_getattr(&self, ino: u64, uid: u32, gid: u32) -> Result<FileAttr, Errno> {
+    pub(crate) fn do_getattr(&self, ino: INodeNo, uid: u32, gid: u32) -> Result<FileAttr, Errno> {
         let table = self.table.lock().expect("inode table lock poisoned");
         let path = table.path_of(ino).ok_or(Errno::ENOENT)?.to_owned();
         drop(table);
@@ -55,7 +55,7 @@ impl NodeOps {
         Ok(Self::resolved_attr(ino, &resolved, uid, gid))
     }
 
-    pub(crate) fn do_read(&self, ino: u64, offset: u64, size: u32) -> Result<Vec<u8>, Errno> {
+    pub(crate) fn do_read(&self, ino: INodeNo, offset: u64, size: u32) -> Result<Vec<u8>, Errno> {
         let table = self.table.lock().expect("inode table lock poisoned");
         let path = table.path_of(ino).ok_or(Errno::ENOENT)?.to_owned();
         drop(table);
@@ -76,7 +76,7 @@ impl NodeOps {
         }
     }
 
-    pub(crate) fn do_readlink(&self, ino: u64) -> Result<Vec<u8>, Errno> {
+    pub(crate) fn do_readlink(&self, ino: INodeNo) -> Result<Vec<u8>, Errno> {
         let table = self.table.lock().expect("inode table lock poisoned");
         let path = table.path_of(ino).ok_or(Errno::ENOENT)?.to_owned();
         drop(table);
@@ -90,9 +90,9 @@ impl NodeOps {
 
     pub(crate) fn do_readdir(
         &self,
-        ino: u64,
+        ino: INodeNo,
         offset: u64,
-    ) -> Result<Vec<(u64, FileType, String)>, Errno> {
+    ) -> Result<Vec<(INodeNo, FileType, String)>, Errno> {
         let table = self.table.lock().expect("inode table lock poisoned");
         let path = table.path_of(ino).ok_or(Errno::ENOENT)?.to_owned();
         let parent_ino = table.parent_ino(&path).unwrap_or(ino);
@@ -103,7 +103,7 @@ impl NodeOps {
             return Err(Errno::ENOTDIR);
         };
 
-        let mut entries: Vec<(u64, FileType, String)> = Vec::new();
+        let mut entries: Vec<(INodeNo, FileType, String)> = Vec::new();
         entries.push((ino, FileType::Directory, ".".to_owned()));
         entries.push((parent_ino, FileType::Directory, "..".to_owned()));
 
@@ -130,10 +130,10 @@ impl NodeOps {
         Ok(entries.into_iter().skip(skip).collect())
     }
 
-    fn resolved_attr(ino: u64, resolved: &Resolved, uid: u32, gid: u32) -> FileAttr {
+    fn resolved_attr(ino: INodeNo, resolved: &Resolved, uid: u32, gid: u32) -> FileAttr {
         match resolved {
             Resolved::Dir(_) => FileAttr {
-                ino: INodeNo(ino),
+                ino,
                 size: 0,
                 blocks: 0,
                 atime: SystemTime::UNIX_EPOCH,
@@ -155,7 +155,7 @@ impl NodeOps {
                 #[expect(clippy::cast_possible_truncation, reason = "mode fits in u16 by construction")]
                 let perm = file.mode.map_or(0o444, |m| m as u16);
                 FileAttr {
-                    ino: INodeNo(ino),
+                    ino,
                     size,
                     blocks: size.div_ceil(512),
                     atime: mtime,
@@ -173,7 +173,7 @@ impl NodeOps {
                 }
             }
             Resolved::Symlink(target) => FileAttr {
-                ino: INodeNo(ino),
+                ino,
                 size: target.len() as u64,
                 blocks: 0,
                 atime: SystemTime::UNIX_EPOCH,

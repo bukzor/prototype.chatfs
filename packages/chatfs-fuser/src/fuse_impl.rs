@@ -27,21 +27,21 @@ impl Filesystem for FuseFs {
             reply.error(Errno::ENOENT);
             return;
         };
-        match self.ops.do_lookup(u64::from(parent), name_str, req.uid(), req.gid()) {
+        match self.ops.do_lookup(parent, name_str, req.uid(), req.gid()) {
             Ok((attr, generation)) => reply.entry(&TTL, &attr, generation),
             Err(e) => reply.error(e),
         }
     }
 
     fn getattr(&self, req: &Request, ino: INodeNo, _fh: Option<FileHandle>, reply: ReplyAttr) {
-        match self.ops.do_getattr(u64::from(ino), req.uid(), req.gid()) {
+        match self.ops.do_getattr(ino, req.uid(), req.gid()) {
             Ok(attr) => reply.attr(&TTL, &attr),
             Err(e) => reply.error(e),
         }
     }
 
     fn readlink(&self, _req: &Request, ino: INodeNo, reply: ReplyData) {
-        match self.ops.do_readlink(u64::from(ino)) {
+        match self.ops.do_readlink(ino) {
             Ok(data) => reply.data(&data),
             Err(e) => reply.error(e),
         }
@@ -58,7 +58,7 @@ impl Filesystem for FuseFs {
         _lock_owner: Option<LockOwner>,
         reply: ReplyData,
     ) {
-        match self.ops.do_read(u64::from(ino), offset, size) {
+        match self.ops.do_read(ino, offset, size) {
             Ok(data) => reply.data(&data),
             Err(e) => reply.error(e),
         }
@@ -72,11 +72,11 @@ impl Filesystem for FuseFs {
         offset: u64,
         mut reply: ReplyDirectory,
     ) {
-        match self.ops.do_readdir(u64::from(ino), offset) {
+        match self.ops.do_readdir(ino, offset) {
             Ok(entries) => {
                 for (i, (ino, kind, name)) in entries.into_iter().enumerate() {
                     let offset_next = offset + i as u64 + 1;
-                    if reply.add(INodeNo(ino), offset_next, kind, &name) {
+                    if reply.add(ino, offset_next, kind, &name) {
                         break;
                     }
                 }
