@@ -1,6 +1,11 @@
+use std::collections::HashMap;
+use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
+
 use fuser::{Errno, FileType, INodeNo};
 
 use crate::node_ops::NodeOps;
+use crate::path_segment::PathSegment;
 use crate::FilesystemBuilder;
 
 const ROOT: INodeNo = INodeNo(1);
@@ -201,4 +206,45 @@ fn readdir_not_a_dir() -> Result<(), Errno> {
     let (lookup, _) = ops.do_lookup(ROOT, "f", UID, GID)?;
     assert!(ops.do_readdir(lookup.ino, 0).is_err());
     Ok(())
+}
+
+// --- ESTALE (stale inodes) ---
+
+/// Build a `NodeOps` with a file that can be toggled out of existence.
+fn build_vanishing() -> (NodeOps, Arc<AtomicBool>) {
+    let visible = Arc::new(AtomicBool::new(true));
+    let vis = Arc::clone(&visible);
+    let root = PathSegment::Dir {
+        read: Arc::new(move || {
+            let mut children = HashMap::new();
+            if vis.load(Ordering::Relaxed) {
+                children.insert(
+                    "f".to_owned(),
+                    PathSegment::File {
+                        read: Arc::new(|| "content".into()),
+                    },
+                );
+            }
+            children
+        }),
+    };
+    (NodeOps::new(root), visible)
+}
+
+#[test]
+fn getattr_stale_returns_estale() {
+    let (ops, visible) = build_vanishing();
+    let (attr, _) = ops.do_lookup(ROOT, "f", UID, GID).expect("lookup should succeed");
+    visible.store(false, Ordering::Relaxed);
+    let err = ops.do_getattr(attr.ino, UID, GID).expect_err("should be stale");
+    assert_eq!(i32::from(err), i32::from(Errno::ESTALE));
+}
+
+#[test]
+fn read_stale_returns_estale() {
+    let (ops, visible) = build_vanishing();
+    let (attr, _) = ops.do_lookup(ROOT, "f", UID, GID).expect("lookup should succeed");
+    visible.store(false, Ordering::Relaxed);
+    let err = ops.do_read(attr.ino, 0, 1024).expect_err("should be stale");
+    assert_eq!(i32::from(err), i32::from(Errno::ESTALE));
 }

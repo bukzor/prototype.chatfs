@@ -23,7 +23,7 @@ pub(crate) enum Resolved {
 ///
 /// - `ENOENT` — a path segment is missing from a Dir's children.
 /// - `ENOTDIR` — traversal attempted through a non-Dir.
-pub(crate) fn resolve_and_read(root: &PathSegment, path: &str) -> Result<Resolved, Errno> {
+pub(crate) fn resolve_stale(root: &PathSegment, path: &str) -> Result<Resolved, Errno> {
     if path == "/" {
         return Ok(read_segment(root));
     }

@@ -5,7 +5,7 @@ use fuser::{Errno, FileAttr, FileType, Generation, INodeNo};
 
 use crate::inode_table::InodeTable;
 use crate::path_segment::PathSegment;
-use crate::resolve::{Resolved, resolve_and_read};
+use crate::resolve::{Resolved, resolve_stale};
 
 /// Pure node-tree operations — testable without FUSE.
 pub(crate) struct NodeOps {
@@ -38,7 +38,7 @@ impl NodeOps {
         drop(table);
 
         // Resolve to verify the path exists and get its type
-        let resolved = resolve_and_read(&self.root, &child_path)?;
+        let resolved = resolve_stale(&self.root, &child_path)?;
 
         let mut table = self.table.lock().expect("inode table lock poisoned");
         let child_ino = table.ensure_ino(&child_path);
@@ -51,7 +51,7 @@ impl NodeOps {
         let path = table.path_of(ino).ok_or(Errno::ENOENT)?.to_owned();
         drop(table);
 
-        let resolved = resolve_and_read(&self.root, &path)?;
+        let resolved = self.resolve(&path)?;
         Ok(Self::resolved_attr(ino, &resolved, uid, gid))
     }
 
@@ -60,7 +60,7 @@ impl NodeOps {
         let path = table.path_of(ino).ok_or(Errno::ENOENT)?.to_owned();
         drop(table);
 
-        let resolved = resolve_and_read(&self.root, &path)?;
+        let resolved = self.resolve(&path)?;
         let Resolved::File(file) = resolved else {
             return Err(Errno::ENOENT);
         };
@@ -81,7 +81,7 @@ impl NodeOps {
         let path = table.path_of(ino).ok_or(Errno::ENOENT)?.to_owned();
         drop(table);
 
-        let resolved = resolve_and_read(&self.root, &path)?;
+        let resolved = self.resolve(&path)?;
         let Resolved::Symlink(target) = resolved else {
             return Err(Errno::ENOENT);
         };
@@ -98,7 +98,7 @@ impl NodeOps {
         let parent_ino = table.parent_ino(&path).unwrap_or(ino);
         drop(table);
 
-        let resolved = resolve_and_read(&self.root, &path)?;
+        let resolved = self.resolve(&path)?;
         let Resolved::Dir(children) = resolved else {
             return Err(Errno::ENOTDIR);
         };
@@ -128,6 +128,12 @@ impl NodeOps {
 
         let skip = usize::try_from(offset).unwrap_or(usize::MAX);
         Ok(entries.into_iter().skip(skip).collect())
+    }
+
+    /// Resolve a path that is known to be in the inode table.
+    /// Any resolution failure means the inode is stale → ESTALE.
+    fn resolve(&self, path: &str) -> Result<Resolved, Errno> {
+        resolve_stale(&self.root, path).map_err(|_| Errno::ESTALE)
     }
 
     fn resolved_attr(ino: INodeNo, resolved: &Resolved, uid: u32, gid: u32) -> FileAttr {

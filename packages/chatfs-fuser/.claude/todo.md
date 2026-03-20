@@ -15,8 +15,9 @@
   - [x] Update Python sketch to unified design
   - [x] Add `PathSegment` enum
   - [x] Add `InodeTable`
-  - [x] Add `resolve_and_read()`
+  - [x] Add `resolve_stale()` (née `resolve_and_read()`)
   - [x] Replace `NodeOps` + Builder internals
   - [x] Correct `readdir` `..` inode (parent_ino from InodeTable)
   - [x] Use `INodeNo` throughout instead of raw u64
-  - [ ] ESTALE for stale inodes — inode in table but path doesn't resolve → ESTALE not ENOENT
+  - [x] ESTALE for stale inodes — `resolve()` wraps `resolve_stale()`, any error → ESTALE
+  - [ ] Update README.md — FAQ entries (lines ~69–79) describe now-fixed behaviors

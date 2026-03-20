@@ -4,7 +4,7 @@ use std::sync::Arc;
 use fuser::Errno;
 
 use crate::path_segment::PathSegment;
-use super::{Resolved, resolve_and_read};
+use super::{Resolved, resolve_stale};
 
 fn make_test_tree() -> PathSegment {
     PathSegment::Dir { read: Arc::new(|| {
@@ -35,7 +35,7 @@ fn assert_errno(actual: Errno, expected: Errno) {
 #[test]
 fn resolve_root() -> Result<(), Errno> {
     let root = make_test_tree();
-    let resolved = resolve_and_read(&root, "/")?;
+    let resolved = resolve_stale(&root, "/")?;
     match resolved {
         Resolved::Dir(children) => {
             assert!(children.contains_key("README.md"));
@@ -50,7 +50,7 @@ fn resolve_root() -> Result<(), Errno> {
 #[test]
 fn resolve_file() -> Result<(), Errno> {
     let root = make_test_tree();
-    let resolved = resolve_and_read(&root, "/README.md")?;
+    let resolved = resolve_stale(&root, "/README.md")?;
     match resolved {
         Resolved::File(file) => assert_eq!(file.data, "# hello\n"),
         _ => panic!("expected File"),
@@ -61,7 +61,7 @@ fn resolve_file() -> Result<(), Errno> {
 #[test]
 fn resolve_symlink() -> Result<(), Errno> {
     let root = make_test_tree();
-    let resolved = resolve_and_read(&root, "/link")?;
+    let resolved = resolve_stale(&root, "/link")?;
     match resolved {
         Resolved::Symlink(target) => assert_eq!(target, "/target"),
         _ => panic!("expected Symlink"),
@@ -72,7 +72,7 @@ fn resolve_symlink() -> Result<(), Errno> {
 #[test]
 fn resolve_nested_file() -> Result<(), Errno> {
     let root = make_test_tree();
-    let resolved = resolve_and_read(&root, "/docs/api.md")?;
+    let resolved = resolve_stale(&root, "/docs/api.md")?;
     match resolved {
         Resolved::File(file) => assert_eq!(file.data, "# API\n"),
         _ => panic!("expected File"),
@@ -83,20 +83,20 @@ fn resolve_nested_file() -> Result<(), Errno> {
 #[test]
 fn resolve_missing_returns_enoent() {
     let root = make_test_tree();
-    let err = resolve_and_read(&root, "/nonexistent").expect_err("should fail");
+    let err = resolve_stale(&root, "/nonexistent").expect_err("should fail");
     assert_errno(err, Errno::ENOENT);
 }
 
 #[test]
 fn resolve_through_file_returns_enotdir() {
     let root = make_test_tree();
-    let err = resolve_and_read(&root, "/README.md/child").expect_err("should fail");
+    let err = resolve_stale(&root, "/README.md/child").expect_err("should fail");
     assert_errno(err, Errno::ENOTDIR);
 }
 
 #[test]
 fn resolve_missing_nested_returns_enoent() {
     let root = make_test_tree();
-    let err = resolve_and_read(&root, "/docs/nonexistent").expect_err("should fail");
+    let err = resolve_stale(&root, "/docs/nonexistent").expect_err("should fail");
     assert_errno(err, Errno::ENOENT);
 }
