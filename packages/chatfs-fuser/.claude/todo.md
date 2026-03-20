@@ -20,4 +20,9 @@
   - [x] Correct `readdir` `..` inode (parent_ino from InodeTable)
   - [x] Use `INodeNo` throughout instead of raw u64
   - [x] ESTALE for stale inodes — `resolve()` wraps `resolve_stale()`, any error → ESTALE
-  - [ ] Update README.md — FAQ entries (lines ~69–79) describe now-fixed behaviors
+  - [x] Update README.md FAQ and caller-responsibility.kb docs to reflect implemented state
+- [ ] API cleanup — rename and preserve caller ordering
+  - `PathSegment` → `Path`
+  - `HashMap<String, PathSegment>` → `DirEntries` (backed by `IndexMap`, preserves insertion order)
+  - Remove alphabetical sort in `do_readdir` — respect caller ordering
+  - Delete `caller-responsibility.kb/entry-ordering.md` and `dir-each-composition.md` (no longer caller responsibilities)

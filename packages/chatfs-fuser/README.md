@@ -66,17 +66,20 @@ size; `read` calls it per FUSE buffer chunk (~128KB). This keeps the
 framework simple and correct. If re-invocation is expensive, cache in
 your closure. FUSE kernel caching (TTL) also helps.
 
-**Why is `dir_each` evaluated at build time?**
-The current builder freezes the tree at `.build()`. Dynamic listings
-(e.g. new conversations appearing) are addressed by the planned
-[dynamic routing](docs/design-incubators/dynamic-routing/)
-approach, which uses lazy inode allocation and callback-driven resolution.
+**How does `dir_each` work?**
+`dir_each` is a builder convenience — it expands at `.build()` time into
+a `Dir` whose `read` closure calls your `list_fn` on every access.
+Directory listings are always fresh; no rebuild needed.
 
-**Why does `readdir` report `..` as inode 1 (root)?**
-The static node map doesn't track parent relationships. Harmless in
-practice — the kernel's dcache tracks parents independently. Will be
-fixed by dynamic routing, where the path-based inode table makes
-parent lookup trivial.
+**How does `readdir` resolve `..`?**
+The inode table tracks path→inode mappings. Parent inodes are derived
+by stripping the last path segment. `..` always reports the correct
+parent inode.
+
+**What happens when a file disappears between accesses?**
+If an inode was allocated (via `lookup` or `readdir`) but its path no
+longer resolves — e.g. a `dir_each` list shrank — subsequent operations
+return `ESTALE` (stale file handle), not `ENOENT`.
 
 ## Future work
 
