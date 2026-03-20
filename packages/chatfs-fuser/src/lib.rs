@@ -3,8 +3,11 @@ mod error;
 mod file;
 mod filesystem;
 mod fuse_impl;
+mod inode_table;
 mod node;
 mod node_ops;
+mod path_segment;
+mod resolve;
 
 #[cfg(test)]
 mod builder_tests;
