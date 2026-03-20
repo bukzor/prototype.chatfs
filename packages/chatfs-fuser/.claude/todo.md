@@ -2,8 +2,7 @@
 
 # chatfs-fuser
 
-- [ ] Dynamic routing — lazy inode allocation via `PathSegment` tree
-  - After: update README.md (API section, examples, FAQ) to reflect new API
+- [x] Dynamic routing — lazy inode allocation via `PathSegment` tree
   - Design: `docs/design-incubators/dynamic-routing/`
   - Policies: `docs/technical-policy.kb/`, `docs/technical-policy.kb/caller-responsibility.kb/`
   - Key decisions:

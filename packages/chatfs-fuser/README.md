@@ -71,6 +71,10 @@ your closure. FUSE kernel caching (TTL) also helps.
 a `Dir` whose `read` closure calls your `list_fn` on every access.
 Directory listings are always fresh; no rebuild needed.
 
+**Does `readdir` preserve ordering?**
+Yes. Directory entries appear in the order your closure inserts them
+(`DirEntries` is backed by `IndexMap`). The framework does not sort.
+
 **How does `readdir` resolve `..`?**
 The inode table tracks path→inode mappings. Parent inodes are derived
 by stripping the last path segment. `..` always reports the correct
