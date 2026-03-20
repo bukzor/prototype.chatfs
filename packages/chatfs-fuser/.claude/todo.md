@@ -22,6 +22,17 @@ Goals are examples that work end-to-end. Each item is one commit.
 End state: a working FUSE wrapper that chatfs can mount for its org/convo/message
 hierarchy. Good enough to use, improve incrementally from there.
 
+## Testing
+
+- [ ] Refactor: separate pure node-tree logic from FUSE reply dispatch
+  - Extract `do_lookup`, `do_getattr`, `do_read`, `do_readlink`, `do_readdir` returning `Result<T, Errno>`
+  - `impl Filesystem` becomes a trivial adapter (no logic to test)
+- [ ] Unit tests: builder tree construction (no FUSE needed)
+- [ ] Unit tests: node-tree operations (depends on refactor above)
+- [ ] Integration tests: real FUSE mounts for the four examples
+
+See `TESTING.md` for detailed test plan.
+
 ## Known limitations (revisit with user)
 
 - [ ] `getattr` calls the read closure on every stat — wasteful for expensive closures
