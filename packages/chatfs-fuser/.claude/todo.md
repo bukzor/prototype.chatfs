@@ -12,7 +12,7 @@ Goals are examples that work end-to-end. Each item is one commit.
   - [x] Wire `mount(self, path)` → `fuser::mount2`, mkdir mountpoint
     - stub API fix: `mount(&self)` → `mount(self)` (fuser consumes the impl)
 - [x] `cargo run --example static_tree` — nested directories
-- [ ] `cargo run --example dynamic` — closures in directories
+- [x] `cargo run --example dynamic` — closures in directories (worked with no changes)
 - [ ] `cargo run --example procfs` — full feature set
   - [ ] Symlinks in fuser bridge
   - [ ] mtime/mode passthrough from File metadata
