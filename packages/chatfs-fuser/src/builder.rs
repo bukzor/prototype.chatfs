@@ -1,10 +1,13 @@
+use std::collections::HashMap;
+
+use crate::node::Node;
 use crate::{File, Filesystem, Result};
 
 /// Builds a filesystem tree from files, directories, and symlinks.
 #[derive(Debug)]
 #[must_use]
 pub struct FilesystemBuilder {
-    // TODO: tree representation
+    entries: Vec<(String, Node)>,
 }
 
 /// Builds the contents of a single directory.
@@ -23,16 +26,24 @@ impl Default for FilesystemBuilder {
 
 impl FilesystemBuilder {
     pub fn new() -> Self {
-        todo!()
+        Self {
+            entries: Vec::new(),
+        }
     }
 
     /// Add a file. The closure is called on each read.
-    pub fn file<F, R>(self, _name: &str, _read: F) -> Self
+    pub fn file<F, R>(mut self, name: &str, read: F) -> Self
     where
-        F: Fn() -> R,
+        F: Fn() -> R + Send + Sync + 'static,
         R: Into<File>,
     {
-        todo!()
+        self.entries.push((
+            name.to_owned(),
+            Node::File {
+                read: Box::new(move || read().into()),
+            },
+        ));
+        self
     }
 
     /// Add a symlink. The closure produces the target path.
@@ -66,7 +77,20 @@ impl FilesystemBuilder {
     ///
     /// Returns an error if the filesystem tree is invalid.
     pub fn build(self) -> Result<Filesystem> {
-        todo!()
+        let mut nodes: HashMap<u64, Node> = HashMap::new();
+        let mut next_ino: u64 = 2; // root is 1
+
+        let mut children = HashMap::new();
+        for (name, node) in self.entries {
+            let ino = next_ino;
+            next_ino += 1;
+            children.insert(name, ino);
+            nodes.insert(ino, node);
+        }
+
+        nodes.insert(1, Node::Dir { children });
+
+        Ok(Filesystem::new(nodes))
     }
 }
 
