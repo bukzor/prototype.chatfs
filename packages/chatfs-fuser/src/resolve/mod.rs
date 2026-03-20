@@ -7,6 +7,7 @@ use crate::path_segment::PathSegment;
 
 /// Result of resolving a path to a leaf and reading it.
 #[derive(Debug)]
+#[cfg_attr(not(test), expect(dead_code, reason = "wired up when NodeOps switches to PathSegment"))]
 pub(crate) enum Resolved {
     Dir(HashMap<String, PathSegment>),
     File(File),
@@ -23,6 +24,7 @@ pub(crate) enum Resolved {
 ///
 /// - `ENOENT` — a path segment is missing from a Dir's children.
 /// - `ENOTDIR` — traversal attempted through a non-Dir.
+#[cfg_attr(not(test), expect(dead_code, reason = "wired up when NodeOps switches to PathSegment"))]
 pub(crate) fn resolve_and_read(root: &PathSegment, path: &str) -> Result<Resolved, Errno> {
     if path == "/" {
         return Ok(read_segment(root));

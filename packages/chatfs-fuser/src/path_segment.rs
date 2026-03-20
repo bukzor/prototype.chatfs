@@ -11,6 +11,7 @@ type ReadLinkFn = Box<dyn Fn() -> String + Send + Sync>;
 ///
 /// All variants are callback-driven. A "static" directory is just one
 /// whose `read` returns a fixed map. The framework doesn't distinguish.
+#[cfg_attr(not(test), expect(dead_code, reason = "wired up when NodeOps switches to PathSegment"))]
 pub(crate) enum PathSegment {
     Dir { read: ReadDirFn },
     File { read: ReadFileFn },
