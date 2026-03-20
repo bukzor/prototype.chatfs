@@ -28,7 +28,7 @@ hierarchy. Good enough to use, improve incrementally from there.
   - Extract `do_lookup`, `do_getattr`, `do_read`, `do_readlink`, `do_readdir` returning `Result<T, Errno>`
   - `impl Filesystem` becomes a trivial adapter (no logic to test)
 - [x] Unit tests: builder tree construction (no FUSE needed)
-- [ ] Unit tests: node-tree operations (depends on refactor above)
+- [x] Unit tests: node-tree operations (depends on refactor above)
 - [ ] Integration tests: real FUSE mounts for the four examples
 
 See `TESTING.md` for detailed test plan.

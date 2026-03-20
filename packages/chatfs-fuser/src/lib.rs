@@ -8,6 +8,8 @@ mod node_ops;
 
 #[cfg(test)]
 mod builder_tests;
+#[cfg(test)]
+mod node_ops_tests;
 
 pub use builder::{DirBuilder, FilesystemBuilder};
 pub use error::{Error, Result};
