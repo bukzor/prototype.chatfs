@@ -27,7 +27,7 @@ hierarchy. Good enough to use, improve incrementally from there.
 - [x] Refactor: separate pure node-tree logic from FUSE reply dispatch
   - Extract `do_lookup`, `do_getattr`, `do_read`, `do_readlink`, `do_readdir` returning `Result<T, Errno>`
   - `impl Filesystem` becomes a trivial adapter (no logic to test)
-- [ ] Unit tests: builder tree construction (no FUSE needed)
+- [x] Unit tests: builder tree construction (no FUSE needed)
 - [ ] Unit tests: node-tree operations (depends on refactor above)
 - [ ] Integration tests: real FUSE mounts for the four examples
 

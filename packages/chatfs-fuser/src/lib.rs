@@ -6,6 +6,9 @@ mod fuse_impl;
 mod node;
 mod node_ops;
 
+#[cfg(test)]
+mod builder_tests;
+
 pub use builder::{DirBuilder, FilesystemBuilder};
 pub use error::{Error, Result};
 pub use file::File;
