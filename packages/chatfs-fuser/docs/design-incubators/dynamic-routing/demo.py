@@ -5,55 +5,44 @@ Design assumptions:
   This is appropriate for a highly dynamic filesystem (like /proc). It means
   the kernel never serves stale dentries — every lookup/getattr/readdir hits
   the FUSE daemon, which re-evaluates user callbacks for fresh data.
-  (entry_valid is a FUSE protocol concept: the duration the kernel trusts a
-  cached dentry before re-lookup. Set by the daemon in lookup replies.)
 - Callbacks are re-evaluated on every access (stateless path resolution).
-  _resolve_entry() re-walks from root each time, calling list()+template() at
-  each level. This is a feature: it guarantees fresh data (or fresh errors)
-  rather than serving stale cached entries. The cost of re-evaluation is the
-  caller's to manage — if list() is expensive, the caller should cache it.
+  _resolve_entry() re-walks from root each time, calling read() at each Dir
+  level. This is a feature: it guarantees fresh data (or fresh errors) rather
+  than serving stale cached entries. The cost of re-evaluation is the caller's
+  to manage — if read() is expensive, the caller should cache it.
 - Races between readdir and subsequent access are expected and normal. A
   readdir may return entries that are gone by the time the caller accesses
   them. This is standard dynamic filesystem behavior (same as /proc, or any
   ext4 directory with concurrent deletes). The framework handles it correctly:
-  _resolve_entry() raises ENOENT, same as any POSIX filesystem. The framework
-  does not introduce races beyond what any dynamic filesystem has.
+  _resolve_entry() raises ENOENT, same as any POSIX filesystem.
 - Inode table is append-only. Stale inodes for vanished entries return ESTALE
   on access (the framework detects: inode exists in table but resolution raised
-  ENOENT → stale handle). ESTALE is the POSIX errno for this situation (cf.
-  NFS stale file handles). No inode GC or generation numbers at current scale.
+  ENOENT → stale handle). No inode GC or generation numbers at current scale.
 - Caching is the caller's responsibility. The VFS framework is intentionally
   stateless w.r.t. data freshness — it lacks the information to determine
   cache validity, and the user's callbacks can cache as they see fit.
 - All errors are filesystem errors (FuseError with errno), never Python
-  exceptions. KeyError → ENOENT (or ESTALE if inode exists), traversal
-  through a file → ENOTDIR, read on a directory → EISDIR.
+  exceptions.
+
+Key design decision — unified PathSegment:
+  Three variants, all callback-driven. No static/dynamic split.
+  - Dir:     read() -> dict[str, PathSegment]
+  - File:    read() -> str
+  - Symlink: read() -> str
+  A "static" dir is just one whose read() returns a fixed dict. The framework
+  doesn't distinguish — same resolution path, same inode lifecycle.
 
 Future work (if needed):
-- Push invalidation: let user code signal "entity X changed", have the VFS call
-  notify_inval_entry(parent, name) on the kernel. Without this, freshness is
-  entirely re-evaluation-driven (fine with entry_valid=0, but push would allow
-  nonzero timeouts for better performance without staleness).
-- Parameter threading: the template(name)->Entry pattern requires user closures
-  for partial application. A routing-style framework (cf. FastAPI Depends, Axum
-  extractors) could thread parent path segments automatically. See
-  CLAUDE.md "Open design question" and "Prior art" sections.
-- Inode reaping: on FUSE forget(ino) (kernel drops all references), remove the
-  entry from ino_to_path/path_to_ino. Turns append-only into append-and-reap.
-  No GC sweep, no generations — driven entirely by kernel lifecycle signals.
+- Push invalidation: notify_inval_entry(parent, name) for nonzero timeouts.
+- Parameter threading: routing-style framework to thread parent path segments.
+- Inode reaping: on FUSE forget(ino), remove from tables.
 
-Design rules (distilled from the above):
-1. Stateless re-evaluation. Every access re-walks from root, re-calling user
-   callbacks. No framework-level caching. entry_valid=0 extends this to the
-   kernel. Caching is the caller's problem. Consequence: fresh data or fresh
-   errors on every access; races are standard POSIX behavior, not a framework
-   deficiency; data that "comes back" is self-healing.
-2. POSIX error semantics. All errors are filesystem errnos, never Python
-   exceptions. ENOENT for missing entries, ESTALE for stale inode handles
-   (inode exists in table but resolution fails), ENOTDIR/EISDIR for type
-   mismatches.
-3. Append-only inodes. Inode table grows monotonically. Stale inodes get
-   ESTALE on access. Future: reap on forget() (kernel-driven, no GC).
+Design rules:
+1. Stateless re-evaluation. Every access re-walks from root. No framework
+   caching. Caching is the caller's problem.
+2. POSIX error semantics. All errors are filesystem errnos. ENOENT for missing,
+   ESTALE for stale handles, ENOTDIR/EISDIR for type mismatches.
+3. Append-only inodes. Table grows monotonically. Stale → ESTALE.
 """
 
 from __future__ import annotations
@@ -67,6 +56,26 @@ class FuseError(OSError):
     """Filesystem error with an errno, translated to FUSE error replies."""
     def __init__(self, err: int, msg: str = ""):
         super().__init__(err, msg)
+
+
+# -- PathSegment: the user-defined tree --
+
+@dataclass
+class Dir:
+    """Directory. read() returns children on each access."""
+    read: Callable[[], dict[str, PathSegment]]
+
+@dataclass
+class File:
+    """File. read() returns content on each access."""
+    read: Callable[[], str]
+
+@dataclass
+class Symlink:
+    """Symlink. read() returns target on each access."""
+    read: Callable[[], str]
+
+PathSegment = Dir | File | Symlink
 
 
 # -- The FUSE kernel's view: everything is inodes --
@@ -89,7 +98,7 @@ class FuseRequest:
 @dataclass
 class VFS:
     """The library's internal layer: translates inodes ↔ paths."""
-    root: Entry  # typically a StaticDir
+    root: PathSegment  # typically a Dir
     ino_to_path: dict[int, str] = field(default_factory=dict)
     path_to_ino: dict[str, int] = field(default_factory=dict)
     next_ino: int = 2  # 1 = root
@@ -107,7 +116,7 @@ class VFS:
         self.path_to_ino[path] = ino
         return ino
 
-    def _resolve_entry(self, path: str) -> Entry:
+    def _resolve_entry(self, path: str) -> PathSegment:
         """Walk path segments through the entry tree.
 
         Returns self.root for "/". Raises FuseError(ENOENT) if any segment
@@ -117,66 +126,55 @@ class VFS:
         parts = [p for p in path.strip("/").split("/") if p]
         node = self.root
         for part in parts:
-            # get children of current node
-            if isinstance(node, StaticDir):
-                entries = node.children
-            elif isinstance(node, DynamicDir):
-                entries = {name: node.template(name) for name in node.list()}
-            else:
+            if not isinstance(node, Dir):
                 raise FuseError(errno.ENOTDIR, path)
+            children = node.read()
             try:
-                node = entries[part]
+                node = children[part]
             except KeyError:
                 raise FuseError(errno.ENOENT, path) from None
         return node
 
     def do_readdir(self, ino: int) -> list[tuple[int, str]]:
-        path = self.ino_to_path[ino]
+        path = self.ino_to_path.get(ino)
+        if path is None:
+            raise FuseError(errno.ENOENT, str(ino))
         entry = self._resolve_entry(path)
 
-        if isinstance(entry, StaticDir):
-            names = list(entry.children.keys())
-        elif isinstance(entry, DynamicDir):
-            names = entry.list()
-        else:
+        if not isinstance(entry, Dir):
             raise FuseError(errno.ENOTDIR, path)
 
+        children = entry.read()
         result = []
-        for name in names:
+        for name in children:
             child_path = f"{path.rstrip('/')}/{name}"
             child_ino = self._ensure_ino(child_path)
             result.append((child_ino, name))
         return result
 
     def do_lookup(self, parent_ino: int, name: str) -> int:
-        parent_path = self.ino_to_path[parent_ino]
+        parent_path = self.ino_to_path.get(parent_ino)
+        if parent_path is None:
+            raise FuseError(errno.ENOENT, str(parent_ino))
         child_path = f"{parent_path.rstrip('/')}/{name}"
         return self._ensure_ino(child_path)
 
     def do_read(self, ino: int) -> str:
-        path = self.ino_to_path[ino]
-        entry = self._resolve_entry(path)
-        if not isinstance(entry, File):
+        path = self.ino_to_path.get(ino)
+        if path is None:
+            raise FuseError(errno.ENOENT, str(ino))
+        try:
+            entry = self._resolve_entry(path)
+        except FuseError as e:
+            if e.errno == errno.ENOENT:
+                # Inode exists in table but path no longer resolves → stale
+                raise FuseError(errno.ESTALE, path) from None
+            raise
+        if isinstance(entry, Dir):
             raise FuseError(errno.EISDIR, path)
+        if isinstance(entry, Symlink):
+            return entry.read()
         return entry.read()
-
-
-# -- User-defined tree entries --
-
-@dataclass
-class File:
-    read: Callable[[], str]
-
-@dataclass
-class StaticDir:
-    children: dict[str, Entry]
-
-@dataclass
-class DynamicDir:
-    list: Callable[[], list[str]]
-    template: Callable[[str], Entry]
-
-Entry = File | StaticDir | DynamicDir
 
 
 # -- The user's view: everything is paths and callbacks --
@@ -213,25 +211,21 @@ class UserVFSModule:
         return "# chatfs\n"
 
     @staticmethod
-    def convo_template(convo: str) -> Entry:
-        return File(read=lambda: UserVFSModule.read_convo(convo))
-
-    @staticmethod
-    def org_template(org: str) -> Entry:
-        return DynamicDir(
-            list=lambda: UserVFSModule.list_convos(org),
-            template=UserVFSModule.convo_template,
-        )
-
-    @staticmethod
     def construct_vfs() -> VFS:
-        """Wire business logic into framework — this is the seam."""
-        root = StaticDir(children={
+        """Wire business logic into framework — this is the seam.
+
+        Note how the "dynamic" orgs directory and "static" root directory
+        use the same Dir type — they just return different dicts.
+        """
+        root = Dir(read=lambda: {
             "README.md": File(read=UserVFSModule.readme),
-            "orgs": DynamicDir(
-                list=UserVFSModule.list_orgs,
-                template=UserVFSModule.org_template,
-            ),
+            "orgs": Dir(read=lambda: {
+                org: Dir(read=lambda org=org: {
+                    convo: File(read=lambda convo=convo: UserVFSModule.read_convo(convo))
+                    for convo in UserVFSModule.list_convos(org)
+                })
+                for org in UserVFSModule.list_orgs()
+            }),
         })
         return VFS(root=root)
 
