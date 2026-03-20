@@ -2,7 +2,7 @@
 why:
   - architectural-invariants
 source:
-  - packages/chatfs-fuser/sketch.py
+  - docs/design-incubators/dynamic-routing/demo.py
 ---
 
 # Inode Lifecycle

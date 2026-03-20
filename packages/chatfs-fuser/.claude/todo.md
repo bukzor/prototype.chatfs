@@ -4,8 +4,8 @@
 
 - [ ] Dynamic routing — lazy inode allocation, replacing build-time `dir_each`
   - After: update README.md (API section, examples, FAQ) to reflect new API
-  - Design validated in Python sketch; see `docs/dev/design-incubators/fusefs-dynamic-routing/`
-  - Policies: `docs/dev/technical-policy.kb/{stateless-re-evaluation,posix-error-semantics,inode-lifecycle}.md`
+  - Design validated in Python sketch; see `docs/design-incubators/dynamic-routing/`
+  - Policies: `docs/technical-policy.kb/{stateless-re-evaluation,posix-error-semantics,inode-lifecycle}.md`
   - [ ] Lazy inode table: assign inodes in lookup/readdir, not at build time
     - `DynamicDir` (list + template callbacks), `StaticDir`, `File` entry types
     - Stateless re-evaluation: resolve path from root on every access

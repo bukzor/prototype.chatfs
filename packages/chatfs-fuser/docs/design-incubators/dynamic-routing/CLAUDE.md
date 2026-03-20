@@ -64,5 +64,5 @@ Handler manually resolves parents. Least ergonomic for this pattern.
 ## Running the sketch
 
 ```bash
-python3 docs/dev/design-incubators/fusefs-dynamic-routing/demo.py
+python3 packages/chatfs-fuser/docs/design-incubators/dynamic-routing/demo.py
 ```

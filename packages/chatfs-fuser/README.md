@@ -69,7 +69,7 @@ your closure. FUSE kernel caching (TTL) also helps.
 **Why is `dir_each` evaluated at build time?**
 The current builder freezes the tree at `.build()`. Dynamic listings
 (e.g. new conversations appearing) are addressed by the planned
-[dynamic routing](docs/dev/design-incubators/fusefs-dynamic-routing/)
+[dynamic routing](docs/design-incubators/dynamic-routing/)
 approach, which uses lazy inode allocation and callback-driven resolution.
 
 **Why does `readdir` report `..` as inode 1 (root)?**
