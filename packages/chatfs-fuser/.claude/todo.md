@@ -21,3 +21,14 @@ Goals are examples that work end-to-end. Each item is one commit.
 
 End state: a working FUSE wrapper that chatfs can mount for its org/convo/message
 hierarchy. Good enough to use, improve incrementally from there.
+
+## Known limitations (revisit with user)
+
+- [ ] `getattr` calls the read closure on every stat — wasteful for expensive closures
+  - Could cache file size, or use a fixed size and let reads determine actual length
+- [ ] `dir_each` evaluates `list_fn` at build time, not readdir time
+  - Truly dynamic directories need lazy inode allocation (interior mutability on node map)
+- [ ] `readdir` `..` entry always reports inode 1 (root) regardless of actual parent
+  - Works in practice (kernel tracks parents via dcache) but not strictly correct
+- [ ] No `open`/`release` tracking — every `read` calls the closure fresh
+  - Fine for cheap closures; expensive ones may want per-open caching
