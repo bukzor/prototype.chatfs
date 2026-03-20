@@ -20,50 +20,76 @@ impl FuseFs {
         Self { nodes }
     }
 
-    fn dir_attr(&self, ino: u64, req: &Request) -> FileAttr {
-        FileAttr {
-            ino: INodeNo(ino),
-            size: 0,
-            blocks: 0,
-            atime: SystemTime::UNIX_EPOCH,
-            mtime: SystemTime::UNIX_EPOCH,
-            ctime: SystemTime::UNIX_EPOCH,
-            crtime: SystemTime::UNIX_EPOCH,
-            kind: FileType::Directory,
-            perm: 0o555,
-            nlink: 2,
-            uid: req.uid(),
-            gid: req.gid(),
-            rdev: 0,
-            blksize: 512,
-            flags: 0,
+    fn node_attr(&self, ino: u64, node: &Node, req: &Request) -> FileAttr {
+        match node {
+            Node::Dir { .. } => FileAttr {
+                ino: INodeNo(ino),
+                size: 0,
+                blocks: 0,
+                atime: SystemTime::UNIX_EPOCH,
+                mtime: SystemTime::UNIX_EPOCH,
+                ctime: SystemTime::UNIX_EPOCH,
+                crtime: SystemTime::UNIX_EPOCH,
+                kind: FileType::Directory,
+                perm: 0o555,
+                nlink: 2,
+                uid: req.uid(),
+                gid: req.gid(),
+                rdev: 0,
+                blksize: 512,
+                flags: 0,
+            },
+            Node::File { read } => {
+                let file = read();
+                let size = file.data.len() as u64;
+                let mtime = file.mtime.unwrap_or(SystemTime::UNIX_EPOCH);
+                let perm = file.mode.map_or(0o444, |m| m as u16);
+                FileAttr {
+                    ino: INodeNo(ino),
+                    size,
+                    blocks: (size + 511) / 512,
+                    atime: mtime,
+                    mtime,
+                    ctime: mtime,
+                    crtime: mtime,
+                    kind: FileType::RegularFile,
+                    perm,
+                    nlink: 1,
+                    uid: req.uid(),
+                    gid: req.gid(),
+                    rdev: 0,
+                    blksize: 512,
+                    flags: 0,
+                }
+            }
+            Node::Symlink { target } => {
+                let t = target();
+                FileAttr {
+                    ino: INodeNo(ino),
+                    size: t.len() as u64,
+                    blocks: 0,
+                    atime: SystemTime::UNIX_EPOCH,
+                    mtime: SystemTime::UNIX_EPOCH,
+                    ctime: SystemTime::UNIX_EPOCH,
+                    crtime: SystemTime::UNIX_EPOCH,
+                    kind: FileType::Symlink,
+                    perm: 0o777,
+                    nlink: 1,
+                    uid: req.uid(),
+                    gid: req.gid(),
+                    rdev: 0,
+                    blksize: 512,
+                    flags: 0,
+                }
+            }
         }
     }
 
-    fn file_attr(&self, ino: u64, node: &Node, req: &Request) -> FileAttr {
-        let file = match node {
-            Node::File { read } => read(),
-            Node::Dir { .. } => return self.dir_attr(ino, req),
-        };
-        let size = file.data.len() as u64;
-        let mtime = file.mtime.unwrap_or(SystemTime::UNIX_EPOCH);
-        let perm = file.mode.map_or(0o444, |m| m as u16);
-        FileAttr {
-            ino: INodeNo(ino),
-            size,
-            blocks: (size + 511) / 512,
-            atime: mtime,
-            mtime,
-            ctime: mtime,
-            crtime: mtime,
-            kind: FileType::RegularFile,
-            perm,
-            nlink: 1,
-            uid: req.uid(),
-            gid: req.gid(),
-            rdev: 0,
-            blksize: 512,
-            flags: 0,
+    fn file_type(node: &Node) -> FileType {
+        match node {
+            Node::Dir { .. } => FileType::Directory,
+            Node::File { .. } => FileType::RegularFile,
+            Node::Symlink { .. } => FileType::Symlink,
         }
     }
 }
@@ -87,7 +113,7 @@ impl Filesystem for FuseFs {
             reply.error(Errno::ENOENT);
             return;
         };
-        let attr = self.file_attr(child_ino, node, req);
+        let attr = self.node_attr(child_ino, node, req);
         reply.entry(&TTL, &attr, Generation(0));
     }
 
@@ -97,11 +123,17 @@ impl Filesystem for FuseFs {
             reply.error(Errno::ENOENT);
             return;
         };
-        let attr = match node {
-            Node::Dir { .. } => self.dir_attr(ino_val, req),
-            Node::File { .. } => self.file_attr(ino_val, node, req),
-        };
+        let attr = self.node_attr(ino_val, node, req);
         reply.attr(&TTL, &attr);
+    }
+
+    fn readlink(&self, _req: &Request, ino: INodeNo, reply: ReplyData) {
+        let ino_val = u64::from(ino);
+        let Some(Node::Symlink { target }) = self.nodes.get(&ino_val) else {
+            reply.error(Errno::ENOENT);
+            return;
+        };
+        reply.data(target().as_bytes());
     }
 
     fn read(
@@ -154,12 +186,10 @@ impl Filesystem for FuseFs {
         sorted_children.sort_by_key(|(name, _)| (*name).clone());
         for (name, child_ino) in &sorted_children {
             let child_ino = **child_ino;
-            let kind = match self.nodes.get(&child_ino) {
-                Some(Node::Dir { .. }) => FileType::Directory,
-                Some(Node::File { .. }) => FileType::RegularFile,
-                None => continue,
+            let Some(node) = self.nodes.get(&child_ino) else {
+                continue;
             };
-            entries.push((child_ino, kind, (*name).clone()));
+            entries.push((child_ino, Self::file_type(node), (*name).clone()));
         }
 
         for (i, (ino, kind, name)) in entries.into_iter().enumerate().skip(offset as usize) {

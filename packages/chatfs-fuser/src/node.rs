@@ -11,6 +11,9 @@ pub(crate) enum Node {
     File {
         read: Box<dyn Fn() -> File + Send + Sync>,
     },
+    Symlink {
+        target: Box<dyn Fn() -> String + Send + Sync>,
+    },
 }
 
 impl fmt::Debug for Node {
@@ -18,6 +21,11 @@ impl fmt::Debug for Node {
         match self {
             Node::Dir { children } => f.debug_struct("Dir").field("children", children).finish(),
             Node::File { .. } => f.debug_struct("File").field("read", &"<closure>").finish(),
+            Node::Symlink { .. } => {
+                f.debug_struct("Symlink")
+                    .field("target", &"<closure>")
+                    .finish()
+            }
         }
     }
 }

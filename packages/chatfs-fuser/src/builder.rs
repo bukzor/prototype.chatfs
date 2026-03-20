@@ -4,11 +4,13 @@ use crate::node::Node;
 use crate::{File, Filesystem, Result};
 
 type ReadFn = Box<dyn Fn() -> File + Send + Sync>;
+type TargetFn = Box<dyn Fn() -> String + Send + Sync>;
 
 /// A tree entry before inode assignment.
 enum BuilderEntry {
     File { read: ReadFn },
     Dir { entries: Vec<(String, BuilderEntry)> },
+    Symlink { target: TargetFn },
 }
 
 impl std::fmt::Debug for BuilderEntry {
@@ -18,6 +20,9 @@ impl std::fmt::Debug for BuilderEntry {
             BuilderEntry::Dir { entries } => {
                 let names: Vec<_> = entries.iter().map(|(n, _)| n.as_str()).collect();
                 f.debug_struct("Dir").field("entries", &names).finish()
+            }
+            BuilderEntry::Symlink { .. } => {
+                f.debug_struct("Symlink").finish_non_exhaustive()
             }
         }
     }
@@ -64,6 +69,9 @@ fn flatten(
         BuilderEntry::File { read } => {
             nodes.insert(ino, Node::File { read });
         }
+        BuilderEntry::Symlink { target } => {
+            nodes.insert(ino, Node::Symlink { target });
+        }
         BuilderEntry::Dir { entries } => {
             let mut children = HashMap::new();
             for (name, child) in entries {
@@ -99,8 +107,14 @@ impl FilesystemBuilder {
     }
 
     /// Add a symlink. The closure produces the target path.
-    pub fn symlink(self, _name: &str, _target: impl Fn() -> String) -> Self {
-        todo!()
+    pub fn symlink(mut self, name: &str, target: impl Fn() -> String + Send + Sync + 'static) -> Self {
+        self.entries.push((
+            name.to_owned(),
+            BuilderEntry::Symlink {
+                target: Box::new(target),
+            },
+        ));
+        self
     }
 
     /// Add a directory with fixed structure.
@@ -171,8 +185,14 @@ impl DirBuilder {
     }
 
     /// Add a symlink.
-    pub fn symlink(&mut self, _name: &str, _target: impl Fn() -> String) -> &mut Self {
-        todo!()
+    pub fn symlink(&mut self, name: &str, target: impl Fn() -> String + Send + Sync + 'static) -> &mut Self {
+        self.entries.push((
+            name.to_owned(),
+            BuilderEntry::Symlink {
+                target: Box::new(target),
+            },
+        ));
+        self
     }
 
     /// Add a nested directory.
