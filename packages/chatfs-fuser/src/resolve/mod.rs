@@ -1,19 +1,17 @@
-use std::collections::HashMap;
-
 use fuser::Errno;
 
 use crate::File;
-use crate::path_segment::PathSegment;
+use crate::path_segment::{DirEntries, Path};
 
 /// Result of resolving a path to a leaf and reading it.
 #[derive(Debug)]
 pub(crate) enum Resolved {
-    Dir(HashMap<String, PathSegment>),
+    Dir(DirEntries),
     File(File),
     Symlink(String),
 }
 
-/// Resolve a path through a `PathSegment` tree and read the leaf.
+/// Resolve a path through a `Path` tree and read the leaf.
 ///
 /// Walks each path segment from root, calling `read()` at each Dir to get
 /// children. At the final segment, calls the leaf's `read()` and returns
@@ -23,7 +21,7 @@ pub(crate) enum Resolved {
 ///
 /// - `ENOENT` — a path segment is missing from a Dir's children.
 /// - `ENOTDIR` — traversal attempted through a non-Dir.
-pub(crate) fn resolve_stale(root: &PathSegment, path: &str) -> Result<Resolved, Errno> {
+pub(crate) fn resolve_stale(root: &Path, path: &str) -> Result<Resolved, Errno> {
     if path == "/" {
         return Ok(read_segment(root));
     }
@@ -32,12 +30,12 @@ pub(crate) fn resolve_stale(root: &PathSegment, path: &str) -> Result<Resolved, 
 
     // Walk to the parent of the final segment, collecting children at each level.
     let mut current_children = match root {
-        PathSegment::Dir { read } => read(),
+        Path::Dir { read } => read(),
         _ => return Err(Errno::ENOTDIR),
     };
 
     for (i, &part) in parts.iter().enumerate() {
-        let segment = current_children.remove(part).ok_or(Errno::ENOENT)?;
+        let segment = current_children.shift_remove(part).ok_or(Errno::ENOENT)?;
 
         if i == parts.len() - 1 {
             // Final segment — read it
@@ -46,7 +44,7 @@ pub(crate) fn resolve_stale(root: &PathSegment, path: &str) -> Result<Resolved, 
 
         // Intermediate segment — must be a Dir, descend
         current_children = match &segment {
-            PathSegment::Dir { read } => read(),
+            Path::Dir { read } => read(),
             _ => return Err(Errno::ENOTDIR),
         };
     }
@@ -55,11 +53,11 @@ pub(crate) fn resolve_stale(root: &PathSegment, path: &str) -> Result<Resolved, 
     Ok(read_segment(root))
 }
 
-fn read_segment(segment: &PathSegment) -> Resolved {
+fn read_segment(segment: &Path) -> Resolved {
     match segment {
-        PathSegment::Dir { read } => Resolved::Dir(read()),
-        PathSegment::File { read } => Resolved::File(read()),
-        PathSegment::Symlink { read } => Resolved::Symlink(read()),
+        Path::Dir { read } => Resolved::Dir(read()),
+        Path::File { read } => Resolved::File(read()),
+        Path::Symlink { read } => Resolved::Symlink(read()),
     }
 }
 

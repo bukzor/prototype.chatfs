@@ -4,17 +4,17 @@ use std::time::SystemTime;
 use fuser::{Errno, FileAttr, FileType, Generation, INodeNo};
 
 use crate::inode_table::InodeTable;
-use crate::path_segment::PathSegment;
+use crate::path_segment::Path;
 use crate::resolve::{Resolved, resolve_stale};
 
 /// Pure node-tree operations — testable without FUSE.
 pub(crate) struct NodeOps {
-    root: PathSegment,
+    root: Path,
     table: Mutex<InodeTable>,
 }
 
 impl NodeOps {
-    pub(crate) fn new(root: PathSegment) -> Self {
+    pub(crate) fn new(root: Path) -> Self {
         Self {
             root,
             table: Mutex::new(InodeTable::new()),
@@ -107,21 +107,18 @@ impl NodeOps {
         entries.push((ino, FileType::Directory, ".".to_owned()));
         entries.push((parent_ino, FileType::Directory, "..".to_owned()));
 
-        let mut sorted_names: Vec<&String> = children.keys().collect();
-        sorted_names.sort();
-
         let mut table = self.table.lock().expect("inode table lock poisoned");
-        for name in sorted_names {
+        for (name, segment) in &children {
             let child_path = if path == "/" {
                 format!("/{name}")
             } else {
                 format!("{path}/{name}")
             };
             let child_ino = table.ensure_ino(&child_path);
-            let file_type = match &children[name] {
-                PathSegment::Dir { .. } => FileType::Directory,
-                PathSegment::File { .. } => FileType::RegularFile,
-                PathSegment::Symlink { .. } => FileType::Symlink,
+            let file_type = match segment {
+                Path::Dir { .. } => FileType::Directory,
+                Path::File { .. } => FileType::RegularFile,
+                Path::Symlink { .. } => FileType::Symlink,
             };
             entries.push((child_ino, file_type, name.clone()));
         }

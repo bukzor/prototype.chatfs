@@ -1,13 +1,11 @@
-use std::path::Path;
-
 use crate::Result;
 use crate::fuse_impl::FuseFs;
 use crate::node_ops::NodeOps;
-use crate::path_segment::PathSegment;
+use crate::path_segment::Path;
 
 /// A built filesystem, ready to mount.
 pub struct Filesystem {
-    pub root: PathSegment,
+    pub root: Path,
 }
 
 impl std::fmt::Debug for Filesystem {
@@ -20,7 +18,7 @@ impl std::fmt::Debug for Filesystem {
 
 impl Filesystem {
     #[must_use]
-    pub fn new(root: PathSegment) -> Self {
+    pub fn new(root: Path) -> Self {
         Self { root }
     }
 
@@ -30,7 +28,7 @@ impl Filesystem {
     ///
     /// Returns `Error::Mount` if the mountpoint is invalid or mounting fails.
     /// Returns `Error::Io` on underlying I/O failures.
-    pub fn mount(self, path: impl AsRef<Path>) -> Result<()> {
+    pub fn mount(self, path: impl AsRef<std::path::Path>) -> Result<()> {
         let path = path.as_ref();
         std::fs::create_dir_all(path)?;
         let ops = NodeOps::new(self.root);

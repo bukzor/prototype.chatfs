@@ -1,11 +1,10 @@
-use std::collections::HashMap;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use fuser::{Errno, FileType, INodeNo};
 
 use crate::node_ops::NodeOps;
-use crate::path_segment::PathSegment;
+use crate::path_segment::{DirEntries, Path};
 use crate::FilesystemBuilder;
 
 const ROOT: INodeNo = INodeNo(1);
@@ -167,7 +166,7 @@ fn readdir_root() -> Result<(), Errno> {
     );
     let entries = ops.do_readdir(ROOT, 0)?;
     let names: Vec<&str> = entries.iter().map(|(_, _, n)| n.as_str()).collect();
-    assert_eq!(names, vec![".", "..", "a", "b"]); // sorted children
+    assert_eq!(names, vec![".", "..", "b", "a"]); // insertion order
     Ok(())
 }
 
@@ -214,13 +213,13 @@ fn readdir_not_a_dir() -> Result<(), Errno> {
 fn build_vanishing() -> (NodeOps, Arc<AtomicBool>) {
     let visible = Arc::new(AtomicBool::new(true));
     let vis = Arc::clone(&visible);
-    let root = PathSegment::Dir {
+    let root = Path::Dir {
         read: Arc::new(move || {
-            let mut children = HashMap::new();
+            let mut children = DirEntries::new();
             if vis.load(Ordering::Relaxed) {
                 children.insert(
                     "f".to_owned(),
-                    PathSegment::File {
+                    Path::File {
                         read: Arc::new(|| "content".into()),
                     },
                 );

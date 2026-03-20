@@ -1,13 +1,12 @@
-use std::collections::HashMap;
 use std::sync::Arc;
 
-use crate::path_segment::PathSegment;
+use crate::path_segment::{DirEntries, Path};
 use crate::{File, Filesystem, Result};
 
 type ReadFn = Box<dyn Fn() -> File + Send + Sync>;
 type TargetFn = Box<dyn Fn() -> String + Send + Sync>;
 
-/// A tree entry before conversion to `PathSegment`.
+/// A tree entry before conversion to `Path`.
 enum BuilderEntry {
     File { read: ReadFn },
     Dir { entries: Vec<(String, BuilderEntry)> },
@@ -75,20 +74,20 @@ fn wrap_in_path(path: &str, entries: Vec<(String, BuilderEntry)>) -> (String, Bu
     (parts[0].to_owned(), entry)
 }
 
-/// Convert a `BuilderEntry` tree into a `PathSegment` tree.
+/// Convert a `BuilderEntry` tree into a `Path` tree.
 ///
-/// Static dirs become `PathSegment::Dir` whose `read` closure returns a
-/// cloned `HashMap` of the children (Clone is cheap — Arc refcount bumps).
-fn convert(entry: BuilderEntry) -> PathSegment {
+/// Static dirs become `Path::Dir` whose `read` closure returns a
+/// cloned map of the children (Clone is cheap — Arc refcount bumps).
+fn convert(entry: BuilderEntry) -> Path {
     match entry {
-        BuilderEntry::File { read } => PathSegment::File { read: Arc::from(read) },
-        BuilderEntry::Symlink { target } => PathSegment::Symlink { read: Arc::from(target) },
+        BuilderEntry::File { read } => Path::File { read: Arc::from(read) },
+        BuilderEntry::Symlink { target } => Path::Symlink { read: Arc::from(target) },
         BuilderEntry::Dir { entries } => {
-            let children: HashMap<String, PathSegment> = entries
+            let children: DirEntries = entries
                 .into_iter()
                 .map(|(name, child)| (name, convert(child)))
                 .collect();
-            PathSegment::Dir {
+            Path::Dir {
                 read: Arc::new(move || children.clone()),
             }
         }

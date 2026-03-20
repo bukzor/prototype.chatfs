@@ -7,7 +7,7 @@
   - Design: `docs/design-incubators/dynamic-routing/`
   - Policies: `docs/technical-policy.kb/`, `docs/technical-policy.kb/caller-responsibility.kb/`
   - Key decisions:
-    - Unified `PathSegment` enum: `Dir { read: Fn() -> HashMap }`, `File { read }`, `Symlink { read }`
+    - Unified `Path` enum: `Dir { read: Fn() -> DirEntries }`, `File { read }`, `Symlink { read }`
     - No static/dynamic split — all variants are closures (Arc-wrapped, cheap Clone)
     - `dir_each` kept as builder convenience — pure composition over `.dir()`
     - `entry_valid=0` / `attr_valid=0` already implemented (TTL=0 in fuse_impl.rs)
@@ -21,8 +21,8 @@
   - [x] Use `INodeNo` throughout instead of raw u64
   - [x] ESTALE for stale inodes — `resolve()` wraps `resolve_stale()`, any error → ESTALE
   - [x] Update README.md FAQ and caller-responsibility.kb docs to reflect implemented state
-- [ ] API cleanup — rename and preserve caller ordering
-  - `PathSegment` → `Path`
-  - `HashMap<String, PathSegment>` → `DirEntries` (backed by `IndexMap`, preserves insertion order)
-  - Remove alphabetical sort in `do_readdir` — respect caller ordering
-  - Delete `caller-responsibility.kb/entry-ordering.md` and `dir-each-composition.md` (no longer caller responsibilities)
+- [x] API cleanup — rename and preserve caller ordering
+  - [x] `PathSegment` → `Path`
+  - [x] `HashMap<String, PathSegment>` → `DirEntries` (backed by `IndexMap`, preserves insertion order)
+  - [x] Remove alphabetical sort in `do_readdir` — respect caller ordering
+  - [x] Delete `caller-responsibility.kb/entry-ordering.md` and `dir-each-composition.md` (done in prior commit)

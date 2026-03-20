@@ -1,7 +1,7 @@
 use fuser::{Errno, INodeNo};
 
 use crate::node_ops::NodeOps;
-use crate::path_segment::PathSegment;
+use crate::path_segment::Path;
 use crate::resolve::{Resolved, resolve_stale};
 use crate::FilesystemBuilder;
 
@@ -9,8 +9,8 @@ const ROOT: INodeNo = INodeNo(1);
 const UID: u32 = 1000;
 const GID: u32 = 1000;
 
-/// Helper: build and return the root `PathSegment`.
-fn build(builder: FilesystemBuilder) -> PathSegment {
+/// Helper: build and return the root `Path`.
+fn build(builder: FilesystemBuilder) -> Path {
     builder.build().expect("build failed").root
 }
 
@@ -31,7 +31,7 @@ fn build_single_file() -> Result<(), Errno> {
         panic!("root is not a Dir");
     };
     assert!(children.contains_key("hello.txt"));
-    assert!(matches!(children["hello.txt"], PathSegment::File { .. }));
+    assert!(matches!(children["hello.txt"], Path::File { .. }));
     Ok(())
 }
 
