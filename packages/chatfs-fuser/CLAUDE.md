@@ -10,6 +10,13 @@ cargo test -p chatfs-fuser
 cargo build -p chatfs-fuser
 ```
 
+## Design context
+
+Project-level docs (paths relative to repo root):
+
+- `docs/dev/technical-policy.kb/` — design rules (stateless re-evaluation, POSIX error semantics, inode lifecycle)
+- `docs/dev/design-incubators/fusefs-dynamic-routing/` — lazy VFS design sketch and analysis
+
 ## Conventions
 
 - Workspace member under `packages/` (see root `Cargo.toml`)
