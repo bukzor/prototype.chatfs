@@ -2,16 +2,23 @@
 
 # chatfs-fuser
 
-- [ ] Dynamic routing — lazy inode allocation, replacing build-time `dir_each`
+- [ ] Dynamic routing — lazy inode allocation via `PathSegment` tree
   - After: update README.md (API section, examples, FAQ) to reflect new API
-  - Design validated in Python sketch; see `docs/design-incubators/dynamic-routing/`
-  - Policies: `docs/technical-policy.kb/{stateless-re-evaluation,posix-error-semantics,inode-lifecycle}.md`
-  - [ ] Lazy inode table: assign inodes in lookup/readdir, not at build time
-    - `DynamicDir` (list + template callbacks), `StaticDir`, `File` entry types
-    - Stateless re-evaluation: resolve path from root on every access
-  - [ ] ESTALE handling: distinguish "inode exists but path no longer resolves"
-    from "inode never existed" (ENOENT)
-  - [ ] `entry_valid=0` / `attr_valid=0`: force kernel to re-validate on every access
-  - [ ] Correct `readdir` `..` inode — derive parent from `ino_to_path`
-    - Currently hardcoded to inode 1; path table makes this trivial
+  - Design: `docs/design-incubators/dynamic-routing/`
+  - Policies: `docs/technical-policy.kb/`, `docs/technical-policy.kb/caller-responsibility.kb/`
+  - Key decisions:
+    - Unified `PathSegment` enum: `Dir { read: Fn() -> HashMap }`, `File { read }`, `Symlink { read }`
+    - No static/dynamic split — all variants are closures, static is just a constant-returning closure
+    - No `dir_each` — callers compose list+template in their `Dir` callback
+    - `entry_valid=0` / `attr_valid=0` already implemented (TTL=0 in fuse_impl.rs)
+  - [ ] Update Python sketch (`docs/design-incubators/dynamic-routing/demo.py`) to unified design
+    - Replace `StaticDir`/`DynamicDir` with single `Dir(read: Callable[[], dict])`
+    - All variants use `read` callback. Validate before porting to Rust.
+  - [ ] Add `PathSegment` enum — three variants, all closure-driven. Unit tests.
+  - [ ] Add `InodeTable` — bidirectional path↔ino map, `ensure_ino()`, `path_of()`. Unit tests.
+  - [ ] Add `resolve_entry()` — walk path through `PathSegment` tree. Unit tests.
+  - [ ] Replace `NodeOps` + Builder internals — `PathSegment` tree + `InodeTable` replaces
+    `HashMap<u64, Node>` + `flatten()`. Delete `Node`, `dir_each`. Update all tests.
+  - [ ] ESTALE for stale inodes — inode in table but path doesn't resolve → ESTALE not ENOENT
+  - [ ] Correct `readdir` `..` inode — derive parent from `InodeTable` path
 
