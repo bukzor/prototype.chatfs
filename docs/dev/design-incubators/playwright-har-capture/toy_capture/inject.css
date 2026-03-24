@@ -1,0 +1,15 @@
+#capture-overlay {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  z-index: 999999;
+}
+
+#capture-done {
+  padding: 12px 24px;
+  font-size: 16px;
+  background: #d32f2f;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+}
