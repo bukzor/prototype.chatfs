@@ -4,5 +4,4 @@ async function loadConversation() {
   document.getElementById("output").textContent = JSON.stringify(data, null, 2);
 }
 
-document.getElementById("refresh").addEventListener("click", loadConversation);
 loadConversation();

@@ -6,10 +6,13 @@ why:
 
 # M2 — Triggered Refresh
 
-Capture script triggers the in-page "refresh conversation" button. HAR includes
-multiple transactions for the same endpoints.
+Capture script injects a button into the target page and clicks it to trigger
+additional network activity. HAR includes multiple transactions for the same
+endpoints. This proves the capture script can drive pages it doesn't own.
 
 ## Acceptance
 
-- HAR contains at least two `/api/conversation` entries (initial load + refresh)
+- Capture script injects a button into the page (not present in toy server HTML)
+- Injected button triggers a fetch to `/api/conversation` when clicked
+- HAR contains at least two `/api/conversation` entries (initial load + injected click)
 - Script correctly waits for network idle after the triggered action
