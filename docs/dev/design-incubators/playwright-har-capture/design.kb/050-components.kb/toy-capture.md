@@ -2,6 +2,8 @@
 why:
   - three-subsystem-pipeline
   - har-lifecycle
+  - persistent-overlay
+  - site-agnostic-capture
 ---
 
 # toy_capture — Playwright HAR Capture Script
@@ -19,18 +21,21 @@ toy_capture --url http://127.0.0.1:8000 --har out.har [--outdir artifacts/] [--h
 1. Launch Chromium (headful or headless per flag)
 2. Create browser context with HAR recording enabled
 3. Navigate to `--url`
-4. Inject a "capture refresh" button into the page via Playwright
-5. Click the injected button to trigger additional network activity
-6. Wait for network idle / specific request completion
+4. Inject a persistent "Done Capturing" button into the page
+5. Human interacts with the site freely (login, navigate, scroll, etc.)
+6. Human clicks "Done Capturing" when finished
 7. Close context to finalize HAR
 8. Exit 0 on success, nonzero on failure
+
+The injected button must persist across page navigations (login redirects,
+multi-page flows). Real use cases involve 2FA, captcha, and multi-step login
+before reaching the target content.
 
 ## Responsibilities
 
 - Browser lifecycle (launch, context, close)
 - HAR recording configuration and finalization
-- Injecting UI controls into the target page (the target page is not ours)
-- Network idle detection
+- Persistent UI overlay across navigations (the target page is not ours)
 - Clean failure on timeout or navigation error
 
 ## Reusable output

@@ -2,6 +2,8 @@
 why:
   - toy-capture
   - har-lifecycle
+  - persistent-overlay
+  - howto-overlay
 ---
 
 # M2 — Triggered Refresh
@@ -14,6 +16,8 @@ pages it doesn't own.
 ## Acceptance
 
 - Capture script injects a button into the page (not present in toy server HTML)
+- Injected button persists across page navigations (login redirects, multi-page flows)
 - Human clicks the injected button to finalize capture
 - HAR contains at least one `/api/conversation` entry (from initial page load)
 - Script waits for the button click before closing the context
+- `--howto instructions.md` flag supported; when provided, renders site-specific guidance in the overlay
