@@ -33,8 +33,7 @@ Wrapped in `lib/chatfs/client.py`. Uses curl_cffi for Cloudflare bypass. Raw acc
 
 See `docs/dev/background.kb/` for foundational context and `docs/dev/technical-policy.kb/`
 for architectural constraints (opaque extractor boundary, 7 invariants, etc.).
-For how to create and maintain design knowledge, see
-`~/.claude/skills/llm-collab/references/how-to-document-design-knowledge.md`.
+For how to create and maintain design knowledge, see `Skill(llm-design-kb)`.
 
 ## Architecture Overview
 
