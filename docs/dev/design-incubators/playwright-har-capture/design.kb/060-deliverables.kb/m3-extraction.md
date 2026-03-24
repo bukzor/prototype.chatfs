@@ -10,6 +10,6 @@ Plucker reliably extracts `/api/conversation` response from HAR.
 
 ## Acceptance
 
-- `toy_pluck out.har --out extracted.json` produces correct conversation graph
-- Works regardless of content encoding (identity, gzip, brotli)
-- Handles multiple matching HAR entries (picks the right one)
+- `toy_pluck.sh < out.har > extracted.json` produces correct conversation graph
+- Handles HAR-level base64 encoding (Playwright handles HTTP-level compression)
+- Handles multiple matching HAR entries (emits all matches)

@@ -9,17 +9,16 @@ Cleanroom subproject: learn browser-driven HAR capture using Playwright against
 a local-only toy app. Produces reusable components for the chatfs BB1 (capture)
 pipeline.
 
-## Source Material
+## Key Files
 
-Design extracted from a ChatGPT design session (2026-03-04). See
-`data/todo-llmfs.chatgpt.com.splat/extracted/01-toy-playwright-spec.md` for the
-original artifact.
+- `toy_server/` — Python `http.server` serving static files on :8000
+  - `api/conversation` — Fixed JSON fixture: 6-message tree with one fork
+- `toy_capture/` — Playwright HAR recorder with injected "Done" button
+  - `capture.mjs` — Launches browser, records HAR, waits for human click
+- `toy_pluck.sh` — jq filter: extracts /api/conversation from HAR (stdin → stdout)
+- `out.har` — Example HAR output (gitignored)
 
-## Collections
+## Design Knowledge
 
-- `010-mission.kb/` — What this subproject exists to accomplish
-- `020-goals.kb/` — Aspirational outcomes that guide requirements
-- `030-requirements.kb/` — Verifiable acceptance criteria
-- `040-design.kb/` — Architecture and major abstractions
-- `050-components.kb/` — Subsystems and their responsibilities
-- `060-deliverables.kb/` — Milestones and build artifacts
+- `design.kb/` — Structured KB collections (010-mission through 060-deliverables)
+- `data/todo-llmfs.chatgpt.com.splat/extracted/01-toy-playwright-spec.md` — Original design artifact
