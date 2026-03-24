@@ -8,7 +8,7 @@ network idle detection, or content encoding handling.
 ## The Problem
 
 chatgpt-splat can process existing HAR files (BB2/BB3), but nobody has built
-the piece that *generates* them. Browser automation for HAR capture involves:
+the piece that _generates_ them. Browser automation for HAR capture involves:
 
 - Launching and controlling a real browser instance
 - Intercepting and recording network traffic

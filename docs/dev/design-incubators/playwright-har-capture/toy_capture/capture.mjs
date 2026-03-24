@@ -31,15 +31,22 @@ await page.goto(values.url, { waitUntil: "networkidle" });
 console.error("Page loaded.");
 
 // Inject capture UI into the page
-await page.evaluate(({ html, css }) => {
-  const style = document.createElement("style");
-  style.textContent = css;
-  document.head.appendChild(style);
-  document.body.insertAdjacentHTML("beforeend", html);
-  document.getElementById("capture-done").addEventListener(
-    "click", (e) => { e.target.dataset.clicked = "true"; }, { once: true },
-  );
-}, { html: injectHTML, css: injectCSS });
+await page.evaluate(
+  ({ html, css }) => {
+    const style = document.createElement("style");
+    style.textContent = css;
+    document.head.appendChild(style);
+    document.body.insertAdjacentHTML("beforeend", html);
+    document.getElementById("capture-done").addEventListener(
+      "click",
+      (e) => {
+        e.target.dataset.clicked = "true";
+      },
+      { once: true },
+    );
+  },
+  { html: injectHTML, css: injectCSS },
+);
 console.error("Waiting for human to click 'Done Capturing'...");
 
 // Wait for the human to click — no timeout
