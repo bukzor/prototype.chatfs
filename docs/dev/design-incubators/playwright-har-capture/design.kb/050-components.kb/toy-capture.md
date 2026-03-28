@@ -41,6 +41,18 @@ before reaching the target content.
 - Persistent UI overlay across navigations (the target page is not ours)
 - Graceful cancellation when browser is closed by user
 
+## Platform workarounds (Crostini)
+
+Playwright's defaults conflict with ChromeOS's Crostini (Linux container):
+
+- **`viewport: null`** — Playwright overrides the viewport to 1280x720 regardless
+  of actual window size. On Crostini the physical window is smaller, pushing
+  fixed-position elements off-screen. `null` lets the browser use its real size.
+- **`ignoreDefaultArgs: ["--enable-unsafe-swiftshader"]`** — Playwright enables
+  SwiftShader (software GL) by default. On Crostini this breaks Wayland fractional
+  scaling: text stretches, mouse events land offset from visuals. Removing it lets
+  Chromium use hardware GL via Sommelier.
+
 ## Reusable output
 
 The browser lifecycle and HAR recording patterns transfer directly to real

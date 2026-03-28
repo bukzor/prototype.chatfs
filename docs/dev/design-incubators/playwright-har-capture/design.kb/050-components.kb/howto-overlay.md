@@ -6,9 +6,9 @@ why:
 
 # howto-overlay — Site-Specific Instructions for Human Operator
 
-Future component. A `--howto instructions.md` flag would inject rendered markdown
-instructions into the persistent capture overlay, guiding the human through
-site-specific steps (e.g. "Log in, navigate to conversation X, click Done").
+A `--howto instructions.md` flag injects plaintext instructions into the
+persistent capture overlay, guiding the human through site-specific steps
+(e.g. "Log in, navigate to conversation X, click Done").
 
 ## Interface
 
@@ -24,7 +24,7 @@ underlying page.
 ## Overlay UX
 
 - Collapsible instructions via native `<details>` element (no JS needed)
-- Draggable via a CSS dot-grid grip handle on the left edge
+- Draggable via a dot-grid grip handle on the left edge (CSS visual, JS drag)
 - 80% opacity, full on hover
 - Hidden entirely when `--howto` is not provided
 
