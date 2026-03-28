@@ -1,14 +1,21 @@
 #!/usr/bin/env node
 import { chromium } from "playwright";
 import { parseArgs } from "node:util";
+import { readFileSync } from "node:fs";
 import { injectOverlay } from "./inject.mjs";
 
-const { values } = parseArgs({
+const { values, positionals } = parseArgs({
   options: {
-    url: { type: "string", default: "http://127.0.0.1:8000" },
     har: { type: "string", default: "out.har" },
+    howto: { type: "string" },
   },
+  allowPositionals: true,
 });
+const url = positionals[0] || "http://127.0.0.1:8000";
+
+const howto = values.howto
+  ? readFileSync(values.howto, "utf-8")
+  : undefined;
 
 const browser = await chromium.launch({
   headless: false,
@@ -26,16 +33,24 @@ const context = await browser.newContext({
 });
 const page = await context.newPage();
 
-await injectOverlay(page);
+await injectOverlay(page, { howto });
 
-await page.goto(values.url, { waitUntil: "networkidle", timeout: 0 });
+page.setDefaultTimeout(0);
+await page.goto(url, { waitUntil: "networkidle" });
 console.error("Page loaded. Waiting for human to click 'Done Capturing'...");
 
 // Wait for the human to click — no timeout
-await page.waitForFunction(
-  () => document.getElementById("capture-done")?.dataset.clicked === "true",
-  { timeout: 0 },
-);
+try {
+  await page.waitForFunction(
+    () => document.getElementById("capture-done")?.dataset.clicked === "true",
+  );
+} catch (e) {
+  if (e.message.includes("has been closed")) {
+    console.error("Cancelled by user.");
+    process.exit(0);
+  }
+  throw e;
+}
 
 await context.close();
 await browser.close();

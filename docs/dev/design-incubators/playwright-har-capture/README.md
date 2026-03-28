@@ -34,10 +34,12 @@ button that survives page navigations. The script blocks until the human clicks
 the button, then writes the HAR and exits.
 
 ```bash
-./toy_capture/capture.mjs
+./toy_capture/capture.mjs [URL] [--har PATH] [--howto PATH]
 ```
 
-Defaults: `--url http://127.0.0.1:8000 --har out.har`
+Defaults: URL `http://127.0.0.1:8000`, `--har out.har`
+
+With `--howto`, a collapsible instructions panel appears in the overlay.
 
 ### `toy_pluck.sh`
 

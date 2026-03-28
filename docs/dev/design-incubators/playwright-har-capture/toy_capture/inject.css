@@ -3,6 +3,60 @@
   top: 10px;
   right: 10px;
   z-index: 999999;
+  max-width: 40vw;
+  opacity: 0.8;
+  display: flex;
+}
+
+#capture-overlay:hover {
+  opacity: 1;
+}
+
+#capture-drag-handle {
+  cursor: grab;
+  width: 11px;
+  background: #555;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Dot-grid grip pattern: https://gist.github.com/JakeSidSmith/83c324dbe7e4d91ee8c52525b1d504d9 */
+#capture-drag-handle::after {
+  content: "";
+  width: 9px;
+  height: 20%;
+  min-height: 12px;
+  background-image: radial-gradient(circle, #aaa 1px, transparent 1px);
+  background-size: 3px 3px;
+}
+
+#capture-drag-handle:active {
+  cursor: grabbing;
+}
+
+#capture-overlay-content {
+  flex: 1;
+}
+
+#capture-howto summary {
+  cursor: pointer;
+  font-weight: bold;
+  color: #fff;
+  background: #333;
+  padding: 4px 8px;
+}
+
+#capture-howto-content {
+  margin: 0;
+  padding: 8px;
+  background: #fffde7;
+  color: #333;
+  font-size: 13px;
+  white-space: pre-wrap;
+  max-height: 60vh;
+  overflow: auto;
 }
 
 #capture-done {

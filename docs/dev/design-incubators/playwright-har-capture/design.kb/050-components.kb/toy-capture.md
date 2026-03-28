@@ -13,19 +13,22 @@ The primary learning target. A one-shot Playwright script that captures a HAR.
 ## Interface
 
 ```
-toy_capture --url http://127.0.0.1:8000 --har out.har [--outdir artifacts/] [--headful]
+./toy_capture/capture.mjs [URL] [--har PATH] [--howto PATH]
 ```
+
+Defaults: URL `http://127.0.0.1:8000`, `--har out.har`
 
 ## Behavior
 
-1. Launch Chromium (headful or headless per flag)
+1. Launch visible Chromium (always headful — human-in-the-loop)
 2. Create browser context with HAR recording enabled
-3. Navigate to `--url`
-4. Inject a persistent "Done Capturing" button into the page
-5. Human interacts with the site freely (login, navigate, scroll, etc.)
-6. Human clicks "Done Capturing" when finished
-7. Close context to finalize HAR
-8. Exit 0 on success, nonzero on failure
+3. Register persistent overlay injection (survives navigations via `addInitScript`)
+4. If `--howto` provided, overlay includes collapsible instructions panel
+5. Navigate to `--url`
+6. Human interacts with the site freely (login, navigate, scroll, etc.)
+7. Human clicks "Done Capturing" when finished
+8. Close context to finalize HAR
+9. If human closes browser instead, exit cleanly ("Cancelled by user")
 
 The injected button must persist across page navigations (login redirects,
 multi-page flows). Real use cases involve 2FA, captcha, and multi-step login
@@ -36,7 +39,7 @@ before reaching the target content.
 - Browser lifecycle (launch, context, close)
 - HAR recording configuration and finalization
 - Persistent UI overlay across navigations (the target page is not ours)
-- Clean failure on timeout or navigation error
+- Graceful cancellation when browser is closed by user
 
 ## Reusable output
 

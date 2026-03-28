@@ -6,7 +6,7 @@ why:
   - howto-overlay
 ---
 
-# M2 — Triggered Refresh
+# M2 — Capture Overlay
 
 Capture script injects a "done" button into the target page. Human clicks it
 to signal capture is complete. HAR is finalized with traffic from the page's
