@@ -1,53 +1,35 @@
+#!/usr/bin/env node
 import { chromium } from "playwright";
 import { parseArgs } from "node:util";
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const injectHTML = readFileSync(join(__dirname, "inject.html"), "utf-8");
-const injectCSS = readFileSync(join(__dirname, "inject.css"), "utf-8");
+import { injectOverlay } from "./inject.mjs";
 
 const { values } = parseArgs({
   options: {
-    url: { type: "string" },
-    har: { type: "string" },
-    headful: { type: "boolean", default: false },
+    url: { type: "string", default: "http://127.0.0.1:8000" },
+    har: { type: "string", default: "out.har" },
   },
 });
 
-if (!values.url || !values.har) {
-  console.error("Usage: toy_capture --url <url> --har <path> [--headful]");
-  process.exit(1);
-}
-
-const browser = await chromium.launch({ headless: !values.headful });
+const browser = await chromium.launch({
+  headless: false,
+  // Playwright defaults to SwiftShader (software GL) which breaks Wayland
+  // fractional scaling on Crostini — text stretches, mouse events offset from
+  // visuals. Removing it lets Chromium use hardware GL via Sommelier.
+  ignoreDefaultArgs: ["--enable-unsafe-swiftshader"],
+});
 const context = await browser.newContext({
   recordHar: { path: values.har, mode: "full" },
+  // Playwright defaults to a 1280x720 viewport override, which doesn't match
+  // the physical window size on Crostini. This causes fixed-position elements
+  // to render off-screen. `null` lets the browser use its actual window size.
+  viewport: null,
 });
 const page = await context.newPage();
 
-await page.goto(values.url, { waitUntil: "networkidle" });
-console.error("Page loaded.");
+await injectOverlay(page);
 
-// Inject capture UI into the page
-await page.evaluate(
-  ({ html, css }) => {
-    const style = document.createElement("style");
-    style.textContent = css;
-    document.head.appendChild(style);
-    document.body.insertAdjacentHTML("beforeend", html);
-    document.getElementById("capture-done").addEventListener(
-      "click",
-      (e) => {
-        e.target.dataset.clicked = "true";
-      },
-      { once: true },
-    );
-  },
-  { html: injectHTML, css: injectCSS },
-);
-console.error("Waiting for human to click 'Done Capturing'...");
+await page.goto(values.url, { waitUntil: "networkidle", timeout: 0 });
+console.error("Page loaded. Waiting for human to click 'Done Capturing'...");
 
 // Wait for the human to click — no timeout
 await page.waitForFunction(
