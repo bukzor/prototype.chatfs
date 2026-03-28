@@ -19,4 +19,4 @@ if (( DEBUG > 0 )); then
   set -x
 fi
 
-node "$HERE/capture.mjs" --url "$URL" --har "$HAR"
+node "$HERE/capture.mjs" "$URL" --har "$HAR"
