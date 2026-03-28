@@ -1,4 +1,9 @@
 ---
+why:
+  - no-network-on-read
+  - explicit-sync-triggers
+background:
+  - google-piper-precedent
 source:
   - conversations.cleaned/06-design-spec-project-handoff/167.assistant.text.md#4
   - conversations.cleaned/05-fuse-implementation-details/159.assistant.text.md
@@ -11,17 +16,17 @@ file parsing) runs in a background job queue, not in the filesystem call path.
 
 ```
 touch file / echo sync > control
-         ↓
+         |
 FUSE handler enqueues job
-         ↓
-Tokio task queue (async runtime)
-         ↓
-job runs BB1 → BB2 → BB3
-         ↓
+         |
+async task queue
+         |
+job runs BB1 -> BB2 -> BB3
+         |
 writes to staging/<jobid>/
-         ↓
-atomic rename: staging → current
-         ↓
+         |
+atomic rename: staging -> current
+         |
 FUSE reads serve new content
 ```
 
@@ -34,10 +39,6 @@ via `status` control file.
 
 **Failure semantics:** Failures never corrupt cache. They update status and
 preserve artifacts/logs for debugging. Last-known-good `current/` is untouched.
-
-**Why async:** Modern FUSE servers run on Tokio or async-std. The `fuse3` crate
-is explicitly async-first. This makes it natural to enqueue work and return
-immediately from FUSE handlers.
 
 **Prior art:** rclone mount, Google Piper workspace mounts — both use this
 pattern of thin filesystem layer + background workers.

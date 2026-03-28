@@ -1,4 +1,8 @@
 ---
+why:
+  - canonical-conversation-graph
+background:
+  - har-format
 source:
   - conversations.cleaned/06-design-spec-project-handoff/167.assistant.text.md#1
 ---
@@ -14,17 +18,17 @@ canonical format preserves:
 - `content` — message text
 - `timestamp` — when created
 
-This is provider-agnostic. Each provider maps into it via a parser:
+This is provider-agnostic. Each provider maps into it via a parser (BB2):
 
 ```
 .har / html / pdf / json
-        ↓
+        |
 provider parser (BB2)
-        ↓
+        |
 canonical conversation graph (extracted.json)
-        ↓
+        |
 markdown renderer (BB3)
-        ↓
+        |
 branch-main.md, branch-alt.md, ...
 ```
 

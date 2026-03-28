@@ -1,16 +1,18 @@
 ---
+why:
+  - black-box-decomposition
+background:
+  - fuse-filesystem
 source:
   - conversations.cleaned/02-architecture-convergence/094.assistant.text.md
 ---
 
-# Stack Split: Rust + Node/Playwright Sidecar (Proposed)
+# Stack Split: Rust + Node/Playwright Sidecar
 
-ChatGPT's recommended split across two language runtimes (not yet decided —
-user was "leaning toward rust" but tech stack is open):
+Two language runtimes, each owning what it's best at:
 
 **Rust owns:** FUSE filesystem, cache layer, canonical format, markdown
-generation, file watching (`notify` crate), orchestration, provider plugin
-registry.
+generation, file watching, orchestration, provider plugin registry.
 
 **Node/Playwright sidecar owns:** Browser interaction only. Attaches to
 existing Chrome via CDP. Injects UI, captures payload, writes JSON, exits.

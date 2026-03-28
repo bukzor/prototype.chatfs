@@ -1,6 +1,10 @@
 ---
 why:
-  - design-spec
+  - black-box-decomposition
+  - no-network-on-read
+  - explicit-sync-triggers
+  - atomic-cache-updates
+  - provider-agnostic-interface
 source:
   - conversations.cleaned/06-design-spec-project-handoff/178.assistant.text.md
   - extracted/03-architectural-invariants.md

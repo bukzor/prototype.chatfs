@@ -1,4 +1,7 @@
 ---
+why:
+  - opaque-extractor-boundary
+  - black-box-decomposition
 source:
   - conversations.cleaned/02-architecture-convergence/094.assistant.text.md
 ---

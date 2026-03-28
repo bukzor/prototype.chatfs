@@ -1,4 +1,6 @@
 ---
+why:
+  - provider-agnostic-interface
 source:
   - conversations.cleaned/06-design-spec-project-handoff/167.assistant.text.md#2
 ---
@@ -28,6 +30,3 @@ when asked.
 - Cache locations
 - TTL/invalidation rules (manual-only, time-based, version file)
 - How to report "needs user interaction" (for wizard-style capture)
-
-**Current state:** `native/claude` exists as a Python JSONL layer. Future
-providers (`native/chatgpt`, `native/gemini`) follow the same pattern.

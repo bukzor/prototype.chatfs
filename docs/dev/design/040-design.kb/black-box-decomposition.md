@@ -1,4 +1,7 @@
 ---
+why:
+  - pipeline-composability
+  - provider-agnostic-interface
 source:
   - conversations.cleaned/04-system-decomposition-sync-design/127.assistant.text.md
   - extracted/04-bb-decomposition.md
@@ -23,5 +26,3 @@ short-lived with clean failure semantics — no long-running agent.
 The rest of the system (daemon, cache, filesystem, orchestration) only depends
 on stable I/O: command invocation, exit codes, file paths, atomic outputs.
 Providers can swap BBs without touching the core.
-
-**Full text:** [data/todo-llmfs.chatgpt.com.splat/extracted/04-bb-decomposition.md]
