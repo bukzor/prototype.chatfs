@@ -10,18 +10,15 @@ Minimal HTTP server on `http://127.0.0.1:8000`.
 
 ## Endpoints
 
-- `/` — HTML page that fetches API endpoints on load
-- `/api/ping` — `{"ok": true, "ts": "..."}`
+- `/` — HTML page that fetches `/api/conversation` on load
 - `/api/conversation` — Fixed conversation graph (IDs, parents, branches)
-- `/api/large` — Larger JSON payload for size/streaming/compression testing
 
 ## Responsibilities
 
 - Serve deterministic JSON responses
-- Optionally apply gzip/brotli content encoding
-- Provide a page with fetchable endpoints (the capture script drives interaction)
+- Provide a page with a fetchable endpoint (the capture script drives interaction)
 
-## Tech choice
+## Implementation
 
-Any of: Python FastAPI, Node Express, Rust axum. Pick whichever is fastest to
-stand up. The server is disposable scaffolding.
+`python3 -m http.server` serving static files. The `/api/conversation` endpoint
+is a static JSON file at `api/conversation` (no extension).

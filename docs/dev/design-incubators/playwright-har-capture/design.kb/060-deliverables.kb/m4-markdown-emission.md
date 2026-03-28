@@ -6,11 +6,6 @@ why:
 
 # M4 — Markdown Emission
 
-Emitter produces deterministic markdown from extracted conversation data.
-
-## Acceptance
-
-- `toy_emit extracted.json --outdir output/` produces `branch-main.md` and
-  `branch-alt.md`
-- Output is byte-identical across runs
-- Writes are atomic (staging directory → rename)
+**Out of scope.** This incubator is scoped to HAR capture (getting the HAR to
+disk). Emission belongs to a downstream pipeline (BB2/BB3), not to this
+subproject.

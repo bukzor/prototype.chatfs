@@ -10,6 +10,6 @@ Playwright captures a HAR for a single page load.
 
 ## Acceptance
 
-- `toy_capture --url http://127.0.0.1:8000 --har out.har` produces a valid HAR
-- HAR contains entries for `/`, `/api/ping`, `/api/conversation`, `/api/large`
+- `./toy_capture/capture.mjs` produces a valid HAR
+- HAR contains entries for `/`, `/index.css`, `/index.js`, `/api/conversation`
 - Script exits 0 on success

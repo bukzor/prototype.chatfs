@@ -10,6 +10,6 @@ endpoints work.
 
 ## Acceptance
 
-- `toy_server` starts and serves all four endpoints
-- Manual browser visit confirms JSON responses
+- `toy_server` starts and serves `/` and `/api/conversation`
+- Manual browser visit confirms page loads and conversation JSON renders
 - No Playwright yet — this validates the target before automating

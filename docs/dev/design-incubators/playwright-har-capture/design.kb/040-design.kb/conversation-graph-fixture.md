@@ -1,6 +1,5 @@
 ---
 why:
-  - deterministic-output
   - content-encoding-handling
 ---
 
@@ -16,5 +15,4 @@ conversation graph with:
   `branch-alt.md`)
 
 This fixture is the "known answer" that makes the entire pipeline
-deterministically testable. The `/api/large` endpoint adds a larger payload
-for compression and streaming testing.
+deterministically testable.

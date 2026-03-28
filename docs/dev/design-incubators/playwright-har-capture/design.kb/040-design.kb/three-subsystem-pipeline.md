@@ -6,7 +6,7 @@ why:
 
 # Three-Subsystem Pipeline
 
-The toy project mirrors the BB1→BB2→BB3 decomposition with three subsystems
+The full pipeline mirrors the BB1→BB2→BB3 decomposition with three subsystems
 connected by file I/O:
 
 ```
@@ -24,7 +24,12 @@ recording. This is BB1.
 
 **Subsystem C** is extraction and rendering — HAR parsing, response plucking,
 markdown emission. This is BB2+BB3, kept simple since chatgpt-splat already
-validates the concepts.
+validates the concepts. **Not implemented in this incubator** — belongs to
+downstream pipeline work.
+
+This incubator covers A and B. `toy_pluck.sh` exists as a verification tool
+(confirms the HAR contains the expected data) but Subsystem C proper lives
+elsewhere.
 
 The subsystems communicate exclusively via files (HAR, extracted.json, markdown).
 No shared memory, no IPC. Each is independently runnable and testable.
