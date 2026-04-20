@@ -33,10 +33,17 @@ export async function captureHar({
     // the physical window size on Crostini. This causes fixed-position elements
     // to render off-screen. `null` lets the browser use its actual window size.
     viewport: null,
-    // Playwright defaults to SwiftShader (software GL) which breaks Wayland
-    // fractional scaling on Crostini — text stretches, mouse events offset from
-    // visuals. Removing it lets Chromium use hardware GL via Sommelier.
-    ignoreDefaultArgs: ["--enable-unsafe-swiftshader"],
+    ignoreDefaultArgs: [
+      // Playwright defaults to SwiftShader (software GL) which breaks Wayland
+      // fractional scaling on Crostini — text stretches, mouse events offset
+      // from visuals. Removing it lets Chromium use hardware GL via Sommelier.
+      "--enable-unsafe-swiftshader",
+      // Suppresses the yellow "Chrome is being controlled by automated test
+      // software" infobar and a few other automation-mode UI tells (password
+      // manager / translate suppression). Cosmetic; the automation is still
+      // real and CDP-driven.
+      "--enable-automation",
+    ],
   });
   // Disable default timeouts on everything the context owns: page waits,
   // page.goto, and context.waitForEvent("close") — the human may take any
