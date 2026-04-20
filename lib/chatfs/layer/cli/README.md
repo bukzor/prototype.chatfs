@@ -45,4 +45,4 @@ Not yet implemented. Will be created after M3-CACHE is complete.
 ## See Also
 
 - [../cache/] - Cache layer that CLI wraps
-- [../../../docs/dev/development-plan.md#m4-cli] - Implementation roadmap
+- [../../../docs/dev/design.kb/] - Layered design knowledge

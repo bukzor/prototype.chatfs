@@ -32,7 +32,7 @@ This is about scope and architecture strategy, not the technical details of norm
 
 When resolved:
 - `DECISION.md` - Chosen scope strategy with rationale (chat-only, universal, or tiered)
-- Update `technical-design.md` with long-term architecture strategy
+- Update `design.kb/` with long-term architecture strategy
 - If tiered: Define tier boundaries and shared infrastructure
 
 ## Related Incubators

@@ -9,18 +9,16 @@ references.
 
 - **New user? Want overview?** → [../README.md] - What the project does
 - **Want to contribute?** → [../HACKING.md] - Setup and development workflow
-- **Resume development session?** → [../STATUS.md] → Latest [dev/devlog/]
+- **Resume development session?** → Latest [../.claude/todo*]
 - **Understand design decisions?** → [dev/design-rationale.md] - Why choices were made
-- **Learn system architecture?** → [dev/technical-design.md] - How it works
-- **Check project roadmap?** → [dev/development-plan.md] - Milestones and tasks
+- **Learn system architecture?** → [dev/design.kb/] - Layered design knowledge
 - **Working with LLM assistant?** → [../CLAUDE.md] - Quick reference guide
 
 **Recommended reading flow for new contributors:**
 
 1. [../HACKING.md] - Setup and conventions
 2. [dev/design-rationale.md] - Understand why
-3. [dev/technical-design.md] - Understand how
-4. [../STATUS.md] - See current state
+3. [dev/design.kb/] - Understand how (mission → goals → requirements → design)
 
 ## Structure
 

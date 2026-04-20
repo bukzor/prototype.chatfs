@@ -22,7 +22,7 @@ suggested-reading:
 prototype.chatfs predates the llm-* skills and uses outdated conventions:
 - No CLAUDE.md frontmatter (missing skill dependencies)
 - Uses root `TODO.md` instead of `.claude/todo.md` + `.claude/todo.kb/`
-- Uses `STATUS.md` (obsolete pattern, replaced by devlog + todo system)
+- Used `STATUS.md` (now deleted, replaced by devlog + todo system)
 - Skills themselves have incomplete evolution (`.d → .kb` partial)
 
 ## Current Situation
@@ -37,7 +37,7 @@ prototype.chatfs predates the llm-* skills and uses outdated conventions:
 
 **prototype.chatfs gaps:**
 - Last meaningful work: 2025-11-05 (devlog)
-- STATUS.md last updated: 2025-11-02
+- STATUS.md: deleted (was last updated 2025-11-02)
 - TODO.md: 432 lines of M0-DOCS phase breakdown (stale)
 
 **Key insight:** Can't fully harmonize prototype.chatfs until skill evolution completes.
@@ -46,7 +46,7 @@ prototype.chatfs predates the llm-* skills and uses outdated conventions:
 
 Two-phase approach:
 1. **Complete skill evolution** - Finish `.d → .kb` migration, update llm-collab skeleton
-2. **Apply to prototype.chatfs** - Add frontmatter, migrate TODO.md, retire STATUS.md
+2. **Apply to prototype.chatfs** - Add frontmatter, migrate TODO.md (STATUS.md already deleted)
 
 ## Subtasks
 
@@ -71,7 +71,7 @@ Two-phase approach:
 - [ ] llm-collab skeleton uses `milestones.kb/` and `design.kb/` patterns
 - [ ] prototype.chatfs CLAUDE.md has `depends:` frontmatter
 - [ ] prototype.chatfs uses `.claude/todo.md` + `.claude/todo.kb/`
-- [ ] STATUS.md retired (content absorbed into devlog/development-plan.md)
+- [x] STATUS.md retired (deleted 2026-03-28)
 - [ ] Fresh agent can orient via `llm-collab-session-start` pattern
 
 ## How to Execute

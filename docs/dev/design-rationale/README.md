@@ -21,7 +21,7 @@ Each document should:
 ## What Doesn't Belong Here
 
 - Brief decision explanations (stay in design-rationale.md)
-- Implementation details (goes in docs/dev/design/)
+- Implementation details (goes in docs/dev/design.kb/)
 - Active design exploration (goes in design-incubators/)
 
 ## Guidelines

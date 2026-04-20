@@ -27,224 +27,84 @@ uv sync
 ## Project Structure
 
 ```
-claude-api/
-├── lib/
-│   └── chatfs/             # Main chatfs package
-│       ├── layer/
-│       │   ├── native/
-│       │   │   └── claude/  # M1-CLAUDE: Claude-native tools
-│       │   │       ├── list_orgs.py
-│       │   │       ├── list_convos.py
-│       │   │       ├── get_convo.py
-│       │   │       └── render_md.py
-│       │   ├── vfs/         # M2-VFS: Normalized JSONL tools (future)
-│       │   ├── cache/       # M3-CACHE: Persistent storage (future)
-│       │   └── cli/         # M4-CLI: Human-friendly commands (future)
-│       ├── client.py        # API client wrapper
-│       ├── cache.py         # Filesystem cache
-│       └── models.py        # Data structures
-└── docs/
-    └── dev/                 # Design documentation
-        └── reference-implementations/  # Reference code (git submodules)
+packages/
+├── chatfs-fuser/            # Rust: idiomatic wrapper on fuser (FUSE library)
+│   ├── src/
+│   │   ├── lib.rs
+│   │   ├── fuse_impl.rs     # FUSE operations
+│   │   ├── filesystem.rs    # Filesystem abstraction
+│   │   ├── inode_table/     # Inode management
+│   │   └── resolve/         # Path resolution
+│   └── examples/            # Static tree, dynamic, procfs demos
+├── bukzor.chatgpt-export/   # Python: ChatGPT conversation export/splat
+docs/
+└── dev/
+    ├── design.kb/           # Layered design knowledge
+    ├── design-incubators/   # Active design explorations
+    ├── background.kb/       # Technology primers
+    ├── technical-policy.kb/ # Cross-cutting guidance
+    └── devlog/              # Session history
 ```
 
-See [docs/dev/technical-design.md] for
+See [docs/dev/design.kb/] for
 architecture details.
 
 ## Running Tests
 
-**Note:** The testing commands shown below will work after M0-DOCS configures entry points in pyproject.toml. For now, these serve as reference for post-M0-DOCS testing workflow.
-
-**Test M1-CLAUDE commands** (`native/claude` layer, outputs raw API data):
+**Rust (chatfs-fuser):**
 
 ```bash
-uv sync  # one-time setup, for new modules
-
-# List organizations
-echo '{}' | chatfs-claude-list-orgs | jq
-
-# List conversations for org
-echo '{"uuid":"org-uuid"}' | chatfs-claude-list-convos | jq
-
-# Get conversation messages
-echo '{"uuid":"convo-uuid"}' | chatfs-claude-get-convo | jq
-
-# Pipe through entire flow
-chatfs-claude-list-orgs | head -n 1 | \
-  chatfs-claude-list-convos | head -n 5 | \
-  chatfs-claude-get-convo | \
-  chatfs-claude-render-md > output.md
+cd packages/chatfs-fuser
+cargo test
+cargo run --example static_tree  # mount a static demo tree
 ```
 
-**Test M2-VFS commands** (`vfs` layer, normalized, future):
+**Python (bukzor.chatgpt-export):**
 
 ```bash
-# Same tools, normalized JSONL schema
-chatfs-vfs-list-orgs | jq
-chatfs-vfs-list-convos | jq
-```
-
-**Testing with jq:**
-
-```bash
-# Extract specific fields
-chatfs-claude-list-orgs | jq -r '.name'
-
-# Filter conversations
-chatfs-claude-list-convos | jq 'select(.created_at > "2025-10")'
-```
-
-## Common Tasks
-
-### Adding a New Layer Tool
-
-**JSONL layer contract** (M1-CLAUDE, M2-VFS, M3-CACHE):
-
-- Read JSONL from stdin (one JSON object per line)
-- Write JSONL to stdout (except render-md → markdown)
-- Log errors to stderr
-- Exit 0 on success
-- No terminal dependencies (colors, progress bars, etc.)
-
-**Example:**
-
-```python
-#!/usr/bin/env -S uv run
-"""
-chatfs-{layer}-example-tool - Does something useful
-
-Reads: {input_field: "value"}
-Writes: {output_field: "result"}
-"""
-import sys
-import json
-
-def main():
-    """CLI entry point for chatfs-{layer}-example-tool command."""
-    for line in sys.stdin:
-        input_obj = json.loads(line)
-
-        # Do something with input_obj
-        result = example_tool(input_obj)
-
-        # Write JSONL to stdout
-        print(json.dumps(result))
-
-if __name__ == "__main__":
-    main()
-```
-
-**Steps:**
-
-1. Choose layer: native/claude/, vfs/, or cache/
-2. Create module in `lib/chatfs/layer/{layer}/example_tool.py`
-3. Add `main()` function as entry point
-4. Document input/output schema in module docstring
-5. Add entry point to `pyproject.toml`:
-   - M1-CLAUDE: `chatfs-claude-example-tool`
-   - M2-VFS: `chatfs-vfs-example-tool`
-   - M3-CACHE: `chatfs-cache-example-tool`
-6. Run `uv sync`
-7. Test with: `echo '{"test":"data"}' | chatfs-{layer}-example-tool`
-
-### Debugging API Issues
-
-**Enable verbose logging:**
-
-```python
-# In lib/chatfs/client.py
-import logging
-logging.basicConfig(level=logging.DEBUG)
-```
-
-**Inspect raw API responses:**
-
-```bash
-# Use chatfs-claude-get-convo and save raw JSON
-echo '{"uuid":"convo-uuid"}' | chatfs-claude-get-convo > raw-response.jsonl
-jq -s '.' raw-response.jsonl > formatted.json
-```
-
-**Test unofficial-claude-api directly:**
-
-```python
-# In Python REPL
-from unofficial_claude_api import Client
-client = Client()  # Uses CLAUDE_SESSION_KEY from env
-orgs = client.list_organizations()
-print(orgs)
+cd packages/bukzor.chatgpt-export
+uv sync
+uv run pytest
 ```
 
 ### Understanding Data Flow
 
-**M1-CLAUDE pipeline** (Claude-native):
+**Pipeline:** BB1 (capture) → BB2 (extract) → BB3 (render)
 
 ```
-chatfs-claude-list-orgs
-  → {uuid, name, created_at, ...}
-
-chatfs-claude-list-convos (stdin: org record)
-  → {uuid, title, created_at, updated_at, org_uuid, ...}
-
-chatfs-claude-get-convo (stdin: convo record)
-  → {type: "human", text: "...", created_at: "..."}
-  → {type: "assistant", text: "...", created_at: "..."}
-
-chatfs-claude-render-md (stdin: message records)
-  → Markdown output (not JSONL)
+Browser session (Playwright sidecar)
+  → capture artifact (HAR/trace)          [BB1]
+  → canonical conversation graph (JSON)   [BB2]
+  → markdown files + metadata in cache    [BB3]
+  → served via FUSE mount
 ```
 
-**M2-VFS pipeline** (normalized, future):
-
-```
-chatfs-vfs-list-orgs --provider=claude
-  → {uuid, name, created_at, ...}  # Normalized schema
-
-Same data flow, normalized JSONL across providers
-```
-
-See
-[docs/dev/technical-design.md#data-flow]
-for details.
+See [docs/dev/design.kb/040-design.kb/black-box-decomposition.md] for details.
 
 ### Working with the Cache
 
-**Cache location:** `./chatfs/` directory with org-based structure
+Sync is explicit — touch a conversation file to trigger refresh. Reads always serve from cache, never hit the network.
 
-**Staleness tracking:** Files have `mtime = conversation.updated_at` from API. If stale, re-fetch.
-
-See [docs/dev/technical-design.md#filesystem-cache-structure] for detailed cache structure and invalidation logic.
+See [docs/dev/design.kb/040-design.kb/sync-control-plane.md] for cache structure and sync triggers.
 
 ## Architecture
 
-**Four-Layer Architecture:**
+**Rust FUSE daemon** mounts conversations as a filesystem. A **Node/Playwright sidecar** handles browser-driven capture.
 
-- **M1-CLAUDE (native):** Claude-native layer - outputs raw API data as JSONL, no normalization
-- **M2-VFS (normalized):** Virtual filesystem layer - normalized JSONL schema across providers (Claude, ChatGPT)
-- **M3-CACHE (persistence):** Cache/filesystem layer - persistent storage with staleness tracking
-- **M4-CLI (UX):** CLI layer - human-friendly commands with colors, progress bars, path-based interface
+**Pipeline:** BB1 (capture) → BB2 (extract) → BB3 (render)
 
-**Why this layered approach?**
+- **BB1 (capture):** Browser automation produces capture artifacts (HAR/trace)
+- **BB2 (extract):** Parses artifacts into canonical conversation graph
+- **BB3 (render):** Writes markdown files and metadata to cache
 
-- **Learn then abstract:** Can't design good abstraction (M2-VFS) without understanding concrete case (M1-CLAUDE)
-- **Clear separation:** Each layer has single responsibility
-- **Testable:** JSONL layers (M1-M3) are pure stdin/stdout, easy to test with echo and jq
+**Key properties:**
 
-**Why JSONL?**
+- **No network on read:** All filesystem reads serve from cache
+- **Explicit sync:** User triggers capture (e.g. `touch` a file), never a side effect of reading
+- **Provider plugins:** Adding a provider means implementing BB1/BB2 — core is unchanged
+- **Work enqueueing:** FUSE handlers stay fast; expensive work runs in a background job queue
 
-- Streaming-friendly (process line-by-line)
-- Works with jq and standard Unix tools
-- Easy migration to capnproto later
-- Simple testing (echo JSON, check output)
-
-**Why lazy loading?**
-
-- Users have 100s-1000s of conversations
-- Most are never accessed
-- Fetch on-demand keeps everything fast
-- Filesystem mtime tracks staleness
-
-See [docs/dev/design-rationale.md] for full reasoning.
+See [docs/dev/design-rationale.md] for full reasoning and [docs/dev/design.kb/] for the layered design knowledge.
 
 ## Design Decisions
 
@@ -252,14 +112,13 @@ For detailed rationale on architectural choices, see:
 
 - [docs/dev/design-rationale.md] - Core design
   decisions
-- [docs/dev/technical-design.md] - System
-  architecture
+- [docs/dev/design.kb/] - Layered design knowledge
+  (mission → goals → requirements → design)
 - [docs/dev/design-incubators/] - Unsolved problems being explored
 
 ## Contributing Workflow
 
-1. Check [STATUS.md] for current milestone
-2. Read relevant design docs
+1. Read relevant design docs in [docs/dev/design.kb/]
 3. Implement changes
 4. Test with JSONL layer pipeline
 5. Update documentation if needed

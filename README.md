@@ -6,37 +6,21 @@ Browse your chat conversations (claude.ai, ChatGPT) as files and directories, wi
 
 ⚠️ **Pre-Alpha:** Not ready for use. Documentation and design phase.
 
-See [STATUS.md] for current development state.
-
 ## What This Will Do
 
 ```bash
-# Use absolute paths anywhere (// prefix)
-chatfs-ls //claude.ai/Buck\ Evan/2025-10-29
+# Conversations appear as a mounted filesystem
+ls /mnt/llmfs/claude.ai/Buck\ Evan/2025-10/
 # conversation-title-1.md
 # conversation-title-2.md
 
-# Optional: Initialize cache directory to enable grep and relative paths
-chatfs-init ~/my-chats
-cd ~/my-chats
+# Standard tools just work
+cat /mnt/llmfs/claude.ai/Buck\ Evan/2025-10/tshark-filtering.md
+grep -r "authentication" /mnt/llmfs/
 
-# Paths work like filesystem - relative to current directory
-chatfs-cat claude.ai/Buck\ Evan/2025-10-29/tshark-filtering.md
-
-# Navigate deeper, paths stay relative
-cd claude.ai/Buck\ Evan/2025-10-29/
-chatfs-cat tshark-filtering.md
-chatfs-ls .
-
-# Search across cached conversations with standard tools
-cd ~/my-chats
-grep -r "authentication" .
+# Sync is explicit — touch a file to update it
+touch /mnt/llmfs/claude.ai/Buck\ Evan/2025-10/conversation-xyz.md
 ```
-
-**Path conventions:**
-- `//provider/...` = Absolute chatfs path (works anywhere)
-- Regular paths = Relative to cwd (only works inside `chatfs-init` directory)
-- Behaves like normal filesystem navigation
 
 ## The Problem
 
@@ -53,28 +37,30 @@ They're in browser tabs, not files - locked away from the Unix toolchain.
 
 ## The Solution
 
-chatfs provides lazy access to conversations via CLI commands, with optional caching:
+chatfs mounts conversations as a FUSE filesystem, with browser-driven capture:
 
-- **Lazy loading:** Fetch only when you run `chatfs-ls` or `chatfs-cat`, never eagerly
-- **Optional caching:** `chatfs-init` creates cache directory where files are written as markdown
-- **Staleness tracking:** Cached file mtime tracks when conversations need refresh
-- **Standard tools:** Cached files work with grep/cat/ls - no special tools needed
-- **Git-like UX:** Familiar init/sync workflow (see [docs/dev/development-plan.md])
+- **FUSE mount:** Conversations appear as files at `/mnt/llmfs/<provider>/`
+- **No network on read:** All reads serve from cache — grep, ls, editors work instantly
+- **Explicit sync:** User triggers capture via control files, never as a side effect
+- **Browser-driven capture:** Playwright sidecar attaches to your browser session
+- **Standard tools:** Mounted files work with grep/cat/ls/find — no special tools needed
 
 ## Architecture
 
-Built on **four-layer architecture** (learn-then-abstract approach):
+**Rust FUSE daemon** mounts conversations as a filesystem. A **Node/Playwright sidecar** handles browser-driven capture.
 
-- **M1-CLAUDE (native):** Direct claude.ai API wrapper (unofficial API), outputs raw JSONL
-- **M2-VFS (normalized):** Provider-agnostic schema based on M1-CLAUDE findings
-- **M3-CACHE (persistence):** Writes markdown files to cache directory, staleness tracking
-- **M4-CLI (UX):** Human-friendly commands (`chatfs-init`, `chatfs-ls`, `chatfs-cat`, etc.)
+**Pipeline:** BB1 (capture) → BB2 (extract) → BB3 (render)
 
-**Key principle:** Learn what the claude.ai API gives us (M1-CLAUDE) before designing normalization (M2-VFS).
+- **BB1 (capture):** Browser automation produces capture artifacts (HAR/trace)
+- **BB2 (extract):** Parses artifacts into canonical conversation graph
+- **BB3 (render):** Writes markdown files and metadata to cache
 
-**Implementation:** JSONL pipelines under the hood (M1-M3) produce markdown files (M3-CACHE output). Commands work without cache (stdout only) or with cache (persistent files).
+**Key principles:**
+- Reads serve from cache — no network on read
+- Sync is always user-triggered (control files, not side effects)
+- Providers are plugins — adding one requires only BB1/BB2 implementation
 
-See [docs/dev/technical-design.md] for details.
+See [docs/dev/design.kb/] for the full layered design knowledge.
 
 ## Contributing
 
@@ -83,8 +69,7 @@ See [HACKING.md] for development setup and architecture.
 ## Design Documentation
 
 - [docs/dev/design-rationale.md] - Why decisions were made
-- [docs/dev/technical-design.md] - How the system works
-- [docs/dev/development-plan.md] - Implementation milestones
+- [docs/dev/design.kb/] - Layered design knowledge (mission → goals → requirements → design)
 
 ## Related Projects
 

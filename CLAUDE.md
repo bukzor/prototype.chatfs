@@ -11,7 +11,7 @@ depends:
 
 chatfs provides lazy filesystem access to chat conversations (claude.ai, ChatGPT). Polyglot Python/Rust repo.
 
-**Pipeline:** Browser-driven capture (BB1) → extraction (BB2) → rendering (BB3). See `docs/dev/design/040-design.kb/black-box-decomposition.md`.
+**Pipeline:** Browser-driven capture (BB1) → extraction (BB2) → rendering (BB3). See `docs/dev/design.kb/040-design.kb/black-box-decomposition.md`.
 
 **Rust side:** `chatfs-fuser` crate — FUSE filesystem daemon. Cargo workspace at repo root.
 
@@ -21,7 +21,7 @@ chatfs provides lazy filesystem access to chat conversations (claude.ai, ChatGPT
 
 ## Design Knowledge
 
-- `docs/dev/design/` — Layered design.kb (mission → goals → requirements → design → future work)
+- `docs/dev/design.kb/` — Layered design.kb (mission → goals → requirements → design → future work)
 - `docs/dev/background.kb/` — Technology primers, prior art
 - `docs/dev/technical-policy.kb/` — Cross-cutting normative guidance (7 invariants, opaque extractor boundary, etc.)
 - `docs/dev/design-incubators/` — Active design explorations with prototypes
@@ -31,7 +31,7 @@ For how to create and maintain design knowledge, see `Skill(llm-design-kb)`.
 ## Key Files
 
 - `packages/` — Polyglot workspace members (Python packages, Rust crates)
-- `docs/dev/design/` — Project-level design knowledge (design.kb)
+- `docs/dev/design.kb/` — Project-level design knowledge (design.kb)
 - `docs/dev/design-incubators/playwright-har-capture/` — BB1 capture learning (Playwright HAR)
 - `docs/dev/design-incubators/fuser-vfs/` — FUSE filesystem learning
 - `docs/dev/design-incubators/fork-representation/` — Fork representation investigation

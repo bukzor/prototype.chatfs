@@ -27,5 +27,5 @@ Each module should:
 
 ## See Also
 
-- [../../docs/dev/technical-design.md] -
-  Architecture overview
+- [../../docs/dev/design.kb/] -
+  Layered design knowledge

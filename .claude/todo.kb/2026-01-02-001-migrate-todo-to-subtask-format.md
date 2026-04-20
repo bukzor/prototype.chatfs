@@ -11,6 +11,7 @@ parent: 2026-01-02-000-harmonize-with-llm-skills.md
 
 # Migrate TODO.md to Subtask Format
 
+**Status:** Done (2026-04-20 — TODO.md deleted, `.claude/todo.md` + `.claude/todo.kb/` in place)
 **Priority:** High
 **Complexity:** Low
 **Context:** Part of harmonize-with-llm-skills effort
@@ -42,14 +43,14 @@ Much of this is 2 months stale and may no longer be relevant.
 
 ## Implementation Steps
 
-- [ ] Read TODO.md, identify still-relevant items
-- [ ] Create `.claude/todo.md` with tactical items
-- [ ] Create strategic todo.kb files for multi-phase work (if any)
-- [ ] Verify no critical context lost
-- [ ] `git rm TODO.md`
+- [x] Read TODO.md, identify still-relevant items (all stale — 4-layer M1-M4 model superseded by BB1/BB2/BB3)
+- [x] Create `.claude/todo.md` with tactical items
+- [x] Create strategic todo.kb files for multi-phase work (harmonize-with-llm-skills set)
+- [x] Verify no critical context lost (content was from 2025-11, superseded by design.kb/)
+- [x] `git rm TODO.md` (2026-04-20)
 
 ## Success Criteria
 
-- [ ] `.claude/todo.md` exists with tactical items
-- [ ] Root `TODO.md` deleted
-- [ ] `subtask load` shows current work correctly
+- [x] `.claude/todo.md` exists with tactical items
+- [x] Root `TODO.md` deleted
+- [x] `subtask load` shows current work correctly

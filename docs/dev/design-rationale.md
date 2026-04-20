@@ -243,13 +243,11 @@ Chose Option B because:
 
 ## Related Documents
 
-- [technical-design.md] - What the system is (implementation of these decisions)
-- [development-plan.md] - How we build it (milestones based on these decisions)
+- [design.kb] - Layered design knowledge (implementation of these decisions)
 - [design-incubators] - Unsolved problems being explored
 
 [layered-architecture]: design-rationale/layered-architecture.md
 [lazy-filesystem]: design-rationale/lazy-filesystem.md
 [unofficial-api]: design-rationale/unofficial-api.md
-[technical-design.md]: technical-design.md
-[development-plan.md]: development-plan.md
+[design.kb]: design.kb/
 [design-incubators]: design-incubators/

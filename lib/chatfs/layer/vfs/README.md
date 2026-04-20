@@ -44,4 +44,4 @@ M2-VFS sits between:
 ## See Also
 
 - [../../../HACKING.md#vfs-layer] - How to work with VFS layer
-- [../../../docs/dev/technical-design.md#m2-vfs-layer] - Architecture details
+- [../../../docs/dev/design.kb/040-design.kb/provider-plugin-model.md] - Provider plugin architecture

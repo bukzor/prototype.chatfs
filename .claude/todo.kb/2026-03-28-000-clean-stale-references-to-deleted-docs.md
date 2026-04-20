@@ -2,21 +2,22 @@
 
 ---
 required-reading:
-  - docs/dev/design/CLAUDE.md
+  - docs/dev/design.kb/CLAUDE.md
 ---
 
 # Clean Stale References to Deleted Docs
 
+**Status:** Done (2026-04-20 — all 13 files updated or deleted)
 **Priority:** Medium
 **Complexity:** Low (mechanical find-and-update)
 **Context:** Session 2026-03-28 deleted `technical-design.md`, `technical-design/`,
 `development-plan.md`, `development-plan/`, and `STATUS.md`. These were the
-API-direct era docs, replaced by `docs/dev/design/` (layered design.kb).
+API-direct era docs, replaced by `docs/dev/design.kb/` (layered design.kb).
 
 ## What Happened
 
 The project's design documentation was restructured:
-- `technical-design.md` + subdocs → `docs/dev/design/040-design.kb/`
+- `technical-design.md` + subdocs → `docs/dev/design.kb/040-design.kb/`
 - `development-plan.md` + subdocs → deleted (no replacement yet; deliverables
   will emerge from implementation)
 - `STATUS.md` → deleted (superseded by /llm-subtask system)
@@ -25,37 +26,42 @@ The project's design documentation was restructured:
 Root `CLAUDE.md` and `design-incubators/README.md` were updated. But 13
 other files still reference the deleted docs.
 
-## Files to Fix
+## Files Fixed (2026-04-20)
 
 **Top-level project docs:**
-- `TODO.md` — references STATUS.md
-- `HACKING.md` — references STATUS.md, technical-design
-- `README.md` — references STATUS.md, technical-design
+- [x] `TODO.md` — deleted (432 lines of stale M0-DOCS planning; superseded by `.claude/todo.md`)
+- [x] `HACKING.md` — rewrote project structure for `packages/` layout, pointed to `design.kb/`
+- [x] `README.md` — rewrote for FUSE+Playwright model, pointed to `design.kb/`
 
 **Dev docs:**
-- `docs/dev/design-rationale.md` — references technical-design.md, development-plan.md
-- `docs/dev/README.md` — references technical-design.md, development-plan.md
-- `docs/README.md` — references STATUS.md
+- [x] `docs/dev/design-rationale.md` — pointed to `design.kb/`
+- [x] `docs/dev/README.md` — pointed to `design.kb/`, listed `.kb/` siblings
+- [x] `docs/README.md` — removed STATUS.md references, pointed to `design.kb/`
+- [x] `docs/dev/design-rationale/README.md` — `docs/dev/design/` → `docs/dev/design.kb/`
 
 **Incubators:**
-- `docs/dev/design-incubators/multi-domain-support/README.md` — references technical-design
-- `docs/dev/design-incubators/multi-domain-support/CLAUDE.md` — references technical-design
+- [x] `docs/dev/design-incubators/multi-domain-support/README.md`
+- [x] `docs/dev/design-incubators/multi-domain-support/CLAUDE.md`
 
 **Code READMEs:**
-- `lib/chatfs/README.md` — references technical-design
-- `lib/chatfs/layer/vfs/README.md` — references technical-design
-- `lib/chatfs/layer/cli/README.md` — references technical-design
+- [x] `lib/chatfs/README.md`
+- [x] `lib/chatfs/layer/vfs/README.md`
+- [x] `lib/chatfs/layer/cli/README.md`
+
+(`lib/chatfs/` retained — dead shell, but kept until a confirmed Python
+replacement lands. Real Python code now lives in `packages/bukzor.chatgpt-export/`.)
 
 **Stale todos:**
-- `.claude/todo.kb/2026-01-02-000-harmonize-with-llm-skills.md` — references STATUS.md
-- `.claude/todo.kb/2026-01-02-002-apply-skill-conventions-post-evolution.md` — references technical-design, development-plan
+- [x] `.claude/todo.kb/2026-01-02-000-harmonize-with-llm-skills.md`
+- [x] `.claude/todo.kb/2026-01-02-002-apply-skill-conventions-post-evolution.md`
+- [x] Self (this file) — internal `design/` → `design.kb/` references
 
 ## How to Fix
 
 For each file:
 1. Read it
 2. Replace `technical-design.md` / `technical-design/*.md` references with
-   appropriate `docs/dev/design/` paths (usually `040-design.kb/`)
+   appropriate `docs/dev/design.kb/` paths (usually `040-design.kb/`)
 3. Replace `development-plan.md` references — either point to design.kb
    deliverables (if they exist by then) or remove the reference
 4. Remove `STATUS.md` references entirely

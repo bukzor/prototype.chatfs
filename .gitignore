@@ -20,6 +20,9 @@ dist/
 # Node.js
 node_modules/
 
+# local scratch
+data/
+
 # dirty hacks
 trash/
 

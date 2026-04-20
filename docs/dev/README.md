@@ -7,15 +7,15 @@ Developer-focused documentation for understanding and modifying chatfs.
 These files live directly in this directory:
 
 - **design-rationale.md** - Why architectural decisions were made
-- **technical-design.md** - How the system works (architecture, components, data
-  flow)
-- **development-plan.md** - Implementation milestones and roadmap
+- **design.kb/** - Layered design knowledge (mission → goals → requirements → design → future work)
 
 ## Subdirectories
 
 - **design-rationale/** - Detailed analysis of major decisions
-- **technical-design/** - Deep dives on specific components or subsystems
-- **development-plan/** - Per-milestone task breakdowns
+- **design.kb/** - Project-level design knowledge
+- **background.kb/** - Technology primers, prior art
+- **technical-policy.kb/** - Cross-cutting normative guidance
+- **design-incubators/** - Active design explorations with prototypes
 - **devlog/** - Chronological session logs
 - **reference-implementations/** - Third-party code for study (git submodules)
 

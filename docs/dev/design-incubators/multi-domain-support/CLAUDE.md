@@ -143,4 +143,4 @@ The chosen approach should:
 
 See also:
 - [fork-representation/] - Fork models differ significantly between providers
-- [technical-design.md] - Overall architecture decisions
+- [design.kb/] - Layered design knowledge
