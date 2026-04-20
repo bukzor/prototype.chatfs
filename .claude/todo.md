@@ -10,4 +10,5 @@
 
 ## Later
 
+- [ ] [Reconcile design-rationale.md with current architecture](todo.kb/2026-04-20-001-reconcile-design-rationale-with-current-architecture.md)
 - [ ] [Review lib/chatfs/ for ideas worth salvaging](todo.kb/2026-04-20-000-review-lib-chatfs-for-integration.md)

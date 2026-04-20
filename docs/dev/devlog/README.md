@@ -1,29 +1,24 @@
-# Development Log
+# Devlog
 
 Chronological record of development sessions.
 
-## Recent Entries
+Each entry is a file named `YYYY-MM-DD-NNN-short-title.md`. Entries
+capture session focus, decisions made, and what to pick up next.
 
-- [2025-11-02.md] - Project rename: claifs → chatfs
-- [2025-11-01.md] - Documentation review and consistency fixes
-- [2025-10-30.md] - Documentation structure, plumbing/porcelain
-  architecture, fork representation incubator
+Use `ls docs/dev/devlog/` for the current index — no hand-curated list
+here.
 
-## By Topic
+## What belongs in a devlog entry
 
-### Architecture & Design
+- **Focus** — what the session was about
+- **What happened** — substantive work done
+- **Decisions** — non-obvious calls and their rationale (durable
+  architectural decisions may also warrant an ADR; see `skills/llm-collab`)
+- **Next session** — where to pick up
 
-- [2025-10-30.md] - Plumbing/porcelain split, JSONL data flow, lazy
-  filesystem
+## What does NOT belong
 
-### Fork Representation
-
-- [2025-10-30.md] - Created design incubator, identified
-  investigation steps
-
-### Documentation
-
-- [2025-11-01.md] - Comprehensive review, status contradictions,
-  placeholder policy
-- [2025-10-30.md] - Established doc structure following
-  meta-documentation standard
+- Mechanical task lists — those go in `.claude/todo.kb/`
+- Status snapshots — use `.claude/todo.md`
+- Deep design rationale — that goes in `docs/dev/design.kb/` or
+  `docs/dev/design-rationale.md`
