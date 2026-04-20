@@ -1,0 +1,28 @@
+[project]
+name = "chatfs"
+version = "0.1.0"
+description = "Lazy filesystem for chat conversations (claude.ai, ChatGPT)"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "bukzor.chatgpt-export",
+    "python-dotenv>=1.2.1",
+    "sseclient-py>=1.8.0",
+]
+
+[project.scripts]
+chatfs = "chatfs.cli:main"
+
+[dependency-groups]
+dev = ["bukzor.chatgpt-export[dev]"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["lib/chatfs"]
+
+[tool.pytest.ini_options]
+python_classes = ["Describe*", "When*", "Test*"]
+python_functions = ["it_*", "test_*"]

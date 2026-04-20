@@ -4,8 +4,6 @@
 
 Driver: [Harmonize with llm-* skills](todo.kb/2026-01-02-000-harmonize-with-llm-skills.md) — most done; chatfs-local remaining items below.
 
-- [ ] [Review lib/chatfs/ for salvageable ideas](todo.kb/2026-04-20-000-review-lib-chatfs-for-integration.md) — low priority
-
 ## Deferred
 
 - [ ] Create `docs/dev/milestones.kb/` — double-blocked (no milestone content yet; skills-repo pattern not defined)

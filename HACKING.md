@@ -28,6 +28,7 @@ uv sync
 
 ```
 packages/
+├── chatfs/                  # Python: top-level CLI and coordination package
 ├── chatfs-fuser/            # Rust: idiomatic wrapper on fuser (FUSE library)
 │   ├── src/
 │   │   ├── lib.rs
@@ -37,6 +38,7 @@ packages/
 │   │   └── resolve/         # Path resolution
 │   └── examples/            # Static tree, dynamic, procfs demos
 ├── bukzor.chatgpt-export/   # Python: ChatGPT conversation export/splat
+├── har-browse/              # Node/Playwright: HAR capture (BB1)
 docs/
 └── dev/
     ├── design.kb/           # Layered design knowledge

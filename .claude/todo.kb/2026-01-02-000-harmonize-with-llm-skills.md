@@ -43,11 +43,11 @@ prototype.chatfs predates the llm-* skills and uses outdated conventions:
 
 - `.claude/todo.md` + `.claude/todo.kb/` in place; TODO.md deleted (2026-04-20)
 - STATUS.md deleted (2026-03-28)
-- CLAUDE.md has `depends:` frontmatter — but still references `skills/llm.kb` (old name) and omits `skills/llm-design-kb`
+- CLAUDE.md `depends:` uses `Skill(X)` form with all four skills (fixed 2026-04-20)
 - `docs/dev/design.kb/` layered design in place
-- `docs/dev/design-rationale.md` content is stale (describes the superseded M1-M4 architecture) — see subtask `2026-04-20-001`
+- `docs/dev/design-rationale.md` reconciled into design.kb/ entries (2026-04-20, subtask `-001`)
 - `docs/dev/milestones.kb/` absent — deferred (no milestone content yet; skills pattern not defined either)
-- `lib/chatfs/` retained as dead shell pending review — see subtask `2026-04-20-000`
+- `lib/chatfs/` reviewed and promoted to `packages/chatfs/` as the top-level CLI package (uv workspace member, installed by default via `uv sync`) — 2026-04-20, subtask `-000`
 
 ## Subtasks
 
@@ -63,9 +63,9 @@ prototype.chatfs predates the llm-* skills and uses outdated conventions:
 - [x] [Migrate TODO.md to subtask format](2026-01-02-001-migrate-todo-to-subtask-format.md)
 - [x] [Clean stale references to deleted docs](2026-03-28-000-clean-stale-references-to-deleted-docs.md)
 - [~] [Apply skill conventions post-evolution](2026-01-02-002-apply-skill-conventions-post-evolution.md) — STATUS.md / development-plan / design.kb work done; only `milestones.kb/` remains and is deferred
-- [ ] [Reconcile design-rationale.md with current architecture](2026-04-20-001-reconcile-design-rationale-with-current-architecture.md)
-- [ ] [Review lib/chatfs/ for salvageable ideas](2026-04-20-000-review-lib-chatfs-for-integration.md)
-- [ ] Fix CLAUDE.md `depends:` — rename `skills/llm.kb` → `skills/llm-kb`, add `skills/llm-design-kb`
+- [x] [Reconcile design-rationale.md with current architecture](2026-04-20-001-reconcile-design-rationale-with-current-architecture.md) — 2026-04-20
+- [x] [Review lib/chatfs/ for salvageable ideas](2026-04-20-000-review-lib-chatfs-for-integration.md) — promoted to packages/chatfs/, 2026-04-20
+- [x] Fix CLAUDE.md `depends:` — migrated to `Skill(X)` form, 2026-04-20
 
 ### Tactical
 
@@ -80,7 +80,7 @@ prototype.chatfs predates the llm-* skills and uses outdated conventions:
 - [x] `docs/dev/design.kb/` layered design in place
 - [x] Fresh agent can orient via CLAUDE.md + `.claude/todo.md` + devlog (verified 2026-04-20 via /session-start)
 - [ ] `docs/dev/design-rationale.md` describes the current architecture
-- [ ] `lib/chatfs/` reviewed (kept or removed with rationale)
+- [x] `lib/chatfs/` reviewed (promoted to packages/chatfs/, 2026-04-20)
 - [ ] CLAUDE.md `depends:` uses current skill names and includes `llm-design-kb`
 - [ ] (Upstream) llm-kb `complete-example/` uses `.kb/` consistently
 - [ ] (Upstream) llm-collab skeleton defines `milestones.kb/` pattern

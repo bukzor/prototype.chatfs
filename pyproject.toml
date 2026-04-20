@@ -1,54 +1,24 @@
 [project]
-name = "chatfs"
-version = "0.1.0"
-description = "Lazy filesystem for chat conversations (claude.ai, ChatGPT)"
-readme = "README.md"
+name = "chatfs-workspace"
+version = "0"
+description = "Top-level workspace for chatfs development; depends on chatfs for default install"
 requires-python = ">=3.10"
-dependencies = [
-    "bukzor.chatgpt-export",
-    "python-dotenv>=1.2.1",
-    "sseclient-py>=1.8.0",
-]
-
-[project.scripts]
-# M1-CLAUDE: Native layer commands (outputs raw Claude API data as JSONL)
-# NOTE: Entry points will be implemented during M1-CLAUDE
-# chatfs-claude-list-orgs = "chatfs.layer.native.claude.list_orgs:main"
-# chatfs-claude-list-convos = "chatfs.layer.native.claude.list_convos:main"
-# chatfs-claude-get-convo = "chatfs.layer.native.claude.get_convo:main"
-# chatfs-claude-render-md = "chatfs.layer.native.claude.render_md:main"
-
-# M2-VFS: Normalized layer commands (provider-agnostic JSONL)
-# NOTE: Entry points will be implemented during M2-VFS
-# chatfs-vfs-list-orgs = "chatfs.layer.vfs.list_orgs:main"
-# chatfs-vfs-list-convos = "chatfs.layer.vfs.list_convos:main"
-# chatfs-vfs-get-convo = "chatfs.layer.vfs.get_convo:main"
-# chatfs-vfs-render-md = "chatfs.layer.vfs.render_md:main"
-
-# M3-CACHE: Cache layer commands (persistent storage with staleness tracking)
-# NOTE: Entry points will be implemented during M3-CACHE
-# chatfs-cache-list-orgs = "chatfs.layer.cache.list_orgs:main"
-# chatfs-cache-list-convos = "chatfs.layer.cache.list_convos:main"
-# chatfs-cache-get-convo = "chatfs.layer.cache.get_convo:main"
-# chatfs-cache-render-md = "chatfs.layer.cache.render_md:main"
-
-# M4-CLI: Human-friendly commands (colors, progress bars, path-based interface)
-# NOTE: Entry points will be implemented during M4-CLI
-# chatfs = "chatfs.layer.cli.main:main"  # Main command with subcommands (ls, cat, sync, etc.)
+dependencies = ["chatfs"]
 
 [dependency-groups]
-dev = ["bukzor.chatgpt-export[dev]"]
+dev = ["bukzor-chatgpt-export[dev]"]
 
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+[tool.uv]
+package = false
+
+[tool.uv.workspace]
+members = ["packages/*"]
+exclude = ["packages/chatfs-fuser", "packages/har-browse"]
+
+[tool.uv.sources]
+chatfs = { workspace = true }
+bukzor-chatgpt-export = { workspace = true }
 
 [tool.pytest.ini_options]
 python_classes = ["Describe*", "When*", "Test*"]
 python_functions = ["it_*", "test_*"]
-
-[tool.uv.workspace]
-members = ["packages/*"]
-
-[tool.uv.sources]
-bukzor-chatgpt-export = { workspace = true }
