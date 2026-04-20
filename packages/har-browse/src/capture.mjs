@@ -38,11 +38,15 @@ export async function captureHar({
     // visuals. Removing it lets Chromium use hardware GL via Sommelier.
     ignoreDefaultArgs: ["--enable-unsafe-swiftshader"],
   });
+  // Disable default timeouts on everything the context owns: page waits,
+  // page.goto, and context.waitForEvent("close") — the human may take any
+  // amount of time to complete login/capture.
+  context.setDefaultTimeout(0);
+
   const page = context.pages()[0] ?? await context.newPage();
 
   await injectOverlay(page, { howto });
 
-  page.setDefaultTimeout(0);
   await page.goto(url, { waitUntil: "commit" });
 
   if (onPageReady) await onPageReady(page);
