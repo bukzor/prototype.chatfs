@@ -1,6 +1,6 @@
 --- # workaround: anthropics/claude-code#13003
 depends:
-  - skills/llm-design-kb
+  - Skill(llm-design-kb)
 ---
 
 # chatfs Design Knowledge

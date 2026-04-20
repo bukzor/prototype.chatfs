@@ -1,6 +1,6 @@
 --- # workaround: anthropics/claude-code#13003
 depends:
-  - skills/llm-kb
+  - Skill(llm-kb)
 ---
 
 # FUSE VFS — Incubator

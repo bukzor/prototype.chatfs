@@ -1,8 +1,9 @@
 --- # workaround: anthropics/claude-code#13003
 depends:
-  - skills/llm-collab
-  - skills/llm-subtask
-  - skills/llm.kb
+  - Skill(llm-collab)
+  - Skill(llm-subtask)
+  - Skill(llm-kb)
+  - Skill(llm-design-kb)
 ---
 
 # chatfs - Development Guide for Claude
