@@ -1,6 +1,6 @@
 --- # workaround: anthropics/claude-code#13003
 depends:
-  - skills/llm-kb
+  - Skill(llm-kb)
 ---
 
 # Playwright HAR Capture — Incubator
@@ -14,7 +14,10 @@ pipeline.
 - `toy_server/` — Python `http.server` serving static files on :8000
   - `api/conversation` — Fixed JSON fixture: 6-message tree with one fork
 - `src/` — Playwright HAR recorder with injected "Done" button
-  - `har_browse.mjs` — Launches browser, records HAR, waits for human click
+  - `har_browse.mjs` — Launches persistent-context browser, records HAR, waits
+    for the human to click "Done" (exit 0) or close the window (exit 2).
+    Per-profile state persists under
+    `${XDG_CACHE_HOME:-$HOME/.cache}/har-browse/profile/${profile}`.
 - `toy_pluck.sh` — jq filter: extracts /api/conversation from HAR (stdin → stdout)
 - `out.har` — Example HAR output (gitignored)
 

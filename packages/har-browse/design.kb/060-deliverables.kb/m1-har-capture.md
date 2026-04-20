@@ -10,6 +10,6 @@ Playwright captures a HAR for a single page load.
 
 ## Acceptance
 
-- `./src/har_browse.mjs` produces a valid HAR
+- `har-browse` produces a valid HAR
 - HAR contains entries for `/`, `/index.css`, `/index.js`, `/api/conversation`
 - Script exits 0 on success

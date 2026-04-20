@@ -75,18 +75,49 @@ await page.goto(url, { waitUntil: 'commit' });
 `commit` returns as soon as the response begins. Works on any site. HAR
 recording is continuous regardless of `waitUntil` value.
 
-### Finalize (race overlay-click vs window-close)
+### Finalize (distinguish overlay-click vs window-close)
+
+The two termination signals have different semantics and must be
+distinguished (this is existing behavior in the toy script worth preserving):
+
+- **Overlay click ("Done Capturing")** — user-declared success. Finalize
+  HAR, log success message.
+- **Window close** — user cancelled. Log "Cancelled by user" and exit.
+  Any HAR bytes Playwright happened to flush are incidental; we do not
+  advertise a HAR on this path.
 
 ```js
-await Promise.race([
-  page.waitForFunction(() =>
-    document.getElementById("capture-done")?.dataset.clicked === "true"),
-  context.waitForEvent("close"),
+const DONE = "done";
+const CANCEL = "cancel";
+
+const outcome = await Promise.race([
+  page.waitForFunction(
+    () => document.getElementById("capture-done")?.dataset.clicked === "true",
+  ).then(() => DONE).catch(() => CANCEL),
+  context.waitForEvent("close").then(() => CANCEL),
 ]);
-await context.close(); // idempotent; flushes HAR
+
+if (outcome === CANCEL) {
+  console.error("Cancelled by user.");
+  process.exit(2);
+}
+
+await context.close(); // flushes HAR
+console.error(`HAR written to ${values.har}`);
 ```
 
-Either signal finalizes the capture.
+Exit codes (per `cli-interface.md`, "exits 0 on success, nonzero on failure"):
+
+- `0` — success (overlay click; HAR finalized)
+- `2` — user cancelled (window closed); halts pipelines like
+  `har-browse && toy_pluck.sh ...`
+- `1` — reserved for genuine errors (Playwright throw, unwritable HAR
+  path, etc.) via default uncaught-exception behavior
+
+The `.catch(() => CANCEL)` handles Playwright's "has been closed" throw
+when the page is torn down during `waitForFunction`; the
+`context.waitForEvent("close")` catches the direct context-close signal
+if it fires first.
 
 ### Keep unchanged
 
@@ -108,36 +139,33 @@ Either signal finalizes the capture.
 
 ## Implementation Steps
 
-- [ ] Add `--profile` option to `parseArgs` (default `"default_profile"`)
-- [ ] Import `os`, `path` (node built-ins); compute `profileDir`
-- [ ] Replace `chromium.launch(...)` + `browser.newContext(...)` with
-      `chromium.launchPersistentContext(profileDir, {...})`
-- [ ] Drop the separate `browser` variable; use `context` directly
-- [ ] Get `page` via `context.pages()[0] ?? await context.newPage()`
-- [ ] Change `waitUntil` from `'networkidle'` to `'commit'`
-- [ ] Replace the single `waitForFunction` with `Promise.race([...])`
-- [ ] Replace `browser.close()` with `context.close()` (single close)
-- [ ] Update `packages/har-browse/CLAUDE.md`, `README.md`,
-      `design.kb/030-requirements.kb/cli-interface.md`,
-      `design.kb/050-components.kb/toy-capture.md` to reflect new CLI
-      and behavior
-- [ ] Run `pnpm --filter har-browse test` — should still pass (toy
-      server uses `networkidle` internally in the test, which works
-      against static files; test doesn't invoke har_browse.mjs directly)
-- [ ] Manual smoke: `pnpm exec har-browse https://example.com` — verify
-      profile dir is created, browser launches, closing window flushes HAR
+The Agreed Design above is the spec. Steps here are file-level pointers
+to where the edits land, not restatements of the behavior.
+
+- [x] Rewrite `packages/har-browse/src/har_browse.mjs` per the Agreed
+      Design sections (CLI, Profile path, Browser setup, Navigation,
+      Finalize)
+- [x] Update docs to reflect the new CLI and behavior:
+  - `packages/har-browse/CLAUDE.md`
+  - `packages/har-browse/README.md`
+  - `packages/har-browse/design.kb/030-requirements.kb/cli-interface.md`
+  - `packages/har-browse/design.kb/050-components.kb/toy-capture.md`
+- [x] `pnpm --filter har-browse test` (test is self-contained; does not
+      invoke `har_browse.mjs`, so it should still pass unchanged)
 
 ## Success Criteria
 
-- [ ] `har-browse https://chatgpt.com/` opens a real browser, prompts
-      for login on first run, skips login on subsequent runs with same
-      `--profile`
-- [ ] Closing the browser window produces a finalized HAR
-- [ ] Clicking "Done Capturing" button also produces a finalized HAR
-- [ ] HAR contains all network activity visible in Chrome DevTools
+Externally observable outcomes. Code-level behavior lives in the Agreed
+Design above and is verified by reading the Finalize section.
+
+- [ ] `har-browse https://chatgpt.com/` opens real Chrome; first run
+      prompts login; subsequent runs with the same `--profile` skip it
 - [ ] Profile dir exists at
       `${XDG_CACHE_HOME:-$HOME/.cache}/har-browse/profile/default_profile`
-- [ ] `pnpm --filter har-browse test` still passes
+      after first run
+- [ ] HAR contains all network activity visible in Chrome DevTools for
+      the session
+- [ ] `pnpm --filter har-browse test` passes
 
 ## Related Follow-ups (not blocking)
 

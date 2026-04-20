@@ -26,20 +26,25 @@ Playwright needs its own Chromium inside the container.
 Starts a Python HTTP server serving static files from `toy_server/` on port 8000.
 Provides the toy app (HTML/CSS/JS) and a fixed `/api/conversation` JSON fixture.
 
-### `src/har_browse.mjs`
+### `har-browse`
 
 Launches a visible Chromium browser via Playwright, navigates to a URL, and
 records all network traffic to a HAR file. Injects a persistent "Done Capturing"
-button that survives page navigations. The script blocks until the human clicks
-the button, then writes the HAR and exits.
+button that survives page navigations. The script blocks until the human either
+clicks the button (success, exit 0) or closes the window (cancelled, exit 2).
 
 ```bash
-./src/har_browse.mjs [URL] [--har PATH] [--howto PATH]
+har-browse [URL] [--har PATH] [--profile NAME] [--howto PATH]
 ```
 
-Defaults: URL `http://127.0.0.1:8000`, `--har out.har`
+Defaults: URL `http://127.0.0.1:8000`, `--har out.har`, `--profile default_profile`.
 
 With `--howto`, a collapsible instructions panel appears in the overlay.
+
+State (cookies, localStorage, service workers) persists across runs in
+`${XDG_CACHE_HOME:-$HOME/.cache}/har-browse/profile/${profile}`, so real-site
+logins only need to be completed once per profile. Pick distinct profile names
+for distinct target sites (e.g. `--profile chatgpt`, `--profile claude`).
 
 ### `toy_pluck.sh`
 
@@ -73,6 +78,6 @@ contains expected entries. No manual interaction needed.
 ./toy_server/run.sh
 
 # Terminal 2: capture, then extract
-./src/har_browse.mjs
+har-browse
 ./toy_pluck.sh < out.har > extracted.json
 ```
