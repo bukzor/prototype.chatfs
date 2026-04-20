@@ -28,29 +28,36 @@ After skill evolution completes, apply modern conventions to prototype.chatfs:
 
 ## Current Situation
 
-Waiting on:
-1. llm.kb: `.d → .kb` rename complete
-2. llm-collab: skeleton updated with `milestones.kb/` and `design.kb/` patterns
+- `design.kb/` pattern delivered via the `llm-design-kb` skill (extracted 2026-03-24) — unblocks layered design here (already applied under `docs/dev/design.kb/`).
+- `milestones.kb/` pattern — still not defined in llm-collab; tracked upstream under `2025-12-11-000-update-skeleton-...md`.
+- llm-kb `.d → .kb` rename — still in progress upstream but does not block chatfs.
 
 ## Proposed Solution
 
-1. ~~Retire STATUS.md~~ (deleted 2026-03-28)
-2. ~~Refactor development-plan/~~ (deleted 2026-03-28, superseded by design.kb/)
-3. ~~Evaluate design.kb/ treatment~~ (done: `docs/dev/design.kb/` created; `technical-design.md` deleted)
+1. Retire STATUS.md — done 2026-03-28
+2. Refactor development-plan/ — done 2026-03-28 (deleted, superseded by design.kb/)
+3. Evaluate design.kb/ treatment — done 2026-03-28 (`docs/dev/design.kb/` created)
+4. `docs/dev/milestones.kb/` — deferred (see Implementation Steps)
 
 ## Implementation Steps
 
-- [ ] Wait for skill evolution to complete
-- [x] ~~Create devlog entry absorbing STATUS.md content~~ (STATUS.md deleted without migration — content was stale)
-- [x] ~~Delete STATUS.md~~ (done 2026-03-28)
-- [x] ~~Rename development-plan/~~ (deleted 2026-03-28, superseded by design.kb/)
-- [x] ~~design.kb/ created~~ (done 2026-03-28: `docs/dev/design.kb/`)
-- [ ] Update all references to old paths (in progress)
-- [x] ~~Evaluate design.kb/ need~~ (done — created with full layered structure)
+- [x] Create devlog entry absorbing STATUS.md content (STATUS.md deleted without migration — content was stale)
+- [x] Delete STATUS.md (done 2026-03-28)
+- [x] Rename development-plan/ (deleted 2026-03-28, superseded by design.kb/)
+- [x] design.kb/ created (done 2026-03-28: `docs/dev/design.kb/`)
+- [x] Update all references to old paths (done 2026-04-20)
+- [x] Evaluate design.kb/ need (done — created with full layered structure)
+- [ ] Create `docs/dev/milestones.kb/` — **deferred** (double-blocked: no milestone content yet, skills-repo pattern not defined)
 
 ## Success Criteria
 
 - [x] STATUS.md retired (deleted)
-- [ ] `docs/dev/milestones.kb/` exists with proper CLAUDE.md
-- [ ] All internal links updated
-- [ ] `llm-collab-session-start` pattern works in this repo
+- [x] All internal links updated (done 2026-04-20)
+- [x] CLAUDE.md + `.claude/todo.md` + devlog pattern works for fresh-agent orientation (verified 2026-04-20)
+- [ ] `docs/dev/milestones.kb/` exists with proper CLAUDE.md — deferred
+
+## Notes
+
+The `milestones.kb/` gap is tracked in the parent
+(`2026-01-02-000-harmonize-with-llm-skills.md`) under Deferred. Revisit
+when the first implementation milestone is concrete enough to structure.

@@ -2,124 +2,115 @@
 
 ---
 required-reading:
-  - ~/.claude/skills/llm.kb/SKILL.md
+  - ~/.claude/skills/llm-kb/SKILL.md
   - ~/.claude/skills/llm-collab/SKILL.md
   - ~/.claude/skills/llm-subtask/SKILL.md
+  - ~/.claude/skills/llm-design-kb/SKILL.md
 suggested-reading:
-  - ~/.claude/skills/llm.kb/references/pattern-guide.md
-  - ~/.claude/skills/llm.kb/docs/adr/2025-12-03-000-pivot-from-d-to-kb-naming-convention.md
+  - ~/.claude/skills/llm-kb/docs/adr/2025-12-03-000-pivot-from-d-to-kb-naming-convention.md
   - ~/.claude/skills/llm-collab/.claude/todo.kb/2025-12-11-000-update-skeleton-to-match-docsdev-pattern-from-git-partial.md
 ---
 
 # Harmonize prototype.chatfs with llm-* Skill Conventions
 
-**Priority:** High
+**Priority:** Medium
 **Complexity:** Medium
-**Context:** Session 2026-01-02, multi-repo coordination
+**Context:** Multi-repo coordination between prototype.chatfs and the skills monorepo
 
 ## Problem Statement
 
 prototype.chatfs predates the llm-* skills and uses outdated conventions:
-- No CLAUDE.md frontmatter (missing skill dependencies)
-- Uses root `TODO.md` instead of `.claude/todo.md` + `.claude/todo.kb/`
-- Used `STATUS.md` (now deleted, replaced by devlog + todo system)
-- Skills themselves have incomplete evolution (`.d → .kb` partial)
+
+- CLAUDE.md missing skill-dependency frontmatter
+- Root `TODO.md` instead of `.claude/todo.md` + `.claude/todo.kb/`
+- `STATUS.md` (obsolete pattern, replaced by devlog + todo system)
+- Design docs outside the `design.kb/` layered pattern
+- Skills themselves still evolving (`.d → .kb` partial in llm-kb;
+  `milestones.kb/` pattern not yet in the llm-collab skeleton)
 
 ## Current Situation
 
-**Skills (monorepo at `~/.claude/skills/`):**
+### Skills monorepo at `~/.claude/skills/` (symlinks to `~/repo/github.com/bukzor/bukzor-agent-skills/`)
 
-| Skill | Purpose | Status |
-|-------|---------|--------|
-| llm.kb | Structured `.kb/` knowledge bases | `.d → .kb` rename partial (todo.kb done, complete-example still .d) |
-| llm-collab | Multi-session coordination | Skeleton TODO open for milestones.kb/design.kb patterns |
-| llm-subtask | Four-tier task management | Ready to use |
+| Skill           | Purpose                                  | Status                                                                                  |
+| --------------- | ---------------------------------------- | --------------------------------------------------------------------------------------- |
+| llm-kb          | Structured `.kb/` knowledge bases        | Skill renamed `llm.kb → llm-kb` (2026-03-02); `complete-example/` internals still `.d/` |
+| llm-collab      | Multi-session coordination               | `docs/dev/` restructure done; no `milestones.kb/` pattern defined yet                   |
+| llm-design-kb   | Layered design knowledge                 | Extracted from llm-collab (2026-03-24); in use here                                     |
+| llm-subtask     | Four-tier task management                | In use here                                                                             |
 
-**prototype.chatfs gaps:**
-- Last meaningful work: 2025-11-05 (devlog)
-- STATUS.md: deleted (was last updated 2025-11-02)
-- TODO.md: 432 lines of M0-DOCS phase breakdown (stale)
+### prototype.chatfs
 
-**Key insight:** Can't fully harmonize prototype.chatfs until skill evolution completes.
-
-## Proposed Solution
-
-Two-phase approach:
-1. **Complete skill evolution** - Finish `.d → .kb` migration, update llm-collab skeleton
-2. **Apply to prototype.chatfs** - Add frontmatter, migrate TODO.md (STATUS.md already deleted)
+- `.claude/todo.md` + `.claude/todo.kb/` in place; TODO.md deleted (2026-04-20)
+- STATUS.md deleted (2026-03-28)
+- CLAUDE.md has `depends:` frontmatter — but still references `skills/llm.kb` (old name) and omits `skills/llm-design-kb`
+- `docs/dev/design.kb/` layered design in place
+- `docs/dev/design-rationale.md` content is stale (describes the superseded M1-M4 architecture) — see subtask `2026-04-20-001`
+- `docs/dev/milestones.kb/` absent — deferred (no milestone content yet; skills pattern not defined either)
+- `lib/chatfs/` retained as dead shell pending review — see subtask `2026-04-20-000`
 
 ## Subtasks
 
-### Phase 1: Skill Evolution
+### Phase 1 — Skills repo (upstream)
 
-- [ ] [llm.kb: Complete .d → .kb rename](~/.claude/skills/llm.kb/.claude/todo.kb/2026-01-02-000-complete-d-to-kb-rename.md)
-- [ ] [llm-collab: Update skeleton](~/.claude/skills/llm-collab/.claude/todo.kb/2025-12-11-000-update-skeleton-to-match-docsdev-pattern-from-git-partial.md) (existing TODO)
+- [ ] [llm-kb: Complete `.d → .kb` rename](~/.claude/skills/llm-kb/.claude/todo.kb/2026-01-02-000-complete-d-to-kb-rename.md) — does not block chatfs (we do not use `complete-example/`)
+- [ ] [llm-collab: Define `milestones.kb/` pattern in skeleton](~/.claude/skills/llm-collab/.claude/todo.kb/2025-12-11-000-update-skeleton-to-match-docsdev-pattern-from-git-partial.md) — blocks creating `docs/dev/milestones.kb/` here, but we have no milestone content to put there yet
+- [x] llm-collab: `docs/dev/` skeleton restructure — done via `2026-02-09-000-design-kb-pattern-for-living-design-docs.md` in llm-collab
+- [x] llm-design-kb: extracted as its own skill — done 2026-03-24
 
-### Phase 2: prototype.chatfs Harmonization
+### Phase 2 — prototype.chatfs
 
-- [ ] [Migrate TODO.md to subtask format](2026-01-02-001-migrate-todo-to-subtask-format.md)
-- [ ] [Apply skill conventions post-evolution](2026-01-02-002-apply-skill-conventions-post-evolution.md)
+- [x] [Migrate TODO.md to subtask format](2026-01-02-001-migrate-todo-to-subtask-format.md)
+- [x] [Clean stale references to deleted docs](2026-03-28-000-clean-stale-references-to-deleted-docs.md)
+- [~] [Apply skill conventions post-evolution](2026-01-02-002-apply-skill-conventions-post-evolution.md) — STATUS.md / development-plan / design.kb work done; only `milestones.kb/` remains and is deferred
+- [ ] [Reconcile design-rationale.md with current architecture](2026-04-20-001-reconcile-design-rationale-with-current-architecture.md)
+- [ ] [Review lib/chatfs/ for salvageable ideas](2026-04-20-000-review-lib-chatfs-for-integration.md)
+- [ ] Fix CLAUDE.md `depends:` — rename `skills/llm.kb` → `skills/llm-kb`, add `skills/llm-design-kb`
 
-### Tactical (in .claude/todo.md)
+### Tactical
 
-- [ ] Add CLAUDE.md frontmatter
-- [ ] Create devlog entry for 2026-01-02
+- [x] Add CLAUDE.md frontmatter
+- [x] Create devlog entry for 2026-01-02 (`docs/dev/devlog/2026-01-02-000-harmonization-planning-session.md`)
 
 ## Success Criteria
 
-- [ ] All skills use `.kb/` naming consistently
-- [ ] llm-collab skeleton uses `milestones.kb/` and `design.kb/` patterns
-- [ ] prototype.chatfs CLAUDE.md has `depends:` frontmatter
-- [ ] prototype.chatfs uses `.claude/todo.md` + `.claude/todo.kb/`
+- [x] prototype.chatfs CLAUDE.md has `depends:` frontmatter (pending minor name fix)
+- [x] prototype.chatfs uses `.claude/todo.md` + `.claude/todo.kb/`
 - [x] STATUS.md retired (deleted 2026-03-28)
-- [ ] Fresh agent can orient via `llm-collab-session-start` pattern
+- [x] `docs/dev/design.kb/` layered design in place
+- [x] Fresh agent can orient via CLAUDE.md + `.claude/todo.md` + devlog (verified 2026-04-20 via /session-start)
+- [ ] `docs/dev/design-rationale.md` describes the current architecture
+- [ ] `lib/chatfs/` reviewed (kept or removed with rationale)
+- [ ] CLAUDE.md `depends:` uses current skill names and includes `llm-design-kb`
+- [ ] (Upstream) llm-kb `complete-example/` uses `.kb/` consistently
+- [ ] (Upstream) llm-collab skeleton defines `milestones.kb/` pattern
 
 ## How to Execute
 
-This task spans two git repositories. Execute phases in separate sessions.
+### Chatfs-local remaining work (actionable now, any order)
 
-### Phase 1: Skills Repo
+1. `2026-04-20-001-reconcile-design-rationale-with-current-architecture.md` — medium priority, medium effort
+2. `2026-04-20-000-review-lib-chatfs-for-integration.md` — low priority, small effort
+3. CLAUDE.md `depends:` fix — tiny, do alongside either of the above
 
-**Location:** `~/.claude/skills/`
+### Upstream work (when motivated; does not block chatfs today)
 
-```bash
-cd ~/.claude/skills && claude
-```
+1. `~/.claude/skills/llm-kb/.claude/todo.kb/2026-01-02-000-complete-d-to-kb-rename.md`
+2. `~/.claude/skills/llm-collab/.claude/todo.kb/2025-12-11-000-update-skeleton-...md` — specifically, define the `milestones.kb/` pattern
 
-Run `/session-start`. If the skill evolution tasks aren't surfaced, the session should:
-1. Create `~/.claude/skills/.claude/todo.kb/` with a root-level task
-2. Reference the existing skill-specific subtasks:
-   - `llm.kb/.claude/todo.kb/2026-01-02-000-complete-d-to-kb-rename.md`
-   - `llm-collab/.claude/todo.kb/2025-12-11-000-update-skeleton-...md`
+### Deferred
 
-**Recommended order:** llm-collab skeleton first (makes llm.kb rename simpler).
+`docs/dev/milestones.kb/` creation — double-blocked:
+- No milestone content yet (project still in design phase, pre-implementation)
+- No skills-repo pattern to follow
 
-**Verification (run from any directory):**
-```bash
-# llm.kb: No .d/ directories in complete-example
-ls -d ~/.claude/skills/llm.kb/complete-example/*.d/ 2>/dev/null && echo "INCOMPLETE" || echo "DONE"
-
-# llm.kb: ADR status updated to Accepted
-grep -A1 "^## Status" ~/.claude/skills/llm.kb/docs/adr/2025-12-03-000-*.md
-```
-
-### Phase 2: prototype.chatfs
-
-**Location:** This repo
-**Precondition:** Phase 1 verification passes
-
-Run `/session-start` here. Execute subtasks:
-1. `2026-01-02-001-migrate-todo-to-subtask-format.md`
-2. `2026-01-02-002-apply-skill-conventions-post-evolution.md`
-
-### Parallel Work
-
-`2026-01-02-001-migrate-todo-to-subtask-format.md` (TODO.md migration) can proceed in parallel with Phase 1 — no dependency on skill evolution.
+Revisit when the first implementation milestone is concrete enough to structure.
 
 ## Notes
 
-**Cross-repo coordination:** Skills repo subtasks have `related-effort` links back to this parent task for context on why the work matters.
+**Cross-repo coordination:** Skills repo subtasks include `related-effort:`
+links back to this parent for context.
 
 **Cross-references:**
-- llm.kb ADR on `.d → .kb`: `docs/adr/2025-12-03-000-pivot-from-d-to-kb-naming-convention.md`
-- llm-collab TODO on skeleton: `.claude/todo.kb/2025-12-11-000-update-skeleton-...md`
+- llm-kb ADR on `.d → .kb`: `~/.claude/skills/llm-kb/docs/adr/2025-12-03-000-pivot-from-d-to-kb-naming-convention.md` (Status: Proposed; promote to Accepted after rename lands)
+- llm-collab skeleton TODO: `~/.claude/skills/llm-collab/.claude/todo.kb/2025-12-11-000-update-skeleton-to-match-docsdev-pattern-from-git-partial.md`
