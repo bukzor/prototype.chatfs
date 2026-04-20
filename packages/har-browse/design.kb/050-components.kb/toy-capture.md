@@ -6,14 +6,14 @@ why:
   - site-agnostic-capture
 ---
 
-# toy_capture — Playwright HAR Capture Script
+# har-browse — Playwright HAR Capture Script
 
 The primary learning target. A one-shot Playwright script that captures a HAR.
 
 ## Interface
 
 ```
-./toy_capture/capture.mjs [URL] [--har PATH] [--howto PATH]
+./src/har_browse.mjs [URL] [--har PATH] [--howto PATH]
 ```
 
 Defaults: URL `http://127.0.0.1:8000`, `--har out.har`

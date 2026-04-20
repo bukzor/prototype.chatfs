@@ -13,8 +13,8 @@ pipeline.
 
 - `toy_server/` — Python `http.server` serving static files on :8000
   - `api/conversation` — Fixed JSON fixture: 6-message tree with one fork
-- `toy_capture/` — Playwright HAR recorder with injected "Done" button
-  - `capture.mjs` — Launches browser, records HAR, waits for human click
+- `src/` — Playwright HAR recorder with injected "Done" button
+  - `har_browse.mjs` — Launches browser, records HAR, waits for human click
 - `toy_pluck.sh` — jq filter: extracts /api/conversation from HAR (stdin → stdout)
 - `out.har` — Example HAR output (gitignored)
 

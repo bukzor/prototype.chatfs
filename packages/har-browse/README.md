@@ -26,7 +26,7 @@ Playwright needs its own Chromium inside the container.
 Starts a Python HTTP server serving static files from `toy_server/` on port 8000.
 Provides the toy app (HTML/CSS/JS) and a fixed `/api/conversation` JSON fixture.
 
-### `toy_capture/capture.mjs`
+### `src/har_browse.mjs`
 
 Launches a visible Chromium browser via Playwright, navigates to a URL, and
 records all network traffic to a HAR file. Injects a persistent "Done Capturing"
@@ -34,7 +34,7 @@ button that survives page navigations. The script blocks until the human clicks
 the button, then writes the HAR and exits.
 
 ```bash
-./toy_capture/capture.mjs [URL] [--har PATH] [--howto PATH]
+./src/har_browse.mjs [URL] [--har PATH] [--howto PATH]
 ```
 
 Defaults: URL `http://127.0.0.1:8000`, `--har out.har`
@@ -50,20 +50,20 @@ Reads HAR from stdin, writes JSON to stdout. Handles base64-encoded responses.
 ./toy_pluck.sh < out.har > extracted.json
 ```
 
-### `toy_capture/test_persistent_injection.mjs`
+### `src/test_persistent_injection.mjs`
 
 Automated test that verifies the "Done Capturing" button survives multiple page
 navigations. Spins up its own toy server, runs headless, and checks the HAR
 contains expected entries. No manual interaction needed.
 
 ```bash
-./toy_capture/test_persistent_injection.mjs
+./src/test_persistent_injection.mjs
 ```
 
 ## Testing
 
 ```bash
-./toy_capture/test_persistent_injection.mjs
+./src/test_persistent_injection.mjs
 ```
 
 ## Usage
@@ -73,6 +73,6 @@ contains expected entries. No manual interaction needed.
 ./toy_server/run.sh
 
 # Terminal 2: capture, then extract
-./toy_capture/capture.mjs
+./src/har_browse.mjs
 ./toy_pluck.sh < out.har > extracted.json
 ```

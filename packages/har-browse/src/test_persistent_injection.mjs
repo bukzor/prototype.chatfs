@@ -54,7 +54,7 @@ try {
   );
   console.log("clicked: " + clicked);
 
-  // Verify waitForFunction works (what capture.mjs uses)
+  // Verify waitForFunction works (what har_browse.mjs uses)
   await page.waitForFunction(
     () => document.getElementById("capture-done")?.dataset.clicked === "true",
     { timeout: 5000 },

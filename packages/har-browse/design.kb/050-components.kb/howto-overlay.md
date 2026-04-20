@@ -13,7 +13,7 @@ persistent capture overlay, guiding the human through site-specific steps
 ## Interface
 
 ```
-./toy_capture/capture.mjs --howto howto-example.md
+./src/har_browse.mjs --howto howto-example.md
 ```
 
 When `--howto` is provided, the overlay includes a collapsible `<details>`
