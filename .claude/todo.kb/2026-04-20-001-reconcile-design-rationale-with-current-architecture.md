@@ -4,14 +4,39 @@
 required-reading:
   - docs/dev/design.kb/CLAUDE.md
   - docs/dev/design.kb/010-mission.kb/chatfs.md
-  - docs/dev/design-rationale.md
 ---
 
 # Reconcile design-rationale.md with Current Architecture
 
+**Status:** Done — 2026-04-20
 **Priority:** Medium
 **Complexity:** Medium (substantive content revision, not mechanical)
 **Discovered:** 2026-04-20 spot check during devlog GC
+
+## Resolution
+
+Deleted `docs/dev/design-rationale.md` and the `design-rationale/` subdir
+(all three subdocs were TODO stubs). Salvaged content into `design.kb/`:
+
+- **Why existing solutions fail** → extended `010-mission.kb/chatfs.md`.
+- **Capture mechanism decision** → promoted `040-design.kb/capture-patterns.md`
+  (listing-style, plural) to `040-design.kb/capture-pattern.md` + sub-kb
+  `capture-pattern.kb/` (five mechanism entries; network-events chosen).
+- **User-facing surface decision** → `040-design.kb/user-interface.md` +
+  sub-kb `user-interface.kb/` (five mechanism entries; fuse-mount chosen).
+- **JSONL interchange rationale** → new `040-design.kb/jsonl-interchange.md`
+  with inline "Why not plain JSON / binary / YAML / NDJSON" alternatives.
+- **Documentation-first meta-principle** → intentionally not migrated; it's
+  process/culture, not design.
+
+Inbound links updated in README.md, docs/README.md, docs/dev/README.md,
+HACKING.md (×2 sections), docs/dev/devlog/README.md.
+
+No ADR directory created this pass; kept the pattern dormant until a decision
+with extensive historicity/prose emerges. The inline "Why not X" shape
+inside design.kb/ entries handled all four decisions cleanly — informed a
+touch-up of `Skill(llm-design-kb)` to codify the alternatives-considered
+pattern, and `Skill(llm-kb)` to add promotion-signals guidance.
 
 ## Problem Statement
 
@@ -74,19 +99,15 @@ documented the superseded architecture.)
 
 ## Implementation Steps
 
-- [ ] Read current `design-rationale.md` fully + all three subdocs
-- [ ] Compare against current `design.kb/` collections
-- [ ] Decide: rewrite, redirect, or delete
-- [ ] If rewriting: preserve the still-valid meta-decisions (JSONL,
-      documentation-first)
-- [ ] Update all inbound links (CLAUDE.md, README.md, docs/README.md,
-      docs/dev/README.md all still link to design-rationale.md)
+- [x] Read current `design-rationale.md` fully + all three subdocs
+- [x] Compare against current `design.kb/` collections
+- [x] Decide: rewrite, redirect, or delete — chose delete + salvage into design.kb/
+- [x] Preserve the still-valid meta-decisions (JSONL landed as `jsonl-interchange.md`;
+      documentation-first left implicit in CLAUDE.md)
+- [x] Update all inbound links (5 files updated)
 
 ## Success Criteria
 
-- [ ] `design-rationale.md` either describes the current architecture
-      or has been replaced with a redirect / deleted
-- [ ] No document links to outdated decision rationales
-- [ ] `grep -r "M1-CLAUDE\|M2-VFS\|M3-CACHE\|M4-CLI" docs/` returns
-      only devlogs (historical) and technical-policy/design.kb where
-      intentional
+- [x] `design-rationale.md` deleted; content salvaged into design.kb/ entries
+- [x] No document links to outdated decision rationales
+- [x] `M1-CLAUDE|M2-VFS|M3-CACHE|M4-CLI` no longer appears in any active design doc

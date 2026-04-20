@@ -13,12 +13,12 @@ here.
 - **Focus** — what the session was about
 - **What happened** — substantive work done
 - **Decisions** — non-obvious calls and their rationale (durable
-  architectural decisions may also warrant an ADR; see `skills/llm-collab`)
+  architectural decisions may also warrant an ADR; see `Skill(llm-collab)`)
 - **Next session** — where to pick up
 
 ## What does NOT belong
 
 - Mechanical task lists — those go in `.claude/todo.kb/`
 - Status snapshots — use `.claude/todo.md`
-- Deep design rationale — that goes in `docs/dev/design.kb/` or
-  `docs/dev/design-rationale.md`
+- Deep design rationale — that goes in `docs/dev/design.kb/` (inline with the
+  relevant entry)

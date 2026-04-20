@@ -4,9 +4,7 @@
 
 Driver: [Harmonize with llm-* skills](todo.kb/2026-01-02-000-harmonize-with-llm-skills.md) — most done; chatfs-local remaining items below.
 
-- [ ] [Reconcile design-rationale.md with current architecture](todo.kb/2026-04-20-001-reconcile-design-rationale-with-current-architecture.md) — medium priority
 - [ ] [Review lib/chatfs/ for salvageable ideas](todo.kb/2026-04-20-000-review-lib-chatfs-for-integration.md) — low priority
-- [ ] Fix CLAUDE.md `depends:` — rename `skills/llm.kb` → `skills/llm-kb`, add `skills/llm-design-kb`
 
 ## Deferred
 

@@ -24,3 +24,13 @@ cat /mnt/llmfs/chatgpt/2025-10/architecture-discussion.md
 ```
 
 Conversations are files. Standard tools work. No provider lock-in.
+
+## Why Not Existing Solutions
+
+- **Official Anthropic API.** Can't reach claude.ai conversations — the API
+  and the web app are separate systems; the API creates new chats rather than
+  exposing existing ones.
+- **Browser extensions.** One-shot exports, no incremental sync, no
+  filesystem surface. Each provider needs its own extension.
+- **Copy-paste.** Loses metadata and fork structure; doesn't scale past a
+  handful of conversations.

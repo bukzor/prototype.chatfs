@@ -68,8 +68,7 @@ See [HACKING.md] for development setup and architecture.
 
 ## Design Documentation
 
-- [docs/dev/design-rationale.md] - Why decisions were made
-- [docs/dev/design.kb/] - Layered design knowledge (mission → goals → requirements → design)
+- [docs/dev/design.kb/] - Layered design knowledge (mission → goals → requirements → design). Decision rationale lives inline with the relevant entries (e.g. `040-design.kb/capture-pattern.md`, `040-design.kb/user-interface.md`).
 
 ## Related Projects
 

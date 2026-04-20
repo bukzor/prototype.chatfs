@@ -104,16 +104,15 @@ See [docs/dev/design.kb/040-design.kb/sync-control-plane.md] for cache structure
 - **Provider plugins:** Adding a provider means implementing BB1/BB2 — core is unchanged
 - **Work enqueueing:** FUSE handlers stay fast; expensive work runs in a background job queue
 
-See [docs/dev/design-rationale.md] for full reasoning and [docs/dev/design.kb/] for the layered design knowledge.
+See [docs/dev/design.kb/] for the layered design knowledge, with decision rationale inline in each entry.
 
 ## Design Decisions
 
 For detailed rationale on architectural choices, see:
 
-- [docs/dev/design-rationale.md] - Core design
-  decisions
 - [docs/dev/design.kb/] - Layered design knowledge
-  (mission → goals → requirements → design)
+  (mission → goals → requirements → design); decision rationale is inline
+  with each entry
 - [docs/dev/design-incubators/] - Unsolved problems being explored
 
 ## Contributing Workflow

@@ -10,15 +10,13 @@ references.
 - **New user? Want overview?** → [../README.md] - What the project does
 - **Want to contribute?** → [../HACKING.md] - Setup and development workflow
 - **Resume development session?** → Latest [../.claude/todo*]
-- **Understand design decisions?** → [dev/design-rationale.md] - Why choices were made
-- **Learn system architecture?** → [dev/design.kb/] - Layered design knowledge
+- **Learn system architecture?** → [dev/design.kb/] - Layered design knowledge; decision rationale lives inline with each entry
 - **Working with LLM assistant?** → [../CLAUDE.md] - Quick reference guide
 
 **Recommended reading flow for new contributors:**
 
 1. [../HACKING.md] - Setup and conventions
-2. [dev/design-rationale.md] - Understand why
-3. [dev/design.kb/] - Understand how (mission → goals → requirements → design)
+2. [dev/design.kb/] - Layered design (mission → goals → requirements → design), with rationale inline
 
 ## Structure
 

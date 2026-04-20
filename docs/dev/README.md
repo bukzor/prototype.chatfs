@@ -2,17 +2,9 @@
 
 Developer-focused documentation for understanding and modifying chatfs.
 
-## Core Documents
-
-These files live directly in this directory:
-
-- **design-rationale.md** - Why architectural decisions were made
-- **design.kb/** - Layered design knowledge (mission → goals → requirements → design → future work)
-
 ## Subdirectories
 
-- **design-rationale/** - Detailed analysis of major decisions
-- **design.kb/** - Project-level design knowledge
+- **design.kb/** - Layered design knowledge (mission → goals → requirements → design → future work). Decision rationale lives inline with entries.
 - **background.kb/** - Technology primers, prior art
 - **technical-policy.kb/** - Cross-cutting normative guidance
 - **design-incubators/** - Active design explorations with prototypes
