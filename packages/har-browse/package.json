@@ -5,7 +5,9 @@
     "har-browse": "./src/har_browse.mjs"
   },
   "scripts": {
-    "test": "./src/test_persistent_injection.mjs"
+    "test": "./src/test_persistent_injection.mjs && ./src/test_e2e_example.mjs",
+    "test:unit": "./src/test_persistent_injection.mjs",
+    "test:e2e": "./src/test_e2e_example.mjs"
   },
   "private": true,
   "packageManager": "pnpm@10.33.0",
