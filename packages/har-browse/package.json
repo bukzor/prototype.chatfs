@@ -1,5 +1,5 @@
 {
-  "name": "playwright-har-capture",
+  "name": "har-browse",
   "version": "1.0.0",
   "scripts": {
     "test": "./toy_capture/test_persistent_injection.mjs"

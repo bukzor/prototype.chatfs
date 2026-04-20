@@ -15,7 +15,7 @@ chatfs provides lazy filesystem access to chat conversations (claude.ai, ChatGPT
 
 **Rust side:** `chatfs-fuser` crate — FUSE filesystem daemon. Cargo workspace at repo root.
 
-**Node/Playwright side:** Browser automation for HAR capture (BB1). See `docs/dev/design-incubators/playwright-har-capture/`.
+**Node/Playwright side:** Browser automation for HAR capture (BB1). See `packages/har-browse/`.
 
 **Why JSONL:** Streaming-friendly, works with Unix tools now, easy capnproto migration later.
 
@@ -32,7 +32,7 @@ For how to create and maintain design knowledge, see `Skill(llm-design-kb)`.
 
 - `packages/` — Polyglot workspace members (Python packages, Rust crates)
 - `docs/dev/design.kb/` — Project-level design knowledge (design.kb)
-- `docs/dev/design-incubators/playwright-har-capture/` — BB1 capture learning (Playwright HAR)
+- `packages/har-browse/` — BB1 capture (Playwright HAR)
 - `docs/dev/design-incubators/fuser-vfs/` — FUSE filesystem learning
 - `docs/dev/design-incubators/fork-representation/` — Fork representation investigation
 - `docs/dev/devlog/` — Session narrative history

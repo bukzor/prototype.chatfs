@@ -12,5 +12,5 @@ a browsing session.
 - HAR is the expected artifact format for BB1 (capture)
 
 **Key challenge:** Understanding how Playwright's HAR recording handles content
-encodings, streaming responses, and large payloads. This is the primary learning
-goal of the playwright-har-capture incubator.
+encodings, streaming responses, and large payloads. This is the concern of
+`packages/har-browse/`.
