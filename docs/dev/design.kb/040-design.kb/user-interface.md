@@ -1,5 +1,5 @@
 ---
-last-updated: 2026-04-20
+last-updated: "2026-04-20"
 why:
   - no-network-on-read
   - explicit-sync-triggers

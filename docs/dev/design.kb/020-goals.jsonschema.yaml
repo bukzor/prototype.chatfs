@@ -1,0 +1,18 @@
+$schema: "http://json-schema.org/draft-07/schema#"
+description: Schema for goal entries in 020-goals.kb/
+type: object
+additionalProperties: false
+required:
+  - why
+properties:
+  why:
+    description: Upward traceability — mission entries this goal serves
+    type: array
+    items:
+      type: string
+    minItems: 1
+  background:
+    description: Background entries that inform this goal
+    type: array
+    items:
+      type: string

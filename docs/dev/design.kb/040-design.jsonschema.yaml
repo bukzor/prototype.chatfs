@@ -1,0 +1,28 @@
+$schema: "http://json-schema.org/draft-07/schema#"
+description: Schema for design entries in 040-design.kb/
+type: object
+additionalProperties: false
+required:
+  - why
+properties:
+  why:
+    description: Upward traceability — requirements, goals, or peer design entries this design realizes
+    type: array
+    items:
+      type: string
+    minItems: 1
+  background:
+    description: Background entries that inform this design
+    type: array
+    items:
+      type: string
+  source:
+    description: Primary-source content paths (conversation transcripts, extracted docs) this design derives from
+    type: array
+    items:
+      type: string
+  last-updated:
+    description: Required for summary docs at parent scope of a sub-kb (YYYY-MM-DD)
+    type: string
+    format: date
+    pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
