@@ -1,0 +1,7 @@
+// these are the configurations that can't be done in the .editorconfig
+{
+  $schema: "https://raw.githubusercontent.com/SchemaStore/schemastore/refs/heads/master/src/schemas/json/prettierrc.json",
+  proseWrap: "always",
+  trailingComma: "all",
+  plugins: ["prettier-plugin-toml"],
+}

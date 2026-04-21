@@ -1,0 +1,7 @@
+node_modules
+trash
+docs/dev/reference-implementations
+.venv
+target
+pnpm-lock.yaml
+**/*.har
