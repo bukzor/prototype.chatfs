@@ -14,9 +14,7 @@ const { values, positionals } = parseArgs({
 });
 const url = positionals[0] || "http://127.0.0.1:8000";
 
-const howto = values.howto
-  ? readFileSync(values.howto, "utf-8")
-  : undefined;
+const howto = values.howto ? readFileSync(values.howto, "utf-8") : undefined;
 
 const profileDir = cachePath("profile", values.profile);
 

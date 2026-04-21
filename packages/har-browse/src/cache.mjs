@@ -1,6 +1,6 @@
-import { createHash } from "node:crypto";
+import assert from "node:assert/strict";
 import { homedir } from "node:os";
-import { join, dirname } from "node:path";
+import { join } from "node:path";
 import { mkdirSync } from "node:fs";
 
 const ROOT = join(
@@ -9,20 +9,41 @@ const ROOT = join(
 );
 
 /**
- * Absolute path inside the har-browse XDG cache root. Ensures the parent
- * directory exists. Namespace separates unrelated caches (user-agent
- * strings, persistent profiles, etc.).
+ * Absolute path to a directory inside the har-browse XDG cache, ensured
+ * to exist. Namespace separates unrelated caches. Key is either:
+ *
+ *   - a string: used directly as a path segment, or
+ *   - an object: hive-style `k=v/` segments in the object's insertion
+ *     order
  */
 export function cachePath(namespace, key) {
-  const path = join(ROOT, namespace, key);
-  mkdirSync(dirname(path), { recursive: true });
+  const segments =
+    typeof key === "string"
+      ? key
+      : Object.entries(key)
+          .map(([k, v]) => {
+            assert(
+              !k.includes("="),
+              `cache key may not contain '=': ${JSON.stringify(k)}`,
+            );
+            assert(
+              !k.includes("\0"),
+              `cache key may not contain NUL: ${JSON.stringify(k)}`,
+            );
+            return `${escape(k)}=${escape(v)}`;
+          })
+          .join("/");
+  const path = join(ROOT, namespace, segments);
+  mkdirSync(path, { recursive: true });
   return path;
 }
 
-/** Stable, filesystem-safe key from any JSON-serializable input. */
-export function hashKey(obj) {
-  return createHash("sha256")
-    .update(JSON.stringify(obj))
-    .digest("hex")
-    .slice(0, 16);
+// ensure a string is filesystem-path semantic-free
+function escape(v) {
+  const s = String(v);
+  assert(
+    !s.includes("\0"),
+    `filesystem paths may not contain NUL: ${JSON.stringify(s)}`,
+  );
+  return s.replaceAll("/", "\\");
 }

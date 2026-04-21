@@ -18,7 +18,13 @@ const port = 8765;
 // Start toy server
 const server = spawn(
   "python3",
-  ["-m", "http.server", String(port), "--directory", join(__dirname, "..", "toy_server")],
+  [
+    "-m",
+    "http.server",
+    String(port),
+    "--directory",
+    join(__dirname, "..", "toy_server"),
+  ],
   { stdio: ["ignore", "pipe", "pipe"] },
 );
 await new Promise((r) => setTimeout(r, 1000));
@@ -38,7 +44,9 @@ try {
   console.log("After initial load: " + btn1);
 
   // Navigate (simulates login redirect)
-  await page.goto(`http://127.0.0.1:${port}/index.html`, { waitUntil: "networkidle" });
+  await page.goto(`http://127.0.0.1:${port}/index.html`, {
+    waitUntil: "networkidle",
+  });
   const btn2 = await page.locator("#capture-done").count();
   console.log("After 2nd navigation: " + btn2);
 
