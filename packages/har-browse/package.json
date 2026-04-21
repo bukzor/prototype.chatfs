@@ -1,6 +1,7 @@
 {
   "name": "har-browse",
   "version": "1.0.0",
+  "homepage": "https://github.com/bukzor/prototype.chatfs",
   "bin": {
     "har-browse": "./src/har_browse.mjs"
   },
@@ -11,6 +12,10 @@
   },
   "private": true,
   "packageManager": "pnpm@10.33.0",
+  "//engines": "src/user-agent.mjs uses JSON import attributes (`with { type: \"json\" }`), which require Node 22+.",
+  "engines": {
+    "node": ">=22"
+  },
   "dependencies": {
     "playwright": "^1.58.2"
   }

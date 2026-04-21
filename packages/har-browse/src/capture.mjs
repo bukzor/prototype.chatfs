@@ -1,6 +1,7 @@
 import { chromium } from "playwright";
 import { mkdirSync } from "node:fs";
 import { injectOverlay } from "./inject.mjs";
+import { userAgent } from "./user-agent.mjs";
 
 /**
  * Launch a persistent-context browser, record HAR, wait for termination.
@@ -33,6 +34,7 @@ export async function captureHar({
     // the physical window size on Crostini. This causes fixed-position elements
     // to render off-screen. `null` lets the browser use its actual window size.
     viewport: null,
+    userAgent: await userAgent(),
     ignoreDefaultArgs: [
       // Playwright defaults to SwiftShader (software GL) which breaks Wayland
       // fractional scaling on Crostini — text stretches, mouse events offset

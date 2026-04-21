@@ -1,9 +1,8 @@
 #!/usr/bin/env node
 import { parseArgs } from "node:util";
 import { readFileSync } from "node:fs";
-import { homedir } from "node:os";
-import { join } from "node:path";
 import { captureHar } from "./capture.mjs";
+import { cachePath } from "./cache.mjs";
 
 const { values, positionals } = parseArgs({
   options: {
@@ -19,8 +18,7 @@ const howto = values.howto
   ? readFileSync(values.howto, "utf-8")
   : undefined;
 
-const cacheHome = process.env.XDG_CACHE_HOME || join(homedir(), ".cache");
-const profileDir = join(cacheHome, "har-browse", "profile", values.profile);
+const profileDir = cachePath("profile", values.profile);
 
 console.error(
   "Launching browser. Click 'Done Capturing' when finished, or close the window to cancel.",
