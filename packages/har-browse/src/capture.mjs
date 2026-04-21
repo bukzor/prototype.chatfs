@@ -44,6 +44,12 @@ export async function captureHar({
       // real and CDP-driven.
       "--enable-automation",
     ],
+    args: [
+      // Hides navigator.webdriver at the blink level. Empirically required
+      // (in addition to the --enable-automation strip above) to clear
+      // Cloudflare Turnstile on cold logins.
+      "--disable-blink-features=AutomationControlled",
+    ],
   });
   // Disable default timeouts on everything the context owns: page waits,
   // page.goto, and context.waitForEvent("close") — the human may take any
