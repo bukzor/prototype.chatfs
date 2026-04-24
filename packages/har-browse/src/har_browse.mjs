@@ -1,12 +1,11 @@
 #!/usr/bin/env node
 import { parseArgs } from "node:util";
 import { readFileSync } from "node:fs";
-import { captureHar } from "./capture.mjs";
+import { captureEvents } from "./capture.mjs";
 import { cachePath } from "./cache.mjs";
 
 const { values, positionals } = parseArgs({
   options: {
-    har: { type: "string", default: "out.har" },
     howto: { type: "string" },
     profile: { type: "string", default: "default_profile" },
   },
@@ -22,16 +21,6 @@ console.error(
   "Launching browser. Click 'Done Capturing' when finished, or close the window to cancel.",
 );
 
-const { outcome } = await captureHar({
-  url,
-  harPath: values.har,
-  profileDir,
-  howto,
-});
-
-if (outcome === "cancel") {
-  console.error("Cancelled by user.");
-  process.exit(2);
+for await (const ev of captureEvents({ url, profileDir, howto })) {
+  process.stdout.write(JSON.stringify(ev) + "\n");
 }
-
-console.error(`HAR written to ${values.har}`);

@@ -1,13 +1,13 @@
----
-anthropic-skill-ownership: llm-subtask
----
+<anthropic-skill-ownership llm-subtask />
 
-- [x] M0 — Manual Baseline (toy server, conversation fixture, XHR on load)
-- [x] M1 — HAR Capture (Playwright captures valid HAR with /, index.js, api/conversation)
-- [x] M2 — Capture Overlay (persistent injected UI, howto instructions, human clicks to finalize)
-  - [x] Basic injection: button appears on initial page load
-  - [x] Persistent injection: button survives page navigations (login redirects, multi-page flows)
-  - [x] howto-overlay: `--howto instructions.md` injects site-specific guidance into overlay
-- [x] M3 — Extraction (toy_pluck.sh: jq filter, stdin HAR → stdout JSON, handles base64)
-- [-] M4 — Markdown Emission (toy_emit: extracted.json → branch-main.md, branch-alt.md) — out of scope for incubator
-- [-] M5 — Adversarial Cases — out of scope (trivial or belongs to downstream pipeline)
+# Tactical Tasks
+
+- [x] [har-browse streaming refactor](todo.kb/2026-04-24-000-har-browse-streaming-refactor.md) — `captureHar` is now an async generator; `har-browse` streams JSONL to stdout. **Superseded** by the public-events refactor below: HAR-entry was the wrong seam.
+- [x] [pw-browse public-events stream](todo.kb/2026-04-24-001-pw-browse-public-events-stream.md) — replaced HAR-entry stream with a **CDP event passthrough** in chrome-har's `{method, params}` shape. Bodies attached at `Network.responseReceived.params.response.body`. `har-browse` bin unchanged; `captureHar` → `captureEvents`; `src/playwright/` deleted.
+- [ ] [cdp2har: validate chrome-har consumes our stream](todo.kb/2026-04-24-002-cdp2har-validate-chrome-har-consumes-our-stream.md) — claim is structural; needs an end-to-end smoke test plus a ~20-line wrapper around `harFromMessages`.
+- [ ] [har-browse: handle EPIPE on stdout cleanly](todo.kb/2026-04-24-003-har-browse-handle-epipe-on-stdout-cleanly.md) — piping to `head` / early-exiting consumers currently dumps a Node stack trace. Add stdout error guard.
+
+## Deferred
+
+- [ ] Rename package `har-browse` → something honest (`pw-browse`?). Cross-cuts package.json, workspace, docs, devlog refs.
+- [ ] `--wait-response` (originally split out of streaming refactor): with events as the seam, becomes "wait for an event matching a pattern". Small CLI feature on top of the new generator.

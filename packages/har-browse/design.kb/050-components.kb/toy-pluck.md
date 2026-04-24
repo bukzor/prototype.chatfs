@@ -4,24 +4,26 @@ why:
   - content-encoding-handling
 ---
 
-# toy_pluck — HAR → extracted.json
+# toy_pluck — CDP events → extracted.json
 
-Reads a Playwright HAR from stdin, finds the `/api/conversation` response,
-decodes it, writes the conversation JSON to stdout.
+Reads a JSONL CDP event stream from stdin, finds the
+`Network.responseReceived` event whose response URL matches
+`/api/conversation`, decodes the body, writes the conversation JSON to
+stdout.
 
 ## Interface
 
 ```
-toy_pluck.sh < out.har > extracted.json
+toy_pluck.sh < events.jsonl > extracted.json
 ```
 
 ## Responsibilities
 
-- Parse HAR JSON
-- Match entries by URL pattern
-- Handle HAR-level base64 encoding (Playwright decodes HTTP-level compression
-  like gzip/brotli before writing the HAR; the only encoding toy_pluck handles
-  is the HAR's own base64 wrapper)
+- Parse JSONL (one event per line)
+- Match on `method == "Network.responseReceived"` and
+  `params.response.url` pattern
+- Handle base64-encoded bodies (Chromium returns `base64Encoded: true`
+  from `Network.getResponseBody` for non-text MIME types)
 - Write structured conversation data
 
 ## Notes

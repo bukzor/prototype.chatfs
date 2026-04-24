@@ -6,35 +6,49 @@ why:
   - site-agnostic-capture
 ---
 
-# har-browse — Playwright HAR Capture Script
+# har-browse — Playwright CDP Capture Script
 
-The primary learning target. A one-shot Playwright script that captures a HAR.
+The primary learning target. A one-shot Playwright script that streams a
+Chrome DevTools Protocol event trace.
 
 ## Interface
 
 ```
-har-browse [URL] [--har PATH] [--profile NAME] [--howto PATH]
+har-browse [URL] [--profile NAME] [--howto PATH] > events.jsonl
 ```
 
-Defaults: URL `http://127.0.0.1:8000`, `--har out.har`, `--profile default_profile`.
+Defaults: URL `http://127.0.0.1:8000`, `--profile default_profile`.
 
 Profile directory:
 `${XDG_CACHE_HOME:-$HOME/.cache}/har-browse/profile/${profile}`.
 State (cookies, localStorage, service workers) persists across runs, so
 real-site logins only need to be completed once per profile.
 
+## Output
+
+JSONL on stdout. One line per CDP event, shaped `{method, params}` — the
+wire format `chrome-har` and other CDP-consuming tools expect. Response
+bodies are attached at `Network.responseReceived.params.response.body`
+(with `.encoding = "base64"` when applicable).
+
+A bonafide HAR document is one downstream pipeline step away:
+`har-browse | node -e 'harFromMessages(...)' > capture.har`. No HAR
+reconstruction logic lives in this repo.
+
 ## Behavior
 
 1. Launch visible Chromium via `launchPersistentContext(profileDir, ...)`
    (always headful — human-in-the-loop)
-2. Register persistent overlay injection (survives navigations via `addInitScript`)
-3. If `--howto` provided, overlay includes a collapsible instructions panel
-4. Navigate to URL with `waitUntil: 'commit'` (returns as soon as the response
+2. Attach a CDP session per page; enable Network + Page domains
+3. Register persistent overlay injection (survives navigations via `addInitScript`)
+4. If `--howto` provided, overlay includes a collapsible instructions panel
+5. Navigate to URL with `waitUntil: 'commit'` (returns as soon as the response
    begins — works on any site, including SPAs with SSE/websockets)
-5. Human interacts with the site freely (login, navigate, scroll, etc.)
-6. Terminate on one of two signals:
-   - Human clicks "Done Capturing" → `context.close()` flushes HAR, exit 0
-   - Human closes the browser window → log "Cancelled by user.", exit 2
+6. Human interacts with the site freely (login, navigate, scroll, etc.)
+7. Terminate on one of two signals:
+   - Human clicks "Done Capturing" → drain in-flight body fetches, close
+     context, exit 0
+   - Human closes the browser window → same drain + exit sequence
 
 The injected button must persist across page navigations (login redirects,
 multi-page flows). Real use cases involve 2FA, captcha, and multi-step login
@@ -42,11 +56,12 @@ before reaching the target content.
 
 ## Responsibilities
 
-- Persistent-context lifecycle (per-profile state, HAR recording, close)
-- HAR recording configuration and finalization
+- Persistent-context lifecycle (per-profile state, CDP attach per page, close)
+- Blanket CDP event passthrough in chrome-har-compatible shape
+- Body attachment: hold `Network.responseReceived` per requestId, fetch
+  body via `Network.getResponseBody` on `loadingFinished`, stash onto
+  `params.response.body`, then emit in order
 - Persistent UI overlay across navigations (the target page is not ours)
-- Distinguishing success (done-click) from cancellation (window-close) via
-  exit code, so `&&`-chained pipelines halt on cancel
 
 ## Platform workarounds (Crostini)
 
@@ -62,5 +77,5 @@ Playwright's defaults conflict with ChromeOS's Crostini (Linux container):
 
 ## Reusable output
 
-The browser lifecycle and HAR recording patterns transfer directly to real
+The browser lifecycle and CDP passthrough patterns transfer directly to real
 BB1 capture scripts targeting external providers.

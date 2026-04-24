@@ -1,6 +1,10 @@
 #!/bin/bash
-# Extract /api/conversation response from a Playwright HAR file.
-# Usage: toy_pluck.sh < out.har > extracted.json
+# Extract /api/conversation response body from a JSONL CDP event stream.
+# Usage: toy_pluck.sh < events.jsonl > extracted.json
+#
+# The body rides on Network.responseReceived events, stashed at
+# params.response.body (per chrome-har convention), with optional
+# params.response.encoding = "base64".
 set -euo pipefail
 export DEBUG="${DEBUG:-0}"
 
@@ -16,9 +20,9 @@ if (( DEBUG > 0 )); then
 fi
 
 jq '
-  .log.entries[]
-  | select(.request.url | endswith("/api/conversation"))
-  | .response.content
-  | if .encoding == "base64" then .text | @base64d | fromjson
-    else .text | fromjson end
+  select(.method == "Network.responseReceived"
+         and (.params.response.url | endswith("/api/conversation")))
+  | if .params.response.encoding == "base64"
+    then .params.response.body | @base64d | fromjson
+    else .params.response.body | fromjson end
 '

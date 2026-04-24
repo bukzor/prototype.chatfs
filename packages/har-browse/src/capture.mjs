@@ -1,23 +1,29 @@
 import { mkdirSync } from "node:fs";
+import { EventEmitter, on } from "node:events";
 import { chromium } from "./playwright.mjs";
 import { injectOverlay } from "./inject.mjs";
 
 /**
- * Launch a persistent-context browser, record HAR, wait for termination.
- * Returns { outcome: "done" | "cancel" }.
+ * Launch a persistent-context browser and yield a Chrome DevTools Protocol
+ * event stream as JSONL. Each yielded object is `{method, params}` — the
+ * wire format that `chrome-har` and other CDP-consuming tools expect.
+ * Response bodies are attached to `Network.responseReceived.params.response`
+ * as `.body` (+ `.encoding = "base64"` when applicable), per chrome-har's
+ * convention.
+ *
+ * The stream ends when the user clicks the injected "Done" button or
+ * closes the window.
  *
  * @param {object} opts
  * @param {string} opts.url
- * @param {string} opts.harPath
  * @param {string} opts.profileDir
  * @param {string} [opts.howto]  pre-read howto content (string, not path)
  * @param {boolean} [opts.headless=false]
  * @param {(page: import("playwright").Page) => Promise<void>} [opts.onPageReady]
- *   hook called after navigation, before the termination race.
+ * @returns {AsyncGenerator<{method: string, params: object}>}
  */
-export async function captureHar({
+export async function* captureEvents({
   url,
-  harPath,
   profileDir,
   howto,
   headless = false,
@@ -27,37 +33,115 @@ export async function captureHar({
 
   const context = await chromium.launchPersistentContext(profileDir, {
     headless,
-    recordHar: { path: harPath, mode: "full" },
   });
   // Disable default timeouts on everything the context owns: page waits,
   // page.goto, and context.waitForEvent("close") — the human may take any
   // amount of time to complete login/capture.
   context.setDefaultTimeout(0);
 
+  let contextClosed = false;
+  context.once("close", () => {
+    contextClosed = true;
+  });
+
+  const out = new EventEmitter();
+  const stream = on(out, "event", { close: ["end"] });
+
+  const emit = (msg) => out.emit("event", msg);
+
+  // Drain tracker: body-fetch lookups need to finish before we emit "end".
+  const pending = new Set();
+  const track = (pr) => {
+    pending.add(pr);
+    pr.finally(() => pending.delete(pr));
+  };
+
+  const attach = async (p) => {
+    const session = await context.newCDPSession(p);
+
+    // Blanket passthrough in chrome-har's `{method, params}` shape.
+    // `responseReceived` is held per requestId and flushed from
+    // `loadingFinished` with body attached at `params.response.body`.
+    // `Network.getResponseBody` is an effectful getter — a single call
+    // per response consumes the buffer; do not double-subscribe it.
+    const held = new Map();
+    const origEmit = session.emit.bind(session);
+    session.emit = function (name, ...args) {
+      if (typeof name !== "string" || !name.includes(".")) {
+        return origEmit(name, ...args);
+      }
+      const params = args[0] ?? {};
+      if (name === "Network.responseReceived") {
+        held.set(params.requestId, params);
+      } else if (name === "Network.loadingFinished") {
+        const response = held.get(params.requestId);
+        held.delete(params.requestId);
+        track(
+          (async () => {
+            if (response) {
+              try {
+                const body = await session.send("Network.getResponseBody", {
+                  requestId: params.requestId,
+                });
+                response.response.body = body.body;
+                if (body.base64Encoded) response.response.encoding = "base64";
+              } catch {
+                // 204 / redirect / no-body responses reject; emit bare.
+              }
+              emit({ method: "Network.responseReceived", params: response });
+            }
+            emit({ method: name, params });
+          })(),
+        );
+      } else if (name === "Network.loadingFailed") {
+        const response = held.get(params.requestId);
+        held.delete(params.requestId);
+        if (response) {
+          emit({ method: "Network.responseReceived", params: response });
+        }
+        emit({ method: name, params });
+      } else {
+        emit({ method: name, params });
+      }
+      return origEmit(name, ...args);
+    };
+
+    await session.send("Network.enable");
+    await session.send("Page.enable");
+  };
+
   const page = context.pages()[0] ?? (await context.newPage());
 
-  await injectOverlay(page, { howto });
+  context.on("page", (p) => track(attach(p)));
+  await attach(page);
 
+  await injectOverlay(page, { howto });
   await page.goto(url, { waitUntil: "commit" });
 
   if (onPageReady) await onPageReady(page);
 
-  const DONE = "done";
-  const CANCEL = "cancel";
+  // Termination: Done click or window close. Drain in-flight body-fetches
+  // before signalling end so their emits land in the queue first.
+  Promise.race([
+    page.waitForFunction(
+      () =>
+        document.getElementById("capture-done")?.dataset.clicked === "true",
+    ),
+    context.waitForEvent("close"),
+  ])
+    .catch(() => {})
+    .finally(async () => {
+      await Promise.allSettled([...pending]);
+      out.emit("end");
+    });
 
-  const outcome = await Promise.race([
-    page
-      .waitForFunction(
-        () =>
-          document.getElementById("capture-done")?.dataset.clicked === "true",
-      )
-      .then(() => DONE)
-      .catch(() => CANCEL),
-    context.waitForEvent("close").then(() => CANCEL),
-  ]);
-
-  if (outcome === CANCEL) return { outcome: "cancel" };
-
-  await context.close();
-  return { outcome: "done" };
+  try {
+    for await (const [msg] of stream) {
+      yield msg;
+    }
+  } finally {
+    if (!contextClosed) {
+      await context.close();
+    }
+  }
 }

@@ -63,15 +63,19 @@ Provides the toy app (HTML/CSS/JS) and a fixed `/api/conversation` JSON fixture.
 ### `har-browse`
 
 Launches a visible Chromium browser via Playwright, navigates to a URL, and
-records all network traffic to a HAR file. Injects a persistent "Done Capturing"
-button that survives page navigations. The script blocks until the human either
-clicks the button (success, exit 0) or closes the window (cancelled, exit 2).
+streams Chrome DevTools Protocol events to stdout as JSONL — one event per
+line, each shaped `{event, ts, page, params}` where `event` is a CDP event
+name (e.g. `Network.responseReceived`) and `params` is its native payload.
+A synthetic `responseBody` event is emitted after each finished request,
+carrying `{requestId, url, body, base64Encoded}`. Injects a persistent
+"Done Capturing" button that survives page navigations. The stream ends
+when the human clicks the button or closes the window.
 
 ```bash
-har-browse [URL] [--har PATH] [--profile NAME] [--howto PATH]
+har-browse [URL] [--profile NAME] [--howto PATH] > events.jsonl
 ```
 
-Defaults: URL `http://127.0.0.1:8000`, `--har out.har`, `--profile default_profile`.
+Defaults: URL `http://127.0.0.1:8000`, `--profile default_profile`.
 
 With `--howto`, a collapsible instructions panel appears in the overlay.
 
@@ -82,11 +86,11 @@ for distinct target sites (e.g. `--profile chatgpt`, `--profile claude`).
 
 ### `toy_pluck.sh`
 
-Extracts `/api/conversation` responses from a HAR file via jq.
-Reads HAR from stdin, writes JSON to stdout. Handles base64-encoded responses.
+Extracts `/api/conversation` body from the JSONL event stream via jq.
+Reads JSONL from stdin, writes JSON to stdout. Handles base64-encoded bodies.
 
 ```bash
-./toy_pluck.sh < out.har > extracted.json
+./toy_pluck.sh < events.jsonl > extracted.json
 ```
 
 ### `src/test_persistent_injection.mjs`
@@ -112,6 +116,9 @@ contains expected entries. No manual interaction needed.
 ./toy_server/run.sh
 
 # Terminal 2: capture, then extract
-har-browse
-./toy_pluck.sh < out.har > extracted.json
+har-browse > events.jsonl
+./toy_pluck.sh < events.jsonl > extracted.json
+
+# or pipe directly
+har-browse | ./toy_pluck.sh > extracted.json
 ```

@@ -3,17 +3,21 @@ why:
   - reusable-capture-components
 ---
 
-# HAR Recording Lifecycle
+# Capture Lifecycle
 
-The capture script must demonstrate control over the full HAR lifecycle:
+The capture script must demonstrate control over the full capture lifecycle:
 
-1. Start HAR recording before any navigation
-2. Navigate to the target page
-3. Inject a persistent "Done Capturing" overlay that survives page navigations
-4. Human interacts freely (login, 2FA, navigate, scroll)
-5. Human clicks "Done Capturing" to signal completion
-6. Finalize and flush the HAR to disk
-7. Exit cleanly (nonzero on failure)
+1. Attach a CDP session to the browser context before any navigation
+2. Enable the `Network` and `Page` CDP domains
+3. Navigate to the target page
+4. Inject a persistent "Done Capturing" overlay that survives page navigations
+5. Human interacts freely (login, 2FA, navigate, scroll)
+6. Human clicks "Done Capturing" (or closes the window) to signal completion
+7. Drain in-flight body fetches so the final `Network.responseReceived`
+   events carry bodies
+8. Close the context and exit cleanly (nonzero on failure)
 
-**Verification:** The output `.har` file is valid JSON, contains entries for all
-expected endpoints, and is not truncated.
+**Verification:** The output JSONL stream is well-formed (one JSON object
+per line), contains `Network.responseReceived` events for all expected
+endpoints, and those events carry `params.response.body` where the response
+had a body. A downstream `chrome-har` pass produces a valid HAR document.
