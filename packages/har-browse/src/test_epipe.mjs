@@ -1,75 +1,70 @@
 #!/usr/bin/env node
 /**
- * Verify the stdout-EPIPE guard in `har_browse.mjs` pattern:
- * - Downstream consumer closes its stdin (e.g. `head -n 1`, or jq with
- *   `limit`) before the producer finishes.
- * - Producer should exit quickly and quietly — no Node `Error: write EPIPE`
- *   stack trace on stderr.
- *
- * We test the pattern (not the browser-driving binary, which is hard to
- * run headlessly without human interaction) by running a small child
- * that replicates the guard: an error handler on stdout + a loop that
- * breaks when the flag is set.
+ * `har-browse <url> | head -n 1` exits cleanly: no EPIPE stack,
+ * no orphan Chromium.
  */
-import { spawn } from "node:child_process";
+import { execFile, spawn } from "node:child_process";
+import { rmSync } from "node:fs";
+import { homedir } from "node:os";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
 
-const producerScript = `
-  let stdoutClosed = false;
-  process.stdout.on("error", (err) => {
-    if (err.code === "EPIPE") stdoutClosed = true;
-    else throw err;
-  });
-  (async () => {
-    for (let i = 0; i < 10000; i++) {
-      if (stdoutClosed) process.exit(0);
-      process.stdout.write(JSON.stringify({ i }) + "\\n");
-      // Yield occasionally so the EPIPE can propagate.
-      if (i % 50 === 0) await new Promise((r) => setImmediate(r));
-    }
-  })();
-`;
-
-const producer = spawn("node", ["-e", producerScript], {
-  stdio: ["ignore", "pipe", "pipe"],
-});
-const consumer = spawn("sed", ["-n", "1,1p"], {
-  stdio: [producer.stdout, "pipe", "inherit"],
-});
-
-let consumerOut = "";
-consumer.stdout.on("data", (d) => (consumerOut += d.toString()));
-
-let producerErr = "";
-producer.stderr.on("data", (d) => (producerErr += d.toString()));
-
-const producerExit = new Promise((resolve) =>
-  producer.on("exit", (code, signal) => resolve({ code, signal })),
-);
-const consumerExit = new Promise((resolve) =>
-  consumer.on("exit", (code, signal) => resolve({ code, signal })),
+const exec = promisify(execFile);
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const port = 8767;
+const profileName = `epipe-test-${process.pid}`;
+// Don't override XDG_CACHE_HOME for the bin — playwright uses it to
+// locate its bundled Chromium. Unique profile name + directed cleanup.
+const profileDir = join(
+  process.env.XDG_CACHE_HOME || join(homedir(), ".cache"),
+  "har-browse",
+  "profile",
+  profileName,
 );
 
-const timeout = new Promise((_, reject) =>
-  setTimeout(() => reject(new Error("timeout: producer did not exit")), 5000),
+const server = spawn(
+  "python3",
+  [
+    "-m",
+    "http.server",
+    String(port),
+    "--directory",
+    join(__dirname, "..", "toy_server"),
+  ],
+  { stdio: "ignore" },
 );
 
-const [pRes] = await Promise.all([
-  Promise.race([producerExit, timeout]),
-  consumerExit,
-]);
+for (let i = 0; i < 50; i++) {
+  try {
+    if ((await fetch(`http://127.0.0.1:${port}/`)).ok) break;
+  } catch {
+    // server not yet listening; retry
+  }
+  await new Promise((r) => setTimeout(r, 100));
+}
 
-console.log("consumer out: " + JSON.stringify(consumerOut.trim()));
-console.log("producer exit: " + JSON.stringify(pRes));
-console.log(
-  "producer stderr: " +
-    JSON.stringify(producerErr.length ? producerErr.slice(0, 200) : ""),
-);
+try {
+  // sh-built pipeline so the OS pipe is direct between har-browse and
+  // head — no Node mediation that could keep the pipe alive after head
+  // exits.
+  const bin = join(__dirname, "har_browse.mjs");
+  const cmd = `node ${JSON.stringify(bin)} --profile ${profileName} http://127.0.0.1:${port}/ | head -n 1`;
+  const { stdout, stderr } = await exec("sh", ["-c", cmd], { timeout: 30000 });
 
-const stderrClean =
-  !producerErr.includes("EPIPE") && !producerErr.includes("Unhandled");
-const firstLineReceived = /^\{"i":0\}$/.test(consumerOut.trim());
-const producerExitedCleanly = pRes.code === 0;
+  const parsed = JSON.parse(stdout.trim());
+  console.log("json keys: " + JSON.stringify(Object.keys(parsed)));
 
-const pass = stderrClean && firstLineReceived && producerExitedCleanly;
-console.log(pass ? "PASS" : "FAIL");
-if (!pass) process.exit(1);
+  if (
+    stderr.includes("Error: write EPIPE") ||
+    stderr.includes("Unhandled 'error' event")
+  ) {
+    console.log("stderr:\n" + stderr);
+    console.log("FAIL");
+    process.exit(1);
+  }
+  console.log("PASS");
+} finally {
+  server.kill();
+  rmSync(profileDir, { recursive: true, force: true });
+}

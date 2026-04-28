@@ -22,9 +22,10 @@ parses as JSON and contains 6 messages. All green.
 **`003` — EPIPE guard.** Added a stdout `error` handler in
 `har_browse.mjs` that flags EPIPE; the loop checks the flag and
 breaks. Breaking lets the generator's `finally` (`context.close()`)
-run — important so Chromium isn't orphaned. `test_epipe.mjs` runs a
-miniature producer with the same pattern, pipes through
-`sed -n 1,1p`, and asserts the producer exits 0 with empty stderr.
+run — important so Chromium isn't orphaned. `test_epipe.mjs` spawns
+the real bin via `sh -c 'har-browse $URL | head -n 1'`, parses the
+first line as JSON, and asserts clean exit + no EPIPE stack in
+stderr.
 
 **Test ergonomics fix.** `test_e2e_har.mjs` initially used a 500ms
 sleep to wait for the toy server. Hit a flaky `ERR_EMPTY_RESPONSE`
@@ -33,24 +34,25 @@ poll-with-fetch loop that retries until the server responds.
 
 ## Decisions
 
-**`sed -n 1,1p` instead of `head -1` in the EPIPE test.** Per
-`must-read.d/before/ANY-shell-commands.md`: avoid `head` because it
-causes SIGPIPE. (Funny: that rule applies to the *test consumer*
-here, not the system under test, which is exactly designed to
-survive that signal.)
+**`head -n 1` is correct here, not `sed`.** The shell-commands rule
+to avoid `head` (it causes SIGPIPE) applies to *our* scripts, where
+SIGPIPE is undesirable. In this test SIGPIPE is the system under
+test. `sed -n '1,1p'` is *not* equivalent: it prints the first line
+but keeps reading to EOF, so the producer's pipe never closes —
+yields a false positive that quietly waits for a Done click before
+"passing."
+
+**`sh -c 'producer | head'` beats Node-mediated piping.** First
+attempt wired the consumer's stdin to the producer's `stdout` Stream
+via `stdio: [harBrowse.stdout, ...]`. Node holds a read-side ref to
+that stream; the OS pipe between the two children isn't direct, so
+when `head` exits Node keeps draining and har-browse never sees
+EPIPE. Letting `sh` build the pipeline gives a real OS pipe.
 
 **EPIPE flag-and-break, not `process.exit(0)`.** The subtask file
 suggested either; flag-and-break preserves the generator's `finally`,
 which closes the browser context. `process.exit` would skip it and
 risk a zombie Chromium.
-
-**Test the EPIPE pattern, not the binary.** `har_browse.mjs` waits
-on a "Done" click (no headless mode in the bin), so testing
-end-to-end EPIPE through the real bin requires either a headless mode
-flag (scope creep) or human interaction (not testable). The guard
-itself is ~5 lines of generic Node — testing the pattern in a
-miniature reproduction gives the same coverage. If the pattern ever
-moves into a shared helper, the test moves with it.
 
 **Decode `content.encoding === "base64"` in the test, not at the
 emitter.** chrome-har faithfully propagates our `encoding: "base64"`
