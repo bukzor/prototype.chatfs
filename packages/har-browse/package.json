@@ -3,12 +3,14 @@
   "version": "1.0.0",
   "homepage": "https://github.com/bukzor/prototype.chatfs",
   "bin": {
-    "har-browse": "./src/har_browse.mjs"
+    "har-browse": "./src/har_browse.mjs",
+    "cdp-to-har": "./src/cdp_to_har.mjs"
   },
   "scripts": {
-    "test": "./src/test_persistent_injection.mjs && ./src/test_e2e_example.mjs",
+    "test": "./src/test_persistent_injection.mjs && ./src/test_e2e_example.mjs && ./src/test_e2e_har.mjs && ./src/test_epipe.mjs",
     "test:unit": "./src/test_persistent_injection.mjs",
-    "test:e2e": "./src/test_e2e_example.mjs"
+    "test:e2e": "./src/test_e2e_example.mjs && ./src/test_e2e_har.mjs",
+    "test:epipe": "./src/test_epipe.mjs"
   },
   "private": true,
   "packageManager": "pnpm@10.33.0",
@@ -17,6 +19,7 @@
     "node": ">=22"
   },
   "dependencies": {
+    "chrome-har": "^1.2.1",
     "playwright": "^1.58.2",
     "playwright-core": "^1.58.2"
   }

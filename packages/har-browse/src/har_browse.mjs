@@ -21,6 +21,16 @@ console.error(
   "Launching browser. Click 'Done Capturing' when finished, or close the window to cancel.",
 );
 
+// Downstream consumer (head, jq with `limit`, etc.) may close the pipe
+// before we're done. Flag EPIPE so the loop can break cleanly and the
+// generator's finally can close the browser context.
+let stdoutClosed = false;
+process.stdout.on("error", (err) => {
+  if (err.code === "EPIPE") stdoutClosed = true;
+  else throw err;
+});
+
 for await (const ev of captureEvents({ url, profileDir, howto })) {
+  if (stdoutClosed) break;
   process.stdout.write(JSON.stringify(ev) + "\n");
 }

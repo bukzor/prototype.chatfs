@@ -124,8 +124,7 @@ export async function* captureEvents({
   // before signalling end so their emits land in the queue first.
   Promise.race([
     page.waitForFunction(
-      () =>
-        document.getElementById("capture-done")?.dataset.clicked === "true",
+      () => document.getElementById("capture-done")?.dataset.clicked === "true",
     ),
     context.waitForEvent("close"),
   ])
