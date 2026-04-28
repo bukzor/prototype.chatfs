@@ -7,10 +7,9 @@
     "cdp-to-har": "./src/cdp_to_har.mjs"
   },
   "scripts": {
-    "test": "node --test tests/*.mjs",
-    "test:unit": "node --test tests/persistent_injection.spec.mjs",
-    "test:e2e": "node --test tests/example.spec.mjs tests/har.spec.mjs",
-    "test:epipe": "node --test tests/epipe.test.mjs"
+    "test": "node --test tests/epipe.test.mjs && playwright test",
+    "test:epipe": "node --test tests/epipe.test.mjs",
+    "test:e2e": "playwright test"
   },
   "private": true,
   "packageManager": "pnpm@10.33.0",
@@ -22,5 +21,8 @@
     "chrome-har": "^1.2.1",
     "playwright": "^1.58.2",
     "playwright-core": "^1.58.2"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.59.1"
   }
 }

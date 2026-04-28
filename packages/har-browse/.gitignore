@@ -1,1 +1,7 @@
 out.har
+
+# playwright failure artifacts
+test-results/
+
+# captured event stream from manual runs
+events.jsonl
