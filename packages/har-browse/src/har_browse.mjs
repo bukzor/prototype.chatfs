@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { parseArgs } from "node:util";
 import { readFileSync } from "node:fs";
-import { captureEvents } from "./capture.mjs";
+import { startCapture } from "./capture.mjs";
 import { cachePath } from "./cache.mjs";
 
 const { values, positionals } = parseArgs({
@@ -30,7 +30,12 @@ process.stdout.on("error", (err) => {
   else throw err;
 });
 
-for await (const ev of captureEvents({ url, profileDir, howto })) {
-  if (stdoutClosed) break;
-  process.stdout.write(JSON.stringify(ev) + "\n");
+const session = await startCapture({ url, profileDir, howto });
+try {
+  for await (const ev of session.events) {
+    if (stdoutClosed) break;
+    process.stdout.write(JSON.stringify(ev) + "\n");
+  }
+} finally {
+  await session.close();
 }

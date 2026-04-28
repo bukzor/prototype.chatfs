@@ -4,31 +4,31 @@ import { chromium } from "./playwright.mjs";
 import { injectOverlay } from "./inject.mjs";
 
 /**
- * Launch a persistent-context browser and yield a Chrome DevTools Protocol
- * event stream as JSONL. Each yielded object is `{method, params}` — the
- * wire format that `chrome-har` and other CDP-consuming tools expect.
- * Response bodies are attached to `Network.responseReceived.params.response`
- * as `.body` (+ `.encoding = "base64"` when applicable), per chrome-har's
- * convention.
+ * Launch a persistent-context browser and expose a Chrome DevTools Protocol
+ * event stream. Each event is `{method, params}` — the wire format that
+ * `chrome-har` and other CDP-consuming tools expect. Response bodies are
+ * attached to `Network.responseReceived.params.response` as `.body`
+ * (+ `.encoding = "base64"` when applicable), per chrome-har's convention.
  *
- * The stream ends when the user clicks the injected "Done" button or
- * closes the window.
+ * Returns a session: callers interact with `page` directly, drain `events`,
+ * and call `close()` when finished. The `events` iterable ends when the
+ * user clicks the injected "Done" button, closes the window, or the
+ * caller invokes `close()`.
  *
  * @param {object} opts
  * @param {string} opts.url
  * @param {string} opts.profileDir
  * @param {string} [opts.howto]  pre-read howto content (string, not path)
  * @param {boolean} [opts.headless=false]
- * @param {(page: import("playwright").Page) => Promise<void>} [opts.onPageReady]
- * @returns {AsyncGenerator<{method: string, params: object}>}
+ * @returns {Promise<{
+ *   page: import("playwright").Page,
+ *   context: import("playwright").BrowserContext,
+ *   events: AsyncIterable<{method: string, params: object}>,
+ *   done: Promise<void>,
+ *   close: () => Promise<void>,
+ * }>}
  */
-export async function* captureEvents({
-  url,
-  profileDir,
-  howto,
-  headless = false,
-  onPageReady,
-}) {
+export async function startCapture({ url, profileDir, howto, headless = false }) {
   mkdirSync(profileDir, { recursive: true });
 
   const context = await chromium.launchPersistentContext(profileDir, {
@@ -45,8 +45,10 @@ export async function* captureEvents({
   });
 
   const out = new EventEmitter();
+  // Subscribe BEFORE any CDP attachment so events emitted during setup
+  // and navigation are buffered, not dropped. on() does not retroactively
+  // capture events emitted before the iterator existed.
   const stream = on(out, "event", { close: ["end"] });
-
   const emit = (msg) => out.emit("event", msg);
 
   // Drain tracker: body-fetch lookups need to finish before we emit "end".
@@ -118,11 +120,9 @@ export async function* captureEvents({
   await injectOverlay(page, { howto });
   await page.goto(url, { waitUntil: "commit" });
 
-  if (onPageReady) await onPageReady(page);
-
   // Termination: Done click or window close. Drain in-flight body-fetches
   // before signalling end so their emits land in the queue first.
-  Promise.race([
+  const done = Promise.race([
     page.waitForFunction(
       () => document.getElementById("capture-done")?.dataset.clicked === "true",
     ),
@@ -134,13 +134,14 @@ export async function* captureEvents({
       out.emit("end");
     });
 
-  try {
-    for await (const [msg] of stream) {
-      yield msg;
-    }
-  } finally {
-    if (!contextClosed) {
-      await context.close();
-    }
-  }
+  const events = (async function* () {
+    for await (const [msg] of stream) yield msg;
+  })();
+
+  const close = async () => {
+    if (!contextClosed) await context.close();
+    await done;
+  };
+
+  return { page, context, events, done, close };
 }

@@ -47,38 +47,42 @@ after(() => {
 
 test("Done Capturing button survives navigations", { timeout: 60000 }, async () => {
   const browser = await chromium.launch({ headless: true });
-  const context = await browser.newContext({
-    recordHar: { path: harPath, mode: "full" },
-  });
-  const page = await context.newPage();
+  try {
+    const context = await browser.newContext({
+      recordHar: { path: harPath, mode: "full" },
+    });
+    try {
+      const page = await context.newPage();
 
-  await injectOverlay(page);
+      await injectOverlay(page);
 
-  await page.goto(`http://127.0.0.1:${port}`, { waitUntil: "networkidle" });
-  assert.equal(await page.locator("#capture-done").count(), 1, "after initial load");
+      await page.goto(`http://127.0.0.1:${port}`, { waitUntil: "networkidle" });
+      assert.equal(await page.locator("#capture-done").count(), 1, "after initial load");
 
-  await page.goto(`http://127.0.0.1:${port}/index.html`, {
-    waitUntil: "networkidle",
-  });
-  assert.equal(await page.locator("#capture-done").count(), 1, "after 2nd navigation");
+      await page.goto(`http://127.0.0.1:${port}/index.html`, {
+        waitUntil: "networkidle",
+      });
+      assert.equal(await page.locator("#capture-done").count(), 1, "after 2nd navigation");
 
-  await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: "networkidle" });
-  assert.equal(await page.locator("#capture-done").count(), 1, "after 3rd navigation");
+      await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: "networkidle" });
+      assert.equal(await page.locator("#capture-done").count(), 1, "after 3rd navigation");
 
-  await page.click("#capture-done");
-  const clicked = await page.evaluate(
-    () => document.getElementById("capture-done")?.dataset.clicked,
-  );
-  assert.equal(clicked, "true");
+      await page.click("#capture-done");
+      const clicked = await page.evaluate(
+        () => document.getElementById("capture-done")?.dataset.clicked,
+      );
+      assert.equal(clicked, "true");
 
-  // Verify waitForFunction works (what har_browse.mjs uses)
-  await page.waitForFunction(
-    () => document.getElementById("capture-done")?.dataset.clicked === "true",
-    { timeout: 5000 },
-  );
-
-  await context.close();
-  await browser.close();
+      await page.waitForFunction(
+        () => document.getElementById("capture-done")?.dataset.clicked === "true",
+        { timeout: 5000 },
+      );
+    } finally {
+      await context.close();
+    }
+  } finally {
+    await browser.close();
+  }
 
   const har = JSON.parse(readFileSync(harPath, "utf-8"));
   const apiEntries = har.log.entries.filter((e) =>

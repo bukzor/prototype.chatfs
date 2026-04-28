@@ -1,5 +1,5 @@
 /**
- * End-to-end: captureEvents → harFromMessages → HAR 1.2 document.
+ * End-to-end: startCapture → harFromMessages → HAR 1.2 document.
  *
  * Validates the central post-pivot claim: the JSONL we emit (CDP
  * `{method, params}` with bodies attached at
@@ -17,7 +17,7 @@ import { after, before, test } from "node:test";
 import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
 import { harFromMessages } from "chrome-har";
-import { captureEvents } from "./capture.mjs";
+import { startCapture } from "./capture.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const port = 8766;
@@ -54,22 +54,25 @@ after(() => {
   rmSync(profileDir, { recursive: true, force: true });
 });
 
-test("captureEvents → chrome-har produces usable HAR", { timeout: 60000 }, async () => {
-  const messages = [];
-  for await (const msg of captureEvents({
+test("startCapture → chrome-har produces usable HAR", { timeout: 60000 }, async () => {
+  const session = await startCapture({
     url: `http://127.0.0.1:${port}`,
     profileDir,
     headless: true,
-    onPageReady: async (page) => {
-      // Fetch the fixture so it lands in the event stream.
-      await page.evaluate(() =>
-        fetch("/api/conversation").then((r) => r.text()),
-      );
-      await page.waitForLoadState("networkidle");
-      await page.click("#capture-done");
-    },
-  })) {
-    messages.push(msg);
+  });
+  let messages;
+  try {
+    // Fetch the fixture so it lands in the event stream.
+    await session.page.evaluate(() =>
+      fetch("/api/conversation").then((r) => r.text()),
+    );
+    await session.page.waitForLoadState("networkidle");
+    await session.page.click("#capture-done");
+
+    messages = [];
+    for await (const msg of session.events) messages.push(msg);
+  } finally {
+    await session.close();
   }
 
   const har = await harFromMessages(messages, {
