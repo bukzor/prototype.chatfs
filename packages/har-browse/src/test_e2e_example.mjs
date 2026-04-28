@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * End-to-end test: captureEvents() against the real internet (example.com).
  *
@@ -12,11 +11,21 @@
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { after, before, test } from "node:test";
+import assert from "node:assert/strict";
 import { captureEvents } from "./capture.mjs";
 
-const profileDir = mkdtempSync(join(tmpdir(), "har-browse-e2e-"));
+let profileDir;
 
-try {
+before(() => {
+  profileDir = mkdtempSync(join(tmpdir(), "har-browse-e2e-"));
+});
+
+after(() => {
+  rmSync(profileDir, { recursive: true, force: true });
+});
+
+test("captureEvents against example.com", { timeout: 60000 }, async () => {
   const messages = [];
   for await (const msg of captureEvents({
     url: "https://example.com",
@@ -38,8 +47,7 @@ try {
       m.method === "Network.responseReceived" &&
       m.params.response?.url?.includes("example.com"),
   );
-  console.log("messages: " + messages.length);
-  console.log("example.com responseReceived: " + responses.length);
+  assert.ok(responses.length >= 1, `got ${responses.length} example.com responses`);
 
   const r = responses[0];
   const body = r?.params?.response?.body ?? "";
@@ -47,13 +55,5 @@ try {
     r?.params?.response?.encoding === "base64"
       ? Buffer.from(body, "base64").toString("utf-8")
       : body;
-  console.log(
-    `example.com[0]: url=${r?.params?.response?.url} status=${r?.params?.response?.status} text-len=${text.length} sample=${JSON.stringify(text.slice(0, 80))}`,
-  );
-
-  const pass = responses.length >= 1 && text.includes("Example Domain");
-  console.log(pass ? "PASS" : "FAIL");
-  if (!pass) process.exit(1);
-} finally {
-  rmSync(profileDir, { recursive: true, force: true });
-}
+  assert.match(text, /Example Domain/);
+});
