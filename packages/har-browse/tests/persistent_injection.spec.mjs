@@ -10,7 +10,7 @@ import { dirname, join } from "node:path";
 import { after, before, test } from "node:test";
 import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
-import { injectOverlay } from "./inject.mjs";
+import { injectOverlay } from "../src/inject.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const harPath = "/tmp/test-persistent-injection.har";

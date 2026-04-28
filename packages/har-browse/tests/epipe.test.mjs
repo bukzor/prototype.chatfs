@@ -56,7 +56,7 @@ test("har-browse | head -n 1 exits cleanly", { timeout: 60000 }, async () => {
   // sh-built pipeline so the OS pipe is direct between har-browse and
   // head — no Node mediation that could keep the pipe alive after head
   // exits.
-  const bin = join(__dirname, "har_browse.mjs");
+  const bin = join(__dirname, "..", "src", "har_browse.mjs");
   const cmd = `node ${JSON.stringify(bin)} --profile ${profileName} http://127.0.0.1:${port}/ | head -n 1`;
   const { stdout, stderr } = await exec("sh", ["-c", cmd], { timeout: 30000 });
 

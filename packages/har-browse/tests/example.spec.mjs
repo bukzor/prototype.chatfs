@@ -13,7 +13,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, before, test } from "node:test";
 import assert from "node:assert/strict";
-import { startCapture } from "./capture.mjs";
+import { startCapture } from "../src/capture.mjs";
 
 let profileDir;
 

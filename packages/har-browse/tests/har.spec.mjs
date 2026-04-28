@@ -17,7 +17,7 @@ import { after, before, test } from "node:test";
 import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
 import { harFromMessages } from "chrome-har";
-import { startCapture } from "./capture.mjs";
+import { startCapture } from "../src/capture.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const port = 8766;
