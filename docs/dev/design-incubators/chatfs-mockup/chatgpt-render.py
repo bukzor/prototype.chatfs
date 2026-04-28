@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
-"""Render a conversation's current_node path into the $TITLE.md placeholder.
+"""Render a conversation's mapping into the $TITLE.md placeholder.
 
-Walks from the root of `mapping` to `current_node` (the head pointer the
-ChatGPT UI persists for "what the user is looking at"), emits one section
-per message: a `## <role>` heading, a `<file:...>` autolink backref to
-the atomic turn-file under $TIMESTAMP.splat/messages/, and the message
-body if any.
+Walks `mapping` from root, emitting one section per textual turn. The
+live path (root → current_node) renders unprefixed; dead branches off
+each fork are blockquoted at depth = how many forks deep they sit
+inside, and appear right after the fork point so they read as
+quoted-asides between the parent turn and the live continuation.
+
+Each section: a `# [seq · role · time](…)` H1 backref to the atomic
+turn-file under $TIMESTAMP.splat/messages/, then the message body.
 
 Usage:
     chatgpt-render.py <path-inside-page-dir>
@@ -24,6 +27,25 @@ def walk_to_current(mapping: Mapping[str, dict], current: str) -> list[str]:
         node = mapping[node].get("parent")
     path.reverse()
     return path
+
+
+def primary_child(
+    children: list[str],
+    live_set: set[str],
+    mapping: Mapping[str, dict],
+) -> str | None:
+    """Pick the child to continue inline. Live child wins; else latest."""
+    for c in children:
+        if c in live_set:
+            return c
+    if not children:
+        return None
+
+    def ct(c: str) -> float:
+        m = mapping[c].get("message") or {}
+        return m.get("create_time") or 0.0
+
+    return max(children, key=ct)
 
 
 def main() -> None:
@@ -59,29 +81,61 @@ def main() -> None:
             by_uuid[uuid] = (stem, ts, role, content_type)
 
     rel_to_messages = messages_dir.relative_to(page)
+    live_set = set(walk_to_current(mapping, current))
 
-    sections: list[str] = []
-    for uuid in walk_to_current(mapping, current):
-        record = by_uuid.get(uuid)
-        if record is None:
-            continue
-        stem, ts, role, content_type = record
-        md_path = messages_dir / f"{stem}.md"
-        if not md_path.exists():
-            continue
-        time_of_day = ts[11:19]  # 'HH:MM:SS' from '<date>T<HH:MM:SS>,<ns><tz>'
-        seq = f"{len(sections):03d}"
-        heading_text = f"{seq} · {role} · {time_of_day}"
-        if content_type != "text":
-            heading_text += f" ({content_type.replace('_', ' ')})"
-        link = f"{rel_to_messages}/{stem}.md"
-        body = md_path.read_text()
-        sections.append(f"# [{heading_text}]({link})\n\n{body.rstrip()}\n")
+    sections: list[tuple[int, str]] = []
 
+    def render(node_id: str, depth: int) -> None:
+        record = by_uuid.get(node_id)
+        if record is not None:
+            stem, ts, role, content_type = record
+            md_path = messages_dir / f"{stem}.md"
+            if md_path.exists():
+                time_of_day = ts[11:19]  # 'HH:MM:SS' from '<date>T<HH:MM:SS>,<ns><tz>'
+                seq = f"{len(sections):03d}"
+                heading_text = f"{seq} · {role} · {time_of_day}"
+                if content_type != "text":
+                    heading_text += f" ({content_type.replace('_', ' ')})"
+                link = f"{rel_to_messages}/{stem}.md"
+                body = md_path.read_text().rstrip()
+                section = f"# [{heading_text}]({link})\n\n{body}\n"
+                if depth > 0:
+                    prefix = "> " * depth
+                    section = "".join(
+                        (prefix + line).rstrip() + "\n"
+                        for line in section.splitlines()
+                    )
+                sections.append((depth, section))
+
+        children = list(mapping[node_id].get("children") or [])
+        primary = primary_child(children, live_set, mapping)
+        for c in children:
+            if c == primary:
+                continue
+            render(c, depth + 1)
+        if primary is not None:
+            render(primary, depth)
+
+    root = next(nid for nid, m in mapping.items() if m.get("parent") is None)
+    render(root, 0)
+
+    out_parts: list[str] = []
+    prev_depth = -1
+    for depth, body in sections:
+        if out_parts:
+            if depth > 0 and prev_depth == depth:
+                # Same dead branch continuing — separator must stay quoted.
+                out_parts.append(("> " * depth).rstrip() + "\n")
+            else:
+                out_parts.append("\n")
+        out_parts.append(body)
+        prev_depth = depth
+
+    output = "".join(out_parts)
     out = page / f"{title}.md"
     if out.is_symlink():
         out.unlink()
-    out.write_text("\n".join(sections))
+    out.write_text(output)
     print(f"Rendered {len(sections)} turn(s) → {out}", file=sys.stderr)
 
 
