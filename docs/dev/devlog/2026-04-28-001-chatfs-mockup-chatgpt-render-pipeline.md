@@ -1,4 +1,4 @@
-# 2026-04-28: chatfs-mockup — end-to-end render pipeline
+# 2026-04-28: chatfs-mockup-chatgpt — end-to-end render pipeline
 
 ## Focus
 
