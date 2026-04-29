@@ -1,5 +1,5 @@
 #!/bin/bash
-# chatgpt-index.sh — capture chatgpt.com and pluck the chat-index pages.
+# chatfs_chatgpt_index_browse.sh — capture chatgpt.com and pluck the chat-index pages.
 # Re-captures chatgpt.index.cdp.jsonl only when missing or older than 1 hour.
 #
 # Outputs:
@@ -31,6 +31,6 @@ else
   har-browse https://chatgpt.com > "$CDP"
 fi
 
-"$HERE/chatgpt-index-pluck.jq" < "$CDP" > "$INDEX"
+"$HERE/chatfs_chatgpt_index_pluck.jq" < "$CDP" > "$INDEX"
 
 echo >&2 "Wrote $INDEX ($(wc -l < "$INDEX") page(s))."

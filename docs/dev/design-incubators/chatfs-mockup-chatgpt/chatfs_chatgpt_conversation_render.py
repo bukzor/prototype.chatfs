@@ -11,7 +11,7 @@ Each section: a `# [seq · role · time](…)` H1 backref to the atomic
 turn-file under $TIMESTAMP.splat/messages/, then the message body.
 
 Usage:
-    chatgpt-render.py <path-inside-page-dir>
+    chatfs_chatgpt_conversation_render.py <path-inside-page-dir>
 """
 import json
 import sys

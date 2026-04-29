@@ -19,20 +19,20 @@ chatfs.demo/chatgpt/YYYY/MM/DD/HH:MM:SS/
     $TITLE.md                 # rendered current_node path with dead-branch asides
 ```
 
-1. **Index capture** (`chatgpt-index.sh` + `chatgpt-index-pluck.jq`) —
+1. **Index capture** (`chatfs_chatgpt_index_browse.sh` + `chatfs_chatgpt_index_pluck.jq`) —
    drives `har-browse` against `https://chatgpt.com`, stores the raw
    CDP event stream as `chatgpt.index.cdp.jsonl`, plucks
    `/backend-api/conversations?...` responses to `chatgpt.index.jsonl`.
    Re-uses the cached CDP file if it is less than an hour old.
-2. **Index splat** (`chatgpt-index-splat.py`) — reads the index pages
+2. **Index splat** (`chatfs_chatgpt_index_splat.py`) — reads the index pages
    on stdin and materializes the date tree, including a `meta.json`
    per timestamp directory.
-3. **Per-conversation capture** (`chatgpt-page-capture.py`) — drives
+3. **Per-conversation capture** (`chatfs_chatgpt_conversation_path_browse.py`) — drives
    `har-browse` against each conversation URL, writes
-   `content.cdp.jsonl`, runs `chatgpt-conversation-pluck.jq` →
+   `content.cdp.jsonl`, runs `chatfs_chatgpt_conversation_pluck.jq` →
    `$UUID.json`, then `chatgpt-splat` → `$UUID.splat/` (one
    `.json`/`.md` pair per message, plus `conversations/` view).
-4. **Render** (`chatgpt-render.py`) — walks the full mapping tree
+4. **Render** (`chatfs_chatgpt_conversation_render.py`) — walks the full mapping tree
    from `current_node` back to root, emits H1 turn headings
    `(seq · role · time, variant suffix)` linking to the atomic `.md`
    under `messages/`. Dead branches render as nested blockquoted
@@ -41,11 +41,11 @@ chatfs.demo/chatgpt/YYYY/MM/DD/HH:MM:SS/
 ## Run it
 
 ```bash
-cd docs/dev/design-incubators/chatfs-mockup
-./chatgpt-index.sh                              # capture + pluck index
-./chatgpt-index-splat.py < chatgpt.index.jsonl  # build the date tree
-./chatgpt-page-capture.py <ts-dir>              # capture+splat one conversation
-./chatgpt-render.py <ts-dir>                    # write $TITLE.md
+cd docs/dev/design-incubators/chatfs-mockup-chatgpt
+./chatfs_chatgpt_index_browse.sh                              # capture + pluck index
+./chatfs_chatgpt_index_splat.py < chatgpt.index.jsonl         # build the date tree
+./chatfs_chatgpt_conversation_path_browse.py <ts-dir>         # capture+splat one conversation
+./chatfs_chatgpt_conversation_render.py <ts-dir>              # write $TITLE.md
 tree chatfs.demo/ | head -20
 ```
 

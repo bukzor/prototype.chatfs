@@ -2,7 +2,7 @@
 """Capture a chatgpt.com conversation page.
 
 Usage:
-    chatgpt-page-capture.py <path-to-page-file>
+    chatfs_chatgpt_conversation_path_browse.py <path-to-page-file>
 
 <path-to-page-file> is anything inside a per-conversation directory
 containing meta.json (e.g. the .md placeholder or meta.json itself).
@@ -39,7 +39,7 @@ def main() -> None:
         with out.open("wb") as f:
             subprocess.run(["har-browse", url], stdout=f, check=True)
 
-    pluck = Path(__file__).parent / "chatgpt-conversation-pluck.jq"
+    pluck = Path(__file__).parent / "chatfs_chatgpt_conversation_pluck.jq"
     conversation = page / f"{meta['id']}.json"
     print(f"Plucking conversation → {conversation} ...", file=sys.stderr)
     with out.open("rb") as src, conversation.open("wb") as dst:
