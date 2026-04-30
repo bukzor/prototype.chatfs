@@ -19,6 +19,15 @@ exclude = ["packages/chatfs-fuser", "packages/har-browse"]
 chatfs = { workspace = true }
 bukzor-chatgpt-export = { workspace = true }
 
+[tool.pyright]
+# Temporary workaround: design-incubators use flat sibling-importing scripts
+# rather than proper packages. Each incubator dir gets a scoped extraPath so
+# pyright resolves intra-incubator imports without polluting the global module
+# namespace. Drop entries here when an incubator graduates to packages/*.
+executionEnvironments = [
+  { root = "docs/dev/design-incubators/chatfs-mockup-chatgpt", extraPaths = ["docs/dev/design-incubators/chatfs-mockup-chatgpt"] },
+]
+
 [tool.pytest.ini_options]
 python_classes = ["Describe*", "When*", "Test*"]
 python_functions = ["it_*", "test_*"]

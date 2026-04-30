@@ -7,16 +7,24 @@ Usage:
 <path-to-page-file> is anything inside a per-conversation directory
 containing meta.json (e.g. the .md placeholder or meta.json itself).
 The conversation id is read from meta.json; output is written next to
-it as content.cdp.jsonl.
+it as cdp.jsonl.
+
+Steps:
+    1. browse $url → cdp.jsonl
+    2. pluck cdp.jsonl → $UUID.json
+    3. delegate to chatfs_chatgpt_path_render.py (splat + render)
+
+Pluck is an implementation detail of browse here; iterators that
+want to re-render without re-capturing should use path_render directly.
 """
 import json
 import subprocess
 import sys
-import time
 from pathlib import Path
 
-MOUNT = Path(__file__).parent / "chatfs.demo"
-MAX_AGE_SEC = 1000 * 60 * 60  # XXX: temporarily 1000h
+HERE = Path(__file__).parent
+PLUCK = HERE / "chatfs_chatgpt_conversation_pluck.jq"
+PATH_RENDER = HERE / "chatfs_chatgpt_path_render.py"
 
 
 def main() -> None:
@@ -30,23 +38,21 @@ def main() -> None:
 
     meta = json.loads((page / "meta.json").read_text())
     url = f"https://chatgpt.com/c/{meta['id']}"
-    out = page / "content.cdp.jsonl"
-
-    if out.exists() and time.time() - out.stat().st_mtime < MAX_AGE_SEC:
-        print(f"{out} is fresh (< {MAX_AGE_SEC // 60}m); skipping capture.", file=sys.stderr)
-    else:
-        print(f"Capturing {url} → {out} ...", file=sys.stderr)
-        with out.open("wb") as f:
-            subprocess.run(["har-browse", url], stdout=f, check=True)
-
-    pluck = Path(__file__).parent / "chatfs_chatgpt_conversation_pluck.jq"
+    cdp = page / "cdp.jsonl"
     conversation = page / f"{meta['id']}.json"
-    print(f"Plucking conversation → {conversation} ...", file=sys.stderr)
-    with out.open("rb") as src, conversation.open("wb") as dst:
-        subprocess.run([str(pluck)], stdin=src, stdout=dst, check=True)
 
-    print(f"Splatting {conversation} ...", file=sys.stderr)
-    subprocess.run(["chatgpt-splat", str(conversation)], check=True)
+    cdp.unlink(missing_ok=True)
+    conversation.unlink(missing_ok=True)
+
+    print(f"Capturing {url} → {cdp} ...", file=sys.stderr)
+    with cdp.open("wb") as f:
+        subprocess.run(["har-browse", url], stdout=f, check=True)
+
+    print(f"Plucking conversation → {conversation} ...", file=sys.stderr)
+    with cdp.open("rb") as src, conversation.open("wb") as dst:
+        subprocess.run([str(PLUCK)], stdin=src, stdout=dst, check=True)
+
+    subprocess.run([str(PATH_RENDER), str(page)], check=True)
 
 
 if __name__ == "__main__":
