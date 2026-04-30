@@ -18,6 +18,8 @@ chatfs chatgpt index splat
 
 chatfs chatgpt conversation url browse <url>
 chatfs chatgpt conversation path browse <ts-dir>
+chatfs chatgpt conversation url render <url>
+chatfs chatgpt conversation path render <ts-dir>
 chatfs chatgpt conversation render <ts-dir>
 ```
 
@@ -34,6 +36,10 @@ chatfs chatgpt conversation render <ts-dir>
   polymorphic single commands: a script that quietly accepts both a URL
   and a directory path is harder to read in a pipeline and harder to
   shell-complete.
+- **Bare-verb leaves** (`conversation render` with no locator) emit
+  data on stdout from already-prepared inputs. The locator-prefixed
+  forms (`path render`, `url render`) orchestrate splat + leaf-render
+  + file placement; they are the user's normal entry points.
 
 ## `splat` as a verb
 
@@ -54,6 +60,8 @@ Each subcommand path translates to a single script with `-` separators:
 | `chatgpt index splat` | `chatfs-chatgpt-index-splat` |
 | `chatgpt conversation url browse` | `chatfs-chatgpt-conversation-url-browse` |
 | `chatgpt conversation path browse` | `chatfs-chatgpt-conversation-path-browse` |
+| `chatgpt conversation url render` | `chatfs-chatgpt-conversation-url-render` |
+| `chatgpt conversation path render` | `chatfs-chatgpt-conversation-path-render` |
 | `chatgpt conversation render` | `chatfs-chatgpt-conversation-render` |
 
 Internal helpers (e.g. `*-pluck.jq` files) carry the same prefix so
