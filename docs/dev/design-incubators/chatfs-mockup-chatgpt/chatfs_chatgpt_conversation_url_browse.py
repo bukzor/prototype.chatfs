@@ -31,7 +31,7 @@ from chatfs_chatgpt_types import IndexItem
 HERE = Path(__file__).parent
 INDEX_PLUCK = HERE / "chatfs_chatgpt_index_pluck.jq"
 CONVERSATION_PLUCK = HERE / "chatfs_chatgpt_conversation_pluck.jq"
-PATH_RENDER = HERE / "chatfs_chatgpt_path_render.py"
+PATH_RENDER = HERE / "chatfs_chatgpt_conversation_path_render.py"
 ROOT = HERE / "chatfs.demo" / "chatgpt"
 
 

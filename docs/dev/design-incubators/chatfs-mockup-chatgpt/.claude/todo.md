@@ -35,7 +35,7 @@ browse-incidental meta capture.
 ## Loose ends
 
 - `foo.py`, `bar.py` — moved to `~/trash/`.
-- `chatfs_chatgpt_url_render.py` — capture-already-done convenience; not on
+- `chatfs_chatgpt_conversation_url_render.py` — capture-already-done convenience; not on
   either entry-point flow. Keep, fold into `path_render`, or delete?
 - End-to-end test against the real chatgpt URL — `har-browse` is interactive
   (waits for "Done Capturing"); needs user to run it. Smoke test: render

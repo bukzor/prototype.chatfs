@@ -52,7 +52,7 @@ the leaves.
    (`chatfs_chatgpt_conversation_path_browse.py <ts-dir>`) — captures
    one chat into an existing ts-dir (which already has `meta.json`
    from index splat), then delegates to path render.
-5. **Path render** (`chatfs_chatgpt_path_render.py <ts-dir>`) — splats
+5. **Path render** (`chatfs_chatgpt_conversation_path_render.py <ts-dir>`) — splats
    `$UUID.json` and runs the conversation render, redirecting its
    stdout into `$TITLE.md`.
 6. **Conversation render**

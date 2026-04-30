@@ -2,7 +2,7 @@
 """Render a conversation from already-plucked artifacts.
 
 Usage:
-    chatfs_chatgpt_path_render.py <path-inside-page-dir>
+    chatfs_chatgpt_conversation_path_render.py <path-inside-page-dir>
 
 Prerequisites (errors otherwise):
     $page/meta.json       — placed by index splat

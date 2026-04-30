@@ -2,11 +2,11 @@
 """Render a conversation by URL, using already-captured artifacts.
 
 Usage:
-    chatfs_chatgpt_url_render.py <chatgpt-url>
+    chatfs_chatgpt_conversation_url_render.py <chatgpt-url>
 
 Resolves the conversation UUID from the URL, locates the corresponding
 page directory under chatfs.demo/chatgpt/ (placed by index browse), and
-delegates to chatfs_chatgpt_path_render.py.
+delegates to chatfs_chatgpt_conversation_path_render.py.
 """
 import json
 import subprocess
@@ -42,7 +42,7 @@ def main() -> None:
     page = page_for_uuid(uuid, ROOT)
     print(f"Resolved {uuid} → {page}", file=sys.stderr)
 
-    path_render = Path(__file__).parent / "chatfs_chatgpt_path_render.py"
+    path_render = Path(__file__).parent / "chatfs_chatgpt_conversation_path_render.py"
     subprocess.run([str(path_render), str(page)], check=True)
 
 

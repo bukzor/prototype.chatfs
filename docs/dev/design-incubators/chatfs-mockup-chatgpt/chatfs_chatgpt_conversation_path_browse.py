@@ -12,7 +12,7 @@ it as cdp.jsonl.
 Steps:
     1. browse $url → cdp.jsonl
     2. pluck cdp.jsonl → $UUID.json
-    3. delegate to chatfs_chatgpt_path_render.py (splat + render)
+    3. delegate to chatfs_chatgpt_conversation_path_render.py (splat + render)
 
 Pluck is an implementation detail of browse here; iterators that
 want to re-render without re-capturing should use path_render directly.
@@ -24,7 +24,7 @@ from pathlib import Path
 
 HERE = Path(__file__).parent
 PLUCK = HERE / "chatfs_chatgpt_conversation_pluck.jq"
-PATH_RENDER = HERE / "chatfs_chatgpt_path_render.py"
+PATH_RENDER = HERE / "chatfs_chatgpt_conversation_path_render.py"
 
 
 def main() -> None:
