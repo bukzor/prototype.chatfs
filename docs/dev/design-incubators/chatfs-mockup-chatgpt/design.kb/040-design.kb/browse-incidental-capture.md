@@ -21,15 +21,15 @@ target conversation as one of its `items[]`.
 ## Consequence
 
 `conversation url browse` runs both pluck filters against its single
-captured CDP file:
+captured CDP file, placing the outputs in `.chat/$UUID/`:
 
-- `chatfs-chatgpt-conversation-pluck.jq` → `$UUID.json` (the mapping
-  document)
+- `chatfs-chatgpt-conversation-pluck.jq` → `conversation.json` (the
+  mapping document)
 - `chatfs-chatgpt-index-pluck.jq` → filtered to `.items[] | select(.id
   == $UUID)` → `meta.json`
 
-This makes `meta.json` deterministic from the same browse run that
-fetched the conversation, with no synthesis (see
+This makes `.chat/$UUID/meta.json` deterministic from the same browse
+run that fetched the conversation, with no synthesis (see
 `no-partial-synthesis.md`) and no separate `index browse` prerequisite
 for the common case.
 
@@ -41,7 +41,7 @@ pluck yields no matching item. The script must fail loudly rather than
 fall back to synthesizing `meta.json` from the conversation document.
 The user's recovery is to run `index browse` (which paginates the full
 list) followed by `conversation path browse` against the resulting
-ts-dir.
+chat dir.
 
 ## Why not always require `index browse` first
 

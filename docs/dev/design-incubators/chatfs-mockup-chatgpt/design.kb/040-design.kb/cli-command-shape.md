@@ -17,10 +17,10 @@ chatfs chatgpt index browse
 chatfs chatgpt index splat
 
 chatfs chatgpt conversation url browse <url>
-chatfs chatgpt conversation path browse <ts-dir>
+chatfs chatgpt conversation path browse <chat-dir>
 chatfs chatgpt conversation url render <url>
-chatfs chatgpt conversation path render <ts-dir>
-chatfs chatgpt conversation render <ts-dir>
+chatfs chatgpt conversation path render <chat-dir>
+chatfs chatgpt conversation render <chat-dir>
 ```
 
 - **Provider** (`chatgpt`) is the outermost grouping — multi-provider is

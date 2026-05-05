@@ -54,19 +54,23 @@ Per-doc minimal-touch update:
 
 ## Implementation Steps
 
-- [ ] `browse-incidental-capture.md`: update `$UUID.json` →
+- [x] `browse-incidental-capture.md`: update `$UUID.json` →
   `conversation.json`; clarify that the index pluck's match populates
   `.chat/$UUID/meta.json`.
-- [ ] `no-partial-synthesis.md`: `meta.json` examples → note the
+- [x] `no-partial-synthesis.md`: `meta.json` examples → note the
   `.chat/$UUID/meta.json` location.
-- [ ] `cli-command-shape.md`: scan for layout-specific examples; update
-  if found.
-- [ ] `stdio-pipeline-shape.md`: update orchestrator-target examples
-  if they assume ts-dir.
+- [x] `cli-command-shape.md`: scan for layout-specific examples; update
+  if found. (Hierarchy block: `<ts-dir>` → `<chat-dir>`.)
+- [x] `stdio-pipeline-shape.md`: update orchestrator-target examples
+  if they assume ts-dir. (`<ts-dir>` → `<chat-dir>`; `$UUID.json` →
+  `conversation.json`; `$TITLE.md` → `chat.md`.)
 - [ ] `README.md`: rewrite pipeline diagram and `Run it` block.
-- [ ] Re-read `chat-as-directory.md` "See also" section after updates;
+  Deferred — co-sequence with implementation so the `Run it` example
+  reflects tested paths.
+- [x] Re-read `chat-as-directory.md` "See also" section after updates;
   verify cross-references still resolve.
-- [ ] `bin/validate-frontmatter` against the design.kb tree.
+- [ ] `bin/validate-frontmatter` against the design.kb tree. Script
+  not present in repo; skip until/unless added.
 
 ## Open Questions
 

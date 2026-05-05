@@ -45,7 +45,9 @@ share a filename.
 
 - `meta.json` is exactly the shape of one entry in the index endpoint's
   `items[]` array. Anything writing `meta.json` must produce that shape
-  byte-for-byte (modulo formatting).
+  byte-for-byte (modulo formatting). Canonical location is
+  `.chat/$UUID/meta.json`; the date-tree view does not store its own
+  copy.
 - The browse-incidental-capture decision (sibling entry) is what makes
   this rule cheap to follow for `conversation url browse`: the index
   endpoint fires anyway during the conversation page load.
