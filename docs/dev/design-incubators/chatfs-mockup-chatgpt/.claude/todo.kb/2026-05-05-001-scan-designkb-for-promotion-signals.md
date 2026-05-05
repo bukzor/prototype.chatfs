@@ -56,15 +56,71 @@ For each candidate file:
 
 ## Implementation Steps
 
-- [ ] Enumerate candidate files with sizes and section counts:
-      `find ... -name '*.md' -not -name 'CLAUDE.md' | xargs wc -l`.
-- [ ] Per-file read + signal evaluation; record decisions in this
-      file as a checklist.
-- [ ] Execute promotions (one per session if numerous; do not batch
-      large factorizations).
-- [ ] After each promotion, update sibling entries that reference the
-      promoted entry's sections.
-- [ ] Run `bin/validate-frontmatter` after each batch.
+- [x] Enumerate candidate files with sizes and section counts.
+- [x] Per-file read + signal evaluation; record decisions below.
+- [ ] Execute promotions (deferred — see Decisions).
+- [ ] After each promotion, update sibling entries.
+- [x] Run `llm.kb-validate` against both design.kb trees. Project-level
+      clean (38 files, 0 errors). Incubator was missing
+      `040-design.jsonschema.yaml`; fixed by symlinking the parent
+      schema (`design.kb/040-design.jsonschema.yaml -> ../../../design.kb/040-design.jsonschema.yaml`).
+      Now clean (11 files, 0 errors).
+
+## Decisions
+
+**Strong promote (1):**
+
+- `chatfs-mockup-chatgpt/.../cli-command-shape.md` — listing-heavy
+  (hierarchy block, script-name table), parallel sections (noun /
+  verb / sub-noun rationale), per-cell growth pressure as the CLI
+  surface widens. Already covered by sibling todo
+  `2026-05-05-002-plan-and-create-noun-verb-model-sub-kb.md`. No
+  duplicate work here.
+
+**Borderline — flag for future (3):**
+
+- `design.kb/040-design.kb/jsonl-interchange.md` (43 lines).
+  "Alternatives considered" has 4 sub-headings of "Why not X" form.
+  Per `Skill(llm-design-kb)` Alternatives-Considered guidance, inline
+  works for 1-3; promote to a sub-kb when alternatives grow per-item
+  content. Currently each alternative is 2-3 sentences — not yet.
+- `design.kb/040-design.kb/sync-control-plane.md` (41 lines). Two
+  parallel listings: "Prior art surveyed" (5 items) and "Why not
+  trigger on read()" (5 items). Items are one-liners; growth pressure
+  not yet present.
+- `design.kb/040-design.kb/stack-split.md` (33 lines). Two "Why not"
+  sections (rejected alternatives). Could be promoted alongside any
+  alternatives sub-kb pattern that emerges.
+
+**No promote (current scan):**
+
+- `chatfs-mockup-chatgpt/.../deterministic-regeneration.md`,
+  `stdio-pipeline-shape.md`, `no-partial-synthesis.md`,
+  `browse-incidental-capture.md` — sections are different concerns,
+  not parallel of the same type.
+- `design.kb/040-design.kb/canonical-conversation-graph.md`,
+  `work-enqueueing-model.md`, `black-box-decomposition.md`,
+  `rotate-90-degrees-layout.md` — small enumerations tightly coupled
+  to surrounding prose; no growth pressure.
+- `design.kb/{010,020,030,070}-*.kb/*` — all entries 11-19 lines;
+  far below promotion-pressure thresholds.
+
+**Already promoted (3):**
+
+- `chatfs-mockup-chatgpt/.../chat-as-directory.md` →
+  `chat-as-directory.kb/` (this session).
+- `design.kb/040-design.kb/capture-pattern.md` →
+  `capture-pattern.kb/` (prior).
+- `design.kb/040-design.kb/user-interface.md` →
+  `user-interface.kb/` (prior).
+
+## Cadence note
+
+This scan completed on 2026-05-05. Next scan recommended:
+- After landing the noun-verb sub-kb (todo 002), re-evaluate the
+  three borderline entries.
+- Otherwise, after every ~5 sessions with substantive design work,
+  or when any single design entry crosses ~80 lines.
 
 ## Open Questions
 
