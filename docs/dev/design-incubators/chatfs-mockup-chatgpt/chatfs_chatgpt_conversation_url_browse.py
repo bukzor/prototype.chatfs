@@ -64,6 +64,9 @@ def find_index_item(cdp: Path, uuid: str) -> IndexItem:
         f"no sidebar index page included {uuid}; "
         f"run `chatfs_chatgpt_index_browse.sh` and use `conversation_path_browse.py`"
     )
+    assert all(m == matches[0] for m in matches), (
+        f"index endpoint returned divergent items for {uuid}: {matches}"
+    )
     return matches[0]
 
 
