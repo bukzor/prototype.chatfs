@@ -21,15 +21,21 @@ status go to stderr; data goes to stdout. This applies to:
 - `chatfs_chatgpt_conversation_render.py` — stdout: markdown
 - `chatfs_chatgpt_index_browse.sh` — stdout: index pages jsonl
 
-Multi-input or multi-output stages take addressable targets as
-positional arguments (URL or ts-dir), not file paths to individual
-inputs:
+Multi-input or multi-output stages need parameterization other than
+stdio — there is no single stream to plumb. Two patterns:
 
-- `chatfs_chatgpt_conversation_path_browse.py <ts-dir>` — reads `meta.json`,
-  writes `cdp.jsonl` + `$UUID.json` next to it
-- `chatfs_chatgpt_conversation_path_render.py <ts-dir>` — reads
-  `meta.json` + `$UUID.json`, runs splat, redirects render stdout to
-  `$TITLE.md`
+- **Positional target arg** when the target varies — URL or ts-dir.
+  - `chatfs_chatgpt_conversation_path_browse.py <ts-dir>` — reads
+    `meta.json`, writes `cdp.jsonl` + `$UUID.json` next to it.
+  - `chatfs_chatgpt_conversation_path_render.py <ts-dir>` — reads
+    `meta.json` + `$UUID.json`, runs splat, redirects render stdout
+    to `$TITLE.md`.
+- **Fixed-by-convention root** when there is exactly one. `index_splat`
+  writes to the lone `chatfs.demo/chatgpt/` tree — making this an
+  argument would invent variability the rest of the pipeline does not
+  have.
+
+Either way, never file paths to individual inputs.
 
 ## Tee debug intermediates in orchestrators
 

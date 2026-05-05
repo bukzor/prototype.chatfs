@@ -35,7 +35,9 @@ chatfs chatgpt conversation render <ts-dir>
   same verb applies to either. We prefer explicit sub-nouns over
   polymorphic single commands: a script that quietly accepts both a URL
   and a directory path is harder to read in a pipeline and harder to
-  shell-complete.
+  shell-complete. `path` itself accepts either a date-tree ts-dir or a
+  `.chat/$UUID/` storage dir; both resolve to the same canonical chat
+  and the script normalizes internally.
 - **Bare-verb leaves** (`conversation render` with no locator) emit
   data on stdout from already-prepared inputs. The locator-prefixed
   forms (`path render`, `url render`) orchestrate splat + leaf-render

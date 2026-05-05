@@ -32,6 +32,17 @@ browse-incidental meta capture.
 - [ ] End-to-end test against `https://chatgpt.com/c/69f21e0c-1cfc-83ea-b952-5e9d31022a31`
 - [x] Devlog in `../../../devlog/2026-04-29-000-chatfs-mockup-chatgpt-url-flow-and-determinism.md`
 
+## Strategic
+
+- [ ] [chat-as-directory layout — propagate to other docs](todo.kb/2026-05-05-000-chat-as-directory-layout--propagate-to-other-docs.md)
+- [ ] [Scan design.kb for promotion signals](todo.kb/2026-05-05-001-scan-designkb-for-promotion-signals.md)
+- [ ] [Plan and create noun-verb model sub-kb](todo.kb/2026-05-05-002-plan-and-create-noun-verb-model-sub-kb.md)
+
+Implementation of the chat-as-directory layout (place_meta → `.chat/$UUID/`,
+view-symlink purge, captured-vs-derived allowlist in path_render, etc.) is
+also pending — design persisted in
+`design.kb/040-design.kb/chat-as-directory.md` and its sub-kb.
+
 ## Loose ends
 
 - `foo.py`, `bar.py` — moved to `~/trash/`.

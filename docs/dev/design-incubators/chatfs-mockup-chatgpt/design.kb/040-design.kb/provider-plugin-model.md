@@ -1,0 +1,1 @@
+../../../../design.kb/040-design.kb/provider-plugin-model.md
