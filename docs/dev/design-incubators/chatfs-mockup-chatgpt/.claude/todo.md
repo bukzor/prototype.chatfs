@@ -37,6 +37,7 @@ browse-incidental meta capture.
 - [x] [chat-as-directory layout — propagate to other docs](todo.kb/2026-05-05-000-chat-as-directory-layout--propagate-to-other-docs.md)
 - [x] [Scan design.kb for promotion signals](todo.kb/2026-05-05-001-scan-designkb-for-promotion-signals.md)
 - [ ] [Plan and create noun-verb model sub-kb](todo.kb/2026-05-05-002-plan-and-create-noun-verb-model-sub-kb.md)
+- [ ] [View as directory-symlink; hide captured exhaust under .data/](todo.kb/2026-05-08-000-view-as-directory-symlink-hide-captured-exhaust-under-data.md)
 
 Implementation of the chat-as-directory layout landed 2026-05-08:
 `place_meta` writes to `.chat/$UUID/`, runs identity-scoped view-symlink
