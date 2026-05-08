@@ -7,18 +7,19 @@ each fork are blockquoted at depth = how many forks deep they sit
 inside, and appear right after the fork point so they read as
 quoted-asides between the parent turn and the live continuation.
 
-Each section: a `# [seq · role · time](…)` H1 backref to the atomic
-turn-file under $TIMESTAMP.splat/messages/, then the message body.
+Each section: a `# [seq · role · time](messages/<stem>.md)` H1 backref
+to the atomic turn-file under the chat dir.
 
 Usage:
-    chatfs_chatgpt_conversation_render.py <path-inside-page-dir>
+    chatfs_chatgpt_conversation_render.py <path-to-chat-dir-or-inside>
 
 stdout: rendered markdown.
 """
 import json
 import sys
 from collections.abc import Mapping
-from pathlib import Path
+
+from chatfs_chatgpt_layout import resolve_chat_dir
 
 
 def walk_to_current(mapping: Mapping[str, dict], current: str) -> list[str]:
@@ -52,19 +53,13 @@ def primary_child(
 
 def main() -> None:
     if len(sys.argv) != 2:
-        print(f"usage: {sys.argv[0]} <path-inside-page-dir>", file=sys.stderr)
+        print(f"usage: {sys.argv[0]} <path-to-chat-dir-or-inside>", file=sys.stderr)
         sys.exit(2)
 
-    page = Path(sys.argv[1])
-    if page.exists(follow_symlinks=False) and not page.is_dir():
-        page = page.parent
+    chat_dir = resolve_chat_dir(sys.argv[1])
+    conversation = json.loads((chat_dir / "conversation.json").read_text())
+    messages_dir = chat_dir / "messages"
 
-    meta = json.loads((page / "meta.json").read_text())
-    conversation_path = page / f"{meta['id']}.json"
-    splat_dir = page / f"{meta['id']}.splat"
-    messages_dir = splat_dir / "messages"
-
-    conversation = json.loads(conversation_path.read_text())
     mapping = conversation["mapping"]
     current = conversation["current_node"]
 
@@ -80,7 +75,6 @@ def main() -> None:
             ts, role, uuid, content_type = parts
             by_uuid[uuid] = (stem, ts, role, content_type)
 
-    rel_to_messages = messages_dir.relative_to(page)
     live_set = set(walk_to_current(mapping, current))
 
     seq = 0
@@ -97,7 +91,7 @@ def main() -> None:
                 heading_text = f"{seq:03d} · {role} · {time_of_day}"
                 if content_type != "text":
                     heading_text += f" ({content_type.replace('_', ' ')})"
-                link = f"{rel_to_messages}/{stem}.md"
+                link = f"messages/{stem}.md"
                 body = md_path.read_text().rstrip()
                 section = f"# [{heading_text}]({link})\n\n{body}\n"
                 if depth > 0:

@@ -28,14 +28,12 @@ Takes a `.chat/$UUID/` dir as its argument (the canonical chat unit).
    `conversation.splat/`.
 3. Unpacks `conversation.splat/*` up one level into the chat dir, then
    `rmdir conversation.splat`.
-4. Writes `chat.md` (with the `uuid:` frontmatter) at
-   `.chat/$UUID/chat.md`.
+4. Writes `chat.md` at `.chat/$UUID/chat.md`.
 
 ## `conversation_render` (leaf)
 
-Reads from a `.chat/$UUID/` dir and emits the rendered markdown —
-including `uuid:` frontmatter — on stdout. No file output, no path
-mutation.
+Reads from a `.chat/$UUID/` dir and emits the rendered markdown on
+stdout. No file output, no path mutation.
 
 ## A future `view rebuild` verb (deferred)
 

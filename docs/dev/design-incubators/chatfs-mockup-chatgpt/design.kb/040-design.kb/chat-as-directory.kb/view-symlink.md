@@ -11,25 +11,6 @@ Renaming a chat means just updating the view symlink — `chat.md`
 itself never moves. This keeps the storage layer immutable across
 title edits.
 
-## Frontmatter for portability
-
-`chat.md` carries `uuid:` frontmatter:
-
-```markdown
----
-uuid: 69dfa575-c0e0-832c-99c2-4e1919ab50de
----
-
-# 000 · user · 14:53:42
-[…]
-```
-
-The frontmatter exists for documents that travel outside the tree
-(copy/paste, attached to email, etc.) — the file remains
-self-identifying without depending on its path. `uuid` is the only
-field there because it's the only one not derivable from location
-inside the tree.
-
 ## Pre-render dangling
 
 Pre-render, the view symlink dangles: its target `chat.md` doesn't

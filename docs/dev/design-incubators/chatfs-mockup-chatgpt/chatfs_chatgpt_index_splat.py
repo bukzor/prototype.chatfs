@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Splat chatgpt index pages into a date-tree.
+"""Splat chatgpt index pages into per-chat storage.
 
 Reads chatgpt.index.jsonl on stdin (one page per line, each
-`{items: [...], total, ...}`). For each item, writes:
+`{items: [...], total, ...}`). For each item, calls place_meta which:
 
-    chatfs.demo/chatgpt/YYYY/MM/DD/HH:MM:SS/meta.json
-    chatfs.demo/chatgpt/YYYY/MM/DD/HH:MM:SS/$TITLE.md   # broken self-symlink
+    - writes $root/.chat/$UUID/meta.json
+    - purges existing view symlinks for $UUID
+    - creates view symlinks under $root/YYYY/MM/DD/HH:MM:SS±HH:MM/
 """
 import json
 import sys
@@ -18,18 +19,15 @@ OUT_DIR = Path(__file__).parent / "chatfs.demo" / "chatgpt"
 
 def main():
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    seen: set[Path] = set()
-    collisions = 0
+    seen: set[str] = set()
     for line in sys.stdin:
         page = json.loads(line)
         for item in page["items"]:
-            d = place_meta(item, OUT_DIR)
-            if d in seen:
-                collisions += 1
-            seen.add(d)
-    print(f"wrote {len(seen)} items under {OUT_DIR}", file=sys.stderr)
-    if collisions:
-        print(f"warning: {collisions} timestamp collision(s) overwritten", file=sys.stderr)
+            uuid = item["id"]
+            assert uuid not in seen, f"duplicate UUID across index pages: {uuid}"
+            seen.add(uuid)
+            place_meta(item, OUT_DIR)
+    print(f"placed {len(seen)} item(s) under {OUT_DIR}", file=sys.stderr)
 
 
 if __name__ == "__main__":

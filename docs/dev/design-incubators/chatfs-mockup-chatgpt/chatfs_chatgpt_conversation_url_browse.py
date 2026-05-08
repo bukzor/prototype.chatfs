@@ -11,10 +11,10 @@ avoiding partial synthesis.
 
 Steps:
     1. browse $url → staging/cdp.jsonl
-    2. conversation pluck → staging/$UUID.json
+    2. conversation pluck → staging/conversation.json
     3. index pluck → filter to .id == $UUID → meta (fail loudly if absent)
-    4. derive ts-dir from meta.create_time; rm -rf and rebuild
-    5. place meta.json (via place_meta), move cdp.jsonl + $UUID.json
+    4. ensure .chat/$UUID/ exists; move captures into it
+    5. place_meta (writes meta.json, purges + places view symlinks)
     6. delegate to path_render (splat + render)
 """
 import json
@@ -25,7 +25,7 @@ import tempfile
 from pathlib import Path
 from urllib.parse import urlparse
 
-from chatfs_chatgpt_layout import place_meta, time_dir_for
+from chatfs_chatgpt_layout import chat_dir_for, place_meta
 from chatfs_chatgpt_types import IndexItem
 
 HERE = Path(__file__).parent
@@ -46,7 +46,7 @@ def find_index_item(cdp: Path, uuid: str) -> IndexItem:
 
     Fails loudly if no sidebar page included this conversation — the
     user's recovery is to run `index browse` then `conversation path
-    browse` against the resulting ts-dir.
+    browse` against the resulting chat dir.
     """
     with cdp.open("rb") as src:
         result = subprocess.run(
@@ -80,28 +80,25 @@ def main() -> None:
 
     with tempfile.TemporaryDirectory(prefix="chatfs-url-browse.") as tmp:
         staging = Path(tmp)
-        cdp = staging / "cdp.jsonl"
-        conversation = staging / f"{uuid}.json"
+        staged_cdp = staging / "cdp.jsonl"
+        staged_conversation = staging / "conversation.json"
 
-        print(f"Capturing {url} → {cdp} ...", file=sys.stderr)
-        with cdp.open("wb") as f:
+        print(f"Capturing {url} → {staged_cdp} ...", file=sys.stderr)
+        with staged_cdp.open("wb") as f:
             subprocess.run(["har-browse", url], stdout=f, check=True)
 
-        print(f"Plucking conversation → {conversation} ...", file=sys.stderr)
-        with cdp.open("rb") as src, conversation.open("wb") as dst:
+        print(f"Plucking conversation → {staged_conversation} ...", file=sys.stderr)
+        with staged_cdp.open("rb") as src, staged_conversation.open("wb") as dst:
             subprocess.run([str(CONVERSATION_PLUCK)], stdin=src, stdout=dst, check=True)
 
-        item = find_index_item(cdp, uuid)
-        page = ROOT / time_dir_for(item["create_time"])
-        if page.exists():
-            shutil.rmtree(page)
-        ROOT.mkdir(parents=True, exist_ok=True)
+        item = find_index_item(staged_cdp, uuid)
+        chat_dir = chat_dir_for(uuid, ROOT)
+        chat_dir.mkdir(parents=True, exist_ok=True)
+        shutil.move(str(staged_cdp), chat_dir / "cdp.jsonl")
+        shutil.move(str(staged_conversation), chat_dir / "conversation.json")
         place_meta(item, ROOT)
 
-        shutil.move(str(cdp), page / "cdp.jsonl")
-        shutil.move(str(conversation), page / f"{uuid}.json")
-
-    subprocess.run([str(PATH_RENDER), str(page)], check=True)
+    subprocess.run([str(PATH_RENDER), str(chat_dir)], check=True)
 
 
 if __name__ == "__main__":

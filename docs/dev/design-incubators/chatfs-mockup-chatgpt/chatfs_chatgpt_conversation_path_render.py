@@ -1,60 +1,65 @@
 #!/usr/bin/env python3
-"""Render a conversation from already-plucked artifacts.
+"""Render a conversation from already-captured artifacts.
 
 Usage:
-    chatfs_chatgpt_conversation_path_render.py <path-inside-page-dir>
+    chatfs_chatgpt_conversation_path_render.py <path-to-chat-dir-or-inside>
 
-Prerequisites (errors otherwise):
-    $page/meta.json       — placed by index splat
-    $page/$UUID.json      — output of conversation pluck
+Prerequisites in the resolved chat dir:
+    meta.json           — placed by index splat or url browse
+    conversation.json   — output of conversation pluck
 
 Steps:
-    1. splat $UUID.json → $UUID.splat/
-    2. render → $TITLE.md
+    1. purge non-captured contents (allowlist captured)
+    2. splat conversation.json → conversation.splat/
+    3. unpack conversation.splat/* one level up; rmdir conversation.splat
+    4. render → chat.md
 """
-import json
 import shutil
 import subprocess
 import sys
 from pathlib import Path
 
-from chatfs_chatgpt_layout import safe_filename
+from chatfs_chatgpt_layout import CAPTURED_FILES, resolve_chat_dir
 
 
-def page_dir_for(arg: str) -> Path:
-    p = Path(arg)
-    if p.exists(follow_symlinks=False) and not p.is_dir():
-        p = p.parent
-    return p
+def purge_non_captured(chat_dir: Path) -> None:
+    keep = set(CAPTURED_FILES)
+    for child in chat_dir.iterdir():
+        if child.name in keep:
+            continue
+        if child.is_symlink() or not child.is_dir():
+            child.unlink()
+        else:
+            shutil.rmtree(child)
 
 
 def main() -> None:
     if len(sys.argv) != 2:
-        print(f"usage: {sys.argv[0]} <path-inside-page-dir>", file=sys.stderr)
+        print(f"usage: {sys.argv[0]} <path-to-chat-dir-or-inside>", file=sys.stderr)
         sys.exit(2)
 
-    page = page_dir_for(sys.argv[1])
-    meta_path = page / "meta.json"
+    chat_dir = resolve_chat_dir(sys.argv[1])
+    meta_path = chat_dir / "meta.json"
     assert meta_path.exists(), f"missing meta.json: run index browse first ({meta_path})"
-
-    meta = json.loads(meta_path.read_text())
-    conversation = page / f"{meta['id']}.json"
+    conversation = chat_dir / "conversation.json"
     assert conversation.exists(), (
-        f"missing pluck output: run conversation browse first ({conversation})"
+        f"missing conversation.json: run conversation browse first ({conversation})"
     )
 
-    splat = page / f"{meta['id']}.splat"
-    if splat.exists():
-        shutil.rmtree(splat)
+    purge_non_captured(chat_dir)
+
     print(f"Splatting {conversation} ...", file=sys.stderr)
     subprocess.run(["chatgpt-splat", str(conversation)], check=True)
+    splat = chat_dir / "conversation.splat"
+    for entry in splat.iterdir():
+        shutil.move(str(entry), str(chat_dir / entry.name))
+    splat.rmdir()
 
     render = Path(__file__).parent / "chatfs_chatgpt_conversation_render.py"
-    out = page / f"{safe_filename(meta['title'])}.md"
-    out.unlink(missing_ok=True)
-    print(f"Rendering {page} → {out.name} ...", file=sys.stderr)
+    out = chat_dir / "chat.md"
+    print(f"Rendering {chat_dir} → chat.md ...", file=sys.stderr)
     with out.open("wb") as f:
-        subprocess.run([str(render), str(page)], stdout=f, check=True)
+        subprocess.run([str(render), str(chat_dir)], stdout=f, check=True)
 
 
 if __name__ == "__main__":
