@@ -82,12 +82,23 @@ asymmetry would have shipped silently. The discipline of reading the
 rendered output (not just running the pipeline) caught a real bug
 that pyright and exit codes never would.
 
+## Live URL Test
+
+After the initial commit, user ran
+`./chatfs_chatgpt_conversation_url_browse.py https://chatgpt.com/c/69de8f14-…`
+end-to-end against the new layout. Browse → pluck → splat into
+`.data/conversation.splat/` → unpack two-levels-up → render. 262
+messages plucked, 206 turns rendered. Three-phrase content spot-check
+passed (first/last/middle lines of expected text appear at expected
+positions; the "middle" phrase was a paraphrase that resolves once
+markdown emphasis is accounted for).
+
+The URL-browse path was untested at first commit (`8b52693`); only
+the path-render path was smoke-tested then. Live URL test confirms
+the staging-tmp → `.data/` move + dir-symlink placement work as
+designed. Marked the success-criterion checkbox done in `de0063a`.
+
 ## Next Session
 
 - `.claude/todo.kb/2026-05-05-002-…-noun-verb-model-sub-kb.md` —
   planning, discussion with user before any kb creation.
-- Live URL re-capture (interactive `har-browse`; user-driven) to
-  confirm the URL-browse flow against the live ChatGPT page under
-  the new layout. Smoke covered the path-render flow; URL-browse
-  was unit-exercised through the layout module and pyright but
-  hasn't run end-to-end this session.
