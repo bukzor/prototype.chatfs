@@ -126,7 +126,9 @@ better for muscle memory than per-chat title-derived filenames.
 - [x] Smoke test: rm-rf demo, re-splat from `chatgpt.index.jsonl`,
       `place_meta` test chat, copy captures into `.data/`, re-render,
       verify links resolve from view path textually; pyright clean
-- [ ] Live URL test (interactive `har-browse`; user-driven)
+- [x] Live URL test (interactive `har-browse`; user-driven) — ran
+      against `https://chatgpt.com/c/69de8f14-e80c-8329-b3a8-3e4046c10cb1`,
+      262 messages → 206 turns, three-phrase content spot-check passed
 
 ## Open Questions (resolved)
 
@@ -151,7 +153,8 @@ better for muscle memory than per-chat title-derived filenames.
       `conversations/` (and `.data/` only with `-a`).
 - [x] `path_render` allowlist purge keeps only `.data/`; everything
       else is rebuilt.
-- [ ] Live URL re-capture works end-to-end. (User-driven; deferred.)
+- [x] Live URL re-capture works end-to-end (verified against
+      `https://chatgpt.com/c/69de8f14-…`; 262 messages → 206 turns).
 - [x] Design docs and README reflect new layout.
 
 ## Notes
