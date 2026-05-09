@@ -19,7 +19,7 @@ import json
 import sys
 from collections.abc import Mapping
 
-from chatfs_chatgpt_layout import resolve_chat_dir
+from chatfs_chatgpt_layout import DATA_DIR_NAME, resolve_chat_dir
 
 
 def walk_to_current(mapping: Mapping[str, dict], current: str) -> list[str]:
@@ -57,7 +57,7 @@ def main() -> None:
         sys.exit(2)
 
     chat_dir = resolve_chat_dir(sys.argv[1])
-    conversation = json.loads((chat_dir / "conversation.json").read_text())
+    conversation = json.loads((chat_dir / DATA_DIR_NAME / "conversation.json").read_text())
     messages_dir = chat_dir / "messages"
 
     mapping = conversation["mapping"]

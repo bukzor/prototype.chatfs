@@ -5,12 +5,12 @@ Usage:
     chatfs_chatgpt_conversation_path_browse.py <path-to-chat-dir-or-inside>
 
 The argument resolves to a `.chat/$UUID/` directory (see
-chatfs_chatgpt_layout.resolve_chat_dir). meta.json must already live
-there (placed by index splat or url browse).
+chatfs_chatgpt_layout.resolve_chat_dir). `.data/meta.json` must already
+live there (placed by index splat or url browse).
 
 Steps:
-    1. browse $url → cdp.jsonl
-    2. pluck cdp.jsonl → conversation.json
+    1. browse $url → .data/cdp.jsonl
+    2. pluck cdp.jsonl → .data/conversation.json
     3. delegate to chatfs_chatgpt_conversation_path_render.py
 """
 import json
@@ -18,7 +18,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from chatfs_chatgpt_layout import resolve_chat_dir
+from chatfs_chatgpt_layout import DATA_DIR_NAME, resolve_chat_dir
 
 HERE = Path(__file__).parent
 PLUCK = HERE / "chatfs_chatgpt_conversation_pluck.jq"
@@ -31,11 +31,12 @@ def main() -> None:
         sys.exit(2)
 
     chat_dir = resolve_chat_dir(sys.argv[1])
+    data_dir = chat_dir / DATA_DIR_NAME
 
-    meta = json.loads((chat_dir / "meta.json").read_text())
+    meta = json.loads((data_dir / "meta.json").read_text())
     url = f"https://chatgpt.com/c/{meta['id']}"
-    cdp = chat_dir / "cdp.jsonl"
-    conversation = chat_dir / "conversation.json"
+    cdp = data_dir / "cdp.jsonl"
+    conversation = data_dir / "conversation.json"
 
     cdp.unlink(missing_ok=True)
     conversation.unlink(missing_ok=True)

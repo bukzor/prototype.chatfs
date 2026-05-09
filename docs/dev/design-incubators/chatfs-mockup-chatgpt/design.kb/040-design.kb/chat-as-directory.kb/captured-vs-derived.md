@@ -4,27 +4,47 @@ Inside `.chat/$UUID/`, contents split by lifecycle:
 
 - **Captured.** `meta.json`, `conversation.json`, `cdp.jsonl`. Written
   by browse stages directly from provider data. Expensive to regenerate
-  (requires Chromium).
+  (requires Chromium). Quarantined under `.chat/$UUID/.data/`.
 - **Derived.** `chat.md`, `messages/`, `conversations/`. Written by
-  render stages from captured state. Cheap to regenerate.
+  render stages from captured state. Cheap to regenerate. Live at
+  chat-dir root — they're the user surface.
 
-## Allowlist captured, purge the rest
+```
+.chat/$UUID/
+    chat.md          # derived
+    messages/        # derived
+    conversations/   # derived
+    .data/           # captured (hidden from default ls)
+        meta.json
+        conversation.json
+        cdp.jsonl
+```
 
-Path-render's pre-cleanup inverts the obvious enumeration: instead of
-listing derived state to delete, it lists captured state to *keep* and
-purges everything else.
+## Allowlist `.data/`, purge the rest
+
+Path-render's pre-cleanup keeps the captured *directory* and purges
+everything else at the chat-dir root:
 
 ```python
-CAPTURED = {"meta.json", "conversation.json", "cdp.jsonl"}
+KEEP = {".data"}
 for child in chat_dir.iterdir():
-    if child.name not in CAPTURED:
+    if child.name not in KEEP:
         rm child
 ```
 
-New derived outputs (if `chatgpt-splat` ever adds an `indices/` dir)
-require no path-render change — they get cleaned implicitly.
+The allowlist is one entry, not three. New derived outputs (if
+`chatgpt-splat` ever adds an `indices/` dir) require no path-render
+change — they get cleaned implicitly.
 
-The inversion costs nothing because the captured set is small (3 files)
-and stable; the derived set is whatever the splat tool happens to emit
-this build. Coupling the cleanup logic to the smaller, more stable set
-is correct.
+The dot-prefix has two jobs:
+
+1. **Hidden from default `ls`.** The user-visible chat surface is
+   `chat.md`, `messages/`, `conversations/` — what they came for.
+   `ls -a` reveals `.data/` for inspection.
+2. **Reachable through the view symlink.** `view/$TITLE/.data/meta.json`
+   resolves to `.chat/$UUID/.data/meta.json`. Captured artifacts stay
+   addressable for debugging, just out of the way for normal browsing.
+
+Coupling the cleanup logic to the captured set is correct because that
+set is small and stable; the derived set is whatever the splat tool
+happens to emit this build.

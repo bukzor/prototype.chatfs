@@ -5,13 +5,14 @@ Usage:
     chatfs_chatgpt_conversation_path_render.py <path-to-chat-dir-or-inside>
 
 Prerequisites in the resolved chat dir:
-    meta.json           — placed by index splat or url browse
-    conversation.json   — output of conversation pluck
+    .data/meta.json           — placed by index splat or url browse
+    .data/conversation.json   — output of conversation pluck
 
 Steps:
-    1. purge non-captured contents (allowlist captured)
-    2. splat conversation.json → conversation.splat/
-    3. unpack conversation.splat/* one level up; rmdir conversation.splat
+    1. purge non-captured contents (allowlist {".data"})
+    2. splat .data/conversation.json → .data/conversation.splat/
+    3. move .data/conversation.splat/{messages,conversations} up to chat dir;
+       rmdir .data/conversation.splat
     4. render → chat.md
 """
 import shutil
@@ -19,11 +20,11 @@ import subprocess
 import sys
 from pathlib import Path
 
-from chatfs_chatgpt_layout import CAPTURED_FILES, resolve_chat_dir
+from chatfs_chatgpt_layout import DATA_DIR_NAME, resolve_chat_dir
 
 
 def purge_non_captured(chat_dir: Path) -> None:
-    keep = set(CAPTURED_FILES)
+    keep = {DATA_DIR_NAME}
     for child in chat_dir.iterdir():
         if child.name in keep:
             continue
@@ -39,9 +40,10 @@ def main() -> None:
         sys.exit(2)
 
     chat_dir = resolve_chat_dir(sys.argv[1])
-    meta_path = chat_dir / "meta.json"
+    data_dir = chat_dir / DATA_DIR_NAME
+    meta_path = data_dir / "meta.json"
     assert meta_path.exists(), f"missing meta.json: run index browse first ({meta_path})"
-    conversation = chat_dir / "conversation.json"
+    conversation = data_dir / "conversation.json"
     assert conversation.exists(), (
         f"missing conversation.json: run conversation browse first ({conversation})"
     )
@@ -50,7 +52,7 @@ def main() -> None:
 
     print(f"Splatting {conversation} ...", file=sys.stderr)
     subprocess.run(["chatgpt-splat", str(conversation)], check=True)
-    splat = chat_dir / "conversation.splat"
+    splat = data_dir / "conversation.splat"
     for entry in splat.iterdir():
         shutil.move(str(entry), str(chat_dir / entry.name))
     splat.rmdir()

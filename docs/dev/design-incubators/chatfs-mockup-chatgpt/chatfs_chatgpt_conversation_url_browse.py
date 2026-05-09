@@ -13,8 +13,8 @@ Steps:
     1. browse $url → staging/cdp.jsonl
     2. conversation pluck → staging/conversation.json
     3. index pluck → filter to .id == $UUID → meta (fail loudly if absent)
-    4. ensure .chat/$UUID/ exists; move captures into it
-    5. place_meta (writes meta.json, purges + places view symlinks)
+    4. ensure .chat/$UUID/.data/ exists; move captures into it
+    5. place_meta (writes meta.json, purges + places view dir-symlink)
     6. delegate to path_render (splat + render)
 """
 import json
@@ -25,7 +25,7 @@ import tempfile
 from pathlib import Path
 from urllib.parse import urlparse
 
-from chatfs_chatgpt_layout import chat_dir_for, place_meta
+from chatfs_chatgpt_layout import chat_dir_for, data_dir_for, place_meta
 from chatfs_chatgpt_types import IndexItem
 
 HERE = Path(__file__).parent
@@ -92,13 +92,13 @@ def main() -> None:
             subprocess.run([str(CONVERSATION_PLUCK)], stdin=src, stdout=dst, check=True)
 
         item = find_index_item(staged_cdp, uuid)
-        chat_dir = chat_dir_for(uuid, ROOT)
-        chat_dir.mkdir(parents=True, exist_ok=True)
-        shutil.move(str(staged_cdp), chat_dir / "cdp.jsonl")
-        shutil.move(str(staged_conversation), chat_dir / "conversation.json")
+        data_dir = data_dir_for(uuid, ROOT)
+        data_dir.mkdir(parents=True, exist_ok=True)
+        shutil.move(str(staged_cdp), data_dir / "cdp.jsonl")
+        shutil.move(str(staged_conversation), data_dir / "conversation.json")
         place_meta(item, ROOT)
 
-    subprocess.run([str(PATH_RENDER), str(chat_dir)], check=True)
+    subprocess.run([str(PATH_RENDER), str(chat_dir_for(uuid, ROOT))], check=True)
 
 
 if __name__ == "__main__":

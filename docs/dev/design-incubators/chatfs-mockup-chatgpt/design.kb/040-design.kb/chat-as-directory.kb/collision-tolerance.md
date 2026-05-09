@@ -7,13 +7,12 @@ eventualities; the view may be lossy under pathological collisions.**
 
 - **Same `create_time` (same-second creation).** Both chats get
   distinct `.chat/$UUID/` dirs (always unambiguous). In the view, both
-  land under one `YYYY/MM/.../HH:MM:SS±HH:MM/` dir — two title
-  symlinks, one `.chat` shortcut. The `.chat` shortcut is singular, so
-  it resolves to whichever chat was placed last.
+  land under one `YYYY/MM/.../HH:MM:SS±HH:MM/` dir — one
+  directory-symlink per chat, named by title.
 
-- **Same `create_time` and same title.** Title.md collides too —
-  whichever chat was placed last wins the symlink. Storage is still
-  fine; the view loses a navigation entry.
+- **Same `create_time` and same title.** The dir-symlink name collides
+  — whichever chat was placed last wins. Storage is still fine; the
+  view loses a navigation entry.
 
 ## Why we accept this
 
@@ -29,5 +28,6 @@ vanishingly-rare case is acceptable when:
   approximately never.
 
 If collisions become operationally common, the view-builder grows a
-collision strategy. Until then, the simpler invariant ("storage
-authoritative; view best-effort under collisions") wins.
+collision strategy (suffix the dir-symlink with `(<short-uuid>)` or
+similar). Until then, the simpler invariant ("storage authoritative;
+view best-effort under collisions") wins.

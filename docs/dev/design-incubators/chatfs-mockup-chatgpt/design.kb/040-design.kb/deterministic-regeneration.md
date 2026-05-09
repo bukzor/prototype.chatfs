@@ -25,9 +25,10 @@ This applies to:
 - `conversation path browse` — addresses by `.chat/$UUID/`; removes
   prior `cdp.jsonl` and `conversation.json` before re-capturing.
 - `index splat` — calls `place_meta` per item; `meta.json` overwritten
-  in `.chat/$UUID/`; view symlinks identity-purged then placed.
+  in `.chat/$UUID/.data/`; view dir-symlinks identity-purged then
+  placed.
 - `conversation path render` — operates on `.chat/$UUID/`; purges
-  non-captured contents (see
+  non-captured contents (allowlist `{".data"}`; see
   `chat-as-directory.kb/captured-vs-derived.md`), runs `chatgpt-splat`,
   writes `chat.md`.
 

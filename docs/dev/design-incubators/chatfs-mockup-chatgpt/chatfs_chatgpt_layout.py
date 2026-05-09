@@ -3,9 +3,17 @@
 Storage is flat and UUID-keyed:
 
     $root/.chat/$UUID/
+        chat.md          # derived
+        messages/        # derived (chatgpt-splat output)
+        conversations/   # derived (chatgpt-splat output)
+        .data/           # captured exhaust (hidden from default ls)
+            meta.json
+            conversation.json
+            cdp.jsonl
 
-The view tree at $root/YYYY/MM/DD/HH:MM:SS±HH:MM/ is symlinks pointing
-into storage. See design.kb/040-design.kb/chat-as-directory.md.
+The view tree at $root/YYYY/MM/DD/HH:MM:SS±HH:MM/$TITLE/ is a single
+directory-symlink per chat pointing at `.chat/$UUID/`. See
+design.kb/040-design.kb/chat-as-directory.md.
 """
 import json
 import os
@@ -15,7 +23,7 @@ from pathlib import Path
 from chatfs_chatgpt_types import IndexItem
 
 
-CAPTURED_FILES = ("meta.json", "conversation.json", "cdp.jsonl")
+DATA_DIR_NAME = ".data"
 
 
 def safe_filename(name: str) -> str:
@@ -54,26 +62,29 @@ def chat_dir_for(uuid: str, root: Path) -> Path:
     return root / ".chat" / uuid
 
 
+def data_dir_for(uuid: str, root: Path) -> Path:
+    return chat_dir_for(uuid, root) / DATA_DIR_NAME
+
+
 def resolve_chat_dir(arg: str | os.PathLike) -> Path:
     """Resolve any path-into-or-pointing-at a `.chat/$UUID/` to that dir.
 
-    Handles: the chat dir itself, files inside it, view symlinks whose
-    target lives inside it, and view dirs containing a `.chat` shortcut.
+    Handles: the chat dir itself, files or subdirs inside it, view
+    dir-symlinks (which resolve straight to the chat dir), and paths
+    descending through view dir-symlinks (e.g. `view/$TITLE/.data/foo`).
 
     Asserts the result is an existing `.chat/$UUID/` directory so that
     callers can treat the return value as canonical and fail loudly on
     bad input here rather than later via missing-file errors.
     """
-    p = Path(arg)
-    if p.is_dir() and (p / ".chat").is_symlink():
-        result = (p / ".chat").resolve()
-    else:
-        p = p.resolve()
-        result = p if p.is_dir() else p.parent
-    assert result.is_dir() and result.parent.name == ".chat", (
-        f"not a chat dir: {result} (resolved from {arg})"
-    )
-    return result
+    p = Path(arg).resolve()
+    if not p.is_dir():
+        p = p.parent
+    while p.parent.name != ".chat":
+        assert p.parent != p, f"reached fs root without finding .chat: {arg}"
+        p = p.parent
+    assert p.is_dir(), p
+    return p
 
 
 def _purge_view_symlinks(uuid: str, root: Path) -> None:
@@ -89,28 +100,24 @@ def _purge_view_symlinks(uuid: str, root: Path) -> None:
 
 
 def place_meta(item: IndexItem, root: Path) -> Path:
-    """Write meta.json into .chat/$UUID/, refresh the view symlinks.
+    """Write meta.json into .chat/$UUID/.data/, refresh the view dir-symlink.
 
     Returns the chat dir.
     """
     uuid = item["id"]
     chat_dir = chat_dir_for(uuid, root)
-    chat_dir.mkdir(parents=True, exist_ok=True)
-    (chat_dir / "meta.json").write_text(json.dumps(item, indent=2) + "\n")
+    data_dir = chat_dir / DATA_DIR_NAME
+    data_dir.mkdir(parents=True, exist_ok=True)
+    (data_dir / "meta.json").write_text(json.dumps(item, indent=2) + "\n")
 
     _purge_view_symlinks(uuid, root)
 
     view_dir = root / time_dir_for(item["create_time"])
     view_dir.mkdir(parents=True, exist_ok=True)
 
-    title_link = view_dir / (safe_filename(item["title"]) + ".md")
+    title_link = view_dir / safe_filename(item["title"])
     if title_link.is_symlink() or title_link.exists():
         title_link.unlink()
-    title_link.symlink_to(os.path.relpath(chat_dir / "chat.md", start=view_dir))
-
-    chat_shortcut = view_dir / ".chat"
-    if chat_shortcut.is_symlink() or chat_shortcut.exists():
-        chat_shortcut.unlink()
-    chat_shortcut.symlink_to(os.path.relpath(chat_dir, start=view_dir))
+    title_link.symlink_to(os.path.relpath(chat_dir, start=view_dir))
 
     return chat_dir

@@ -1,5 +1,5 @@
 ---
-last-updated: "2026-05-05"
+last-updated: "2026-05-08"
 why:
   - opaque-extractor-boundary
   - canonical-conversation-graph
@@ -18,16 +18,24 @@ derived from that store.
 chatfs.demo/chatgpt/
     .chat/
         69dfa575-c0e0-832c-99c2-4e1919ab50de/
-            chat.md                # ergonomic view
-            meta.json              # captured (index endpoint item)
-            conversation.json      # captured (conversation endpoint mapping doc)
-            cdp.jsonl              # captured (raw CDP)
+            chat.md                # derived (rendered current_node walk)
             messages/              # derived (chatgpt-splat output)
             conversations/         # derived (chatgpt-splat output)
+            .data/                 # captured exhaust (hidden from default ls)
+                meta.json          # captured (index endpoint item)
+                conversation.json  # captured (conversation endpoint mapping doc)
+                cdp.jsonl          # captured (raw CDP)
     YYYY/MM/DD/HH:MM:SS±HH:MM/
-        Quantum Gravity and UV Catastrophe.md -> ../../../../.chat/69dfa575-…/chat.md
-        .chat -> ../../../../.chat/69dfa575-…
+        Quantum Gravity and UV Catastrophe -> ../../../../.chat/69dfa575-…
 ```
+
+The view entry is a single directory-symlink: the named view path *is*
+the chat directory. `cat 2026/.../$TITLE/chat.md` resolves to
+`.chat/$UUID/chat.md`; `cat 2026/.../$TITLE/messages/<stem>.md` resolves
+textually (no symlink resolution required after the dir-symlink is
+followed once). Inline `messages/<stem>.md` links inside `chat.md` work
+under both real-path and view-path reads — including from path-textual
+renderers (web rendering, mkdocs, Obsidian publish).
 
 ## Storage vs view
 

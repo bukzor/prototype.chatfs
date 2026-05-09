@@ -14,16 +14,21 @@ into storage (see `design.kb/040-design.kb/chat-as-directory.md`).
 ```
 chatfs.demo/chatgpt/
     .chat/$UUID/
-        meta.json                 # one item from /backend-api/conversations
-        cdp.jsonl                 # raw CDP from har-browse for this conversation
-        conversation.json         # plucked conversation mapping document
+        chat.md                   # rendered current_node path with dead-branch asides
         messages/                 # chatgpt-splat output (per-message .md/.json)
         conversations/            # chatgpt-splat output (per-branch symlinks)
-        chat.md                   # rendered current_node path with dead-branch asides
+        .data/                    # captured exhaust (hidden from default ls)
+            meta.json             # one item from /backend-api/conversations
+            conversation.json     # plucked conversation mapping document
+            cdp.jsonl             # raw CDP from har-browse for this conversation
     YYYY/MM/DD/HH:MM:SS±HH:MM/
-        $TITLE.md   -> ../../../../.chat/$UUID/chat.md
-        .chat       -> ../../../../.chat/$UUID
+        $TITLE -> ../../../../.chat/$UUID/      # single directory-symlink per chat
 ```
+
+The view entry is a directory-symlink — `view/$TITLE/` *is* the chat
+dir. `cat 2026/.../$TITLE/chat.md` reads chat content;
+`cat 2026/.../$TITLE/messages/<stem>.md` reads atomic turn content
+textually (web renderers and editors both work).
 
 There are two entry points for capturing a single conversation:
 
@@ -45,26 +50,26 @@ the leaves.
    `chatgpt.index.cdp.jsonl` (debug intermediate), pipes through
    `chatfs_chatgpt_index_pluck.jq`, emits index pages on stdout.
 2. **Index splat** (`chatfs_chatgpt_index_splat.py`) — reads index
-   pages on stdin; per item, writes `.chat/$UUID/meta.json`, purges
-   any prior view symlinks for that UUID, and places fresh
-   `$TITLE.md` + `.chat` symlinks under the date tree.
+   pages on stdin; per item, writes `.chat/$UUID/.data/meta.json`,
+   purges any prior view symlinks for that UUID, and places a fresh
+   `$TITLE` directory-symlink under the date tree.
 3. **Conversation URL browse**
    (`chatfs_chatgpt_conversation_url_browse.py <url>`) — captures one
    chat by URL: browses to a staging dir, runs both pluck filters,
    filters the index pluck to the matching item for `meta.json`,
-   moves captures into `.chat/$UUID/`, calls `place_meta`, and
+   moves captures into `.chat/$UUID/.data/`, calls `place_meta`, and
    delegates to path render. Fails loudly if the sidebar didn't
    include the target.
 4. **Conversation path browse**
    (`chatfs_chatgpt_conversation_path_browse.py <chat-dir>`) — writes
-   `cdp.jsonl` and `conversation.json` directly into `.chat/$UUID/`
-   (which already has `meta.json` from index splat), then delegates
-   to path render.
+   `cdp.jsonl` and `conversation.json` directly into
+   `.chat/$UUID/.data/` (which already has `meta.json` from index
+   splat), then delegates to path render.
 5. **Path render** (`chatfs_chatgpt_conversation_path_render.py <chat-dir>`) —
-   purges non-captured contents (allowlist:
-   `meta.json` / `conversation.json` / `cdp.jsonl`), splats
-   `conversation.json`, unpacks the splat output up one level into the
-   chat dir, and runs the conversation render, redirecting its stdout
+   purges non-captured contents (allowlist `{".data"}`), splats
+   `.data/conversation.json`, moves `messages/` and `conversations/`
+   from `.data/conversation.splat/` up two levels into the chat-dir
+   root, and runs the conversation render, redirecting its stdout
    into `chat.md`.
 6. **Conversation render**
    (`chatfs_chatgpt_conversation_render.py <chat-dir>`) — walks the

@@ -37,14 +37,17 @@ browse-incidental meta capture.
 - [x] [chat-as-directory layout — propagate to other docs](todo.kb/2026-05-05-000-chat-as-directory-layout--propagate-to-other-docs.md)
 - [x] [Scan design.kb for promotion signals](todo.kb/2026-05-05-001-scan-designkb-for-promotion-signals.md)
 - [ ] [Plan and create noun-verb model sub-kb](todo.kb/2026-05-05-002-plan-and-create-noun-verb-model-sub-kb.md)
-- [ ] [View as directory-symlink; hide captured exhaust under .data/](todo.kb/2026-05-08-000-view-as-directory-symlink-hide-captured-exhaust-under-data.md)
+- [x] [View as directory-symlink; hide captured exhaust under .data/](todo.kb/2026-05-08-000-view-as-directory-symlink-hide-captured-exhaust-under-data.md)
 
-Implementation of the chat-as-directory layout landed 2026-05-08:
-`place_meta` writes to `.chat/$UUID/`, runs identity-scoped view-symlink
-purge, places `$TITLE.md` + `.chat` shortcut under the date tree;
-`path_render` allowlists captured then re-derives. Smoke test: 56 chats
-splat from cached index, one captured chat re-rendered to 134 turns,
-re-render byte-stable.
+Directory-symlink + `.data/` refactor landed 2026-05-08:
+`place_meta` writes `meta.json` to `.chat/$UUID/.data/` and places a
+single `$TITLE → .chat/$UUID/` directory-symlink under the date tree;
+`path_render` allowlists `{".data"}`, splats into `.data/`, moves
+`messages/`/`conversations/` up two levels into the chat-dir root,
+writes `chat.md`. Smoke: 56 chats re-splat, test chat (188 messages /
+129 turns) re-rendered byte-stable; `messages/<stem>.md` links resolve
+textually under the view path; re-splat symlink count stable
+(374 → 374).
 
 ## Loose ends
 

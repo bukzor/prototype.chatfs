@@ -83,80 +83,76 @@ better for muscle memory than per-chat title-derived filenames.
 
 ## Implementation Steps
 
-- [ ] `chatfs_chatgpt_layout.py`:
-  - [ ] `place_meta`: replace title-`.md` symlink + `.chat` shortcut
+- [x] `chatfs_chatgpt_layout.py`:
+  - [x] `place_meta`: replace title-`.md` symlink + `.chat` shortcut
         with single `$TITLE → .chat/$UUID/` directory-symlink
-  - [ ] Write `meta.json` to `.chat/$UUID/.data/meta.json`
-  - [ ] `mkdir .chat/$UUID/.data/` if missing
-  - [ ] `CAPTURED_FILES` constant → `CAPTURED_DIR = ".data"` (or
-        equivalent); update consumers
-  - [ ] `_purge_view_symlinks` unchanged (still scans for symlinks
-        whose target contains UUID)
-- [ ] `chatfs_chatgpt_index_splat.py`: no change beyond the layout
-      module (it just calls `place_meta`)
-- [ ] `chatfs_chatgpt_conversation_path_browse.py`:
-  - [ ] Read meta from `.data/meta.json`
-  - [ ] Write `cdp.jsonl` and `conversation.json` to `.data/`
-- [ ] `chatfs_chatgpt_conversation_url_browse.py`:
-  - [ ] Move staged captures into `.data/` (not chat-dir root)
-- [ ] `chatfs_chatgpt_conversation_path_render.py`:
-  - [ ] `purge_non_captured`: keep only `.data/`; rm everything else
-  - [ ] Read `conversation.json` from `.data/`
-  - [ ] Splat unchanged (output to `.data/conversation.splat`?
-        TBD — whether splat output goes through `.data/` or directly
-        to chat dir; design decision)
-- [ ] `chatfs_chatgpt_conversation_render.py`:
-  - [ ] Read `conversation.json` from `.data/`
-  - [ ] `messages/` lookup unchanged (still at chat-dir root)
-- [ ] `chatfs_chatgpt_conversation_url_render.py`: no change
-- [ ] Design docs:
-  - [ ] `chat-as-directory.md` — update layout block
-  - [ ] `chat-as-directory.kb/view-symlink.md` — rewrite for
-        directory-symlink (drop `$TITLE.md` filename ergonomics
-        section; emphasize that view IS chat dir via symlink)
-  - [ ] `chat-as-directory.kb/captured-vs-derived.md` — simpler
-        allowlist (`.data/`)
-  - [ ] `chat-as-directory.kb/pipeline-implications.md` — update
-        per-script descriptions
-  - [ ] `chat-as-directory.kb/collision-tolerance.md` — same logic;
-        verify wording still accurate
-  - [ ] `deterministic-regeneration.md` — update purge example if it
-        still references the old layout
-- [ ] `README.md` — update layout block and `Run it` example
-- [ ] Smoke test: rm-rf demo, re-splat from `chatgpt.index.jsonl`,
-      migrate captures for the test chat into `.data/`, re-render,
-      verify links resolve from view path textually
+  - [x] Write `meta.json` to `.chat/$UUID/.data/meta.json`
+  - [x] `mkdir .chat/$UUID/.data/` if missing
+  - [x] `CAPTURED_FILES` constant → `DATA_DIR_NAME = ".data"`;
+        update consumers
+  - [x] `_purge_view_symlinks` unchanged
+  - [x] `resolve_chat_dir` simplified — walks up to `.chat`-parent;
+        the `.chat`-shortcut branch goes away
+- [x] `chatfs_chatgpt_index_splat.py`: unchanged (calls `place_meta`)
+- [x] `chatfs_chatgpt_conversation_path_browse.py`:
+  - [x] Read meta from `.data/meta.json`
+  - [x] Write `cdp.jsonl` and `conversation.json` to `.data/`
+- [x] `chatfs_chatgpt_conversation_url_browse.py`:
+  - [x] Move staged captures into `.data/` (not chat-dir root)
+- [x] `chatfs_chatgpt_conversation_path_render.py`:
+  - [x] `purge_non_captured`: keep only `.data/`; rm everything else
+  - [x] Read `conversation.json` from `.data/`
+  - [x] Splat into `.data/conversation.splat/`; move `messages/` and
+        `conversations/` up two levels into chat-dir root, then
+        rmdir splat (Approach A from the open question)
+- [x] `chatfs_chatgpt_conversation_render.py`:
+  - [x] Read `conversation.json` from `.data/`
+  - [x] `messages/` lookup unchanged (still at chat-dir root)
+- [x] `chatfs_chatgpt_conversation_url_render.py`: meta-presence check
+      now reads `.data/meta.json`
+- [x] Design docs:
+  - [x] `chat-as-directory.md` — updated layout block + textual-link
+        explanation
+  - [x] `chat-as-directory.kb/view-symlink.md` — rewritten for
+        directory-symlink
+  - [x] `chat-as-directory.kb/captured-vs-derived.md` — `.data/`
+        allowlist
+  - [x] `chat-as-directory.kb/pipeline-implications.md` — updated
+  - [x] `chat-as-directory.kb/collision-tolerance.md` — wording
+        updated for dir-symlink
+  - [x] `deterministic-regeneration.md` — updated index-splat and
+        path-render bullets
+- [x] `README.md` — layout block + `Run it` references updated
+- [x] Smoke test: rm-rf demo, re-splat from `chatgpt.index.jsonl`,
+      `place_meta` test chat, copy captures into `.data/`, re-render,
+      verify links resolve from view path textually; pyright clean
 - [ ] Live URL test (interactive `har-browse`; user-driven)
 
-## Open Questions
+## Open Questions (resolved)
 
-- **Splat output location.** `chatgpt-splat` writes
-  `<src>.splat/{messages,conversations}` next to its input. If input
-  moves to `.data/conversation.json`, splat writes to
-  `.data/conversation.splat/`. Then we unpack `messages/` and
-  `conversations/` up *two* levels (out of `.data/conversation.splat/`,
-  out of `.data/`, into chat-dir root). Or we splat into a tmp dir and
-  move outputs explicitly. Decide before coding.
-- **Should `.data/meta.json` be readable through the view?** Currently
-  it would be: `view/$TITLE/.data/meta.json` → `.chat/$UUID/.data/meta.json`.
-  That's fine — `.data/` is hidden from `ls` but reachable via known path.
-- **What about `chatgpt.index.cdp.jsonl` (the index-level debug
-  intermediate at incubator root)?** Out of scope — it's incubator
-  exhaust, not chat-scoped. Leaves as-is.
+- **Splat output location.** Resolved as Approach A: splat into
+  `.data/conversation.splat/`, move `messages/` and `conversations/`
+  up two levels into chat-dir root, rmdir the splat. Mirrors the
+  prior pattern (one extra path component); no tmp-dir staging.
+- **`.data/meta.json` readable through the view.** Yes —
+  `view/$TITLE/.data/meta.json` resolves correctly. `.data/` is hidden
+  from default `ls` but reachable via known path.
+- **`chatgpt.index.cdp.jsonl` (incubator-level intermediate).** Out of
+  scope — incubator exhaust, not chat-scoped. Left as-is.
 
 ## Success Criteria
 
-- [ ] View dir contains exactly one entry per chat (the dir-symlink).
-- [ ] `cat 2026/.../$TITLE/chat.md` reads chat content (via symlink
+- [x] View dir contains exactly one entry per chat (the dir-symlink).
+- [x] `cat 2026/.../$TITLE/chat.md` reads chat content (via symlink
       resolution).
-- [ ] `cat 2026/.../$TITLE/messages/<stem>.md` reads atomic turn
+- [x] `cat 2026/.../$TITLE/messages/<stem>.md` reads atomic turn
       content textually (no symlink resolution required).
-- [ ] `ls 2026/.../$TITLE/` shows `chat.md`, `messages/`,
+- [x] `ls 2026/.../$TITLE/` shows `chat.md`, `messages/`,
       `conversations/` (and `.data/` only with `-a`).
-- [ ] `path_render` allowlist purge keeps only `.data/`; everything
+- [x] `path_render` allowlist purge keeps only `.data/`; everything
       else is rebuilt.
-- [ ] Live URL re-capture works end-to-end.
-- [ ] Design docs and README reflect new layout.
+- [ ] Live URL re-capture works end-to-end. (User-driven; deferred.)
+- [x] Design docs and README reflect new layout.
 
 ## Notes
 
