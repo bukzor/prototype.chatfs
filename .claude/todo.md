@@ -11,7 +11,8 @@ Plan from 2026-05-05 design.kb consolidation. Order is dependency-driven; 1-2 ar
 1. [x] **`.chat/$UUID/` implementation.** Landed 2026-05-08; see devlog `2026-05-08-000-chatfs-mockup-chatgpt-chat-as-directory-implementation.md`.
 2. [x] **README rewrite + end-to-end test.** Landed 2026-05-08; live URL test passed (188 messages / 129 turns initial, 262 / 206 follow-up). See devlogs `2026-04-29-000` and `2026-05-08-001`.
 3. [x] **Noun-verb sub-kb.** Landed 2026-05-11 at `docs/dev/design-incubators/chatfs-mockup-chatgpt/design.kb/040-design.kb/cli-command-shape.kb/` (partition-prefix scope, Hive-style `key=value` naming). See devlog `2026-05-11-000-chatfs-mockup-chatgpt-cli-command-shape-kb.md`.
-4. [ ] **Multi-provider sketch** (deferrable). `chatfs.demo/claude/` parallel to `chatgpt/`; tests the parent project's `provider-plugin-model.md` against a second provider in practice. Also the natural moment to promote the incubator's `provider-plugin-model.md` symlink to a real entry or sub-kb.
+4. [ ] [Rename incubator to chatfs-cli-mockup](todo.kb/2026-05-11-000-rename-incubator-to-chatfs-cli-mockup.md) — precursor to multi-provider sketch; current name encodes a single provider.
+5. [ ] **Multi-provider sketch** (deferrable). Scope B from 2026-05-11 conversation: hand-prepare a Claude data-export-derived `chatfs.demo/claude/.chat/$UUID/` and run splat + render through it; no live BB1 capture from claude.ai yet. Tests the parent project's `provider-plugin-model.md` against a second provider in practice. Also the natural moment to promote the incubator's `provider-plugin-model.md` symlink to a real entry or sub-kb.
 
 ## Deferred
 

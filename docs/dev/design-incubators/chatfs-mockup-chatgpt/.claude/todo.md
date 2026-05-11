@@ -5,6 +5,53 @@
 Scope: this incubator only. Project-wide tactical work lives in
 `../../../../.claude/todo.md`.
 
+## Next
+
+- [ ] [Rename incubator to chatfs-cli-mockup](../../../../../.claude/todo.kb/2026-05-11-000-rename-incubator-to-chatfs-cli-mockup.md) — precursor to multi-provider sketch; current name encodes a single provider. Tracked at project level because the rename also touches `pyproject.toml` and the project ADR.
+
+## Claude provider — parity ladder
+
+Each row extends the working surface. Check the first few for an MVP
+that renders a single linear chat end-to-end; check all rows for full
+parity with the chatgpt side (or better).
+
+**MVP — single chat URL → `chat.md` (linear chats only):**
+
+- [x] `chatfs_claude_index_pluck.jq` — extract `/chat_conversations_v2?…` response bodies from CDP
+- [x] `chatfs_claude_index_splat.py` — place `.chat/$UUID/.data/meta.json` + view dir-symlink (uuid dedupe; empty-name → uuid fallback)
+- [x] `chatfs_claude_conversation_pluck.jq` — extract `/chat_conversations/{id}?…` response body
+- [x] `chatfs_claude_conversation_splat.py` (text-only first) — walk `chat_messages`, write one `messages/<stem>.md` per message with concatenated text-block content; skip thinking/tool blocks; skip `conversations/` symlinks
+- [x] `chatfs_claude_conversation_render.py` — DFS from root via `parent_message_uuid` index; live path (root → `current_leaf_message_uuid`) inline; dead branches as nested blockquoted asides (mirrors chatgpt-render structure)
+- [ ] `chatfs_claude_conversation_path_render.py` — orchestrator: splat `.data/conversation.json` into `.data/conversation.splat/`, move outputs up two levels, render → `chat.md`
+
+**Same end-user entry points as chatgpt:**
+
+- [ ] `chatfs_claude_conversation_url_browse.py` — capture by URL; pluck both index + conversation; place files; delegate to `path_render`
+- [ ] `chatfs_claude_conversation_path_browse.py` — capture by chat-dir path (bulk iteration after index)
+- [ ] `chatfs_claude_conversation_url_render.py` — URL → resolve to `.chat/$UUID/`, delegate to `path_render`
+
+**All content types rendered (this capture exercises all four):**
+
+- [ ] Render `thinking` blocks (proposed: blockquoted, marked `[thinking]`)
+- [ ] Render `tool_use` blocks (proposed: fenced JSON with tool name + input)
+- [ ] Render `tool_result` blocks (proposed: fenced text; truncate huge)
+
+**Browse-side automation:**
+
+- [ ] `chatfs_claude_index_browse.sh` — drive `har-browse` against `/recents`, tee CDP, pluck
+- [ ] Solve har-browse "wait until `has_more=false`" — active scroll or longer idle? (`/recents` doesn't fire `chat_conversations_v2` until the user scrolls)
+
+**Branches:**
+
+- [x] Forked claude chat for test data — the founder-self-sabotage chat is forked (user edited their second message), discovered while rendering
+- [x] Render dead-branch asides (nested blockquotes, depth = nesting; mirror chatgpt-side) — landed with `conversation_render.py`
+- [ ] Branch enumeration in splat — emit `conversations/<branch>.md` symlinks per leaf
+
+**Refactor (after both providers run end-to-end):**
+
+- [ ] Extract provider-agnostic helpers into shared `chatfs_layout.py`; both `chatfs_chatgpt_layout.py` and `chatfs_claude_layout.py` reduce to provider-shaped `place_meta` + shared imports
+- [ ] Promote `provider-plugin-model.md` symlink to a real incubator entry, with two-provider lessons (what's truly provider-shaped, what's universal)
+
 ## Today — URL-driven capture + CLI rename
 
 Design persisted in `design.kb/040-design.kb/`. Decisions: noun-verb CLI
@@ -38,6 +85,8 @@ browse-incidental meta capture.
 - [x] [Scan design.kb for promotion signals](todo.kb/2026-05-05-001-scan-designkb-for-promotion-signals.md)
 - [x] [Plan and create noun-verb model sub-kb](todo.kb/2026-05-05-002-plan-and-create-noun-verb-model-sub-kb.md)
 - [x] [View as directory-symlink; hide captured exhaust under .data/](todo.kb/2026-05-08-000-view-as-directory-symlink-hide-captured-exhaust-under-data.md)
+- [ ] [claude-code as next provider](todo.kb/2026-05-11-000-claude-code-as-next-provider.md) — after claude.ai parity; datasource `~/.claude/`, no BB1
+- [ ] [shared code among providers](todo.kb/2026-05-11-001-shared-code-among-providers.md) — strategic placement of the parity-ladder Refactor entry
 
 Directory-symlink + `.data/` refactor landed 2026-05-08:
 `place_meta` writes `meta.json` to `.chat/$UUID/.data/` and places a
