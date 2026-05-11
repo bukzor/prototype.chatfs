@@ -72,7 +72,7 @@ For each candidate file:
 
 - `chatfs-mockup-chatgpt/.../cli-command-shape.md` — listing-heavy
   (hierarchy block, script-name table), parallel sections (noun /
-  verb / sub-noun rationale), per-cell growth pressure as the CLI
+  verb / sub-noun rationale), per-command growth pressure as the CLI
   surface widens. Already covered by sibling todo
   `2026-05-05-002-plan-and-create-noun-verb-model-sub-kb.md`. No
   duplicate work here.

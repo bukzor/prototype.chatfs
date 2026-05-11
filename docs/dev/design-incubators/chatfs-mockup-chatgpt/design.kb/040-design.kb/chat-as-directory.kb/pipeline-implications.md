@@ -2,6 +2,10 @@
 
 Per-script consequences of the chat-as-directory layout.
 
+Each section is keyed by script; for the noun-verb-locator framing of
+those scripts (which noun/verb/locator each implements, why each name
+was chosen), see `../cli-command-shape.md` + `../cli-command-shape.kb/`.
+
 ## `place_meta(item, root)`
 
 1. Ensures `$root/.chat/$UUID/.data/` exists, writes

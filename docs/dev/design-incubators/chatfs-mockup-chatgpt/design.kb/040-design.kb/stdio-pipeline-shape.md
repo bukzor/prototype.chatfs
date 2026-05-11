@@ -10,6 +10,12 @@ Leaf scripts read stdin and write data to stdout. Higher-level
 orchestrators take an addressable target (URL or ts-dir) and tee
 debug intermediates to disk.
 
+Orthogonal to the noun-verb-locator partition (see
+`cli-command-shape.md` + `cli-command-shape.kb/`): every command sits
+at some noun×verb partition AND has some stdio shape. "Leaf" and
+"orchestrator" map to that doc's *bare-verb leaf* and *orchestrator
+form* vocabulary.
+
 ## Rule
 
 A script with one logical input and one logical output uses stdin/stdout

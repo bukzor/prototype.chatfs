@@ -36,7 +36,7 @@ browse-incidental meta capture.
 
 - [x] [chat-as-directory layout — propagate to other docs](todo.kb/2026-05-05-000-chat-as-directory-layout--propagate-to-other-docs.md)
 - [x] [Scan design.kb for promotion signals](todo.kb/2026-05-05-001-scan-designkb-for-promotion-signals.md)
-- [ ] [Plan and create noun-verb model sub-kb](todo.kb/2026-05-05-002-plan-and-create-noun-verb-model-sub-kb.md)
+- [x] [Plan and create noun-verb model sub-kb](todo.kb/2026-05-05-002-plan-and-create-noun-verb-model-sub-kb.md)
 - [x] [View as directory-symlink; hide captured exhaust under .data/](todo.kb/2026-05-08-000-view-as-directory-symlink-hide-captured-exhaust-under-data.md)
 
 Directory-symlink + `.data/` refactor landed 2026-05-08:
@@ -49,11 +49,21 @@ writes `chat.md`. Smoke: 56 chats re-splat, test chat (188 messages /
 textually under the view path; re-splat symlink count stable
 (374 → 374).
 
+noun-verb model sub-kb landed 2026-05-11 at
+`design.kb/040-design.kb/cli-command-shape.kb/` (10 entries, partition-
+prefix scope, Hive-style `key=value` naming). Summary
+`cli-command-shape.md` reshaped: listings out (subcommand-path block,
+script-name table), partition-vocabulary glossary + explicit-locator
+policy + naming-conventions rule in. "Cell" terminology renamed to
+"command" throughout. Sibling-doc cross-links added to
+`stdio-pipeline-shape.md` and
+`chat-as-directory.kb/pipeline-implications.md`.
+
 ## Loose ends
 
 - `foo.py`, `bar.py` — moved to `~/trash/`.
 - `chatfs_chatgpt_conversation_url_render.py` — kept as the
-  noun-verb-locator cell `conversation × url × render`; updated to
+  noun-verb-locator command `conversation × url × render`; updated to
   resolve URL → `.chat/$UUID/` directly and delegate to `path_render`.
 
 ## Pipeline shape (post-session)

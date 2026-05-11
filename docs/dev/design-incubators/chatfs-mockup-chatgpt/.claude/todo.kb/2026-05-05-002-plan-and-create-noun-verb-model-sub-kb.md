@@ -17,7 +17,7 @@ anthropic-skill-ownership: llm-subtask
 The noun-verb-locator naming scheme for pipeline scripts is articulated
 in a single file (`cli-command-shape.md`) as a prose hierarchy and a
 flat table mapping subcommand paths to script names. As the surface
-grows (multi-provider, more verbs, more locator types), per-cell
+grows (multi-provider, more verbs, more locator types), per-command
 rationale and metadata accrue:
 
 - Why each verb was chosen (`browse` over `capture`, `splat` as a verb
@@ -29,7 +29,7 @@ rationale and metadata accrue:
 
 A flat table grows brittle. The user wants a sub-kb to track the model
 concretely so that adding a new noun/verb has a clear home and the
-relationships between cells stay legible.
+relationships between commands stay legible.
 
 ## Current Situation
 
@@ -51,9 +51,9 @@ Plan-out phase (this todo) before any kb creation:
      `noun-account.md`. Each lists its verbs/locators.
    - **Per-verb.** `verb-browse.md`, `verb-splat.md`, `verb-render.md`.
      Each notes which nouns it applies to, why-chosen.
-   - **Per-cell (noun×verb).** Most files; richest metadata; most
+   - **Per-command (noun×verb).** Most files; richest metadata; most
      entries. e.g. `index-browse.md`, `conversation-url-browse.md`.
-   - **Hybrid.** Per-cell for implemented scripts, per-noun/per-verb
+   - **Hybrid.** Per-command for implemented scripts, per-noun/per-verb
      for narrative or design rationale.
 2. Decide schema. Frontmatter candidates:
    - `noun:`, `verb:`, `locator:` (string or list)
@@ -74,23 +74,32 @@ Create phase (separate session):
 
 ## Implementation Steps
 
-- [ ] Pick per-file scope (cell vs noun vs verb vs hybrid). Discuss
-      with user before deciding — non-obvious.
-- [ ] Design schema (frontmatter fields + valid values).
-- [ ] Decide promotion strategy: extend `cli-command-shape.md` into
-      a sub-kb, or create a new sibling.
-- [ ] Inventory current scripts + planned scripts for population.
-- [ ] Sketch CLAUDE.md content for the new kb.
-- [ ] Create the kb (separate session per llm-kb's
-      `references/creating-a-new-kb.md`).
-- [ ] Update sibling docs (`stdio-pipeline-shape.md`,
-      `chat-as-directory.kb/pipeline-implications.md`) to point at
-      the new kb where they currently inline-name scripts.
+- [x] Pick per-file scope. Chose **partition-prefix**: a file exists
+      when a partition prefix (`noun=X`, `verb=Y`, `noun=X × verb=Y`,
+      `noun=X × locator=Z`) carries durable rationale spanning more
+      than one command. Rejects all four planned candidates
+      (per-command, per-noun, per-verb, hybrid) — none captured the
+      "spans-multiple-commands" criterion that keeps the kb from
+      growing brittle.
+- [x] Design schema. Chose **prose-only, no frontmatter** on entries
+      (summary file `cli-command-shape.md` carries `last-updated` per
+      llm-kb).
+- [x] Decide promotion strategy. Extended `cli-command-shape.md` into
+      sibling `cli-command-shape.kb/` (llm-kb's `$CATEGORY.md` +
+      `$CATEGORY.kb/` pairing).
+- [x] Inventory current scripts + planned scripts for population.
+- [x] Sketch CLAUDE.md content for the new kb.
+- [x] Create the kb.
+- [x] Update sibling docs (`stdio-pipeline-shape.md`,
+      `chat-as-directory.kb/pipeline-implications.md`) — added a
+      cross-link paragraph at the top of each, pointing at
+      `cli-command-shape.md` + `cli-command-shape.kb/` for the
+      noun-verb-locator framing.
 
 ## Open Questions
 
-- Per-cell vs per-noun: which scope minimizes redundancy while keeping
-  files focused? Likely per-cell, but per-noun gives a "what verbs
+- Per-command vs per-noun: which scope minimizes redundancy while keeping
+  files focused? Likely per-command, but per-noun gives a "what verbs
   does this noun support" glance.
 - Should the kb include rejected/considered nouns and verbs as entries
   (with `status: rejected`)? Argument for: future sessions don't
@@ -101,11 +110,14 @@ Create phase (separate session):
 
 ## Success Criteria
 
-- [ ] Plan-out decisions recorded (scope, schema, location).
-- [ ] User signs off on the plan before creation.
-- [ ] kb created with entries for current scripts.
-- [ ] Sibling docs updated to point into the new kb.
-- [ ] Adding a new script (next session) requires only a new kb entry,
+- [x] Plan-out decisions recorded (scope, schema, location). Recorded
+      implicitly in `cli-command-shape.kb/CLAUDE.md` (what-belongs +
+      partition-key convention + promotion rule).
+- [x] User signs off on the plan before creation. Done interactively
+      during the 2026-05-11 session.
+- [x] kb created with entries for current scripts.
+- [x] Sibling docs updated to point into the new kb.
+- [x] Adding a new script (next session) requires only a new kb entry,
       not edits to multiple prose files.
 
 ## Notes
@@ -114,3 +126,24 @@ This is a planning todo, not an execution todo. Discussion with user
 expected before any kb creation. The chat-as-directory factorization
 took several rounds of structural discussion before final shape;
 expect similar here.
+
+## Resolution (2026-05-11)
+
+Landed `design.kb/040-design.kb/cli-command-shape.kb/` with 10 entries
+across two levels (top-level + `noun=conversation.kb/` sub-kb).
+Partition-prefix scope, prose-only entries, Hive-style `key=value`
+naming. Summary `cli-command-shape.md` gutted of listings (subcommand-
+path block and script-name table both removed) and restructured into
+partition-vocabulary glossary + explicit-locator policy + naming-
+conventions rule. Open Questions resolved:
+
+- **Per-command vs per-noun scope:** picked partition-prefix —
+  promotes when rationale spans more than one command at a prefix
+  AND exceeds ~50 tokens. Smaller and more growth-resistant than
+  per-command would have been.
+- **Rejected nouns/verbs as entries:** not included; ADR remains the
+  right home for rejected designs.
+- **Incubator vs project scope:** incubator (`chatfs-mockup-chatgpt/`)
+  for now; promotion to project level deferred until claude.ai joins.
+
+Devlog: `docs/dev/devlog/2026-05-11-000-chatfs-mockup-chatgpt-cli-command-shape-kb.md`.

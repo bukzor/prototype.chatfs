@@ -2,6 +2,7 @@
 why:
   - unix-composability
   - pipeline-composability
+last-updated: 2026-05-11
 ---
 
 # CLI Command Shape
@@ -10,64 +11,38 @@ Pipeline scripts are named as if they were subcommands of a future
 `chatfs` CLI: noun-then-verb, with an explicit locator sub-noun where
 the same action accepts multiple input shapes.
 
-## Hierarchy
+## Partition vocabulary
 
-```
-chatfs chatgpt index browse
-chatfs chatgpt index splat
+- **Provider** — outermost grouping for per-provider script families.
+- **Noun** — an artifact the pipeline manipulates.
+- **Verb** — an operation applied to a noun.
+- **Sub-noun (locator)** — disambiguates input shape (e.g. `url` vs
+  `path`) when a verb accepts multiple. Sits between noun and verb in
+  the command path (e.g. `conversation url browse`).
+- **Bare-verb leaf** — stdio-only entry point that emits data on
+  stdout from prepared inputs.
+- **Orchestrator form** — locator-prefixed command that arranges
+  capture, splat, and placement around a bare-verb leaf.
 
-chatfs chatgpt conversation url browse <url>
-chatfs chatgpt conversation path browse <chat-dir>
-chatfs chatgpt conversation url render <url>
-chatfs chatgpt conversation path render <chat-dir>
-chatfs chatgpt conversation render <chat-dir>
-```
+## Why explicit locators
 
-- **Provider** (`chatgpt`) is the outermost grouping — multi-provider is
-  a parent goal, and per-provider script families compose under it.
-- **Nouns** are `index` and `conversation`. These are the only two
-  artifacts the pipeline manipulates.
-- **Verbs** are `browse`, `splat`, `render`. `browse` is preferred over
-  `capture` or `fetch` because it accurately signals that a real browser
-  window opens (har-browse drives Chromium); reducing user surprise
-  matters more than CLI verb conventions here.
-- **Sub-nouns** disambiguate locator type (`url` vs `path`) when the
-  same verb applies to either. We prefer explicit sub-nouns over
-  polymorphic single commands: a script that quietly accepts both a URL
-  and a directory path is harder to read in a pipeline and harder to
-  shell-complete. `path` itself accepts either a date-tree ts-dir or a
-  `.chat/$UUID/` storage dir; both resolve to the same canonical chat
-  and the script normalizes internally.
-- **Bare-verb leaves** (`conversation render` with no locator) emit
-  data on stdout from already-prepared inputs. The locator-prefixed
-  forms (`path render`, `url render`) orchestrate splat + leaf-render
-  + file placement; they are the user's normal entry points.
+A verb that quietly accepts both a URL and a directory path is harder
+to read in a pipeline and harder to shell-complete than two separate
+commands. The few extra keystrokes (`url browse` vs `browse`) buy
+clarity.
 
-## `splat` as a verb
+## Naming conventions
 
-`splat` names the unusual operation of fanning a monolithic JSON
-document out into a normalized tree of small files (one per message,
-plus indices). Alternatives considered: `materialize`, `expand`,
-`unpack`. `splat` is in-house jargon but precise — readers of this
-repo recognize it, and it carries the connotation of "explode into
-many pieces" that the alternatives lose.
+Subcommand paths map to scripts on `$PATH` with `-` separators
+(`chatgpt conversation url browse` →
+`chatfs-chatgpt-conversation-url-browse`). Internal helpers (e.g.
+`*-pluck.jq` files) carry the same prefix so `ls chatfs-chatgpt-*`
+enumerates the family. Python module names use `_` for the same path:
+`chatfs_chatgpt_layout` for shared primitives.
 
-## Script names on `$PATH`
+---
 
-Each subcommand path translates to a single script with `-` separators:
-
-| subcommand | script |
-|---|---|
-| `chatgpt index browse` | `chatfs-chatgpt-index-browse` |
-| `chatgpt index splat` | `chatfs-chatgpt-index-splat` |
-| `chatgpt conversation url browse` | `chatfs-chatgpt-conversation-url-browse` |
-| `chatgpt conversation path browse` | `chatfs-chatgpt-conversation-path-browse` |
-| `chatgpt conversation url render` | `chatfs-chatgpt-conversation-url-render` |
-| `chatgpt conversation path render` | `chatfs-chatgpt-conversation-path-render` |
-| `chatgpt conversation render` | `chatfs-chatgpt-conversation-render` |
-
-Internal helpers (e.g. `*-pluck.jq` files) carry the same prefix so
-that `ls chatfs-chatgpt-*` enumerates the family.
-
-Python module names use `_` for the same path: `chatfs_chatgpt_layout`
-for shared primitives.
+Per-partition rationale lives in `cli-command-shape.kb/`, keyed by
+partition prefix (`noun=index.md`, `verb=splat.md`,
+`noun=conversation.kb/locator=url.md`, etc.). See the kb's `CLAUDE.md`
+for partition-key conventions and the promotion rule.
