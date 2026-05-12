@@ -1,0 +1,51 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+type: object
+required: [status, last-checked]
+additionalProperties: false
+properties:
+  status:
+    enum: [assumed, observed, refuted, settled]
+    description: |
+      assumed   — believed but unverified empirically
+      observed  — single observation; one-shot, not confirmed
+      refuted   — counter-evidence available; see previously-claimed
+      settled   — repeatedly confirmed; safe to rely on
+  last-checked:
+    pattern: "^\\d{4}-\\d{2}-\\d{2}$"
+    format: date
+    description: |
+      ISO 8601 date of most recent status confirmation. Either an
+      unquoted YAML date literal (parses to datetime.date) or a
+      quoted string (parses to str) is accepted. The pattern
+      validates the string form; datetime.date instances pass
+      through (pattern only applies to strings per JSON Schema spec).
+  first-recorded:
+    pattern: "^\\d{4}-\\d{2}-\\d{2}$"
+    format: date
+  evidence:
+    type: array
+    items: { type: string }
+    description: |
+      Pointers to captured artifacts, CDP files, devlog entries, or
+      external sources that bear on this claim.
+  previously-claimed:
+    type: array
+    description: |
+      Earlier wordings that were superseded by the current claim.
+      Use when a prior bad version was recorded somewhere (todo,
+      response, doc) so future agents can pattern-match if they
+      encounter the bad version elsewhere.
+    items:
+      type: object
+      required: [text]
+      additionalProperties: false
+      properties:
+        text:
+          type: string
+          description: Verbatim earlier wording.
+        where:
+          type: string
+          description: Where the bad version appeared (file path, response, etc.).
+        when:
+          pattern: "^\\d{4}-\\d{2}-\\d{2}$"
+          format: date
