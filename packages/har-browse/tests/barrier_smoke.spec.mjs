@@ -1,15 +1,17 @@
 /**
- * BARRIER snapshot-defer invariant.
+ * BARRIER snapshot-defer invariant + {1..K} no-gaps invariant.
  *
  * Page fires N parallel `/payload?id=K&delay=D` fetches, awaits them,
  * then calls `window.harBrowseMark("BARRIER:end")`. The capture
  * pipeline must defer emitting the BARRIER bindingCalled until every
  * body-fetch pending at BARRIER's CDP arrival has settled — so all
  * `/payload` `Network.responseReceived` events land at strictly
- * earlier JSONL indices than BARRIER.
+ * earlier JSONL indices than BARRIER. Additionally, the set of `n`
+ * values stamped into captured /payload bodies must equal {1..served}.
  */
-import { createServer } from "node:http";
 import { test, expect } from "./fixtures.mjs";
+import { startServer } from "./_common/server.mjs";
+import { assertNoGaps } from "./_common/testing.mjs";
 
 const N = 10;
 const DELAY_MS = 20;
@@ -17,23 +19,11 @@ const DELAY_MS = 20;
 test("BARRIER: pending /payload responses precede BARRIER in stream", async ({
   startCapture,
 }) => {
-  const server = createServer(async (req, res) => {
-    const url = new URL(req.url, `http://${req.headers.host}`);
-    if (url.pathname === "/payload") {
-      const id = url.searchParams.get("id") ?? "";
-      const delay = Number(url.searchParams.get("delay") ?? 0);
-      if (delay > 0) await new Promise((r) => setTimeout(r, delay));
-      res.writeHead(200, { "content-type": "application/json" });
-      res.end(JSON.stringify({ id }));
-      return;
-    }
-    res.writeHead(200, { "content-type": "text/html" });
-    res.end("<!doctype html><html><body>barrier smoke</body></html>");
-  });
-  await new Promise((r) => server.listen(0, "127.0.0.1", r));
-  const { port } = server.address();
+  const server = await startServer();
   try {
-    const session = await startCapture({ url: `http://127.0.0.1:${port}/` });
+    const session = await startCapture({
+      url: `http://127.0.0.1:${server.port}/`,
+    });
 
     await session.page.evaluate(
       async ({ n, delay }) => {
@@ -77,7 +67,9 @@ test("BARRIER: pending /payload responses precede BARRIER in stream", async ({
         barrierIdx,
       );
     }
+
+    assertNoGaps({ events: messages, requestLog: server.requestLog });
   } finally {
-    await new Promise((r) => server.close(r));
+    await server.close();
   }
 });
