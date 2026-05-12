@@ -6,6 +6,8 @@ depends:
   - Skill(llm-design-kb)
 ---
 
+@.claude/focus.md
+
 # chatfs - Development Guide for Claude
 
 ## Architecture Overview
