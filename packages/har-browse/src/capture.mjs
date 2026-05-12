@@ -102,6 +102,23 @@ export async function startCapture({ url, profileDir, howto, headless = false })
           emit({ method: "Network.responseReceived", params: response });
         }
         emit({ method: name, params });
+      } else if (
+        name === "Runtime.bindingCalled" &&
+        params.name === "harBrowseMark" &&
+        typeof params.payload === "string" &&
+        params.payload.startsWith("BARRIER:")
+      ) {
+        // Snapshot body-fetches in flight at BARRIER's CDP arrival; defer
+        // the bindingCalled emit until all settle. Per-target CDP FIFO
+        // guarantees any loadingFinished that preceded this bindingCalled
+        // has already enqueued its body-fetch into `pending`.
+        const snapshot = [...pending];
+        track(
+          (async () => {
+            await Promise.allSettled(snapshot);
+            emit({ method: name, params });
+          })(),
+        );
       } else {
         emit({ method: name, params });
       }
@@ -110,6 +127,8 @@ export async function startCapture({ url, profileDir, howto, headless = false })
 
     await session.send("Network.enable");
     await session.send("Page.enable");
+    await session.send("Runtime.enable");
+    await session.send("Runtime.addBinding", { name: "harBrowseMark" });
   };
 
   const page = context.pages()[0] ?? (await context.newPage());

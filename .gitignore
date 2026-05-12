@@ -33,4 +33,4 @@ trash/
 .env.secret
 
 # per-worktree agent focus (see CLAUDE.md)
-.claude/focus.md
+**/.claude/focus.md
