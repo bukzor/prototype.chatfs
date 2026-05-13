@@ -2,6 +2,11 @@
 
 # Tactical Tasks
 
+- [ ] Refresh `CLAUDE.md` so 6-month-future-you isn't bewildered.
+  - [ ] Update "Key Files" entry for `capture.mjs`: drop stale `captureEvents()` reference; describe current `attachCapture(page)` (low-level) vs `startCapture(opts)` (convenience wrapper) split.
+  - [ ] Add a "BARRIER protocol" subsection: what `window.harBrowseMark("BARRIER:…")` does in the page, why snapshot-defer in capture.mjs is the load-bearing mechanism, where the invariant is tested (`tests/barrier_consumed.spec.mjs`).
+  - [ ] Cross-link to `.claude/ideas.kb/` for deferred work, especially the streaming-witness gate idea.
+  - [ ] Verify references to `toy_server/`, `toy_pluck.sh`, etc. still match the tree; remove or update stale paths.
 - [ ] Add `// @ts-check` to remaining `.mjs` files (`src/cache.mjs`, `src/cdp_to_har.mjs`, `src/har_browse.mjs`, `src/inject.mjs`, `src/playwright.mjs`, `src/user-agent.mjs`, tests). Per-file opt-in; tighten any errors that surface.
 - [ ] Migrate the package to TypeScript proper (`.mjs` → `.ts`). Add `tsconfig.json`, decide on runner (`tsx` vs compile), wire `pnpm run typecheck`. Consider installing `devtools-protocol` for typed CDP event shapes (would let us drop `any` on `params` throughout `capture.mjs`).
 - [x] [har-browse streaming refactor](todo.kb/2026-04-24-000-har-browse-streaming-refactor.md) — `captureHar` is now an async generator; `har-browse` streams JSONL to stdout. **Superseded** by the public-events refactor below: HAR-entry was the wrong seam.
