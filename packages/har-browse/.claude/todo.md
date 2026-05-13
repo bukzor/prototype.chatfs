@@ -2,15 +2,21 @@
 
 # Tactical Tasks
 
+- [ ] Add a header comment to `src/inject.mjs` documenting the Done-button protocol: page injects `#capture-done`, click handler sets `dataset.clicked = "true"`, capture polls via `page.waitForFunction(… dataset.clicked === "true")` in `capture.mjs`. Note the choice (DOM-dataset, not `harBrowseMark("DONE")` or a CDP signal) so 6-month-you doesn't re-litigate it.
 - [ ] Refresh `CLAUDE.md` so 6-month-future-you isn't bewildered.
   - [ ] Update "Key Files" entry for `capture.mjs`: drop stale `captureEvents()` reference; describe current `attachCapture(page)` (low-level) vs `startCapture(opts)` (convenience wrapper) split.
-  - [ ] Add a "BARRIER protocol" subsection: what `window.harBrowseMark("BARRIER:…")` does in the page, why snapshot-defer in capture.mjs is the load-bearing mechanism, where the invariant is tested (`tests/barrier_consumed.spec.mjs`).
+  - [ ] Document the BARRIER protocol, paired in two places so it's reachable where you'd look:
+    - `CLAUDE.md`: short paragraph — page-side `window.harBrowseMark("BARRIER:…")` carries a page-attested consumed list; capture defers each BARRIER's emit until in-flight body-fetches settle, so consumed RRs precede the BARRIER that names them. Point at `tests/barrier_consumed.spec.mjs` as the formal invariant.
+    - `src/capture.mjs`: header comment with the mechanic detail (snapshot-via-spread of `inFlight`, `allSettled`-superset ordering for concurrent BARRIERs) and a pointer to the same test.
   - [ ] Cross-link to `.claude/ideas.kb/` for deferred work, especially the streaming-witness gate idea.
   - [ ] Verify references to `toy_server/`, `toy_pluck.sh`, etc. still match the tree; remove or update stale paths.
-- [ ] Add `// @ts-check` to remaining `.mjs` files (`src/cache.mjs`, `src/cdp_to_har.mjs`, `src/har_browse.mjs`, `src/inject.mjs`, `src/playwright.mjs`, `src/user-agent.mjs`, tests). Per-file opt-in; tighten any errors that surface.
-- [ ] Migrate the package to TypeScript proper (`.mjs` → `.ts`). Add `tsconfig.json`, decide on runner (`tsx` vs compile), wire `pnpm run typecheck`. Consider installing `devtools-protocol` for typed CDP event shapes (would let us drop `any` on `params` throughout `capture.mjs`).
-- [x] [har-browse streaming refactor](todo.kb/2026-04-24-000-har-browse-streaming-refactor.md) — `captureHar` is now an async generator; `har-browse` streams JSONL to stdout. **Superseded** by the public-events refactor below: HAR-entry was the wrong seam.
-- [x] [pw-browse public-events stream](todo.kb/2026-04-24-001-pw-browse-public-events-stream.md) — replaced HAR-entry stream with a **CDP event passthrough** in chrome-har's `{method, params}` shape. Bodies attached at `Network.responseReceived.params.response.body`. `har-browse` bin unchanged; `captureHar` → `captureEvents`; `src/playwright/` deleted.
-- [x] [cdp2har: validate chrome-har consumes our stream](todo.kb/2026-04-24-002-cdp2har-validate-chrome-har-consumes-our-stream.md) — added `cdp-to-har` bin (~20 lines) + `test_e2e_har.mjs` driving `captureEvents → harFromMessages` against the toy server. Claim is now empirical: entries, pages, timings, and the `/api/conversation` body round-trip through chrome-har unmodified.
-- [x] [har-browse: handle EPIPE on stdout cleanly](todo.kb/2026-04-24-003-har-browse-handle-epipe-on-stdout-cleanly.md) — stdout error handler sets a flag; loop breaks and the generator's `finally` closes the context. `test_epipe.mjs` verifies the pattern (clean exit, no stack trace) via a `sed -n 1,1p` consumer.
+- [ ] Wire build-time typecheck (prerequisite for the next item to have real rigor). Install `typescript` as a devDep, add `tsconfig.json` at package root (`allowJs: true`, `checkJs: false` so `@ts-check` opts in per-file, `noEmit: true`, `strict: true`, `module: nodenext`, `target: esnext`, include `src/**/*.mjs` and `tests/**/*.mjs`), add `"typecheck": "tsc -p ."` to `package.json` scripts, wire into CI. Without this, `@ts-check` is editor-only — no CI gate.
+- [ ] Add `// @ts-check` to remaining `.mjs` files (`src/cache.mjs`, `src/cdp_to_har.mjs`, `src/har_browse.mjs`, `src/inject.mjs`, `src/playwright.mjs`, `src/user-agent.mjs`, tests). Per-file opt-in; tighten any errors that surface. Depends on the typecheck wiring above for real rigor.
+- [ ] Rename `.mjs` → `.ts` for native TS syntax. Node 22 strips types from `.ts` by default, so `#!/usr/bin/env node` shebangs work unchanged — just avoid `enum`/`namespace`/parameter-properties (the runtime-emitting TS constructs) or accept switching to `tsx`. Playwright loads `.ts` natively, so tests need no runner change. Consider installing `devtools-protocol` for typed CDP event shapes (would let us drop `any` on `params` throughout `capture.mjs`).
 
+## Done
+
+- [x] [har-browse streaming refactor](todo.kb/2026-04-24-000-har-browse-streaming-refactor.md) — superseded by the public-events refactor.
+- [x] [pw-browse public-events stream](todo.kb/2026-04-24-001-pw-browse-public-events-stream.md)
+- [x] [cdp2har: validate chrome-har consumes our stream](todo.kb/2026-04-24-002-cdp2har-validate-chrome-har-consumes-our-stream.md)
+- [x] [har-browse: handle EPIPE on stdout cleanly](todo.kb/2026-04-24-003-har-browse-handle-epipe-on-stdout-cleanly.md)
