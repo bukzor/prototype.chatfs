@@ -2,6 +2,8 @@
 
 # Tactical Tasks
 
+- [ ] Add `// @ts-check` to remaining `.mjs` files (`src/cache.mjs`, `src/cdp_to_har.mjs`, `src/har_browse.mjs`, `src/inject.mjs`, `src/playwright.mjs`, `src/user-agent.mjs`, tests). Per-file opt-in; tighten any errors that surface.
+- [ ] Migrate the package to TypeScript proper (`.mjs` → `.ts`). Add `tsconfig.json`, decide on runner (`tsx` vs compile), wire `pnpm run typecheck`. Consider installing `devtools-protocol` for typed CDP event shapes (would let us drop `any` on `params` throughout `capture.mjs`).
 - [x] [har-browse streaming refactor](todo.kb/2026-04-24-000-har-browse-streaming-refactor.md) — `captureHar` is now an async generator; `har-browse` streams JSONL to stdout. **Superseded** by the public-events refactor below: HAR-entry was the wrong seam.
 - [x] [pw-browse public-events stream](todo.kb/2026-04-24-001-pw-browse-public-events-stream.md) — replaced HAR-entry stream with a **CDP event passthrough** in chrome-har's `{method, params}` shape. Bodies attached at `Network.responseReceived.params.response.body`. `har-browse` bin unchanged; `captureHar` → `captureEvents`; `src/playwright/` deleted.
 - [x] [cdp2har: validate chrome-har consumes our stream](todo.kb/2026-04-24-002-cdp2har-validate-chrome-har-consumes-our-stream.md) — added `cdp-to-har` bin (~20 lines) + `test_e2e_har.mjs` driving `captureEvents → harFromMessages` against the toy server. Claim is now empirical: entries, pages, timings, and the `/api/conversation` body round-trip through chrome-har unmodified.

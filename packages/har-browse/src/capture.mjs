@@ -1,57 +1,57 @@
+// @ts-check
 import { mkdirSync } from "node:fs";
 import { EventEmitter, on } from "node:events";
 import { chromium } from "./playwright.mjs";
 import { injectOverlay } from "./inject.mjs";
 
+/** @typedef {{ method: string, params: any }} CDPEvent */
+/** @typedef {import("playwright").Page} Page */
+/** @typedef {import("playwright").BrowserContext} BrowserContext */
+
 /**
- * Attach Chrome DevTools Protocol capture to an already-open page. Streams
- * CDP events as `{method, params}` — the wire format `chrome-har` and other
- * CDP consumers expect. Response bodies are attached to
- * `Network.responseReceived.params.response` as `.body`
- * (+ `.encoding = "base64"` when applicable), per chrome-har's convention.
+ * Stream CDP events from an open page as `{method, params}` JSONL —
+ * chrome-har's wire format. Response bodies attach at
+ * `Network.responseReceived.params.response.body`
+ * (+ `.encoding = "base64"` when applicable). Stream ends on injected
+ * "Done" click or context close. Caller owns the browser lifecycle.
  *
- * The stream ends when the user clicks the injected "Done" button or the
- * context closes. The browser's lifecycle is the caller's responsibility;
- * use `startCapture` for the convenience-wrapped version.
- *
- * @param {import("playwright").Page} page
- * @param {object} [opts]
- * @param {string} [opts.howto]  pre-read howto content (string, not path)
+ * @param {Page} page
+ * @param {{ howto?: string }} [opts]
  * @returns {Promise<{
- *   events: AsyncIterable<{method: string, params: object}>,
+ *   events: AsyncIterable<CDPEvent>,
  *   done: Promise<void>,
  * }>}
  */
 export async function attachCapture(page, { howto } = {}) {
   const context = page.context();
 
-  const out = new EventEmitter();
-  // Subscribe BEFORE any CDP attachment so events emitted during setup
-  // and navigation are buffered, not dropped. on() does not retroactively
-  // capture events emitted before the iterator existed.
-  const stream = on(out, "event", { close: ["end"] });
-  const emit = (msg) => out.emit("event", msg);
+  const emitter = new EventEmitter();
+  // Subscribe before any CDP attachment: on() doesn't retroactively
+  // capture events emitted before its iterator existed.
+  const queue = on(emitter, "event", { close: ["end"] });
+  /** @param {CDPEvent} msg */
+  const enqueue = (msg) => emitter.emit("event", msg);
 
-  // Drain tracker: body-fetch lookups (and deferred BARRIER emits) need
-  // to finish before we emit "end".
-  const pending = new Set();
+  /** @type {Set<Promise<unknown>>} */
+  const inFlight = new Set();
+  /** @template T @param {Promise<T>} pr @returns {Promise<T>} */
   const track = (pr) => {
-    pending.add(pr);
-    pr.finally(() => pending.delete(pr));
+    inFlight.add(pr);
+    pr.finally(() => inFlight.delete(pr));
     return pr;
   };
 
-  const attach = async (p) => {
-    const session = await context.newCDPSession(p);
+  /** @param {Page} subject */
+  const wireSession = async (subject) => {
+    const session = await context.newCDPSession(subject);
 
-    // `responseReceived` arrives with headers but not body; held here per
-    // requestId until the matching `loadingFinished` (or `loadingFailed`)
-    // lets us fetch and attach the body. `Network.getResponseBody` is an
-    // effectful getter — a single call per response consumes the buffer;
-    // do not double-subscribe it.
+    // RR arrives with headers; stashed by requestId, flushed on LF/LFail
+    // with body attached. `getResponseBody` is one-shot per response.
+    /** @type {Map<string, any>} */
     const awaitingBody = new Map();
 
-    async function emitWithBody(lf) {
+    /** @param {any} lf */
+    async function onLoadingFinished(lf) {
       const rr = awaitingBody.get(lf.requestId);
       awaitingBody.delete(lf.requestId);
       if (rr) {
@@ -64,55 +64,58 @@ export async function attachCapture(page, { howto } = {}) {
         } catch {
           // 204 / redirect / no-body responses reject; emit bare.
         }
-        emit({ method: "Network.responseReceived", params: rr });
+        enqueue({ method: "Network.responseReceived", params: rr });
       }
-      emit({ method: "Network.loadingFinished", params: lf });
+      enqueue({ method: "Network.loadingFinished", params: lf });
     }
 
-    function emitOnFail(lfail) {
+    /** @param {any} lfail */
+    function onLoadingFailed(lfail) {
       const rr = awaitingBody.get(lfail.requestId);
       awaitingBody.delete(lfail.requestId);
-      if (rr) emit({ method: "Network.responseReceived", params: rr });
-      emit({ method: "Network.loadingFailed", params: lfail });
+      if (rr) enqueue({ method: "Network.responseReceived", params: rr });
+      enqueue({ method: "Network.loadingFailed", params: lfail });
     }
 
-    function emitBinding(params) {
-      // Snapshot body-fetches in flight at BARRIER's CDP arrival; defer
-      // the bindingCalled emit until all settle. Per-target CDP FIFO
-      // guarantees any loadingFinished that preceded this bindingCalled
-      // has already enqueued its body-fetch into `pending`. Reentrant:
-      // each BARRIER takes its own snapshot, and Promise.allSettled on
-      // a superset can only resolve at-or-after its subset's, so
-      // serialization between concurrent BARRIERs is structural.
+    /** @param {any} params */
+    function onBindingCalled(params) {
+      // BARRIER snapshot-defer: hold emit until in-flight body-fetches at
+      // CDP arrival have settled. Per-BARRIER snapshots; concurrent
+      // BARRIERs serialize via allSettled's superset ordering.
       if (
         params.name === "harBrowseMark" &&
         params.payload?.startsWith?.("BARRIER:")
       ) {
         track(
-          Promise.allSettled([...pending]).then(() =>
-            emit({ method: "Runtime.bindingCalled", params }),
+          Promise.allSettled([...inFlight]).then(() =>
+            enqueue({ method: "Runtime.bindingCalled", params }),
           ),
         );
       } else {
-        emit({ method: "Runtime.bindingCalled", params });
+        enqueue({ method: "Runtime.bindingCalled", params });
       }
     }
 
-    // Per-method dispatch. The `else` branch in the override is blanket
-    // passthrough — keeps chrome-har's Network/Page/Target events flowing
-    // without enumerating them.
-    const handlers = {
+    /** @type {Record<string, (params: any) => void>} */
+    const cdpHandlers = {
       "Network.responseReceived": (p) => awaitingBody.set(p.requestId, p),
-      "Network.loadingFinished": (p) => track(emitWithBody(p)),
-      "Network.loadingFailed": (p) => emitOnFail(p),
-      "Runtime.bindingCalled": (p) => emitBinding(p),
+      "Network.loadingFinished": (p) => track(onLoadingFinished(p)),
+      "Network.loadingFailed": onLoadingFailed,
+      "Runtime.bindingCalled": onBindingCalled,
     };
 
-    const origEmit = session.emit.bind(session);
-    session.emit = function (name, ...args) {
+    // Blanket passthrough via emit-override: handlers special-case the
+    // methods that need transformation; everything else (Page.*, Target.*,
+    // etc.) flows through unchanged so downstream HAR builders see the
+    // full event set. CDPSession extends EventEmitter internally — cast
+    // through it to reach `.emit`, which isn't in playwright's public
+    // surface.
+    const sessionBus = /** @type {EventEmitter} */ (/** @type {unknown} */ (session));
+    const origEmit = sessionBus.emit.bind(sessionBus);
+    sessionBus.emit = function (name, ...args) {
       if (typeof name === "string" && name.includes(".")) {
         const params = args[0] ?? {};
-        (handlers[name] ?? ((p) => emit({ method: name, params: p })))(params);
+        (cdpHandlers[name] ?? ((p) => enqueue({ method: name, params: p })))(params);
       }
       return origEmit(name, ...args);
     };
@@ -123,14 +126,13 @@ export async function attachCapture(page, { howto } = {}) {
     await session.send("Runtime.addBinding", { name: "harBrowseMark" });
   };
 
-  await attach(page);
-  context.on("page", (p) => track(attach(p)));
+  await wireSession(page);
+  context.on("page", (p) => track(wireSession(p)));
 
   await injectOverlay(page, { howto });
 
-  // Termination: Done click or window close. Drain in-flight body-fetches
-  // (and any deferred BARRIER emits) before signalling end so their emits
-  // land in the queue first.
+  // Drain inFlight (body-fetches + deferred BARRIERs) before "end" so
+  // their emits land in the queue first.
   const done = Promise.race([
     page.waitForFunction(
       () => document.getElementById("capture-done")?.dataset.clicked === "true",
@@ -139,32 +141,32 @@ export async function attachCapture(page, { howto } = {}) {
   ])
     .catch(() => {})
     .finally(async () => {
-      await Promise.allSettled([...pending]);
-      out.emit("end");
-    });
+      await Promise.allSettled([...inFlight]);
+      emitter.emit("end");
+    })
+    .then(() => {});
 
   const events = (async function* () {
-    for await (const [msg] of stream) yield msg;
+    for await (const [msg] of queue) yield msg;
   })();
 
   return { events, done };
 }
 
 /**
- * Launch a persistent-context browser, navigate to `url`, and return a
- * capture session. Thin convenience wrapper over `attachCapture` that
- * also manages the browser lifecycle. Per-profile state persists under
- * `profileDir`.
+ * Launch a persistent-context browser, navigate, and return a capture
+ * session. Per-profile state persists under `profileDir`.
  *
- * @param {object} opts
- * @param {string} opts.url
- * @param {string} opts.profileDir
- * @param {string} [opts.howto]
- * @param {boolean} [opts.headless=false]
+ * @param {{
+ *   url: string,
+ *   profileDir: string,
+ *   howto?: string,
+ *   headless?: boolean,
+ * }} opts
  * @returns {Promise<{
- *   page: import("playwright").Page,
- *   context: import("playwright").BrowserContext,
- *   events: AsyncIterable<{method: string, params: object}>,
+ *   page: Page,
+ *   context: BrowserContext,
+ *   events: AsyncIterable<CDPEvent>,
  *   done: Promise<void>,
  *   close: () => Promise<void>,
  * }>}
@@ -175,9 +177,7 @@ export async function startCapture({ url, profileDir, howto, headless = false })
   const context = await chromium.launchPersistentContext(profileDir, {
     headless,
   });
-  // Disable default timeouts on everything the context owns: page waits,
-  // page.goto, and context.waitForEvent("close") — the human may take any
-  // amount of time to complete login/capture.
+  // Human may take any amount of time to complete login/capture.
   context.setDefaultTimeout(0);
 
   const page = context.pages()[0] ?? (await context.newPage());
