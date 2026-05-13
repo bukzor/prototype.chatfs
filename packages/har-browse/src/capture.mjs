@@ -111,7 +111,10 @@ export async function startCapture({ url, profileDir, howto, headless = false })
         // Snapshot body-fetches in flight at BARRIER's CDP arrival; defer
         // the bindingCalled emit until all settle. Per-target CDP FIFO
         // guarantees any loadingFinished that preceded this bindingCalled
-        // has already enqueued its body-fetch into `pending`.
+        // has already enqueued its body-fetch into `pending`. Reentrant:
+        // each BARRIER takes its own snapshot, and Promise.allSettled on
+        // a superset can only resolve at-or-after its subset's, so
+        // serialization between concurrent BARRIERs is structural.
         const snapshot = [...pending];
         track(
           (async () => {
