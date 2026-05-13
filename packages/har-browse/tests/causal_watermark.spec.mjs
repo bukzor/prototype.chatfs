@@ -1,30 +1,14 @@
 /**
  * Causal-watermark adversarial oracle.
  *
- * Under adversarial concurrency (most fetches still in flight at marker
- * emit time), the SPECIFIC `Network.responseReceived` whose body the
- * page consumed before BARRIER must appear at a strictly earlier JSONL
- * index than the BARRIER event. Subset-of-events form: only the
- * consumed RR needs to precede; the other ~N-1 may emit after.
- *
- * Why this holds, given commit 1's snapshot-defer:
- *
- *  - The renderer fires the FIRST .then callback after the network
- *    service has delivered that response's body. The body delivery is
- *    downstream of Network.loadingFinished, so LF for that response is
- *    already enqueued in our CDP session before the bindingCalled.
- *  - capture.mjs has by then started the body-fetch for that response
- *    (kicked off from its LF handler) and added the promise to
- *    `pending`.
- *  - On the bindingCalled for "BARRIER:…", capture.mjs snapshots
- *    `pending` and defers the BARRIER emit until allSettled. The
- *    consumed response's body-fetch is in that snapshot, so its RR
- *    emit lands strictly before BARRIER.
- *
- * The ~N-1 other fetches are still in flight at BARRIER's CDP arrival
- * — their LF hasn't reached us yet, so their body-fetches aren't in
- * the snapshot, and their RR may emit after BARRIER (or not at all,
- * if end fires before they land).
+ * Page-side, every consumed response appends its `body.n` (space-
+ * delimited) to a `<div id="high-water-mark">`. At BARRIER time the
+ * marker payload carries the current div contents — the page's
+ * committed list of "responses I have consumed." Under adversarial
+ * concurrency (most fetches still in flight at marker emit time),
+ * every entry in that list must have a `Network.responseReceived`
+ * earlier in the JSONL than BARRIER. Subset-of-events form: only the
+ * consumed RRs need to precede; the rest may emit after.
  *
  * Awaiting `Promise.all` of every fetch would defeat the test: by the
  * time we click capture-done, every LF has arrived at the session, every
@@ -68,24 +52,29 @@ test("causal-watermark: consumed RR precedes BARRIER", async (
 
     await session.page.evaluate(
       async ({ n, awaitCount }) => {
-        let highWater = 0;
+        const div = document.createElement("div");
+        div.id = "high-water-mark";
+        document.body.appendChild(div);
         const all = [];
         for (let i = 0; i < n; i++) {
           all.push(
             fetch(`/payload?id=${i}`)
               .then((r) => r.json())
               .then(({ n: rn }) => {
-                if (rn > highWater) highWater = rn;
+                div.appendChild(document.createTextNode(rn + " "));
               }),
           );
         }
-        // Wait for the first 1% to settle so highWater is non-trivial,
+        // Wait for the first 1% to settle so the list is non-empty,
         // then snapshot it into BARRIER. The remaining ~99% stay in
         // flight — that's the adversarial condition under test.
         await Promise.all(all.slice(0, awaitCount));
-        window.harBrowseMark(
-          "BARRIER:" + JSON.stringify({ watermark: highWater }),
-        );
+        const consumed = div.textContent
+          .trim()
+          .split(/\s+/)
+          .filter(Boolean)
+          .map(Number);
+        window.harBrowseMark("BARRIER:" + JSON.stringify({ consumed }));
       },
       { n: N, awaitCount: AWAIT_COUNT },
     );
@@ -107,16 +96,16 @@ test("causal-watermark: consumed RR precedes BARRIER", async (
       0,
     );
 
-    const watermark = JSON.parse(
+    const consumed = JSON.parse(
       messages[barrierIdx].params.payload.slice("BARRIER:".length),
-    ).watermark;
-    expect(typeof watermark, "watermark is number").toBe("number");
-    expect(watermark, "watermark > 0").toBeGreaterThan(0);
+    ).consumed;
+    expect(Array.isArray(consumed), "consumed is array").toBe(true);
+    expect(consumed.length, "consumed not empty").toBeGreaterThan(0);
 
-    // Assertion 2 (the point): the RR whose body the page consumed
-    // (n == watermark) appears at a strictly earlier JSONL index than
-    // BARRIER. Names the missing response if it fails.
-    let watermarkIdx = -1;
+    // Assertion 2 (the point): every RR whose body the page consumed
+    // (body.n in `consumed`) appears at a strictly earlier JSONL index
+    // than BARRIER. Names the missing ones if it fails.
+    const seenBefore = new Set();
     for (let i = 0; i < barrierIdx; i++) {
       const e = messages[i];
       if (e.method !== "Network.responseReceived") continue;
@@ -127,16 +116,13 @@ test("causal-watermark: consumed RR precedes BARRIER", async (
         r.encoding === "base64"
           ? Buffer.from(r.body, "base64").toString("utf8")
           : r.body;
-      const body = JSON.parse(text);
-      if (body.n === watermark) {
-        watermarkIdx = i;
-        break;
-      }
+      seenBefore.add(JSON.parse(text).n);
     }
+    const missing = consumed.filter((n) => !seenBefore.has(n));
     expect(
-      watermarkIdx,
-      `RR with body.n=${watermark} precedes BARRIER (idx ${barrierIdx})`,
-    ).toBeGreaterThanOrEqual(0);
+      missing,
+      `consumed RRs precede BARRIER (idx ${barrierIdx})`,
+    ).toEqual([]);
 
     // Assertion 3: BARRIER emitted exactly once. The page emits the
     // mark a single time after the await; a second emission would
@@ -151,12 +137,13 @@ test("causal-watermark: consumed RR precedes BARRIER", async (
     expect(barriers.length, "BARRIER emitted exactly once").toBe(1);
 
     // Assertion 5 + 6: adversarial regime bounds. Both metrics should
-    // be much smaller than N — watermark = max n consumed by the
-    // renderer at BARRIER time; rrBefore = /payload RRs the session
-    // already processed by BARRIER time. If either exceeds N/2, the
-    // test has collapsed into barrier_smoke's all-form regime and the
-    // subset invariant under test wasn't exercised. Warn earlier
-    // (at N/4 and N/10) to surface regressions before they hard-fail.
+    // be much smaller than N — consumed.length = responses the renderer
+    // has actually observed at BARRIER time; rrBefore = /payload RRs
+    // the session already processed by BARRIER time. If either exceeds
+    // N/2, the test has collapsed into barrier_smoke's all-form regime
+    // and the subset invariant under test wasn't exercised. Warn
+    // earlier (at N/4 and N/10) to surface regressions before they
+    // hard-fail.
     const rrsBefore = messages
       .slice(0, barrierIdx)
       .filter(
@@ -165,7 +152,7 @@ test("causal-watermark: consumed RR precedes BARRIER", async (
           (m.params?.response?.url ?? "").includes("/payload"),
       ).length;
     bound(
-      { name: "watermark", value: watermark, warnAt: N / 4, failAt: N / 2 },
+      { name: "consumed", value: consumed.length, warnAt: N / 4, failAt: N / 2 },
       testInfo,
     );
     bound(
@@ -193,6 +180,41 @@ test("causal-watermark: consumed RR precedes BARRIER", async (
       })
       .filter((n) => n != null);
     expect(new Set(ns).size, "captured n values unique").toBe(ns.length);
+
+    // Assertion 7: no extras. Every captured /payload n is in
+    // [1, served]. Combined with A4 (uniqueness), this forces every
+    // captured n to be a real served one — closes synthetic
+    // post-BARRIER RR injection. Full completeness (captured ⊇ served)
+    // is NOT asserted here: this test's adversarial regime closes
+    // capture while ~99% of fetches are in flight, and those late
+    // responses legitimately drop. barrier_smoke covers the quiescent
+    // complete-form invariant.
+    const served = server.requestLog.filter(
+      (r) => r.pathname === "/payload",
+    ).length;
+    for (const n of ns) {
+      expect(
+        Number.isInteger(n) && n >= 1 && n <= served,
+        `captured n=${n} in [1, ${served}]`,
+      ).toBe(true);
+    }
+
+    // Assertion 8: body integrity. Every captured /payload body's `id`
+    // (page→server→capture round-trip) matches the URL's id param.
+    // Catches body corruption / truncation that preserves `n` but
+    // strips or alters other fields.
+    for (const m of messages) {
+      if (m.method !== "Network.responseReceived") continue;
+      const r = m.params?.response;
+      if (!r || !(r.url ?? "").includes("/payload") || r.body == null) continue;
+      const text =
+        r.encoding === "base64"
+          ? Buffer.from(r.body, "base64").toString("utf8")
+          : r.body;
+      const body = JSON.parse(text);
+      const urlId = new URL(r.url).searchParams.get("id");
+      expect(body.id, `body.id round-trips for n=${body.n}`).toBe(urlId);
+    }
   } finally {
     await server.close();
   }
