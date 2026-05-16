@@ -1,8 +1,25 @@
 ---
 anthropic-skill-ownership: llm-subtask
+status: done
+done-by: 2026-05-16-000-execute-rust-port-kb-scope-refactor.md
+done-via:
+  - packages/har-browse/dev.kb/rust-port.kb/scope-audit.md
+  - ~/.claude/sessions.kb/rust-port-kb-scope-refactor.md
 ---
 
 # Place the rust-port kb at a proper home
+
+**Status: DECIDED (2026-05-15).** Per-file content audit complete; all four open questions resolved; stress-test pass complete. Execution tracked in `2026-05-16-000-execute-rust-port-kb-scope-refactor.md`.
+
+**Outcome summary:**
+- Work-area moves to **workspace-root `dev.kb/rust-port.{md,kb}/`** (not crate-local; not `docs/dev/design-incubators/`).
+- Durable content extracted out of the work-area to per-scope homes (workspace `docs/dev/{adr,background.kb,technical-policy.kb}/`; future packages `rs-playwright-lite/{design.kb,adr,dev.kb}/`).
+- Future packages named with polyglot directory prefix (`rs-`) but bare crate names (Q4).
+- Sweep + design.kb migration at commit 1300.
+
+See linked audit and session file for the full record.
+
+---
 
 **Priority:** Medium (defer until at least one more session of thinking)
 **Complexity:** Medium-to-high (touches paths, crate names, contracts scope)
