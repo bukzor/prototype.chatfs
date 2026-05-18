@@ -1,5 +1,5 @@
 ---
-anthropic-skill-ownership: llm-subtask
+managed-by: Skill(llm-subtask)
 required-reading:
   - packages/har-browse/src/capture.mjs
   - packages/har-browse/.claude/todo.kb/2026-04-24-001-pw-browse-public-events-stream.md

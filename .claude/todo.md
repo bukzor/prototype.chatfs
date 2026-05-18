@@ -1,4 +1,19 @@
-<anthropic-skill-ownership llm-subtask />
+---
+managed-by: Skill(llm-subtask)
+cost-benefit-sweh:
+  timebox:
+    "@value": 1.0
+    rationale: |
+      File-level estimate for a 6-item rollup that's mostly tracking
+      upstream skill work. Only the mockup-chatgpt rename is actual
+      tactical work here.
+  benefit-2w:
+    "@value": 0.5
+    rationale: |
+      Most payoff is double-counted in upstream items (llm-kb/todo.md,
+      rust-port kb scope refactor). Local payoff is the mockup-chatgpt
+      rename plus better visibility into cross-repo blockers.
+---
 
 # Tactical Tasks
 

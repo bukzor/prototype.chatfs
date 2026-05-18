@@ -1,6 +1,5 @@
-<anthropic-skill-ownership llm-subtask />
-
 ---
+managed-by: Skill(llm-subtask)
 required-reading:
   - ~/.claude/skills/llm-kb/SKILL.md
   - ~/.claude/skills/llm-collab/SKILL.md

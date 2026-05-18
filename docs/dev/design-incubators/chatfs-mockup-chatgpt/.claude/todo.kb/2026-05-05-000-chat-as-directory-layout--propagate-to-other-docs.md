@@ -1,5 +1,5 @@
 ---
-anthropic-skill-ownership: llm-subtask
+managed-by: Skill(llm-subtask)
 ---
 
 # chat-as-directory layout — propagate to other docs

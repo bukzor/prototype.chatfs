@@ -1,4 +1,19 @@
-<anthropic-skill-ownership llm-subtask />
+---
+managed-by: Skill(llm-subtask)
+cost-benefit-sweh:
+  timebox:
+    "@value": 2.0
+    rationale: |
+      File-level estimate for a 5-item rollup: Done-button protocol
+      doc, CLAUDE.md refresh, typecheck wiring, @ts-check sweep,
+      .mjs→.ts decision. The last is the open-ended item.
+  benefit-2w:
+    "@value": 1.5
+    rationale: |
+      Reduces re-orienting cost when returning to har-browse (CLAUDE.md
+      is stale). Typecheck catches a class of bugs that currently
+      surface at runtime.
+---
 
 # Tactical Tasks
 

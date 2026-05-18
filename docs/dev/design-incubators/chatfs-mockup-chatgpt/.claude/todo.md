@@ -1,4 +1,6 @@
-<anthropic-skill-ownership llm-subtask />
+---
+managed-by: Skill(llm-subtask)
+---
 
 # Tactical Tasks — chatfs-mockup-chatgpt
 

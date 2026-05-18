@@ -1,5 +1,5 @@
 ---
-anthropic-skill-ownership: llm-subtask
+managed-by: Skill(llm-subtask)
 ---
 
 # Rename incubator to chatfs-cli-mockup

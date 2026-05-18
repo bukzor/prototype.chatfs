@@ -1,9 +1,22 @@
 ---
-anthropic-skill-ownership: llm-subtask
+managed-by: Skill(llm-subtask)
 depends:
   - packages/har-browse/dev.kb/rust-port.kb/scope-audit.md
   - ~/.claude/sessions.kb/rust-port-kb-scope-refactor.md
 supersedes-question-from: 2026-05-13-000-place-rust-port-kb-at-proper-home.md
+cost-benefit-sweh:
+  timebox:
+    "@value": 4.0
+    rationale: |
+      9 sequenced mechanical steps spanning workspace + 2 future packages
+      + transient work area. Realistic execution is staged across 3-4
+      commits. Beyond 4h, splitting the plan further is mandatory.
+  benefit-2w:
+    "@value": 5.0
+    rationale: |
+      Hard blocker for commits 0750/1000/1050 (write durable contracts
+      that need the target homes). Also unblocks polyglot package naming
+      sweep and the chatfs todo rollup. Strong multiplier.
 ---
 
 # Execute the rust-port kb scope refactor

@@ -1,7 +1,20 @@
 ---
-anthropic-skill-ownership: llm-subtask
+managed-by: Skill(llm-subtask)
 depends:
   - 2026-05-16-000-execute-rust-port-kb-scope-refactor.md
+cost-benefit-sweh:
+  timebox:
+    "@value": 1.5
+    rationale: |
+      3 package renames × ~25 min each (rename + import updates +
+      build/test verify). Beyond 1.5h, you've hit a non-obvious
+      build-system gotcha worth pausing on.
+  benefit-2w:
+    "@value": 1.0
+    rationale: |
+      One-time convention adoption. Modest 2-week payoff (cleaner ls
+      output, less ambiguity in cross-toolchain references); main
+      benefit is multi-month.
 ---
 
 # Polyglot package directory naming — sweep existing packages

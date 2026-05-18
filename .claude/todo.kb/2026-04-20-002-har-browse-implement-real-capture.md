@@ -1,6 +1,5 @@
-<anthropic-skill-ownership llm-subtask />
-
 ---
+managed-by: Skill(llm-subtask)
 required-reading:
   - packages/har-browse/CLAUDE.md
   - packages/har-browse/design.kb/030-requirements.kb/cli-interface.md
