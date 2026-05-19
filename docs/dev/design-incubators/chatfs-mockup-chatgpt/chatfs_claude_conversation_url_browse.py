@@ -18,29 +18,33 @@ the two endpoints (null-tolerant) — catches schema drift if either side
 ever changes shape.
 
 Steps:
-    1. browse $url → staging/cdp.jsonl
-    2. conversation pluck → staging/conversation.json
+    1. browse $url → .chat/$UUID/.data/cdp.jsonl
+    2. conversation pluck → .chat/$UUID/.data/conversation.json
     3. index pluck → filter to .uuid == $UUID → meta (fail loudly if absent)
     4. cross-check conversation doc vs index item, null-tolerant
-    5. move captures into .chat/$UUID/.data/
-    6. place_meta (writes meta.json, purges + places view dir-symlink)
-    7. delegate to path_render
+    5. place_meta (writes meta.json, purges + places view dir-symlink)
+    6. delegate to path_render
+
+Captures are written directly into `.chat/$UUID/.data/` — no temp
+staging. If a later step fails, the captures remain there for
+inspection. Recovery from the long-tail "sidebar didn't include this
+uuid" case is to run `chatfs_claude_index_browse.sh |
+chatfs_claude_index_splat.py` (deposits meta.json into the same
+`.data/`) and then `chatfs_claude_conversation_path_render.py` on the
+chat dir (reuses the already-captured cdp.jsonl + conversation.json).
 """
 import json
-import shutil
 import subprocess
 import sys
-import tempfile
 from collections.abc import Mapping
 from pathlib import Path
 from urllib.parse import urlparse
 
-from chatfs_claude_layout import chat_dir_for, data_dir_for, place_meta
+from chatfs_claude_layout import capture, chat_dir_for, place_meta
 from chatfs_claude_types import IndexItem
 
 HERE = Path(__file__).parent
 INDEX_PLUCK = HERE / "chatfs_claude_index_pluck.jq"
-CONVERSATION_PLUCK = HERE / "chatfs_claude_conversation_pluck.jq"
 PATH_RENDER = HERE / "chatfs_claude_conversation_path_render.py"
 ROOT = HERE / "chatfs.demo" / "claude"
 
@@ -51,15 +55,24 @@ def uuid_from_url(url: str) -> str:
     return parts[1]
 
 
-def null_tolerant_mismatches(a: Mapping, b: Mapping) -> list[str]:
-    """Top-level key comparison; missing or None on either side is ok."""
+def null_tolerant_mismatches(a: Mapping, b: Mapping, prefix: str = "") -> list[str]:
+    """Recursive key comparison; missing or None on either side is ok.
+
+    Recurses into nested mappings so that one side carrying extra
+    None-valued keys (common when one endpoint returns a superset
+    schema with unset fields) does not register as a mismatch.
+    """
     out: list[str] = []
     for k in set(a) | set(b):
         va, vb = a.get(k), b.get(k)
         if va is None or vb is None:
             continue
+        path = f"{prefix}{k}"
+        if isinstance(va, Mapping) and isinstance(vb, Mapping):
+            out.extend(null_tolerant_mismatches(va, vb, prefix=f"{path}."))
+            continue
         if va != vb:
-            out.append(f"{k}: {va!r} != {vb!r}")
+            out.append(f"{path}: {va!r} != {vb!r}")
     return out
 
 
@@ -101,35 +114,23 @@ def main() -> None:
     url = sys.argv[1]
     uuid = uuid_from_url(url)
 
-    with tempfile.TemporaryDirectory(prefix="chatfs-url-browse.") as tmp:
-        staging = Path(tmp)
-        staged_cdp = staging / "cdp.jsonl"
-        staged_conversation = staging / "conversation.json"
+    chat_dir = chat_dir_for(uuid, ROOT)
+    data_dir = capture(url, chat_dir)
+    cdp = data_dir / "cdp.jsonl"
+    conversation = data_dir / "conversation.json"
 
-        print(f"Capturing {url} → {staged_cdp} ...", file=sys.stderr)
-        with staged_cdp.open("wb") as f:
-            subprocess.run(["har-browse", url], stdout=f, check=True)
+    item = find_index_item(cdp, uuid)
 
-        print(f"Plucking conversation → {staged_conversation} ...", file=sys.stderr)
-        with staged_cdp.open("rb") as src, staged_conversation.open("wb") as dst:
-            subprocess.run([str(CONVERSATION_PLUCK)], stdin=src, stdout=dst, check=True)
+    conv_doc = json.loads(conversation.read_text())
+    mismatches = null_tolerant_mismatches(conv_doc, item)
+    assert not mismatches, (
+        f"meta fields disagree across conversation and index endpoints "
+        f"for {uuid}: {mismatches}"
+    )
 
-        item = find_index_item(staged_cdp, uuid)
+    place_meta(item, ROOT)
 
-        conv_doc = json.loads(staged_conversation.read_text())
-        mismatches = null_tolerant_mismatches(conv_doc, item)
-        assert not mismatches, (
-            f"meta fields disagree across conversation and index endpoints "
-            f"for {uuid}: {mismatches}"
-        )
-
-        data_dir = data_dir_for(uuid, ROOT)
-        data_dir.mkdir(parents=True, exist_ok=True)
-        shutil.move(str(staged_cdp), data_dir / "cdp.jsonl")
-        shutil.move(str(staged_conversation), data_dir / "conversation.json")
-        place_meta(item, ROOT)
-
-    subprocess.run([str(PATH_RENDER), str(chat_dir_for(uuid, ROOT))], check=True)
+    subprocess.run([str(PATH_RENDER), str(chat_dir)], check=True)
 
 
 if __name__ == "__main__":

@@ -7,12 +7,16 @@ end-to-end.
 """
 import json
 import os
+import subprocess
+import sys
 from datetime import datetime
 from pathlib import Path
 
 from chatfs_claude_types import IndexItem
 
 
+HERE = Path(__file__).parent
+CONVERSATION_PLUCK = HERE / "chatfs_claude_conversation_pluck.jq"
 DATA_DIR_NAME = ".data"
 
 
@@ -62,6 +66,38 @@ def _purge_view_symlinks(uuid: str, root: Path) -> None:
     for path in root.rglob("*"):
         if path.is_symlink() and uuid in os.readlink(path):
             path.unlink()
+
+
+def capture(url: str, chat_dir: Path) -> Path:
+    """Browse $url and pluck the conversation into chat_dir/.data/.
+
+    Ensures `.data/` exists, clears any prior cdp.jsonl /
+    conversation.json from a previous run, then runs har-browse
+    followed by the conversation pluck. Returns the data dir for
+    callers that need to deposit meta.json or similar siblings.
+
+    The intermediate-data policy is the load-bearing piece: captures
+    land directly in `.chat/$UUID/.data/`, never a tempdir. Failures
+    leave the bytes inspectable; success hands off to splat/render
+    without a move.
+    """
+    data_dir = chat_dir / DATA_DIR_NAME
+    data_dir.mkdir(parents=True, exist_ok=True)
+    cdp = data_dir / "cdp.jsonl"
+    conversation = data_dir / "conversation.json"
+
+    cdp.unlink(missing_ok=True)
+    conversation.unlink(missing_ok=True)
+
+    print(f"Capturing {url} → {cdp} ...", file=sys.stderr)
+    with cdp.open("wb") as f:
+        subprocess.run(["har-browse", url], stdout=f, check=True)
+
+    print(f"Plucking conversation → {conversation} ...", file=sys.stderr)
+    with cdp.open("rb") as src, conversation.open("wb") as dst:
+        subprocess.run([str(CONVERSATION_PLUCK)], stdin=src, stdout=dst, check=True)
+
+    return data_dir
 
 
 def place_meta(item: IndexItem, root: Path) -> Path:

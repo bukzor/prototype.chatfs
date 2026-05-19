@@ -4,4 +4,6 @@
 # anchor on end-of-path-segment, not end-of-url.
 select(.method == "Network.responseReceived"
        and (.params.response.url | test("/chat_conversations/[0-9a-f-]+($|\\?)")))
-| .params.response.body | fromjson
+| .params.response.body
+| strings  # 204, interrupted responses
+| fromjson
