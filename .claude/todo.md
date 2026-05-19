@@ -19,6 +19,10 @@ cost-benefit-sweh:
 
 Driver: [Harmonize with llm-* skills](todo.kb/2026-01-02-000-harmonize-with-llm-skills.md) — most done; chatfs-local remaining items below.
 
+## Drain too-many-changes freeze (priority: HIGH — clear before more work piles on)
+
+- [ ] [Drain too-many-changes freeze](todo.kb/2026-05-19-000-drain-too-many-changes-freeze.md) — Stream 3 (BARRIER) on main; plan is 2 commits (incubator infra + promoted learnings) plus conservative Stream-2 paper trail, then archive the branch.
+
 ## chatfs-mockup-chatgpt — next sessions
 
 Plan from 2026-05-05 design.kb consolidation. Order is dependency-driven; 1-2 are blocking, 3-4 are deferrable. Incubator-tactical breakdowns at `docs/dev/design-incubators/chatfs-mockup-chatgpt/.claude/todo.kb/`.
