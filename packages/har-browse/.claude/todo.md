@@ -13,6 +13,14 @@ cost-benefit-sweh:
       Reduces re-orienting cost when returning to har-browse (CLAUDE.md
       is stale). Typecheck catches a class of bugs that currently
       surface at runtime.
+  cost-of-delay-2w:
+    "@value": 0.3
+    rationale: |
+      Modest. CLAUDE.md already stale — additional 2w of decay is
+      marginal on top of an already-broken orientation. Deferred typecheck
+      means runtime-bug class continues to surface (~1 incident/2w
+      cost ≈ 0.3 SWEh). No external dollar flow or deadline.
+    confidence: tentative
 ---
 
 # Tactical Tasks
