@@ -38,6 +38,17 @@ test("hive cache-key value with '/' must be escaped so it stays one path segment
   assert.equal(existsSync(result), true);
 });
 
+test("hive cache-key value with multiple '/'s escapes every one", () => {
+  // `String.prototype.replace` only swaps the first match; `replaceAll`
+  // is required. A value like `a/b/c` must collapse to one segment.
+  const result = cachePath("ns-multi-slash", { k: "a/b/c" });
+  assert.equal(
+    result,
+    join(TEST_ROOT, "har-browse", "ns-multi-slash", "k=a\\b\\c"),
+  );
+  assert.equal(existsSync(result), true);
+});
+
 test("cachePath rejects '=' in hive key (would parse ambiguously)", () => {
   assert.throws(
     () => cachePath("ns-eq", { "a=b": "v" }),
