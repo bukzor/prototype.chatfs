@@ -1,11 +1,31 @@
 import { expect } from "@playwright/test";
 
-function decodeRRBody(rr) {
+/** Decode a `Network.responseReceived` event's body, base64 or utf8. */
+export function decodeRRBody(rr) {
   const r = rr.params?.response;
   if (!r || r.body == null) return null;
   return r.encoding === "base64"
     ? Buffer.from(r.body, "base64").toString("utf8")
     : r.body;
+}
+
+/**
+ * Walk `messages` and return one entry per `Network.responseReceived`
+ * whose URL contains `pathname` and whose body is present and JSON-parseable.
+ * Entries are `{ idx, url, body }`. Bodyless RRs are skipped.
+ */
+export function parsedPayloadRRs(messages, pathname = "/payload") {
+  const out = [];
+  for (let idx = 0; idx < messages.length; idx++) {
+    const m = messages[idx];
+    if (m.method !== "Network.responseReceived") continue;
+    const r = m.params?.response;
+    if (!r || !(r.url ?? "").includes(pathname)) continue;
+    const text = decodeRRBody(m);
+    if (text == null) continue;
+    out.push({ idx, url: r.url, body: JSON.parse(text) });
+  }
+  return out;
 }
 
 /**
@@ -24,18 +44,12 @@ function decodeRRBody(rr) {
  */
 export function assertNoGaps({ events, requestLog, pathname = "/payload" }) {
   const served = requestLog.filter((r) => r.pathname === pathname).length;
-  const ns = [];
-  for (const e of events) {
-    if (e.method !== "Network.responseReceived") continue;
-    if (!(e.params?.response?.url ?? "").includes(pathname)) continue;
-    const body = decodeRRBody(e);
-    expect(body, `body present for ${pathname}`).toBeTruthy();
-    const parsed = JSON.parse(body);
-    expect(typeof parsed.n, `n is number in body for ${pathname}`).toBe(
+  const ns = parsedPayloadRRs(events, pathname).map((rr) => {
+    expect(typeof rr.body.n, `n is number in body for ${pathname}`).toBe(
       "number",
     );
-    ns.push(parsed.n);
-  }
+    return rr.body.n;
+  });
   ns.sort((a, b) => a - b);
   const expected = Array.from({ length: served }, (_, i) => i + 1);
   expect(ns).toEqual(expected);

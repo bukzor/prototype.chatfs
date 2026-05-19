@@ -37,7 +37,7 @@
  */
 import { test, expect } from "./fixtures.mjs";
 import { startServer } from "./_common/server.mjs";
-import { assertNoGaps } from "./_common/testing.mjs";
+import { assertNoGaps, parsedPayloadRRs } from "./_common/testing.mjs";
 
 const N = 500;
 const AWAIT_COUNT = Math.max(1, Math.floor(N * 0.01));
@@ -58,14 +58,6 @@ function bound({ name, value, warnAt, failAt }, testInfo) {
   expect(value, `${name}=${value} above fail threshold ${failAt}`).toBeLessThanOrEqual(
     failAt,
   );
-}
-
-function decodeRRBody(rr) {
-  const r = rr.params?.response;
-  if (!r || r.body == null) return null;
-  return r.encoding === "base64"
-    ? Buffer.from(r.body, "base64").toString("utf8")
-    : r.body;
 }
 
 function findBarriers(messages) {
@@ -90,32 +82,14 @@ function findBarriers(messages) {
  * JSONL idx strictly less than `barrier.idx`. Names the missing ones.
  */
 function assertConsumedPrecede(messages, barrier) {
-  const seen = new Set();
-  for (let i = 0; i < barrier.idx; i++) {
-    const e = messages[i];
-    if (e.method !== "Network.responseReceived") continue;
-    if (!(e.params?.response?.url ?? "").includes("/payload")) continue;
-    const text = decodeRRBody(e);
-    if (text == null) continue;
-    seen.add(JSON.parse(text).n);
-  }
+  const seen = new Set(
+    parsedPayloadRRs(messages.slice(0, barrier.idx)).map((rr) => rr.body.n),
+  );
   const missing = barrier.consumed.filter((n) => !seen.has(n));
   expect(
     missing,
     `consumed RRs precede BARRIER (idx ${barrier.idx})`,
   ).toEqual([]);
-}
-
-function payloadNs(messages) {
-  const ns = [];
-  for (const m of messages) {
-    if (m.method !== "Network.responseReceived") continue;
-    if (!(m.params?.response?.url ?? "").includes("/payload")) continue;
-    const text = decodeRRBody(m);
-    if (text == null) continue;
-    ns.push(JSON.parse(text).n);
-  }
-  return ns;
 }
 
 /**
@@ -124,16 +98,8 @@ function payloadNs(messages) {
  * but strips or alters other fields.
  */
 function assertBodyIntegrity(messages) {
-  for (const m of messages) {
-    if (m.method !== "Network.responseReceived") continue;
-    const r = m.params?.response;
-    if (!r || !(r.url ?? "").includes("/payload") || r.body == null) continue;
-    const text =
-      r.encoding === "base64"
-        ? Buffer.from(r.body, "base64").toString("utf8")
-        : r.body;
-    const body = JSON.parse(text);
-    const urlId = new URL(r.url).searchParams.get("id");
+  for (const { url, body } of parsedPayloadRRs(messages)) {
+    const urlId = new URL(url).searchParams.get("id");
     expect(body.id, `body.id round-trips for n=${body.n}`).toBe(urlId);
   }
 }
@@ -231,7 +197,7 @@ test("BARRIER (adversarial single): consumed RRs precede marker", async (
       testInfo,
     );
 
-    const ns = payloadNs(messages);
+    const ns = parsedPayloadRRs(messages).map((rr) => rr.body.n);
     expect(new Set(ns).size, "captured n values unique").toBe(ns.length);
 
     const served = server.requestLog.filter(
@@ -306,7 +272,7 @@ test("BARRIER (reentrant): consumed RRs precede each of N markers", async ({
     // Captured set == served set with no gaps.
     assertNoGaps({ events: messages, requestLog: server.requestLog });
 
-    const ns = payloadNs(messages);
+    const ns = parsedPayloadRRs(messages).map((rr) => rr.body.n);
     expect(new Set(ns).size, "captured n values unique").toBe(ns.length);
 
     const served = server.requestLog.filter(

@@ -2,7 +2,7 @@
  * `har-browse <url> | head -n 1` exits cleanly: no EPIPE stack,
  * no orphan Chromium.
  */
-import { execFile, spawn } from "node:child_process";
+import { execFile } from "node:child_process";
 import { rmSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
@@ -10,6 +10,7 @@ import { after, before, test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import assert from "node:assert/strict";
+import { spawnToyServer } from "./_common/toy_server.mjs";
 
 const exec = promisify(execFile);
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -25,26 +26,10 @@ const profileDir = join(
 let server;
 
 before(async () => {
-  server = spawn(
-    "python3",
-    [
-      "-m",
-      "http.server",
-      String(port),
-      "--directory",
-      join(__dirname, "..", "toy_server"),
-    ],
-    { stdio: "ignore" },
-  );
-  for (let i = 0; i < 50; i++) {
-    try {
-      if ((await fetch(`http://127.0.0.1:${port}/`)).ok) return;
-    } catch {
-      // server not yet listening; retry
-    }
-    await new Promise((r) => setTimeout(r, 100));
-  }
-  throw new Error("toy server failed to start");
+  server = await spawnToyServer({
+    port,
+    directory: join(__dirname, "..", "toy_server"),
+  });
 });
 
 after(() => {

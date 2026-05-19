@@ -1,10 +1,10 @@
 import { test as base, expect } from "@playwright/test";
-import { spawn } from "node:child_process";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { startCapture as _startCapture } from "../src/capture.mjs";
+import { spawnToyServer } from "./_common/toy_server.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -13,30 +13,10 @@ export const test = base.extend({
   toyServer: [
     async ({}, use, workerInfo) => {
       const port = 9000 + workerInfo.workerIndex;
-      const proc = spawn(
-        "python3",
-        [
-          "-m",
-          "http.server",
-          String(port),
-          "--directory",
-          join(__dirname, "..", "toy_server"),
-        ],
-        { stdio: "ignore" },
-      );
-      let ready = false;
-      for (let i = 0; i < 50; i++) {
-        try {
-          if ((await fetch(`http://127.0.0.1:${port}/`)).ok) {
-            ready = true;
-            break;
-          }
-        } catch {
-          // not yet listening
-        }
-        await new Promise((r) => setTimeout(r, 100));
-      }
-      if (!ready) throw new Error(`toy server failed to start on :${port}`);
+      const proc = await spawnToyServer({
+        port,
+        directory: join(__dirname, "..", "toy_server"),
+      });
       try {
         await use({ port, url: `http://127.0.0.1:${port}` });
       } finally {
