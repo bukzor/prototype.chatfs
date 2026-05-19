@@ -37,6 +37,20 @@ cost-benefit-sweh:
 - [ ] Add `// @ts-check` to remaining `.mjs` files (`src/cache.mjs`, `src/cdp_to_har.mjs`, `src/har_browse.mjs`, `src/inject.mjs`, `src/playwright.mjs`, `src/user-agent.mjs`, tests). Per-file opt-in; tighten any errors that surface. Depends on the typecheck wiring above for real rigor.
 - [ ] Rename `.mjs` → `.ts` for native TS syntax. Node 22 strips types from `.ts` by default, so `#!/usr/bin/env node` shebangs work unchanged — just avoid `enum`/`namespace`/parameter-properties (the runtime-emitting TS constructs) or accept switching to `tsx`. Playwright loads `.ts` natively, so tests need no runner change. Consider installing `devtools-protocol` for typed CDP event shapes (would let us drop `any` on `params` throughout `capture.mjs`).
 
+## Mutation testing (paused 2026-05-19)
+
+Kb established at `docs/dev/mutation-testing.kb/` (22 entries). Status:
+15 done, 6 gap, 1 todo. Session record:
+`~/.claude/sessions.kb/har-browse-mutation-testing.md`.
+
+- [ ] Drive `events-subscribed-after-cdp-attach` mutation through
+  inject→test→revert. Hypothesis: `har.spec.mjs` should catch it
+  (early-navigation RRs lost). ~5 min.
+- [ ] Convert gap entries to done by adding the fixtures each needs.
+  Decomposable: adversarial-delay BARRIER test, delayed-Done test,
+  toy_server failing-mid-body route, internal-state hook for
+  awaitingBody size, per-request RR-before-LF assertion. ~1 hr total.
+
 ## Done
 
 - [x] [har-browse streaming refactor](todo.kb/2026-04-24-000-har-browse-streaming-refactor.md) — superseded by the public-events refactor.
