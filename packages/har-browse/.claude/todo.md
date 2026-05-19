@@ -39,13 +39,15 @@ cost-benefit-sweh:
 
 ## Mutation testing (paused 2026-05-19)
 
-Kb established at `docs/dev/mutation-testing.kb/` (22 entries). Status:
-15 done, 6 gap, 1 todo. Session record:
+Kb at `docs/dev/mutation-testing.kb/` (26 entries). Status:
+16 done, 6 gap, 3 todo. Session record:
 `~/.claude/sessions.kb/har-browse-mutation-testing.md`.
 
-- [ ] Drive `events-subscribed-after-cdp-attach` mutation through
-  inject→test→revert. Hypothesis: `har.spec.mjs` should catch it
-  (early-navigation RRs lost). ~5 min.
+- [ ] Drive 3 newly-enumerated todo mutations through inject→test→revert:
+  `loading-failed-event-not-emitted` (needs failing-route fixture),
+  `context-close-no-stream-end` (needs context-close test),
+  `body-fetch-not-tracked` (likely caught by barrier_consumed — verify).
+  ~45 min total.
 - [ ] Convert gap entries to done by adding the fixtures each needs.
   Decomposable: adversarial-delay BARRIER test, delayed-Done test,
   toy_server failing-mid-body route, internal-state hook for

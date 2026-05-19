@@ -1,26 +1,29 @@
 ---
-status: todo
+status: done
 ---
 
 # `capture.mjs`: event-iterator subscribes after CDP attach
 
-`on(emitter, "event", ...)` must subscribe before any CDP event can
-fire. Moving the subscription past `wireSession(page)` means events
-emitted between `Network.enable` returning and the iterator existing
-are lost. Manifests as missing early requests when capture starts on
-a page that is already fetching at attach time.
+`on(emitter, "event", ...)` must subscribe before any CDP attachment.
+`Page.enable` / `Runtime.enable` replay existing state via events (e.g.
+`Runtime.executionContextCreated` for the about:blank initial frame).
+If the queue is subscribed after `wireSession()`, those replay events
+fire to an emitter with no listener — `on()` does not retroactively
+capture past emits — and are silently lost. Manifests as missing
+initial execution contexts and missing frame events on the very first
+page; subsequent navigations (after queue creation) flow normally.
 
 ## Injection
 
 `src/capture.mjs`: move the `const queue = on(...)` line to *after*
 the `await wireSession(page)` call.
 
-## Status
+## Test Coverage
 
-Not yet attempted — deferred to a follow-up session. Hypothesis:
-`har.spec.mjs` should catch it because the page's initial navigation
-fires `Network.requestWillBeSent` for `/`, `/index.css`, `/index.js`
-during `wireSession`, before the iterator subscribes. If subscription
-happens after, those early RRs go to the EventEmitter with no
-listener — node:events buffers them, but `on()` doesn't reach back.
-Test should observe `byUrl(":port/")` returning undefined.
+`tests/attach_replay.spec.mjs` — collects events from `startCapture`
+and asserts the stream contains at least one
+`Runtime.executionContextCreated` with `context.origin === "://"`
+(CDP's opaque-origin form for about:blank). Without the mutation, 4
+contexts are captured (2 about:blank replays + 2 for the navigated
+origin); with the mutation, both about:blank replays are dropped and
+the assertion fails (received 0).
