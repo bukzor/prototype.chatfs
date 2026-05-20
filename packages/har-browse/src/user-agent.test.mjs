@@ -8,12 +8,12 @@
 import { mkdtempSync, rmSync, writeFileSync, readFileSync, existsSync } from "node:fs";
 import { tmpdir, platform, arch } from "node:os";
 import { join } from "node:path";
+import { after, test } from "node:test";
+import assert from "node:assert/strict";
 
 const TEST_ROOT = mkdtempSync(join(tmpdir(), "har-browse-ua-test-"));
 process.env.XDG_CACHE_HOME = TEST_ROOT;
 
-const { test, after } = await import("node:test");
-const assert = (await import("node:assert/strict")).default;
 const { cachePath } = await import("./cache.mjs");
 const { registry } = await import(
   "playwright-core/lib/server/registry/index"
@@ -24,7 +24,8 @@ const pkg = JSON.parse(
 );
 
 const SUFFIX = `${pkg.name}/${pkg.version} (+${pkg.homepage})`;
-const fakeChromium = { name: () => "chromium" };
+/** @type {import('playwright').BrowserType} */
+const fakeChromium = /** @type {any} */ ({ name: () => "chromium" });
 
 after(() => rmSync(TEST_ROOT, { recursive: true, force: true }));
 

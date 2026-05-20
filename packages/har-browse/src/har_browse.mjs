@@ -25,7 +25,7 @@ console.error(
 // before we're done. Flag EPIPE so the loop can break cleanly and the
 // generator's finally can close the browser context.
 let stdoutClosed = false;
-process.stdout.on("error", (err) => {
+process.stdout.on("error", (/** @type {NodeJS.ErrnoException} */ err) => {
   if (err.code === "EPIPE") stdoutClosed = true;
   else throw err;
 });

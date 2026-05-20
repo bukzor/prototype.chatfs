@@ -40,11 +40,14 @@ export async function startServer() {
     res.writeHead(200, { "content-type": "text/html" });
     res.end("<!doctype html><html><body>capture stress</body></html>");
   });
-  await new Promise((r) => server.listen(0, "127.0.0.1", r));
-  const { port } = server.address();
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", () => resolve()));
+  const addr = server.address();
+  if (typeof addr !== "object" || addr === null) {
+    throw new Error(`unexpected server.address(): ${addr}`);
+  }
   return {
-    port,
+    port: addr.port,
     requestLog,
-    close: () => new Promise((r) => server.close(r)),
+    close: () => new Promise((resolve) => server.close(() => resolve())),
   };
 }

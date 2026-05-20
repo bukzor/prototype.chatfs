@@ -6,7 +6,12 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const injectHTML = readFileSync(join(__dirname, "inject.html"), "utf-8");
 const injectCSS = readFileSync(join(__dirname, "inject.css"), "utf-8");
 
-/** Register persistent overlay injection on a Playwright page. */
+/**
+ * Register persistent overlay injection on a Playwright page.
+ *
+ * @param {import('playwright').Page} page
+ * @param {{ howto?: string }} [opts]
+ */
 export async function injectOverlay(page, { howto } = {}) {
   await page.addInitScript(
     ({ html, css, howto }) => {
@@ -48,7 +53,7 @@ export async function injectOverlay(page, { howto } = {}) {
         document.getElementById("capture-done").addEventListener(
           "click",
           (e) => {
-            e.target.dataset.clicked = "true";
+            /** @type {HTMLElement} */ (e.target).dataset.clicked = "true";
           },
           { once: true },
         );

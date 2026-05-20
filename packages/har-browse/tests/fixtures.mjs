@@ -8,7 +8,14 @@ import { spawnToyServer } from "./_common/toy_server.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-export const test = base.extend({
+/**
+ * @typedef {Awaited<ReturnType<typeof _startCapture>>} CaptureSession
+ * @typedef {Partial<Parameters<typeof _startCapture>[0]> & { url: string }} StartCaptureOpts
+ * @typedef {(opts: StartCaptureOpts) => Promise<CaptureSession>} StartCaptureFactory
+ * @typedef {{ port: number, url: string }} ToyServer
+ */
+
+export const test = base.extend(/** @type {import('@playwright/test').Fixtures<{ startCapture: StartCaptureFactory }, { toyServer: ToyServer }>} */ ({
   // One toy http.server per worker; ports separated by workerIndex.
   toyServer: [
     async ({}, use, workerInfo) => {
@@ -57,6 +64,6 @@ export const test = base.extend({
       }
     }
   },
-});
+}));
 
 export { expect };

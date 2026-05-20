@@ -6,14 +6,13 @@
 import { mkdtempSync, rmSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { after, test } from "node:test";
+import assert from "node:assert/strict";
 
 const TEST_ROOT = mkdtempSync(join(tmpdir(), "har-browse-cache-test-"));
 process.env.XDG_CACHE_HOME = TEST_ROOT;
 
 const { cachePath } = await import("./cache.mjs");
-
-const { after, test } = await import("node:test");
-const assert = (await import("node:assert/strict")).default;
 
 after(() => rmSync(TEST_ROOT, { recursive: true, force: true }));
 
