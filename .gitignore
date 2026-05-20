@@ -26,6 +26,9 @@ data/
 # dirty hacks
 trash/
 
+# git worktrees nested under the main checkout
+worktree/
+
 # other trash
 .*.sw[a-z]
 
