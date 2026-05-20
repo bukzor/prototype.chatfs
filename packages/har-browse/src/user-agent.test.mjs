@@ -78,6 +78,39 @@ test("cachedUserAgent strips trailing whitespace from cached UA", async () => {
   assert.equal(ua, `TrailingNewline/1.0 ${SUFFIX}`);
 });
 
+/**
+ * Build a fake Playwright BrowserType for fetchUserAgent probe tests.
+ * `send` defaults to returning `{userAgent: ua}`; pass a custom `send` to
+ * model failure. `onLaunch(opts)` observes launch options; `onClose()`
+ * observes the browser.close() call.
+ *
+ * @param {{
+ *   ua?: string,
+ *   send?: () => Promise<any>,
+ *   onLaunch?: (opts: any) => void,
+ *   onClose?: () => void,
+ * }} [opts]
+ * @returns {import('playwright').BrowserType}
+ */
+function makeFakeBrowserType({ ua = "ProbeUA/1.0", send, onLaunch, onClose } = {}) {
+  return /** @type {any} */ ({
+    name: () => "chromium",
+    launch: async (/** @type {any} */ opts) => {
+      onLaunch?.(opts);
+      return {
+        newPage: async () => ({
+          context: () => ({
+            newCDPSession: async () => ({
+              send: send ?? (async () => ({ userAgent: ua })),
+            }),
+          }),
+        }),
+        close: async () => { onClose?.(); },
+      };
+    },
+  });
+}
+
 test("fetchUserAgent pins probe to registry-resolved executablePath", async () => {
   // The probe must launch the SAME Chromium revision the caller will
   // launch. Drop `executablePath` and Playwright's default-discovery
@@ -87,22 +120,8 @@ test("fetchUserAgent pins probe to registry-resolved executablePath", async () =
     .findExecutable("chromium")
     .executablePath();
   let observedPath = "unset";
-  /** @type {import('playwright').BrowserType} */
-  const fakeBrowserType = /** @type {any} */ ({
-    name: () => "chromium",
-    launch: async (/** @type {any} */ opts) => {
-      observedPath = opts.executablePath;
-      return {
-        newPage: async () => ({
-          context: () => ({
-            newCDPSession: async () => ({
-              send: async () => ({ userAgent: "ProbeUA/1.0" }),
-            }),
-          }),
-        }),
-        close: async () => {},
-      };
-    },
+  const fakeBrowserType = makeFakeBrowserType({
+    onLaunch: (opts) => { observedPath = opts.executablePath; },
   });
   const ua = await fetchUserAgent(fakeBrowserType, true);
   assert.equal(ua, "ProbeUA/1.0");
@@ -114,19 +133,8 @@ test("fetchUserAgent closes the probe browser", async () => {
   // per (revision, headless) on cache miss. Assert via a fake browser
   // that records close() invocations.
   let closeCalls = 0;
-  /** @type {import('playwright').BrowserType} */
-  const fakeBrowserType = /** @type {any} */ ({
-    name: () => "chromium",
-    launch: async () => ({
-      newPage: async () => ({
-        context: () => ({
-          newCDPSession: async () => ({
-            send: async () => ({ userAgent: "ProbeUA/1.0" }),
-          }),
-        }),
-      }),
-      close: async () => { closeCalls += 1; },
-    }),
+  const fakeBrowserType = makeFakeBrowserType({
+    onClose: () => { closeCalls += 1; },
   });
   await fetchUserAgent(fakeBrowserType, true);
   assert.equal(closeCalls, 1);
@@ -137,19 +145,9 @@ test("fetchUserAgent closes the probe browser on error", async () => {
   // skip the close as well. Throw from CDP.send and assert close still
   // fires.
   let closeCalls = 0;
-  /** @type {import('playwright').BrowserType} */
-  const fakeBrowserType = /** @type {any} */ ({
-    name: () => "chromium",
-    launch: async () => ({
-      newPage: async () => ({
-        context: () => ({
-          newCDPSession: async () => ({
-            send: async () => { throw new Error("probe-fail"); },
-          }),
-        }),
-      }),
-      close: async () => { closeCalls += 1; },
-    }),
+  const fakeBrowserType = makeFakeBrowserType({
+    send: async () => { throw new Error("probe-fail"); },
+    onClose: () => { closeCalls += 1; },
   });
   await assert.rejects(() => fetchUserAgent(fakeBrowserType, true), /probe-fail/);
   assert.equal(closeCalls, 1);
