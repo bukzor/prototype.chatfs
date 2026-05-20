@@ -1,0 +1,6 @@
+{
+  "pattern": "{tests,src}/**/*.mjs",
+  "minLines": 5,
+  "minTokens": 50,
+  "gitignore": true
+}
