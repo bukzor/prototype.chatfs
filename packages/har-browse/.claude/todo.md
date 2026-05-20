@@ -2,24 +2,23 @@
 managed-by: Skill(llm-subtask)
 cost-benefit-sweh:
   timebox:
-    "@value": 2.0
-    rationale: |
-      File-level estimate for a 5-item rollup: Done-button protocol
-      doc, CLAUDE.md refresh, typecheck wiring, @ts-check sweep,
-      .mjs→.ts decision. The last is the open-ended item.
-  benefit-2w:
     "@value": 1.5
     rationale: |
-      Reduces re-orienting cost when returning to har-browse (CLAUDE.md
-      is stale). Typecheck catches a class of bugs that currently
-      surface at runtime.
-  cost-of-delay-2w:
-    "@value": 0.3
+      File-level estimate for the remaining rollup: Done-button protocol
+      doc, CLAUDE.md refresh, .mjs→.ts decision (open-ended), tsconfig
+      tightening (small).
+  benefit-2w:
+    "@value": 1.0
     rationale: |
-      Modest. CLAUDE.md already stale — additional 2w of decay is
-      marginal on top of an already-broken orientation. Deferred typecheck
-      means runtime-bug class continues to surface (~1 incident/2w
-      cost ≈ 0.3 SWEh). No external dollar flow or deadline.
+      Reduces re-orienting cost when returning to har-browse (CLAUDE.md
+      still stale). Typecheck now wired (041b31e) — that bug class is
+      gated.
+  cost-of-delay-2w:
+    "@value": 0.2
+    rationale: |
+      Modest. CLAUDE.md stale — additional 2w of decay is marginal on
+      top of an already-broken orientation. Typecheck wired so its
+      runtime-bug class is now caught.
     confidence: tentative
 ---
 
@@ -33,8 +32,7 @@ cost-benefit-sweh:
     - `src/capture.mjs`: header comment with the mechanic detail (snapshot-via-spread of `inFlight`, `allSettled`-superset ordering for concurrent BARRIERs) and a pointer to the same test.
   - [ ] Cross-link to `.claude/ideas.kb/` for deferred work, especially the streaming-witness gate idea.
   - [ ] Verify references to `toy_server/`, `toy_pluck.sh`, etc. still match the tree; remove or update stale paths.
-- [ ] Wire build-time typecheck (prerequisite for the next item to have real rigor). Install `typescript` as a devDep, add `tsconfig.json` at package root (`allowJs: true`, `checkJs: false` so `@ts-check` opts in per-file, `noEmit: true`, `strict: true`, `module: nodenext`, `target: esnext`, include `src/**/*.mjs` and `tests/**/*.mjs`), add `"typecheck": "tsc -p ."` to `package.json` scripts, wire into CI. Without this, `@ts-check` is editor-only — no CI gate.
-- [ ] Add `// @ts-check` to remaining `.mjs` files (`src/cache.mjs`, `src/cdp_to_har.mjs`, `src/har_browse.mjs`, `src/inject.mjs`, `src/playwright.mjs`, `src/user-agent.mjs`, tests). Per-file opt-in; tighten any errors that surface. Depends on the typecheck wiring above for real rigor.
+- [ ] Tighten `tsconfig.json` once the codebase is ready. Currently `strict: false` and `checkJs: true` (project-wide). Open items: declare a stub for `playwright-core/lib/server/registry/index` to silence TS7016; consider enabling `noImplicitAny` once fixture-callback params are typed.
 - [ ] Rename `.mjs` → `.ts` for native TS syntax. Node 22 strips types from `.ts` by default, so `#!/usr/bin/env node` shebangs work unchanged — just avoid `enum`/`namespace`/parameter-properties (the runtime-emitting TS constructs) or accept switching to `tsx`. Playwright loads `.ts` natively, so tests need no runner change. Consider installing `devtools-protocol` for typed CDP event shapes (would let us drop `any` on `params` throughout `capture.mjs`).
 
 ## Mutation testing (paused 2026-05-19)
@@ -59,3 +57,4 @@ Kb at `docs/dev/mutation-testing.kb/` (26 entries). Status:
 - [x] [pw-browse public-events stream](todo.kb/2026-04-24-001-pw-browse-public-events-stream.md)
 - [x] [cdp2har: validate chrome-har consumes our stream](todo.kb/2026-04-24-002-cdp2har-validate-chrome-har-consumes-our-stream.md)
 - [x] [har-browse: handle EPIPE on stdout cleanly](todo.kb/2026-04-24-003-har-browse-handle-epipe-on-stdout-cleanly.md)
+- [x] Wire build-time typecheck — `tsc --noEmit` as a `node:test` (commit 041b31e). Took the project-wide `checkJs: true` path instead of per-file `@ts-check`, which subsumes the planned `@ts-check` sweep.
