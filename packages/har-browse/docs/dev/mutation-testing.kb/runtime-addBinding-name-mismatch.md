@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 ---
 
 # `capture.mjs`: `Runtime.addBinding` name doesn't match page-side caller
@@ -25,12 +25,10 @@ don't fire at all.
 +    await session.send("Runtime.addBinding", { name: "HarBrowseMark" });
 ```
 
-## Hypothesis
+## Test Coverage
 
-`tests/barrier_smoke.spec.mjs` calls
-`window.harBrowseMark("BARRIER:end")` page-side. With the registration
-name mismatched, `window.harBrowseMark` is undefined and the
-`page.evaluate` rejects with a `ReferenceError` (or downstream
-`barrierIdx >= 0` assertion fails because no BARRIER ever lands in the
-stream). Drive through inject→test→revert to confirm and link the
-test.
+`tests/barrier_smoke.spec.mjs` — with the registration name
+mismatched, the page-side `window.harBrowseMark("BARRIER:end")` throws
+`TypeError: window.harBrowseMark is not a function`; the
+`page.evaluate` rejects before the click and the test fails fast
+(~600ms).

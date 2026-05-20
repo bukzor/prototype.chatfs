@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 ---
 
 # `capture.mjs`: body-fetch promise not added to inFlight
@@ -24,3 +24,15 @@ through inject→test→revert to confirm and link the test.
 `src/capture.mjs`, `cdpHandlers`:
 change `"Network.loadingFinished": (p) => track(onLoadingFinished(p)),`
 to `"Network.loadingFinished": (p) => onLoadingFinished(p),`.
+
+## Test Coverage
+
+`tests/barrier_consumed.spec.mjs`:
+- "BARRIER (adversarial single): consumed RRs precede marker"
+- "BARRIER (reentrant): consumed RRs precede each of N markers"
+
+Both fail deterministically (6/6 across 3 repeats with the mutation):
+the body-fetch promises aren't added to `inFlight`, so the
+BARRIER's `Promise.allSettled([...inFlight])` snapshot completes
+before the responseReceived bodies land, and consumed RRs land *after*
+their BARRIER in the stream — violating `assertConsumedPrecede`.

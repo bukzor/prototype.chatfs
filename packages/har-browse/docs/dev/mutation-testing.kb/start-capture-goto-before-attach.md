@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 ---
 
 # `capture.mjs`: `startCapture` navigates before attaching CDP
@@ -21,9 +21,11 @@ initial page load entry.
 +  const { events, done } = await attachCapture(page, { howto });
 ```
 
-## Fixture needed
+## Test Coverage
 
-Test asserts the captured stream contains a `Network.responseReceived`
-whose `request.url` ends with the toy-server origin (the initial nav).
-Without the original ordering, that event fires before CDP attaches
-and the assertion fails (count: 0).
+`tests/initial_nav.spec.mjs` — "initial navigation RR is captured" —
+runs `startCapture` against the toy server, ends the stream via
+`context.close()` (overlay-independent, since the bug also breaks the
+overlay), and asserts a `Network.responseReceived` event for the root
+URL is present in the captured stream. With the bug, the initial nav
+fires before CDP listeners attach and the RR is missing.

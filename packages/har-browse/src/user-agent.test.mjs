@@ -18,7 +18,7 @@ const { cachePath } = await import("./cache.mjs");
 const { registry } = await import(
   "playwright-core/lib/server/registry/index"
 );
-const { userAgent } = await import("./user-agent.mjs");
+const { userAgent, fetchUserAgent } = await import("./user-agent.mjs");
 const pkg = JSON.parse(
   readFileSync(new URL("../package.json", import.meta.url), "utf-8"),
 );
@@ -67,6 +67,92 @@ test("cachedUserAgent cache key includes Chromium revision", async () => {
   const path = expectedCacheFile({ headless: false });
   assert.ok(path.includes("revision="), `expected revision in path: ${path}`);
   assert.equal(existsSync(path), true);
+});
+
+test("cachedUserAgent strips trailing whitespace from cached UA", async () => {
+  // Cache files may be hand-edited and pick up trailing newlines. A bare
+  // newline in a `User-Agent` request header is a control character —
+  // strip on read.
+  writeFileSync(expectedCacheFile({ headless: true }), "TrailingNewline/1.0\n");
+  const ua = await userAgent(fakeChromium, true);
+  assert.equal(ua, `TrailingNewline/1.0 ${SUFFIX}`);
+});
+
+test("fetchUserAgent pins probe to registry-resolved executablePath", async () => {
+  // The probe must launch the SAME Chromium revision the caller will
+  // launch. Drop `executablePath` and Playwright's default-discovery
+  // picks whatever (possibly a `PLAYWRIGHT_BROWSERS_PATH`-overridden
+  // build) — the cached UA then doesn't match the caller's browser.
+  const expectedPath = registry
+    .findExecutable("chromium")
+    .executablePath();
+  let observedPath = "unset";
+  /** @type {import('playwright').BrowserType} */
+  const fakeBrowserType = /** @type {any} */ ({
+    name: () => "chromium",
+    launch: async (/** @type {any} */ opts) => {
+      observedPath = opts.executablePath;
+      return {
+        newPage: async () => ({
+          context: () => ({
+            newCDPSession: async () => ({
+              send: async () => ({ userAgent: "ProbeUA/1.0" }),
+            }),
+          }),
+        }),
+        close: async () => {},
+      };
+    },
+  });
+  const ua = await fetchUserAgent(fakeBrowserType, true);
+  assert.equal(ua, "ProbeUA/1.0");
+  assert.equal(observedPath, expectedPath);
+});
+
+test("fetchUserAgent closes the probe browser", async () => {
+  // Dropping browser.close() leaks a Chromium process per probe — once
+  // per (revision, headless) on cache miss. Assert via a fake browser
+  // that records close() invocations.
+  let closeCalls = 0;
+  /** @type {import('playwright').BrowserType} */
+  const fakeBrowserType = /** @type {any} */ ({
+    name: () => "chromium",
+    launch: async () => ({
+      newPage: async () => ({
+        context: () => ({
+          newCDPSession: async () => ({
+            send: async () => ({ userAgent: "ProbeUA/1.0" }),
+          }),
+        }),
+      }),
+      close: async () => { closeCalls += 1; },
+    }),
+  });
+  await fetchUserAgent(fakeBrowserType, true);
+  assert.equal(closeCalls, 1);
+});
+
+test("fetchUserAgent closes the probe browser on error", async () => {
+  // If `try/finally` is reduced to a bare body, errors thrown inside
+  // skip the close as well. Throw from CDP.send and assert close still
+  // fires.
+  let closeCalls = 0;
+  /** @type {import('playwright').BrowserType} */
+  const fakeBrowserType = /** @type {any} */ ({
+    name: () => "chromium",
+    launch: async () => ({
+      newPage: async () => ({
+        context: () => ({
+          newCDPSession: async () => ({
+            send: async () => { throw new Error("probe-fail"); },
+          }),
+        }),
+      }),
+      close: async () => { closeCalls += 1; },
+    }),
+  });
+  await assert.rejects(() => fetchUserAgent(fakeBrowserType, true), /probe-fail/);
+  assert.equal(closeCalls, 1);
 });
 
 test("cachedUserAgent cache key includes headless mode", async () => {

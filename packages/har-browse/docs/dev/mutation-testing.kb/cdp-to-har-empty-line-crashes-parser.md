@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 ---
 
 # `cdp_to_har.mjs`: empty-line skip dropped
@@ -21,10 +21,9 @@ the whole pipeline fails on the most benign input quirk.
  }
 ```
 
-## Fixture needed
+## Test Coverage
 
-Unit test (new `src/cdp_to_har.test.mjs` or
-`tests/cdp_to_har.test.mjs`): pipe `"\n"` (or valid JSONL with a
-trailing blank line) into `cdp_to_har`, assert exit 0 and HAR JSON on
-stdout. Without the skip, exit is non-zero with a SyntaxError on
-stderr.
+`tests/cdp_to_har.test.mjs` — "cdp-to-har tolerates blank lines in
+JSONL input". Pipes the valid fixture with extra blank lines injected
+mid-stream and at EOF; asserts exit 0 and parseable HAR on stdout.
+Without the skip, `JSON.parse("")` throws and the CLI exits non-zero.

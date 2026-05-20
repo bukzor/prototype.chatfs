@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 ---
 
 # `capture.mjs`: BARRIER prefix check uses `includes` instead of `startsWith`
@@ -20,11 +20,14 @@ ordering semantics for those events.
 +        params.payload?.includes?.("BARRIER:")
 ```
 
-## Fixture needed
+## Test Coverage
 
-Add a non-BARRIER `harBrowseMark` call from the page with payload
-containing `"BARRIER:"` mid-string (e.g.
-`"debug-saw-BARRIER:foo-elsewhere"`). Assert the binding event emits
-immediately (not deferred). Without anchoring, the test sees the
-binding emit after in-flight bodies settle — order violation flagged by
-a precede-binding-in-stream check or an immediate-emit timestamp delta.
+`tests/barrier_smoke.spec.mjs` — "non-anchored 'BARRIER:' substring
+isn't deferred". Awaits N=10 parallel /payload fetches so every
+loadingFinished has arrived and N body-fetches sit in `inFlight`,
+then immediately issues `window.harBrowseMark("debug-BARRIER:foo")`.
+Under `startsWith` the binding emits at its natural CDP position
+(before the RRs whose body-fetches haven't resolved). Under `includes`
+the binding is deferred behind the in-flight drain and lands after
+the last /payload RR — assertion `bindingIdx < lastPayloadRRIdx`
+fails.

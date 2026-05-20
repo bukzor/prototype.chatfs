@@ -1,5 +1,6 @@
 ---
-status: todo
+status: gap
+attempts: 1
 ---
 
 # `capture.mjs`: `params.payload?.startsWith?.` optional chains dropped
@@ -22,10 +23,21 @@ CDP emit-override propagates the throw, crashing the capture stream.
        ) {
 ```
 
-## Fixture needed
+## Test Result
 
-Page-side call `window.harBrowseMark()` (no payload). Assert the
-capture stream still produces events for subsequent network activity
-(i.e., capture didn't die). Without the optional chaining, the
-TypeError propagates out of the emit-override and kills downstream
-flow.
+The defended-against case is not reachable in practice. Playwright /
+CDP `Runtime.addBinding` only accepts string payloads — calling
+`window.harBrowseMark()` page-side throws
+`Error: Invalid arguments: should be exactly one string` at the
+binding layer, before `Runtime.bindingCalled` is dispatched. Same for
+non-string args. The optional chains defend against an undefined
+`params.payload`, which CDP guarantees is a string. No page-side
+invocation can reach the `.startsWith` call on undefined.
+
+Tried: `page.evaluate(() => window.harBrowseMark())` — Playwright
+rejects before the binding fires. Other non-string payloads behave
+the same.
+
+This mutation is unreachable; the `?.` chains are dead defense. Could
+be safely removed from the implementation, but leaving them in keeps
+the code robust against any future protocol change.

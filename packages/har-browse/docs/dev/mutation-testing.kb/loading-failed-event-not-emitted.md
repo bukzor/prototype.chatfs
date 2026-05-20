@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 ---
 
 # `capture.mjs`: `Network.loadingFailed` is not enqueued
@@ -18,9 +18,10 @@ flush; this one covers the LFail event itself.
 `src/capture.mjs`, `onLoadingFailed`:
 delete the trailing `enqueue({ method: "Network.loadingFailed", params: lfail });`.
 
-## Fixture needed
+## Test Coverage
 
-`toy_server/` route that fails the request — e.g., terminate the
-connection mid-headers, or simply trigger a `fetch("http://127.0.0.1:1")`
-to a closed port from the page. Test asserts that the captured events
-include a `Network.loadingFailed` for that request.
+`tests/loading_failed.spec.mjs` — page fetches a closed local port
+(`http://127.0.0.1:1/`), which triggers `Network.loadingFailed` from
+the browser. The test asserts at least one `loadingFailed` event in
+the captured stream. With the enqueue dropped, zero events match and
+the assertion fails.

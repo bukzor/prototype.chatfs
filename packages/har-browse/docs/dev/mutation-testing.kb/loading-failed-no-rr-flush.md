@@ -1,6 +1,5 @@
 ---
-status: gap
-attempts: 1
+status: done
 ---
 
 # `capture.mjs`: `onLoadingFailed` doesn't flush the stashed RR
@@ -22,11 +21,12 @@ metadata at all — chrome-har may also miscount totals.
        enqueue({ method: "Network.loadingFailed", params: lfail });
 ```
 
-## Test Result
+## Test Coverage
 
-All 8 Playwright tests pass with the flush dropped. No existing
-fixture serves a request that succeeds headers then fails mid-body —
-neither the toy_server nor example.com produces a stashed-RR-+-LFail
-condition. To catch this, the toy server needs a route that writes
-headers then aborts the connection mid-body (`socket.destroy()` after
-`res.flushHeaders()`).
+`tests/loading_failed.spec.mjs` — "RR flushed for mid-body abort
+(responseReceived precedes loadingFailed)". The `tests/_common/server.mjs`
+`/abort-after-headers` route calls `res.flushHeaders()` then
+`socket.destroy()` after a 10ms delay so the browser receives headers
+(emits `responseReceived`) before the RST (emits `loadingFailed`).
+The test asserts the stashed RR is flushed by `onLoadingFailed` —
+without the flush, `rrIdx` is `-1` and the test fails.

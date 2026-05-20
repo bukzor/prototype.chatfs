@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 ---
 
 # `cdp_to_har.mjs`: `includeTextFromResponseBody` option dropped
@@ -21,13 +21,11 @@ side did its job.
 +const har = await harFromMessages(messages);
 ```
 
-## Fixture needed
+## Test Coverage
 
-No existing test exercises the `cdp_to_har.mjs` CLI binary —
-`tests/har.spec.mjs` imports `harFromMessages` directly. Need a CLI
-integration test (spawn `cdp-to-har` as a subprocess like
-`tests/epipe.test.mjs` does for `har-browse`): pipe a known
-`{method, params}` stream that includes a `Network.responseReceived`
-with `response.body`, then assert the HAR JSON on stdout has
-`entries[].response.content.text` populated. Without the option, `text`
-is absent (or empty).
+`tests/cdp_to_har.test.mjs` — "cdp-to-har includes response body
+text in HAR entries". Spawns the CLI with a hand-crafted minimal CDP
+sequence (Page.frameStartedLoading + Network.{requestWillBeSent,
+responseReceived with body, loadingFinished}) and asserts
+`entry.response.content.text` equals the seeded body. With the option
+dropped, `text` is `undefined` and `assert.equal` fails.

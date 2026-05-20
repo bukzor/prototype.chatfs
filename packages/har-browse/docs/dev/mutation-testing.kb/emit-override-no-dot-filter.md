@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 ---
 
 # `capture.mjs`: emit-override drops the `"."` filter on event names
@@ -22,8 +22,10 @@ junk entries.
 +      if (typeof name === "string") {
 ```
 
-## Fixture needed
+## Test Coverage
 
-Assert the captured event stream contains no `method`s without a `.`
-separator (i.e., every method matches `/\w+\.\w+/`). Could add to any
-existing capture-driven spec.
+`tests/barrier_smoke.spec.mjs` — every captured `messages[].method`
+is asserted to match `/^[A-Za-z]+\.[A-Za-z]+/`. Without the `.`
+filter the override enqueues every internal EventEmitter event (Page
+listener registration, etc.) — the first non-dot method (e.g. `"close"`,
+`"error"`, or an internal Playwright tag) fails the regex.

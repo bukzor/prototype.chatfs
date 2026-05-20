@@ -37,7 +37,7 @@ after(() => {
   rmSync(profileDir, { recursive: true, force: true });
 });
 
-test("har-browse | head -n 1 exits cleanly", { timeout: 30000 }, async () => {
+test("har-browse | head -n 1 exits cleanly", { timeout: 10000 }, async () => {
   // sh-built pipeline so the OS pipe is direct between har-browse and
   // head — no Node mediation that could keep the pipe alive after head
   // exits.
@@ -48,12 +48,14 @@ test("har-browse | head -n 1 exits cleanly", { timeout: 30000 }, async () => {
   // newline) tears down with Chromium rather than leaving an orphan
   // window for the user to close manually. SIGTERM only — Chromium
   // handles it cleanly; SIGKILL would forfeit the cleanup we want.
+  //
+  // Budget: green case ~2s; 5s is 2.5x headroom for slower machines.
   const bin = join(__dirname, "..", "src", "har_browse.mjs");
   const cmd = `node ${JSON.stringify(bin)} --profile ${profileName} http://127.0.0.1:${port}/ | head -n 1`;
   const { stdout, stderr } = await exec(
     "timeout",
-    ["15s", "sh", "-c", cmd],
-    { timeout: 25000 },
+    ["5s", "sh", "-c", cmd],
+    { timeout: 8000 },
   );
 
   const parsed = JSON.parse(stdout.trim());

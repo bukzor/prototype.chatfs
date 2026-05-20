@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 ---
 
 # `inject.mjs`: `addInitScript` replaced with one-shot `evaluate`
@@ -20,11 +20,15 @@ mid-session.
      ({ html, css, howto }) => {
 ```
 
-## Hypothesis
+## Test Coverage
 
-`tests/persistent_injection.spec.mjs` ("Done Capturing button survives
-navigations") navigates three times and asserts
-`page.locator("#capture-done").count() === 1` after each. With
-`page.evaluate` (one-shot), the second navigation lands on a fresh
-document with no overlay — count is 0 and the assertion fails. Drive
-through inject→test→revert to confirm and link the test.
+`tests/persistent_injection.spec.mjs` — all three tests fail
+deterministically with the mutation:
+- "Done Capturing button survives navigations"
+- "Done click handler is registered { once: true } and removed after first fire"
+- "injectOverlay is idempotent: double-register yields one overlay"
+
+`page.evaluate` runs against the current document only; the very next
+`page.goto(...)` lands on a fresh document with no overlay
+(`#capture-overlay` count is 0), and every persistence-oriented
+assertion in the suite fails.

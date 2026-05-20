@@ -37,6 +37,17 @@ export async function startServer() {
       res.end(JSON.stringify({ id, n }));
       return;
     }
+    if (url.pathname === "/abort-after-headers") {
+      // Send headers + a partial body, then forcibly tear down the
+      // socket before EOF. Browser sees: responseReceived (headers)
+      // followed by loadingFailed (transport error) — the regime that
+      // exercises `onLoadingFailed`'s stashed-RR flush.
+      res.writeHead(200, { "content-type": "application/json" });
+      res.flushHeaders();
+      // Small delay so headers reach the wire before the RST.
+      setTimeout(() => res.socket?.destroy(), 10);
+      return;
+    }
     res.writeHead(200, { "content-type": "text/html" });
     res.end("<!doctype html><html><body>capture stress</body></html>");
   });

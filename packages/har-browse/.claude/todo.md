@@ -35,21 +35,30 @@ cost-benefit-sweh:
 - [ ] Tighten `tsconfig.json` once the codebase is ready. Currently `strict: false` and `checkJs: true` (project-wide). Open items: declare a stub for `playwright-core/lib/server/registry/index` to silence TS7016; consider enabling `noImplicitAny` once fixture-callback params are typed.
 - [ ] Rename `.mjs` → `.ts` for native TS syntax. Node 22 strips types from `.ts` by default, so `#!/usr/bin/env node` shebangs work unchanged — just avoid `enum`/`namespace`/parameter-properties (the runtime-emitting TS constructs) or accept switching to `tsx`. Playwright loads `.ts` natively, so tests need no runner change. Consider installing `devtools-protocol` for typed CDP event shapes (would let us drop `any` on `params` throughout `capture.mjs`).
 
-## Mutation testing (paused 2026-05-19)
+## Mutation testing (paused 2026-05-20)
 
-Kb at `docs/dev/mutation-testing.kb/` (26 entries). Status:
-16 done, 6 gap, 3 todo. Session record:
+Kb at `docs/dev/mutation-testing.kb/` (53 entries). Status:
+45 done, 7 gap, 1 todo. Session record:
 `~/.claude/sessions.kb/har-browse-mutation-testing.md`.
 
-- [ ] Drive 3 newly-enumerated todo mutations through inject→test→revert:
-  `loading-failed-event-not-emitted` (needs failing-route fixture),
-  `context-close-no-stream-end` (needs context-close test),
-  `body-fetch-not-tracked` (likely caught by barrier_consumed — verify).
-  ~45 min total.
-- [ ] Convert gap entries to done by adding the fixtures each needs.
-  Decomposable: adversarial-delay BARRIER test, delayed-Done test,
-  toy_server failing-mid-body route, internal-state hook for
-  awaitingBody size, per-request RR-before-LF assertion. ~1 hr total.
+- [ ] Drive remaining 1 todo through inject→test→revert:
+  `awaiting-body-shared-across-sessions` — requires engineered CDP
+  requestId collision across two pages. Likely **gap** without CDP
+  interception.
+- [ ] Re-attempt 2 recoverable gaps:
+  - `barrier-promise-not-tracked` — adversarial-delay BARRIER FIFO
+    fixture (mixed `?delay=N`). Analysis suggests microtask FIFO +
+    shared-LF snapshots may make `track()` a no-op for ordering; the
+    track may actually be Done-drain insurance, not serialization.
+    Re-run with mutation injected showed full BARRIER suite passes —
+    so the order invariant isn't what `track()` protects in practice.
+  - `body-attached-after-loading-finished` — per-request RR-before-LF
+    JSONL-index assertion across captured stream.
+- [ ] 5 remaining gaps are analyzed-unreachable / dead defense:
+  `awaiting-body-not-deleted`, `barrier-payload-no-optional-chaining`,
+  `barrier-snapshot-not-frozen`, `context-close-no-stream-end`,
+  `inject-overlay-not-awaited`. Each has a `## Test Result` body
+  explaining why hardening is impractical.
 
 ## Done
 
