@@ -61,8 +61,12 @@ function fixture() {
   ];
 }
 
-/** Run `node BIN` with stdin = lines joined; return { code, stdout, stderr }. */
-function runCdpToHar(messages) {
+/**
+ * Run `node BIN` with stdin = one line per item (object → JSON, string →
+ * literal); return { code, stdout, stderr }. Empty strings produce blank
+ * lines, the regime the blank-line tolerance test exercises.
+ */
+function runCdpToHar(items) {
   return new Promise((resolve, reject) => {
     const proc = spawn("node", [BIN]);
     let stdout = "";
@@ -71,7 +75,10 @@ function runCdpToHar(messages) {
     proc.stderr.on("data", (c) => (stderr += c));
     proc.on("error", reject);
     proc.on("close", (code) => resolve({ code, stdout, stderr }));
-    for (const m of messages) proc.stdin.write(JSON.stringify(m) + "\n");
+    for (const item of items) {
+      const line = typeof item === "string" ? item : JSON.stringify(item);
+      proc.stdin.write(line + "\n");
+    }
     proc.stdin.end();
   });
 }
@@ -89,20 +96,10 @@ test("cdp-to-har includes response body text in HAR entries", async () => {
 
 test("cdp-to-har tolerates blank lines in JSONL input", async () => {
   // Trailing newlines / stray blank lines from shells & redirects must
-  // not crash the parser. Inject a blank line between two valid records.
-  const messages = fixture();
-  const proc = spawn("node", [BIN]);
-  let stdout = "";
-  let stderr = "";
-  proc.stdout.on("data", (c) => (stdout += c));
-  proc.stderr.on("data", (c) => (stderr += c));
-  const done = new Promise((r) => proc.on("close", (code) => r(code)));
-  proc.stdin.write(JSON.stringify(messages[0]) + "\n");
-  proc.stdin.write("\n");
-  for (const m of messages.slice(1)) proc.stdin.write(JSON.stringify(m) + "\n");
-  proc.stdin.write("\n");
-  proc.stdin.end();
-  const code = await done;
+  // not crash the parser. Inject a blank line between two valid records
+  // and a trailing one.
+  const [first, ...rest] = fixture();
+  const { code, stdout, stderr } = await runCdpToHar([first, "", ...rest, ""]);
   assert.equal(code, 0, `non-zero exit; stderr: ${stderr}`);
   const har = JSON.parse(stdout);
   assert.ok(har.log.entries.length >= 1, "har entries non-empty");
