@@ -36,8 +36,10 @@ Plan from 2026-05-05 design.kb consolidation. Order is dependency-driven; 1-2 ar
 ## Rust port — kb scope refactor
 
 - [x] [Place the rust-port kb at a proper home](todo.kb/2026-05-13-000-place-rust-port-kb-at-proper-home.md) — decided 2026-05-15; audit at `packages/har-browse/dev.kb/rust-port.kb/scope-audit.md`; session record at `~/.claude/sessions.kb/rust-port-kb-scope-refactor.md`
-- [ ] [Execute the rust-port kb scope refactor](todo.kb/2026-05-16-000-execute-rust-port-kb-scope-refactor.md) — 9 steps; must land before commits 0750/1000/1050
+- [ ] [Execute the rust-port kb scope refactor](todo.kb/2026-05-16-000-execute-rust-port-kb-scope-refactor.md) — 9 steps; must land before commits 0750/1000/1050. Layered with 2026-05-21 meta-planning evolutions (see todo's "Additional decisions" section).
 - [ ] [Polyglot package dir naming — sweep existing packages](todo.kb/2026-05-16-001-polyglot-package-dir-naming-sweep.md) — depends on execute-rust-port above
+- [ ] **Update `packages/har-browse/dev.kb/rust-port.md` charter:** insert commit `0050` (blackbox `.spec.mjs` → CLI conversion + baseline capture) before `0100` scaffold; record commits `0025`/`0035` if diagnostic-events design and Node-side emission want separate commits. Source: `.claude/decision.kb/test-conversion-precedes-port-scaffold.md`.
+- [ ] **Pre-port testing infrastructure** (Phases C/D/E) — tracked at `~/.claude/sessions.kb/har-browse-rust-port-pre-port-infrastructure.md`. Must precede commit `0800` (cdp-jsonl contract freeze) at minimum.
 
 ## Deferred
 

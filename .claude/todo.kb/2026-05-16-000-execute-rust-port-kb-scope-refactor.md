@@ -95,3 +95,42 @@ cost-benefit-sweh:
 - Steps 6-8 are mop-up; one commit each or grouped.
 - Step 9 is months-out (fires when commit 1300 lands).
 - No destructive operations until step 6 (stubbing, not deletion); full deletion at step 9 only.
+
+## Additional decisions layered on top (2026-05-21 meta-planning session)
+
+Today's session evolved several of this plan's resolutions without
+replacing them. Refer to workspace `.claude/decision.kb/` for the
+canonical decisions; each item below cross-references.
+
+- **Schema home (Q1 evolution):** Schemas live at
+  `packages/rs-har-browse/schema/`, not `design.kb/`. Filename
+  convention: `<stem>.jsonschema.yaml` matching the validated stream.
+  Diagnostic events go in a *separate* stream with its own schema. See
+  `.claude/decision.kb/{schema-home-and-naming,bb1-is-har-browse,separate-diagnostic-stream}.md`.
+  Step 1 should add `schema/` to the `packages/rs-har-browse/` skeleton.
+- **Whitehat rename (Q3 addition):** When executing Step 3's
+  "Promote `policy-safe-automation-boundary.md`" item, *also* rename to
+  `policy-whitehat-automation-boundary.md`. "Safe" is too ambiguous;
+  "whitehat" specifies the non-adversarial security stance. See
+  `.claude/decision.kb/rename-safe-to-whitehat-automation-boundary.md`.
+- **Defer-and-runtime-assert dual home (Q2 addition):** Step 3 plans
+  `docs/dev/technical-policy.kb/policy-defer-with-runtime-assertion.md`.
+  Today the same principle also lives at
+  `.claude/principle.kb/defer-and-runtime-assert.md`. Either is
+  acceptable as canonical; the other becomes a cross-link. Decide at
+  execution time.
+- **Threat-model reframe (sibling to Q3):** The rust-port-side
+  `packages/har-browse/dev.kb/rust-port.kb/facts.kb/threat-model.md`
+  becomes a decision + consequence doc (the *decision* is
+  "har-browse is an interactive single-user tool"; the *consequences*
+  are the headed-only / no-stealth list). Sibling to the 4-facet
+  policy promotion, not a replacement. See
+  `.claude/decision.kb/interactive-single-user-usage.md`.
+
+## Adjacent follow-up (not part of this plan)
+
+- Pre-port testing infrastructure (schema design, blackbox conversion,
+  baseline capture, mutation walk, diagnostic emission) →
+  `~/.claude/sessions.kb/har-browse-rust-port-pre-port-infrastructure.md`.
+- Workspace role-keyed kb adoption considerations →
+  `<repo-root>/.claude/sessions.kb/dev-kb-five-collection-pattern.md`.
