@@ -1,5 +1,26 @@
 ---
 managed-by: Skill(llm-subtask)
+cost-benefit-sweh:
+  timebox:
+    "@value": 2.0
+    rationale: |
+      Enumeration + per-candidate evaluation done; decisions
+      recorded. Residual: execute promotions on 3 files + update
+      sibling cross-references. ~2h mechanical migration.
+    confidence: tentative
+  benefit-2w:
+    "@value": 0.5
+    rationale: |
+      Closes a tech-debt loop. The promoted `.kb/` collections give
+      better organization for future entries. Modest, ~$50 of
+      "structural cleanliness."
+    confidence: tentative
+  cost-of-delay-2w:
+    "@value": 0.0
+    rationale: |
+      Self-classified "not blocking." Promotion-signal items grow
+      slowly; 2w delay only adds marginal scope.
+    confidence: tentative
 ---
 
 # Scan design.kb for promotion signals

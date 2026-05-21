@@ -4,6 +4,28 @@ required-reading:
   - packages/har-browse/CLAUDE.md
   - packages/har-browse/design.kb/030-requirements.kb/cli-interface.md
   - packages/har-browse/src/har_browse.mjs
+cost-benefit-sweh:
+  timebox:
+    "@value": 1.0
+    rationale: |
+      Implementation steps all [x]. Residual is end-to-end validation
+      against real providers (chatgpt.com, claude.ai): first-run
+      login, profile persistence across runs, HAR completeness, test
+      still passes. ~1h hands-on.
+    confidence: tentative
+  benefit-2w:
+    "@value": 0.5
+    rationale: |
+      Validation unblocks BB1 against real providers — the whole
+      reason this rewrite happened. Pure unblock value once it lands.
+    confidence: tentative
+  cost-of-delay-2w:
+    "@value": 0.2
+    rationale: |
+      File self-classifies as "blocks BB1 against real providers."
+      Each 2w of delay leaves BB1 on toy-server only — the rewrite
+      sits unproven. Pivot pace tax.
+    confidence: tentative
 ---
 
 # Implement har-browse real-site capture

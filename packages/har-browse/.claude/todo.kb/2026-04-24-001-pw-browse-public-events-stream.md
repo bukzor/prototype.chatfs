@@ -6,6 +6,29 @@ required-reading:
   - packages/har-browse/src/har_browse.mjs
   - packages/har-browse/src/playwright.mjs
   - packages/har-browse/src/inject.mjs
+cost-benefit-sweh:
+  timebox:
+    "@value": 6.0
+    rationale: |
+      Design fully locked (postscript shows pivoted twice to landing
+      shape). Implementation pending: ~150 line rewrite of capture.mjs,
+      delete playwright/ dir, refactor har_browse.mjs to consume the
+      new stream, rewrite tests. ~6h hands-on.
+    confidence: tentative
+  benefit-2w:
+    "@value": 2.0
+    rationale: |
+      Replaces the wrong-seam HAR-entry stream with public-events —
+      unblocks cdp2har validation downstream and gives har-browse a
+      clean v2 API. ~$200 of "core infrastructure landed in window."
+    confidence: tentative
+  cost-of-delay-2w:
+    "@value": 0.2
+    rationale: |
+      Active rewrite — context decay tax. Each 2w of delay erodes
+      the working knowledge of the design + Playwright internals
+      that's currently fresh. Non-trivial pivot pace risk.
+    confidence: tentative
 ---
 
 # har-browse: switch from HAR-entry stream to public-events stream
