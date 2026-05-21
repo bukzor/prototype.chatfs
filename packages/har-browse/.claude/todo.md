@@ -35,30 +35,20 @@ cost-benefit-sweh:
 - [ ] Tighten `tsconfig.json` once the codebase is ready. Currently `strict: false` and `checkJs: true` (project-wide). Open items: declare a stub for `playwright-core/lib/server/registry/index` to silence TS7016; consider enabling `noImplicitAny` once fixture-callback params are typed.
 - [ ] Rename `.mjs` → `.ts` for native TS syntax. Node 22 strips types from `.ts` by default, so `#!/usr/bin/env node` shebangs work unchanged — just avoid `enum`/`namespace`/parameter-properties (the runtime-emitting TS constructs) or accept switching to `tsx`. Playwright loads `.ts` natively, so tests need no runner change. Consider installing `devtools-protocol` for typed CDP event shapes (would let us drop `any` on `params` throughout `capture.mjs`).
 
-## Mutation testing (paused 2026-05-20)
+## Mutation testing (terminus 2026-05-21)
 
-Kb at `docs/dev/mutation-testing.kb/` (53 entries). Status:
-45 done, 7 gap, 1 todo. Session record:
+Kb at `docs/dev/mutation-testing.kb/` (65 entries). Status:
+**57 done, 0 todo, 8 gap.** Session record:
 `~/.claude/sessions.kb/har-browse-mutation-testing.md`.
 
-- [ ] Drive remaining 1 todo through inject→test→revert:
-  `awaiting-body-shared-across-sessions` — requires engineered CDP
-  requestId collision across two pages. Likely **gap** without CDP
-  interception.
-- [ ] Re-attempt 2 recoverable gaps:
-  - `barrier-promise-not-tracked` — adversarial-delay BARRIER FIFO
-    fixture (mixed `?delay=N`). Analysis suggests microtask FIFO +
-    shared-LF snapshots may make `track()` a no-op for ordering; the
-    track may actually be Done-drain insurance, not serialization.
-    Re-run with mutation injected showed full BARRIER suite passes —
-    so the order invariant isn't what `track()` protects in practice.
-  - `body-attached-after-loading-finished` — per-request RR-before-LF
-    JSONL-index assertion across captured stream.
-- [ ] 5 remaining gaps are analyzed-unreachable / dead defense:
-  `awaiting-body-not-deleted`, `barrier-payload-no-optional-chaining`,
-  `barrier-snapshot-not-frozen`, `context-close-no-stream-end`,
-  `inject-overlay-not-awaited`. Each has a `## Test Result` body
-  explaining why hardening is impractical.
+All 8 gaps are analyzed-unreachable / dead-defense (`## Test Result`
+in each file explains why hardening is impractical):
+`awaiting-body-not-deleted`, `awaiting-body-shared-across-sessions`,
+`barrier-payload-no-optional-chaining`, `barrier-promise-not-tracked`,
+`barrier-snapshot-not-frozen`, `body-attached-after-loading-finished`,
+`context-close-no-stream-end`, `inject-overlay-not-awaited`.
+
+No followups unless new src/ surface is added.
 
 ## Done
 

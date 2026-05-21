@@ -131,6 +131,20 @@ test("fetchUserAgent pins probe to registry-resolved executablePath", async () =
   assert.equal(observedPath, expectedPath);
 });
 
+test("fetchUserAgent passes headless mode through to launch", async () => {
+  // Headful and headless Chromium emit different UAs; the probe must
+  // launch in the SAME mode the caller will use. Negating the param
+  // would cache the wrong-mode UA against the caller's headless key.
+  let observedHeadless = /** @type {boolean | null} */ (null);
+  const fakeBrowserType = makeFakeBrowserType({
+    onLaunch: (opts) => { observedHeadless = opts.headless; },
+  });
+  await fetchUserAgent(fakeBrowserType, true);
+  assert.equal(observedHeadless, true);
+  await fetchUserAgent(fakeBrowserType, false);
+  assert.equal(observedHeadless, false);
+});
+
 test("fetchUserAgent closes the probe browser", async () => {
   // Dropping browser.close() leaks a Chromium process per probe — once
   // per (revision, headless) on cache miss. Assert via a fake browser
