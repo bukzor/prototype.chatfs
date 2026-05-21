@@ -4,7 +4,7 @@
  * downstream HAR builders can mark the entry as failed.
  */
 import { test, expect } from "./fixtures.mjs";
-import { startServer } from "./_common/server.mjs";
+import { drainMessages } from "./_common/testing.mjs";
 
 test("Network.loadingFailed emitted for failed fetch", async ({
   startCapture,
@@ -20,8 +20,7 @@ test("Network.loadingFailed emitted for failed fetch", async ({
 
   await session.page.click("#capture-done");
 
-  const messages = [];
-  for await (const msg of session.events) messages.push(msg);
+  const messages = await drainMessages(session);
 
   const failed = messages.filter(
     (m) => m.method === "Network.loadingFailed",
@@ -31,38 +30,31 @@ test("Network.loadingFailed emitted for failed fetch", async ({
 
 test("RR flushed for mid-body abort (responseReceived precedes loadingFailed)", async ({
   startCapture,
+  payloadServer,
 }) => {
   // Request gets headers then the server destroys the socket mid-body.
   // CDP fires: responseReceived (headers stashed in `awaitingBody`)
   // then loadingFailed. `onLoadingFailed` must flush the stashed RR
   // before enqueueing the LFail so HAR builders see a response entry.
-  const server = await startServer();
-  try {
-    const session = await startCapture({
-      url: `http://127.0.0.1:${server.port}/`,
-    });
+  const session = await startCapture({ url: `${payloadServer.url}/` });
 
-    await session.page.evaluate(() =>
-      fetch("/abort-after-headers").catch(() => {}),
-    );
+  await session.page.evaluate(() =>
+    fetch("/abort-after-headers").catch(() => {}),
+  );
 
-    await session.page.click("#capture-done");
+  await session.page.click("#capture-done");
 
-    const messages = [];
-    for await (const msg of session.events) messages.push(msg);
+  const messages = await drainMessages(session);
 
-    const rrIdx = messages.findIndex(
-      (m) =>
-        m.method === "Network.responseReceived" &&
-        (m.params?.response?.url ?? "").includes("/abort-after-headers"),
-    );
-    const lfailIdx = messages.findIndex(
-      (m) => m.method === "Network.loadingFailed",
-    );
-    expect(lfailIdx, "loadingFailed present").toBeGreaterThanOrEqual(0);
-    expect(rrIdx, "stashed RR flushed").toBeGreaterThanOrEqual(0);
-    expect(rrIdx, "RR precedes LFail").toBeLessThan(lfailIdx);
-  } finally {
-    await server.close();
-  }
+  const rrIdx = messages.findIndex(
+    (m) =>
+      m.method === "Network.responseReceived" &&
+      (m.params?.response?.url ?? "").includes("/abort-after-headers"),
+  );
+  const lfailIdx = messages.findIndex(
+    (m) => m.method === "Network.loadingFailed",
+  );
+  expect(lfailIdx, "loadingFailed present").toBeGreaterThanOrEqual(0);
+  expect(rrIdx, "stashed RR flushed").toBeGreaterThanOrEqual(0);
+  expect(rrIdx, "RR precedes LFail").toBeLessThan(lfailIdx);
 });

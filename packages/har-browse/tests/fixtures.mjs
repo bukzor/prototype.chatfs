@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { startCapture as _startCapture } from "../src/capture.mjs";
+import { startServer } from "./_common/server.mjs";
 import { spawnToyServer } from "./_common/toy_server.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -13,9 +14,10 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
  * @typedef {Partial<Parameters<typeof _startCapture>[0]> & { url: string }} StartCaptureOpts
  * @typedef {(opts: StartCaptureOpts) => Promise<CaptureSession>} StartCaptureFactory
  * @typedef {{ port: number, url: string }} ToyServer
+ * @typedef {Awaited<ReturnType<typeof startServer>> & { url: string }} PayloadServer
  */
 
-export const test = base.extend(/** @type {import('@playwright/test').Fixtures<{ startCapture: StartCaptureFactory }, { toyServer: ToyServer }>} */ ({
+export const test = base.extend(/** @type {import('@playwright/test').Fixtures<{ startCapture: StartCaptureFactory, payloadServer: PayloadServer }, { toyServer: ToyServer }>} */ ({
   // One toy http.server per worker; ports separated by workerIndex.
   toyServer: [
     async ({}, use, workerInfo) => {
@@ -32,6 +34,17 @@ export const test = base.extend(/** @type {import('@playwright/test').Fixtures<{
     },
     { scope: "worker" },
   ],
+
+  // Per-test Node http.server with /payload + /abort-after-headers.
+  // Tests use `${payloadServer.url}/` as the capture target URL.
+  payloadServer: async ({}, use) => {
+    const server = await startServer();
+    try {
+      await use({ ...server, url: `http://127.0.0.1:${server.port}` });
+    } finally {
+      await server.close();
+    }
+  },
 
   // Factory: tests call `await startCapture({ url, ... })`. Cleanup
   // (session.close + profile dir rm) happens after the test body.

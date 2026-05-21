@@ -1,5 +1,27 @@
 import { expect } from "@playwright/test";
 
+/**
+ * Drain a capture session's events iterator to completion. Equivalent to
+ * `for await (const m of session.events) acc.push(m)`.
+ */
+export async function drainMessages(session) {
+  const messages = [];
+  for await (const msg of session.events) messages.push(msg);
+  return messages;
+}
+
+/**
+ * First Network.responseReceived event whose URL contains `urlSubstring`.
+ * Returns undefined if no match.
+ */
+export function findRR(messages, urlSubstring) {
+  return messages.find(
+    (m) =>
+      m.method === "Network.responseReceived" &&
+      (m.params?.response?.url ?? "").includes(urlSubstring),
+  );
+}
+
 /** Decode a `Network.responseReceived` event's body, base64 or utf8. */
 export function decodeRRBody(rr) {
   const r = rr.params?.response;
@@ -53,4 +75,32 @@ export function assertNoGaps({ events, requestLog, pathname = "/payload" }) {
   ns.sort((a, b) => a - b);
   const expected = Array.from({ length: served }, (_, i) => i + 1);
   expect(ns).toEqual(expected);
+}
+
+/**
+ * Three consistency checks bundled for capture-stress tests:
+ *   1. Captured n's are unique (no duplicate emissions).
+ *   2. Every n is in [1, served] (no synthetic post-BARRIER injection).
+ *   3. body.id round-trips to the URL's `id` param (no body corruption).
+ *
+ * @param {object} args
+ * @param {Array<{method: string, params: object}>} args.messages
+ * @param {{ requestLog: Array<{pathname: string}> }} args.server
+ * @param {string} [args.pathname="/payload"]
+ */
+export function assertCapturedConsistent({ messages, server, pathname = "/payload" }) {
+  const rrs = parsedPayloadRRs(messages, pathname);
+  const ns = rrs.map((rr) => rr.body.n);
+  expect(new Set(ns).size, "captured n values unique").toBe(ns.length);
+  const served = server.requestLog.filter((r) => r.pathname === pathname).length;
+  for (const n of ns) {
+    expect(
+      Number.isInteger(n) && n >= 1 && n <= served,
+      `captured n=${n} in [1, ${served}]`,
+    ).toBe(true);
+  }
+  for (const { url, body } of rrs) {
+    const urlId = new URL(url).searchParams.get("id");
+    expect(body.id, `body.id round-trips for n=${body.n}`).toBe(urlId);
+  }
 }

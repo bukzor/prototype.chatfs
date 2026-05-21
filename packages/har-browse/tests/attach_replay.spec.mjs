@@ -8,6 +8,7 @@
  * capture past emits.
  */
 import { test, expect } from "./fixtures.mjs";
+import { drainMessages } from "./_common/testing.mjs";
 
 test("queue captures CDP replay events fired during enable awaits", async ({
   startCapture,
@@ -17,8 +18,7 @@ test("queue captures CDP replay events fired during enable awaits", async ({
   await session.page.waitForLoadState("load");
   await session.page.click("#capture-done");
 
-  const messages = [];
-  for await (const msg of session.events) messages.push(msg);
+  const messages = await drainMessages(session);
 
   // CDP reports about:blank's opaque origin as "://". With the queue
   // subscribed before CDP attach, Runtime.enable replays the initial

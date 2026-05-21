@@ -10,31 +10,24 @@
  * captured-RR loss without depending on the overlay.
  */
 import { test, expect } from "./fixtures.mjs";
-import { startServer } from "./_common/server.mjs";
+import { drainMessages } from "./_common/testing.mjs";
 
-test("initial navigation RR is captured", async ({ startCapture }) => {
+test("initial navigation RR is captured", async ({ startCapture, payloadServer }) => {
   test.setTimeout(10_000);
 
-  const server = await startServer();
-  try {
-    const session = await startCapture({
-      url: `http://127.0.0.1:${server.port}/`,
-    });
+  const session = await startCapture({ url: `${payloadServer.url}/` });
 
-    await session.page.waitForLoadState("networkidle");
-    // End the stream via context close (independent of the overlay).
-    await session.context.close();
+  await session.page.waitForLoadState("networkidle");
+  // End the stream via context close (independent of the overlay).
+  await session.context.close();
 
-    const messages = [];
-    for await (const msg of session.events) messages.push(msg);
+  const messages = await drainMessages(session);
 
-    const rootRR = messages.find(
-      (m) =>
-        m.method === "Network.responseReceived" &&
-        m.params?.response?.url === `http://127.0.0.1:${server.port}/`,
-    );
-    expect(rootRR, "initial nav RR captured").toBeTruthy();
-  } finally {
-    await server.close();
-  }
+  // Equality (not includes) — assert the root URL specifically.
+  const rootRR = messages.find(
+    (m) =>
+      m.method === "Network.responseReceived" &&
+      m.params?.response?.url === `${payloadServer.url}/`,
+  );
+  expect(rootRR, "initial nav RR captured").toBeTruthy();
 });

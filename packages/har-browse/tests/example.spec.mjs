@@ -6,6 +6,7 @@
  * that persistent_injection.spec.mjs doesn't cover. Requires network.
  */
 import { test, expect } from "./fixtures.mjs";
+import { drainMessages } from "./_common/testing.mjs";
 
 test("startCapture against example.com", async ({ startCapture }) => {
   const session = await startCapture({ url: "https://example.com" });
@@ -16,8 +17,7 @@ test("startCapture against example.com", async ({ startCapture }) => {
   await session.page.waitForLoadState("networkidle");
   await session.page.click("#capture-done");
 
-  const messages = [];
-  for await (const msg of session.events) messages.push(msg);
+  const messages = await drainMessages(session);
 
   const responses = messages.filter(
     (m) =>

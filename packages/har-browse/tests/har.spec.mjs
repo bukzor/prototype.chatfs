@@ -7,6 +7,7 @@
  */
 import { harFromMessages } from "chrome-har";
 import { test, expect } from "./fixtures.mjs";
+import { drainMessages } from "./_common/testing.mjs";
 
 test("startCapture → chrome-har produces usable HAR", async ({
   startCapture,
@@ -20,8 +21,7 @@ test("startCapture → chrome-har produces usable HAR", async ({
   await session.page.waitForLoadState("networkidle");
   await session.page.click("#capture-done");
 
-  const messages = [];
-  for await (const msg of session.events) messages.push(msg);
+  const messages = await drainMessages(session);
 
   const har = await harFromMessages(messages, {
     includeTextFromResponseBody: true,
