@@ -1,5 +1,28 @@
 ---
 managed-by: Skill(llm-subtask)
+cost-benefit-sweh:
+  timebox:
+    "@value": 1.0
+    rationale: |
+      Doc-consistency sweep — README pipeline diagram + Run-it example
+      + frontmatter validation script. ~1h mechanical work plus
+      sanity checks against the new chat-as-directory layout.
+    confidence: tentative
+  benefit-2w:
+    "@value": 0.3
+    rationale: |
+      Doc consistency win — future agents orienting on the layout
+      stop tripping over stale flat-layout references. No
+      implementation unblocked.
+    confidence: tentative
+  cost-of-delay-2w:
+    "@value": 0.0
+    rationale: |
+      File self-classifies "does not block implementation; doc
+      consistency." Other agents may misread layout from the stale
+      docs, but cost manifests one-shot per encounter, not a flowing
+      tax. Set to 0; not zero in expectation but trivial.
+    confidence: tentative
 ---
 
 # chat-as-directory layout — propagate to other docs

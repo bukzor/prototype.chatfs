@@ -3,6 +3,29 @@ managed-by: Skill(llm-subtask)
 required-reading:
   - packages/har-browse/src/capture.mjs
   - packages/har-browse/.claude/todo.kb/2026-04-24-001-pw-browse-public-events-stream.md
+cost-benefit-sweh:
+  timebox:
+    "@value": 2.0
+    rationale: |
+      ~20-line cdp_to_har.mjs wrapper, smoke test against toy server,
+      add e2e test. Low complexity per the file's own assessment.
+      Effort small relative to validation payoff.
+    confidence: tentative
+  benefit-2w:
+    "@value": 0.5
+    rationale: |
+      Unblocks the "bonafide HAR on demand" claim — once validated,
+      the package can credibly produce HARs consumable by standard
+      tooling. Pure unblock value.
+    confidence: tentative
+  cost-of-delay-2w:
+    "@value": 0.1
+    rationale: |
+      Claim is unverified; until validated, har-browse can't be
+      advertised as HAR-producing. Each 2w of delay leaves a known
+      capability unproven. Soft-blocked on -001 pw-browse rewrite
+      landing first.
+    confidence: tentative
 ---
 
 # cdp2har: validate chrome-har consumes our stream

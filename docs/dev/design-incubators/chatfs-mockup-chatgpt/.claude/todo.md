@@ -1,5 +1,31 @@
 ---
 managed-by: Skill(llm-subtask)
+cost-benefit-sweh:
+  timebox:
+    "@value": 10.0
+    rationale: |
+      Heavily-used incubator parent — residual is real, mixed with
+      already-rated child .kb references. Unchecked items: 3 content-
+      type renders (thinking, tool_use, tool_result) ~3h, har-browse
+      has_more=false wait fix ~2h, branch enumeration ~1h, 2
+      refactors (extract chatfs_layout.py, promote provider-plugin-
+      model) ~3h, strategic items (claude-code provider, shared
+      code) tracked as child .kb refs.
+    confidence: tentative
+  benefit-2w:
+    "@value": 2.0
+    rationale: |
+      Active prototype with MVP landed for both chatgpt + claude
+      providers. Content-type renders close last gap to full parity.
+      Refactor unlocks third provider. Real forward momentum.
+    confidence: tentative
+  cost-of-delay-2w:
+    "@value": 0.3
+    rationale: |
+      Active prototyping has high context-decay tax. Each 2w of
+      delay forces re-learning the incubator's many design choices.
+      The "too-many-changes" worktree is observed to still be active.
+    confidence: tentative
 ---
 
 # Tactical Tasks — chatfs-mockup-chatgpt

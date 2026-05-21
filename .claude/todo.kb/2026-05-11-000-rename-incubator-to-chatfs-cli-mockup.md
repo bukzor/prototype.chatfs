@@ -1,5 +1,27 @@
 ---
 managed-by: Skill(llm-subtask)
+cost-benefit-sweh:
+  timebox:
+    "@value": 2.0
+    rationale: |
+      Mechanical git-mv + grep-replace across ~14 references + README
+      reframe. Pending user sign-off on README wording. Low complexity
+      per the file's own assessment.
+    confidence: tentative
+  benefit-2w:
+    "@value": 0.3
+    rationale: |
+      Unblocks multi-provider sketch (the renaming is its precursor).
+      Modest direct benefit, larger second-order benefit if multi-
+      provider work lands shortly after.
+    confidence: tentative
+  cost-of-delay-2w:
+    "@value": 0.1
+    rationale: |
+      The misleading name doesn't break anything; only blocks adding
+      `claude/` alongside `chatgpt/` in the incubator. Low per-2w
+      drag.
+    confidence: tentative
 ---
 
 # Rename incubator to chatfs-cli-mockup

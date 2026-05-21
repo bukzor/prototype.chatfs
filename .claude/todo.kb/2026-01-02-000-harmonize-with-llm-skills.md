@@ -8,6 +8,28 @@ required-reading:
 suggested-reading:
   - ~/.claude/skills/llm-kb/docs/adr/2025-12-03-000-pivot-from-d-to-kb-naming-convention.md
   - ~/.claude/skills/llm-collab/.claude/todo.kb/2025-12-11-000-update-skeleton-to-match-docsdev-pattern-from-git-partial.md
+cost-benefit-sweh:
+  timebox:
+    "@value": 1.0
+    rationale: |
+      Most subtasks already done. Residual: CLAUDE.md depends fix
+      (~10min, include llm-design-kb), reconcile design-rationale.md
+      with current architecture (~30min — child task already done
+      per line 65, success criterion line 81 just needs ticking),
+      tick deferred milestones.kb item. Real residual ~1h.
+    confidence: tentative
+  benefit-2w:
+    "@value": 0.3
+    rationale: |
+      Cleanup — success criteria get checked off, file becomes
+      closeable. Minor in absolute terms.
+    confidence: tentative
+  cost-of-delay-2w:
+    "@value": 0.1
+    rationale: |
+      Nothing blocked; mostly bookkeeping. The 2 upstream items
+      explicitly "don't block chatfs today" per the file.
+    confidence: tentative
 ---
 
 # Harmonize prototype.chatfs with llm-* Skill Conventions

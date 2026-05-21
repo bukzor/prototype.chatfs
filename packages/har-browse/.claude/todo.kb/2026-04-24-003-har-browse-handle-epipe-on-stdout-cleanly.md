@@ -3,6 +3,27 @@ managed-by: Skill(llm-subtask)
 required-reading:
   - packages/har-browse/src/har_browse.mjs
   - packages/har-browse/src/capture.mjs
+cost-benefit-sweh:
+  timebox:
+    "@value": 1.0
+    rationale: |
+      ~10 line fix + test. Bug location identified. Self-classified
+      Complexity: Low. Trivial scope.
+    confidence: tentative
+  benefit-2w:
+    "@value": 0.3
+    rationale: |
+      Cleaner CLI UX — `har-browse | head` and `har-browse |
+      toy_pluck` no longer spam stack traces on early-exit downstream.
+      Quality-of-life fix.
+    confidence: tentative
+  cost-of-delay-2w:
+    "@value": 0.1
+    rationale: |
+      Observed in the wild on chatgpt.com captures. Each 2w of
+      delay = more noise sessions where the stack trace masks real
+      output. Low but flowing.
+    confidence: tentative
 ---
 
 # har-browse: handle EPIPE on stdout cleanly

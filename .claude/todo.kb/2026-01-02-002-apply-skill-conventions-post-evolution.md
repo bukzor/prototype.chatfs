@@ -10,6 +10,29 @@ parent: 2026-01-02-000-harmonize-with-llm-skills.md
 depends-on:
   - ~/.claude/skills/llm.kb/.claude/todo.kb/2026-01-02-000-complete-d-to-kb-rename.md
   - ~/.claude/skills/llm-collab/.claude/todo.kb/2025-12-11-000-update-skeleton-to-match-docsdev-pattern-from-git-partial.md
+cost-benefit-sweh:
+  timebox:
+    "@value": 1.5
+    rationale: |
+      Mostly done — STATUS.md / design.kb / development-plan all
+      landed. Sole residual: create `docs/dev/milestones.kb/`,
+      double-blocked (no milestone content yet, no skill pattern
+      yet). ~1.5h once unblocked: unwrap pattern from llm-collab
+      skeleton + apply here.
+    confidence: tentative
+  benefit-2w:
+    "@value": 0.2
+    rationale: |
+      Negligible in window — work is blocked. Once milestones
+      pattern lands upstream, applying it here is a one-shot.
+    confidence: tentative
+  cost-of-delay-2w:
+    "@value": 0.0
+    rationale: |
+      Hard-blocked on llm-collab skeleton pattern definition and on
+      having concrete milestones to record. Delay costs nothing
+      because work cannot proceed.
+    confidence: confident
 ---
 
 # Apply Skill Conventions Post-Evolution
