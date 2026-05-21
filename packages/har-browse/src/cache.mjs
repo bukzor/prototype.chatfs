@@ -15,6 +15,9 @@ const ROOT = join(
  *   - a string: used directly as a path segment, or
  *   - an object: hive-style `k=v/` segments in the object's insertion
  *     order
+ *
+ * @param {string} namespace
+ * @param {string | Record<string, unknown>} key
  */
 export function cachePath(namespace, key) {
   const segments =
@@ -39,6 +42,7 @@ export function cachePath(namespace, key) {
 }
 
 // ensure a string is filesystem-path semantic-free
+/** @param {unknown} v */
 function escape(v) {
   const s = String(v);
   assert(

@@ -38,7 +38,7 @@ test("popup wireSession is awaited at close (slow CDP attach)", async ({
   session.context.newCDPSession = async (p) => {
     const s = await origNewCDPSession(p);
     const origSend = s.send.bind(s);
-    s.send = async (method, params) => {
+    s.send = async (/** @type {string} */ method, /** @type {any} */ params) => {
       if (method === "Runtime.enable") {
         await new Promise((r) => setTimeout(r, PROBE_DELAY_MS));
       }

@@ -19,6 +19,7 @@ import { createServer } from "node:http";
  * }>}
  */
 export async function startServer() {
+  /** @type {Array<{pathname: string, search: string, time: number}>} */
   const requestLog = [];
   let payloadCount = 0;
   const server = createServer(async (req, res) => {

@@ -49,8 +49,11 @@ export const test = base.extend(/** @type {import('@playwright/test').Fixtures<{
   // Factory: tests call `await startCapture({ url, ... })`. Cleanup
   // (session.close + profile dir rm) happens after the test body.
   startCapture: async ({}, use) => {
+    /** @type {CaptureSession[]} */
     const sessions = [];
+    /** @type {string[]} */
     const profileDirs = [];
+    /** @type {StartCaptureFactory} */
     const factory = async (opts) => {
       const profileDir = mkdtempSync(join(tmpdir(), "har-browse-test-"));
       profileDirs.push(profileDir);

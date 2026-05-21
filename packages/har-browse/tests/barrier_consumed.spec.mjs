@@ -48,10 +48,18 @@ const AWAIT_COUNT = Math.max(1, Math.floor(N * 0.01));
 const THRESHOLDS = [100, 250, 500];
 
 /**
+ * @typedef {import("./_common/testing.mjs").CDPMessage} CDPMessage
+ * @typedef {{ idx: number, consumed: number[] }} Barrier
+ */
+
+/**
  * Two-stage bound: warn (annotation + stderr) if value > warnAt,
  * hard fail via expect() if value > failAt. Use with `failAt = 2 * warnAt`
  * to give a graceful tightening window before the regression becomes a
  * test failure.
+ *
+ * @param {{ name: string, value: number, warnAt: number, failAt: number }} args
+ * @param {import("@playwright/test").TestInfo} testInfo
  */
 function bound({ name, value, warnAt, failAt }, testInfo) {
   if (value > warnAt && value <= failAt) {
@@ -64,7 +72,12 @@ function bound({ name, value, warnAt, failAt }, testInfo) {
   );
 }
 
+/**
+ * @param {CDPMessage[]} messages
+ * @returns {Barrier[]}
+ */
 function findBarriers(messages) {
+  /** @type {Barrier[]} */
   const out = [];
   for (let i = 0; i < messages.length; i++) {
     const m = messages[i];
@@ -84,6 +97,9 @@ function findBarriers(messages) {
 /**
  * Every n in `barrier.consumed` must appear as a /payload RR at a
  * JSONL idx strictly less than `barrier.idx`. Names the missing ones.
+ *
+ * @param {CDPMessage[]} messages
+ * @param {Barrier} barrier
  */
 function assertConsumedPrecede(messages, barrier) {
   const seen = new Set(

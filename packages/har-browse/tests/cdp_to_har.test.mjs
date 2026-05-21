@@ -65,6 +65,8 @@ function fixture() {
  * Run `node BIN` with stdin = one line per item (object → JSON, string →
  * literal); return { code, stdout, stderr }. Empty strings produce blank
  * lines, the regime the blank-line tolerance test exercises.
+ *
+ * @param {Array<object | string>} items
  */
 function runCdpToHar(items) {
   return new Promise((resolve, reject) => {
@@ -87,8 +89,8 @@ test("cdp-to-har includes response body text in HAR entries", async () => {
   const { code, stdout, stderr } = await runCdpToHar(fixture());
   assert.equal(code, 0, `non-zero exit; stderr: ${stderr}`);
   const har = JSON.parse(stdout);
-  const entry = har.log.entries.find((e) =>
-    e.request.url.endsWith("/api"),
+  const entry = har.log.entries.find(
+    (/** @type {any} */ e) => e.request.url.endsWith("/api"),
   );
   assert.ok(entry, "api entry present in HAR");
   assert.equal(entry.response.content.text, '{"hello":"world"}');

@@ -43,8 +43,8 @@ test("Done Capturing button survives navigations", async (
   }
 
   const har = JSON.parse(readFileSync(harPath, "utf-8"));
-  const apiEntries = har.log.entries.filter((e) =>
-    e.request.url.includes("/api/conversation"),
+  const apiEntries = har.log.entries.filter(
+    (/** @type {any} */ e) => e.request.url.includes("/api/conversation"),
   );
   expect(apiEntries.length).toBeGreaterThanOrEqual(1);
 });

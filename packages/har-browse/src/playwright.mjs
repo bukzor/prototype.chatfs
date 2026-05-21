@@ -9,6 +9,10 @@ import * as playwright from "playwright";
 import { userAgent } from "./user-agent.mjs";
 
 export const chromium = {
+  /**
+   * @param {string} profileDir
+   * @param {Parameters<typeof playwright.chromium.launchPersistentContext>[1]} [opts]
+   */
   async launchPersistentContext(profileDir, opts = {}) {
     const headless = opts.headless ?? true;
     return playwright.chromium.launchPersistentContext(profileDir, {
@@ -31,7 +35,7 @@ export const chromium = {
         // manager / translate suppression). The automation itself is
         // CDP-driven and independent of this flag.
         "--enable-automation",
-        ...(opts.ignoreDefaultArgs ?? []),
+        ...(Array.isArray(opts.ignoreDefaultArgs) ? opts.ignoreDefaultArgs : []),
       ],
       args: [
         // Hides navigator.webdriver at the blink level. Empirically

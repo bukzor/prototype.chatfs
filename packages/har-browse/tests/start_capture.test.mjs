@@ -19,6 +19,9 @@ after(() => rmSync(ROOT, { recursive: true, force: true }));
  * Replace chromium.launchPersistentContext for the duration of an awaited
  * call. Restores the original on return — even on throw — so other tests
  * see the real implementation.
+ *
+ * @param {typeof chromium.launchPersistentContext} fake
+ * @param {() => Promise<unknown>} fn
  */
 async function withFakeChromium(fake, fn) {
   const original = chromium.launchPersistentContext;

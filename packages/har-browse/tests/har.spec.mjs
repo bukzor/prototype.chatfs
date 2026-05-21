@@ -27,8 +27,11 @@ test("startCapture → chrome-har produces usable HAR", async ({
     includeTextFromResponseBody: true,
   });
 
+  /** @param {string} suffix */
   const byUrl = (suffix) =>
-    har.log.entries.find((e) => e.request.url.endsWith(suffix));
+    har.log.entries.find(
+      (/** @type {any} */ e) => e.request.url.endsWith(suffix),
+    );
 
   const root = byUrl(`:${toyServer.port}/`);
   expect(root, "root entry").toBeTruthy();

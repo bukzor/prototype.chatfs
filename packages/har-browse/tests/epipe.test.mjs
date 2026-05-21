@@ -23,6 +23,7 @@ const profileDir = join(
   profileName,
 );
 
+/** @type {Awaited<ReturnType<typeof spawnToyServer>> | undefined} */
 let server;
 
 before(async () => {

@@ -29,7 +29,10 @@ const fakeChromium = /** @type {any} */ ({ name: () => "chromium" });
 
 after(() => rmSync(TEST_ROOT, { recursive: true, force: true }));
 
-/** Path the production cachedUserAgent will read for these inputs. */
+/**
+ * Path the production cachedUserAgent will read for these inputs.
+ * @param {{ headless: boolean }} param
+ */
 function expectedCacheFile({ headless }) {
   const { revision } = registry.findExecutable("chromium");
   const dir = cachePath("browser", {

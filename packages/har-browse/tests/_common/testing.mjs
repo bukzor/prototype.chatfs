@@ -1,10 +1,19 @@
 import { expect } from "@playwright/test";
 
 /**
+ * @typedef {{ method: string; params?: any }} CDPMessage
+ * @typedef {{ events: AsyncIterable<CDPMessage> }} CaptureSessionLike
+ */
+
+/**
  * Drain a capture session's events iterator to completion. Equivalent to
  * `for await (const m of session.events) acc.push(m)`.
+ *
+ * @param {CaptureSessionLike} session
+ * @returns {Promise<CDPMessage[]>}
  */
 export async function drainMessages(session) {
+  /** @type {CDPMessage[]} */
   const messages = [];
   for await (const msg of session.events) messages.push(msg);
   return messages;
@@ -13,6 +22,9 @@ export async function drainMessages(session) {
 /**
  * First Network.responseReceived event whose URL contains `urlSubstring`.
  * Returns undefined if no match.
+ *
+ * @param {CDPMessage[]} messages
+ * @param {string} urlSubstring
  */
 export function findRR(messages, urlSubstring) {
   return messages.find(
@@ -22,7 +34,10 @@ export function findRR(messages, urlSubstring) {
   );
 }
 
-/** Decode a `Network.responseReceived` event's body, base64 or utf8. */
+/**
+ * Decode a `Network.responseReceived` event's body, base64 or utf8.
+ * @param {CDPMessage} rr
+ */
 export function decodeRRBody(rr) {
   const r = rr.params?.response;
   if (!r || r.body == null) return null;
@@ -35,6 +50,9 @@ export function decodeRRBody(rr) {
  * Walk `messages` and return one entry per `Network.responseReceived`
  * whose URL contains `pathname` and whose body is present and JSON-parseable.
  * Entries are `{ idx, url, body }`. Bodyless RRs are skipped.
+ *
+ * @param {CDPMessage[]} messages
+ * @param {string} [pathname]
  */
 export function parsedPayloadRRs(messages, pathname = "/payload") {
   const out = [];
@@ -60,7 +78,7 @@ export function parsedPayloadRRs(messages, pathname = "/payload") {
  * captured-vs-served, which only sees fully-missed entries.
  *
  * @param {object} args
- * @param {Array<{method: string, params: object}>} args.events
+ * @param {CDPMessage[]} args.events
  * @param {Array<{pathname: string}>} args.requestLog
  * @param {string} [args.pathname="/payload"]
  */
@@ -84,9 +102,9 @@ export function assertNoGaps({ events, requestLog, pathname = "/payload" }) {
  *   3. body.id round-trips to the URL's `id` param (no body corruption).
  *
  * @param {object} args
- * @param {Array<{method: string, params: object}>} args.messages
+ * @param {CDPMessage[]} args.messages
  * @param {{ requestLog: Array<{pathname: string}> }} args.server
- * @param {string} [args.pathname="/payload"]
+ * @param {string} [args.pathname]
  */
 export function assertCapturedConsistent({ messages, server, pathname = "/payload" }) {
   const rrs = parsedPayloadRRs(messages, pathname);
