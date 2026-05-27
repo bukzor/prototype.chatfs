@@ -1,5 +1,6 @@
 ---
 anthropic-skill-ownership: llm-subtask
+status: done
 ---
 
 # View as directory-symlink; hide captured exhaust under .data/

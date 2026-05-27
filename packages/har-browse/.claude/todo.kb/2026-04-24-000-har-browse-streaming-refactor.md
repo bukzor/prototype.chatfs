@@ -6,6 +6,7 @@ required-reading:
   - packages/har-browse/src/har_browse.mjs
   - packages/har-browse/src/playwright.mjs
   - packages/har-browse/src/playwright/har.mjs
+status: done
 ---
 
 # har-browse streaming refactor

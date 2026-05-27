@@ -1,5 +1,6 @@
 ---
 managed-by: Skill(llm-subtask)
+status: done
 ---
 
 # Drain too-many-changes freeze

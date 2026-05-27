@@ -1,5 +1,21 @@
 ---
 anthropic-skill-ownership: llm-subtask
+cost-benefit-sweh:
+  timebox:
+    '@value': 4
+    confidence: tentative
+    rationale: |
+      Third provider; local-files datasource (no BB1). Design open questions: locator shape, per-turn richness for tool calls/sub-agents/hooks, provider naming. Implementation after design: extractor reading ~/.claude/, locator parser, noun-verb extension. ~3-5 SWEh once unblocked.
+  benefit-2w:
+    '@value': 1
+    confidence: tentative
+    rationale: |
+      Third provider unlocks rule-of-three signal for the shared-code refactor (sibling todo). Within 2w mostly design clarity not landing — claude.ai parity is the trigger and not yet done.
+  cost-of-delay-2w:
+    '@value': 0.1
+    confidence: tentative
+    rationale: |
+      Gated on claude.ai parity. Each 2w of delay defers the rule-of-three test; small option value on earlier shared-lib design clarity.
 ---
 
 # claude-code as next provider (datasource `~/.claude`)

@@ -1,3 +1,6 @@
+---
+status: done
+---
 <anthropic-skill-ownership llm-subtask />
 
 ---

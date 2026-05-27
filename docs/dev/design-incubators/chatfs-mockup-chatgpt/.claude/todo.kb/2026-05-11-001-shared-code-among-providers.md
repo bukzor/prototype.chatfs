@@ -1,5 +1,16 @@
 ---
 anthropic-skill-ownership: llm-subtask
+cost-benefit-sweh:
+  timebox:
+    '@value': 2
+    confidence: tentative
+    rationale: |
+      Extract shared lib (chatfs_layout.py initial home, possibly promote to packages/chatfs-core/). Touch each provider's scripts; verify end-to-end against all providers. ~1.5-2.5 SWEh once triggered. Tactical capture in todo.md parity ladder already encodes the immediate moves.
+  benefit-2w:
+    '@value': 0.5
+    confidence: tentative
+    rationale: |
+      Strategic decision file; cross-provider abstraction question. Direct 2w value is design clarity (when/where), not code landing.
 ---
 
 # shared code among providers

@@ -1,5 +1,6 @@
 ---
 anthropic-skill-ownership: llm-subtask
+status: done
 ---
 
 # Plan and create noun-verb model sub-kb
