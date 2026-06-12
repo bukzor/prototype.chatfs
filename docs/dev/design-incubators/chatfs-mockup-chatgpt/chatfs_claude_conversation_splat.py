@@ -40,16 +40,20 @@ def fenced_json(value: object) -> str:
     return "```json\n" + json.dumps(value, indent=2, ensure_ascii=False) + "\n```"
 
 
-def render_details(kind: str, emoji: str, label: str, body: str) -> str:
+def render_details(
+    kind: str, icon: str, label: str, body: str, tool: str | None = None
+) -> str:
     """Wrap non-answer content in a collapsible `<details>`, tagged for grep.
 
     `type="{kind}"` makes each block kind searchable (e.g.
-    `grep 'type="tool_call"'`). `<details>` (vs a blockquote) keeps the
-    content collapsed-by-default and avoids colliding with the render
-    step's blockquote-as-fork-depth convention.
+    `grep 'type="tool_call"'`); `tool="{tool}"` further distinguishes
+    tool calls by name. `<details>` (vs a blockquote) keeps the content
+    collapsed-by-default and avoids colliding with the render step's
+    blockquote-as-fork-depth convention.
     """
+    tool_attr = f' tool="{tool}"' if tool else ""
     return (
-        f'<details type="{kind}"><summary>{emoji} {label}</summary>'
+        f'<details type="{kind}"{tool_attr}><summary>{icon} {label}</summary>'
         f"\n\n{body}\n\n</details>"
     )
 
@@ -69,23 +73,25 @@ def render_result_content(content: object) -> str:
     through — and falls back to JSON for anything unrecognized rather
     than dropping it.
     """
-    if isinstance(content, str):
-        return content.strip()
-    if not isinstance(content, list):
-        return fenced_json(content)
-    lines: list[str] = []
-    for item in content:
-        if not isinstance(item, dict):
-            lines.append(str(item))
-        elif item.get("text"):
-            lines.append(item["text"].strip())
-        elif item.get("title"):
-            url = item.get("url")
-            title = item["title"]
-            lines.append(f"- [{title}]({url})" if url else f"- {title}")
-        else:
-            lines.append(fenced_json(item))
-    return "\n".join(lines)
+    match content:
+        case str():
+            return content.strip()
+        case list():
+            lines: list[str] = []
+            for item in content:
+                if not isinstance(item, dict):
+                    lines.append(str(item))
+                elif item.get("text"):
+                    lines.append(item["text"].strip())
+                elif item.get("title"):
+                    url = item.get("url")
+                    title = item["title"]
+                    lines.append(f"- [{title}]({url})" if url else f"- {title}")
+                else:
+                    lines.append(fenced_json(item))
+            return "\n".join(lines)
+        case _:
+            return fenced_json(content)
 
 
 def render_tool_call(use: dict, result: dict) -> str:
@@ -93,16 +99,32 @@ def render_tool_call(use: dict, result: dict) -> str:
 
     Every tool_use is immediately followed by the tool_result for the
     same call (asserted by the caller), so they read better fused: one
-    disclosure showing the request above its result.
+    disclosure tagged `tool="<name>"`. web_search/web_fetch get a
+    bespoke icon and a summary built from their single argument, with
+    the request omitted; other tools show the request JSON above the
+    result.
     """
-    label = f"{use['name']} — {use['message']}"
-    if result["is_error"]:
-        label += " — ERROR"
-    body = (
-        f"**Request:**\n\n{fenced_json(use['input'])}\n\n"
-        f"**Result:**\n\n{render_result_content(result['content'])}"
-    )
-    return render_details("tool_call", "🔧", label, body)
+    name = use["name"]
+    tool_input = use["input"]
+    result_md = render_result_content(result["content"])
+    error = " — ERROR" if result["is_error"] else ""
+
+    match name:
+        case "web_search":
+            assert set(tool_input) == {"query"}, tool_input
+            label = tool_input["query"] + error
+            return render_details("tool_call", "🔍", label, result_md, tool=name)
+        case "web_fetch":
+            assert set(tool_input) == {"url"}, tool_input
+            label = tool_input["url"] + error
+            return render_details("tool_call", "🕷️", label, result_md, tool=name)
+        case _:
+            label = f"{name} — {use['message']}" + error
+            body = (
+                f"**Request:**\n\n{fenced_json(tool_input)}\n\n"
+                f"**Result:**\n\n{result_md}"
+            )
+            return render_details("tool_call", "🛠️", label, body, tool=name)
 
 
 def extract_text(content_blocks: list[dict]) -> str:
