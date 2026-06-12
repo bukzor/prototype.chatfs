@@ -8,11 +8,12 @@ Output: `<src>.splat/messages/<basename>.{json,md}` per message in
 `chat_messages`. The .json carries the raw message object; the .md
 carries the rendered content.
 
-Scope: `text` blocks pass through; `thinking`, `tool_use`, and
-`tool_result` blocks render as collapsible `<details type="...">`
-sections (the `type` attribute makes each kind greppable). The raw
-block stays in the .json regardless. No `conversations/`
-branch-symlinks yet (next ladder rung).
+Scope: `text` blocks pass through; `thinking` and each
+`tool_use`+`tool_result` pair render as collapsible
+`<details type="...">` sections (the `type` attribute makes each kind
+greppable). Unknown block types raise. The raw block stays in the
+.json regardless. No `conversations/` branch-symlinks yet (next ladder
+rung).
 """
 import json
 import shutil
@@ -36,14 +37,14 @@ def format_timestamp(created_at: str) -> str:
 
 
 def fenced_json(value: object) -> str:
-    return "```json\n" + json.dumps(value, indent=2) + "\n```"
+    return "```json\n" + json.dumps(value, indent=2, ensure_ascii=False) + "\n```"
 
 
 def render_details(kind: str, emoji: str, label: str, body: str) -> str:
     """Wrap non-answer content in a collapsible `<details>`, tagged for grep.
 
     `type="{kind}"` makes each block kind searchable (e.g.
-    `grep 'type="tool_use"'`). `<details>` (vs a blockquote) keeps the
+    `grep 'type="tool_call"'`). `<details>` (vs a blockquote) keeps the
     content collapsed-by-default and avoids colliding with the render
     step's blockquote-as-fork-depth convention.
     """
@@ -55,25 +56,18 @@ def render_details(kind: str, emoji: str, label: str, body: str) -> str:
 
 def render_thinking(block: dict) -> str:
     """Render a `thinking` block. Claude's own `summaries` label the disclosure."""
-    label = "; ".join(
-        s["summary"] for s in block.get("summaries", []) if s.get("summary")
-    )
+    label = "; ".join(s["summary"] for s in block["summaries"])
     return render_details("thinking", "💭", label or "Thinking", block["thinking"].strip())
-
-
-def render_tool_use(block: dict) -> str:
-    """Render a `tool_use` block: friendly `message` as label, input as JSON."""
-    name = block.get("name", "tool")
-    message = block.get("message")
-    label = f"{name} — {message}" if message else name
-    return render_details("tool_use", "🔧", label, fenced_json(block.get("input", {})))
 
 
 def render_result_content(content: object) -> str:
     """Render a tool_result `content` payload to markdown.
 
-    Knowledge items (web search/fetch) become a link list; text items
-    pass through; anything else falls back to JSON for fidelity.
+    Tool result schemas are open-ended (each tool returns its own item
+    shape), so this dispatches on the item keys it knows — knowledge
+    items (web search/fetch) become a link list, text items pass
+    through — and falls back to JSON for anything unrecognized rather
+    than dropping it.
     """
     if isinstance(content, str):
         return content.strip()
@@ -94,31 +88,52 @@ def render_result_content(content: object) -> str:
     return "\n".join(lines)
 
 
-def render_tool_result(block: dict) -> str:
-    """Render a `tool_result` block; flag errors in the label."""
-    name = block.get("name", "tool")
-    label = f"{name} result" + (" — ERROR" if block.get("is_error") else "")
-    return render_details("tool_result", "📄", label, render_result_content(block.get("content")))
+def render_tool_call(use: dict, result: dict) -> str:
+    """Render a `tool_use` + its `tool_result` as one collapsible pair.
+
+    Every tool_use is immediately followed by the tool_result for the
+    same call (asserted by the caller), so they read better fused: one
+    disclosure showing the request above its result.
+    """
+    label = f"{use['name']} — {use['message']}"
+    if result["is_error"]:
+        label += " — ERROR"
+    body = (
+        f"**Request:**\n\n{fenced_json(use['input'])}\n\n"
+        f"**Result:**\n\n{render_result_content(result['content'])}"
+    )
+    return render_details("tool_call", "🔧", label, body)
 
 
 def extract_text(content_blocks: list[dict]) -> str:
     """Render content blocks to markdown, in document order.
 
-    `text` passes through; `thinking`/`tool_use`/`tool_result` become
-    collapsible `<details>`. Order is preserved so reasoning and tool
-    calls sit where they happened, around the answer they produced.
+    `text` passes through; `thinking` and each tool_use+tool_result
+    pair become collapsible `<details>`. Order is preserved so
+    reasoning and tool calls sit where they happened, around the answer
+    they produced. Unknown block types raise rather than vanish.
     """
     pieces: list[str] = []
-    for b in content_blocks:
-        block_type = b.get("type")
-        if block_type == "text" and b.get("text"):
-            pieces.append(b["text"])
-        elif block_type == "thinking" and b.get("thinking"):
-            pieces.append(render_thinking(b))
+    i = 0
+    while i < len(content_blocks):
+        block = content_blocks[i]
+        block_type = block["type"]
+        if block_type == "text":
+            if block["text"]:  # empty text blocks occur; skip them
+                pieces.append(block["text"])
+        elif block_type == "thinking":
+            pieces.append(render_thinking(block))
         elif block_type == "tool_use":
-            pieces.append(render_tool_use(b))
+            result = content_blocks[i + 1]  # each tool_use is paired next
+            assert result["type"] == "tool_result", (block, result)
+            assert result["tool_use_id"] == block["id"], (block, result)
+            pieces.append(render_tool_call(block, result))
+            i += 1  # consume the paired tool_result
         elif block_type == "tool_result":
-            pieces.append(render_tool_result(b))
+            raise AssertionError(("tool_result without preceding tool_use", block))
+        else:
+            raise ValueError(f"unexpected content type: {block_type!r}")
+        i += 1
     return "\n\n".join(pieces)
 
 
@@ -147,7 +162,7 @@ def main() -> None:
     for msg in chat_messages:
         basename = basename_for(msg)
         (messages_dir / f"{basename}.json").write_text(
-            json.dumps(msg, indent=2) + "\n"
+            json.dumps(msg, indent=2, ensure_ascii=False) + "\n"
         )
         text = extract_text(msg["content"])
         if text:
