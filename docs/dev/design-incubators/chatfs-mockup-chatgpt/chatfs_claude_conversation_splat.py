@@ -6,11 +6,12 @@ Input: path to conversation.json (the plucked
 
 Output: `<src>.splat/messages/<basename>.{json,md}` per message in
 `chat_messages`. The .json carries the raw message object; the .md
-carries the concatenated text-block content.
+carries the rendered text and thinking content.
 
-MVP scope: text blocks only — `thinking`, `tool_use`, `tool_result`
-content blocks are skipped from the .md but preserved in the .json.
-No `conversations/` branch-symlinks yet (next ladder rung).
+Scope: `text` and `thinking` blocks render to the .md (thinking as a
+collapsible `<details>`); `tool_use`/`tool_result` blocks are skipped
+from the .md but preserved in the .json. No `conversations/`
+branch-symlinks yet (next ladder rung).
 """
 import json
 import shutil
@@ -33,13 +34,36 @@ def format_timestamp(created_at: str) -> str:
     return dt.strftime(f"%Y-%m-%dT%H:%M:%S,{fractional}%z")
 
 
-def extract_text(content_blocks: list[dict]) -> str:
-    """Concatenate `text` from `text`-typed content blocks. MVP scope."""
-    return "\n\n".join(
-        b["text"]
-        for b in content_blocks
-        if b.get("type") == "text" and b.get("text")
+def render_thinking(block: dict) -> str:
+    """Render a `thinking` block as a collapsible `<details>`.
+
+    Claude's own `summaries[].summary` headers label the disclosure, so
+    the collapsed view stays scannable; the raw `thinking` text is the
+    body. `<details>` (vs a blockquote) avoids colliding with the render
+    step's blockquote-as-fork-depth convention.
+    """
+    label = "; ".join(
+        s["summary"] for s in block.get("summaries", []) if s.get("summary")
     )
+    text = block["thinking"].strip()
+    return f"<details><summary>💭 {label or 'Thinking'}</summary>\n\n{text}\n\n</details>"
+
+
+def extract_text(content_blocks: list[dict]) -> str:
+    """Render `text` and `thinking` blocks to markdown, in document order.
+
+    `text` blocks pass through; `thinking` blocks become collapsible
+    `<details>` sections. Order is preserved so reasoning precedes the
+    answer it produced. `tool_use`/`tool_result` remain out of scope.
+    """
+    pieces: list[str] = []
+    for b in content_blocks:
+        block_type = b.get("type")
+        if block_type == "text" and b.get("text"):
+            pieces.append(b["text"])
+        elif block_type == "thinking" and b.get("thinking"):
+            pieces.append(render_thinking(b))
+    return "\n\n".join(pieces)
 
 
 def basename_for(msg: dict) -> str:
@@ -63,7 +87,7 @@ def main() -> None:
         shutil.rmtree(base_dir)
     messages_dir.mkdir(parents=True)
 
-    text_count = 0
+    rendered_count = 0
     for msg in chat_messages:
         basename = basename_for(msg)
         (messages_dir / f"{basename}.json").write_text(
@@ -72,11 +96,11 @@ def main() -> None:
         text = extract_text(msg["content"])
         if text:
             (messages_dir / f"{basename}.md").write_text(text + "\n")
-            text_count += 1
+            rendered_count += 1
 
     print(
-        f"wrote {len(chat_messages)} message(s), {text_count} with text content, "
-        f"to {base_dir}",
+        f"wrote {len(chat_messages)} message(s), {rendered_count} with rendered "
+        f"content, to {base_dir}",
         file=sys.stderr,
     )
 
