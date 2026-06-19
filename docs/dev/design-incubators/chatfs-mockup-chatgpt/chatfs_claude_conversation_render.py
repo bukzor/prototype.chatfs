@@ -46,7 +46,6 @@ class Turn:
     """A renderable turn: its heading fields plus body. Keyed by uuid in the
     `turns` map, whose keyset is exactly the set of emittable turns."""
 
-    uuid: str
     sender: str
     time: str
     link: str
@@ -61,14 +60,12 @@ def build_children(chat_messages: list[ChatMessage]) -> dict[str, list[str]]:
 
 
 def find_root(chat_messages: list[ChatMessage]) -> str:
-    """Return the virtual root: the shared parent of all top-level messages.
+    """Return the virtual root: the all-zero UUID sentinel that every
+    top-level message names as parent.
 
-    Claude uses an all-zero UUID sentinel as the root-parent. Editing the
-    first message re-parents each version to that sentinel, so a conversation
-    can have several sibling roots — all naming the same sentinel as parent.
-    We return the sentinel itself. With one first message it stays unrendered
-    (`number_turns` finds no turn for it and descends into its child); with
-    several, `main` materializes it as turn `000 · origin` so the fork shows.
+    Editing the first message re-parents each version to the same sentinel,
+    so a conversation can have several top-level siblings but always exactly
+    one sentinel.
     """
     uuids = {m["uuid"] for m in chat_messages}
     root_parents = {
@@ -180,10 +177,8 @@ class Renderer:
 
     def replies(self, node: str) -> str:
         """Footer item at a fork: all replies in render order, the live one last
-        and marked `←live` (liveness shouldn't rely on the unstated last-is-live
-        convention). Sits at the section's end, directly above the descent it
-        describes — the superseded replies render below as quoted asides; the
-        live one continues the conversation at this turn's depth."""
+        and explicitly marked `←live` — liveness shouldn't rely on the unstated
+        last-is-live convention."""
         kids = self.children.get(node, [])
         if len(kids) < 2:
             return ""
@@ -196,11 +191,10 @@ class Renderer:
     def version_status(self, node: str) -> str:
         """Header item placing this version within its fork — empty when the
         parent isn't a fork. The two cases are converses, and a node is exactly
-        one of them: on a superseded sibling, `superseded by: <winner>` — a
-        stop-reading-here pointer, one hop to the version the conversation
-        continued with; on the winner, `prior revisions: <priors>` — the
-        revision chain in one canonical place, landing right after the
-        superseded asides it names."""
+        one of them: a superseded sibling gets `superseded by: <winner>`, a
+        stop-reading-here pointer to the version the conversation continued
+        with; the winner gets `prior revisions: <priors>`, the revision chain
+        in one canonical place."""
         parent = self.parent_of[node]
         kids = self.children.get(parent, [])
         if len(kids) < 2:
@@ -256,34 +250,23 @@ class Renderer:
         return "".join(out)
 
 
-def read_message_index(messages_dir: Path) -> dict[str, tuple[str, str, str]]:
-    """uuid → (stem, ts, sender), parsed from `<iso-ts>.<sender>.<uuid>.json`."""
-    index: dict[str, tuple[str, str, str]] = {}
+def load_turns(messages_dir: Path) -> dict[str, Turn]:
+    """uuid → its Turn, for every message that rendered to a non-empty body.
+
+    The time field keeps the date, not just the clock: conversations span days."""
+    turns: dict[str, Turn] = {}
     for entry in messages_dir.iterdir():
         if entry.suffix != ".json":
             continue
         parts = entry.stem.split(".")
-        if len(parts) == 3:
-            ts, sender, uuid = parts
-            index[uuid] = (entry.stem, ts, sender)
-    return index
-
-
-def load_turns(
-    messages_dir: Path, index: Mapping[str, tuple[str, str, str]]
-) -> dict[str, Turn]:
-    """Read each rendered turn-file. The returned map's keyset is exactly the
-    emittable turns (those with a `.md` body on disk)."""
-    turns: dict[str, Turn] = {}
-    for uuid, (stem, ts, sender) in index.items():
-        md_path = messages_dir / f"{stem}.md"
+        if len(parts) != 3:
+            continue
+        ts, sender, uuid = parts
+        md_path = messages_dir / f"{entry.stem}.md"
         if not md_path.exists():
             continue
-        # ISO date+time, sliced from `2026-05-29T09:21:56,716…`. Conversations
-        # span days, so the heading carries the full date.
-        when = ts[:19]
         turns[uuid] = Turn(
-            uuid, sender, when, f"messages/{stem}.md", md_path.read_text().rstrip()
+            sender, ts[:19], f"messages/{entry.stem}.md", md_path.read_text().rstrip()
         )
     return turns
 
@@ -311,8 +294,7 @@ def main() -> None:
         for nid in [root, *by_uuid]
     }
 
-    index = read_message_index(messages_dir)
-    turns = load_turns(messages_dir, index)
+    turns = load_turns(messages_dir)
     # Every conversation message must have a rendered body on disk — a missing
     # one would silently vanish from numbering, re:-chains, and reply lists.
     assert set(turns) == set(by_uuid), set(turns) ^ set(by_uuid)
@@ -323,7 +305,6 @@ def main() -> None:
     # With a single child there is no fork, so origin would be noise — skip it.
     if len(children.get(root, [])) > 1:
         turns[root] = Turn(
-            root,
             "origin",
             "0000-00-00T00:00:00",
             f"{DATA_DIR_NAME}/conversation.json",
