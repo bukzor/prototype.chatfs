@@ -5,6 +5,7 @@ Mirrors chatfs_chatgpt_layout.py with claude-shaped item keys
 get factored into a provider-agnostic core once both pipelines run
 end-to-end.
 """
+
 import json
 import os
 import subprocess
@@ -51,7 +52,7 @@ def data_dir_for(uuid: str, root: Path) -> Path:
     return chat_dir_for(uuid, root) / DATA_DIR_NAME
 
 
-def resolve_chat_dir(arg: str | os.PathLike) -> Path:
+def resolve_chat_dir(arg: str | os.PathLike[str]) -> Path:
     p = Path(arg).resolve()
     if not p.is_dir():
         p = p.parent
@@ -91,11 +92,11 @@ def capture(url: str, chat_dir: Path) -> Path:
 
     print(f"Capturing {url} → {cdp} ...", file=sys.stderr)
     with cdp.open("wb") as f:
-        subprocess.run(["har-browse", url], stdout=f, check=True)
+        _ = subprocess.run(["har-browse", url], stdout=f, check=True)
 
     print(f"Plucking conversation → {conversation} ...", file=sys.stderr)
     with cdp.open("rb") as src, conversation.open("wb") as dst:
-        subprocess.run([str(CONVERSATION_PLUCK)], stdin=src, stdout=dst, check=True)
+        _ = subprocess.run([str(CONVERSATION_PLUCK)], stdin=src, stdout=dst, check=True)
 
     return data_dir
 
@@ -105,7 +106,7 @@ def place_meta(item: IndexItem, root: Path) -> Path:
     chat_dir = chat_dir_for(uuid, root)
     data_dir = chat_dir / DATA_DIR_NAME
     data_dir.mkdir(parents=True, exist_ok=True)
-    (data_dir / "meta.json").write_text(json.dumps(item, indent=2) + "\n")
+    _ = (data_dir / "meta.json").write_text(json.dumps(item, indent=2) + "\n")
 
     _purge_view_symlinks(uuid, root)
 
