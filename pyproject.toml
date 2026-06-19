@@ -2,11 +2,13 @@
 name = "chatfs-workspace"
 version = "0"
 description = "Top-level workspace for chatfs development; depends on chatfs for default install"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 dependencies = ["chatfs"]
 
 [dependency-groups]
-dev = ["bukzor-chatgpt-export[dev]"]
+dev = [
+    "bukzor-chatgpt-export[dev]",
+]
 
 [tool.uv]
 package = false
