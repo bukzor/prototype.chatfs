@@ -142,152 +142,118 @@ def number_turns(
     return order, numbering
 
 
-def format_number(numbering: Mapping[str, tuple[int | None, int]], node: str) -> str:
-    """`head/seq`, dropping the prefix when the turn is its own branch head — so
-    the live branch and every branch head render bare (`034`, not `034/034`)."""
-    head, seq = numbering[node]
-    prefix = "" if head in (None, seq) else f"{head:03d}/"
-    return f"{prefix}{seq:03d}"
+def format_subtitle(item: str) -> str:
+    """A metadata line, italic so it can't be mistaken for message prose.
+    Bare *italics* rather than <sub>: the primary consumers are LLMs and
+    plaintext editors, to which <sub> tags are token cost and visual clutter;
+    in-browser smallness would serve only the third-ranked consumer. Same
+    reasoning that kept anchors out."""
+    return f"*{item}*" if item else ""
 
 
-def format_backlink(
-    node: str,
-    prev_seq: int | None,
-    numbering: Mapping[str, tuple[int | None, int]],
-    parent_of: Mapping[str, str],
-) -> str:
-    """` (re: parent)` when the parent isn't the turn just above."""
-    parent = parent_of[node]
-    if parent in numbering and numbering[parent][1] != prev_seq:
-        return f" (re: {format_number(numbering, parent)})"
-    return ""
+@dataclass(frozen=True)
+class Renderer:
+    """Formats fork facts and assembles the markdown. Holds the conversation's
+    structure maps so each formatter takes just a `node`, rather than threading
+    `numbering`/`children`/`primary_of`/`parent_of` through every signature."""
 
+    numbering: Mapping[str, tuple[int | None, int]]
+    children: Mapping[str, list[str]]
+    primary_of: Mapping[str, str | None]
+    parent_of: Mapping[str, str]
+    turns: Mapping[str, Turn]
 
-def format_subtitle(*items: str) -> str:
-    """One metadata line from the non-empty items: italic, so it can't be
-    mistaken for message prose. Bare *italics* rather than <sub>: the primary
-    consumers are LLMs and plaintext editors, to which <sub> tags are token
-    cost and visual clutter; in-browser smallness would serve only the
-    third-ranked consumer. Same reasoning that kept anchors out."""
-    joined = " · ".join(i for i in items if i)
-    return f"*{joined}*" if joined else ""
+    def number(self, node: str) -> str:
+        """`head/seq`, dropping the prefix when the turn is its own branch head —
+        so the live branch and every branch head render bare (`034`, not
+        `034/034`)."""
+        head, seq = self.numbering[node]
+        prefix = "" if head in (None, seq) else f"{head:03d}/"
+        return f"{prefix}{seq:03d}"
 
-
-def format_replies(
-    node: str,
-    numbering: Mapping[str, tuple[int | None, int]],
-    children: Mapping[str, list[str]],
-    primary_of: Mapping[str, str | None],
-) -> str:
-    """Footer item at a fork: all replies in render order, the live one last
-    and marked `←live` (liveness shouldn't rely on the unstated last-is-live
-    convention). Sits at the section's end, directly above the descent it
-    describes — the superseded replies render below as quoted asides; the live
-    one continues the conversation at this turn's depth."""
-    kids = children.get(node, [])
-    if len(kids) < 2:
+    def backlink(self, node: str, prev_seq: int | None) -> str:
+        """` (re: parent)` when the parent isn't the turn just above."""
+        parent = self.parent_of[node]
+        if parent in self.numbering and self.numbering[parent][1] != prev_seq:
+            return f" (re: {self.number(parent)})"
         return ""
-    primary = primary_of[node]
-    assert primary is not None, node
-    dead = [format_number(numbering, c) for c in kids if c != primary]
-    live = f"{format_number(numbering, primary)} ←live"
-    return f"replies: {', '.join([*dead, live])}"
 
+    def replies(self, node: str) -> str:
+        """Footer item at a fork: all replies in render order, the live one last
+        and marked `←live` (liveness shouldn't rely on the unstated last-is-live
+        convention). Sits at the section's end, directly above the descent it
+        describes — the superseded replies render below as quoted asides; the
+        live one continues the conversation at this turn's depth."""
+        kids = self.children.get(node, [])
+        if len(kids) < 2:
+            return ""
+        primary = self.primary_of[node]
+        assert primary is not None, node
+        dead = [self.number(c) for c in kids if c != primary]
+        live = f"{self.number(primary)} ←live"
+        return f"replies: {', '.join([*dead, live])}"
 
-def format_supersession(
-    node: str,
-    numbering: Mapping[str, tuple[int | None, int]],
-    children: Mapping[str, list[str]],
-    primary_of: Mapping[str, str | None],
-    parent_of: Mapping[str, str],
-) -> str:
-    """Header item on a superseded fork sibling: names the version the
-    conversation continued with — one hop to the winner from any excerpt.
-    A stop-reading-here warning, so it precedes the body. The winner's
-    converse view is format_priors."""
-    parent = parent_of[node]
-    kids = children.get(parent, [])
-    if len(kids) < 2:
-        return ""
-    primary = primary_of[parent]
-    assert primary is not None, node
-    if node == primary:
-        return ""
-    return f"superseded by: {format_number(numbering, primary)}"
+    def version_status(self, node: str) -> str:
+        """Header item placing this version within its fork — empty when the
+        parent isn't a fork. The two cases are converses, and a node is exactly
+        one of them: on a superseded sibling, `superseded by: <winner>` — a
+        stop-reading-here pointer, one hop to the version the conversation
+        continued with; on the winner, `prior revisions: <priors>` — the
+        revision chain in one canonical place, landing right after the
+        superseded asides it names."""
+        parent = self.parent_of[node]
+        kids = self.children.get(parent, [])
+        if len(kids) < 2:
+            return ""
+        primary = self.primary_of[parent]
+        assert primary is not None, node
+        if node != primary:
+            return f"superseded by: {self.number(primary)}"
+        priors = ", ".join(self.number(c) for c in kids if c != primary)
+        return f"prior revisions: {priors}"
 
-
-def format_priors(
-    node: str,
-    numbering: Mapping[str, tuple[int | None, int]],
-    children: Mapping[str, list[str]],
-    primary_of: Mapping[str, str | None],
-    parent_of: Mapping[str, str],
-) -> str:
-    """Header item on a fork winner: its superseded priors in succession
-    order, so the revision chain stays recoverable in one canonical place.
-    The winner renders just below its superseded asides, so this line lands
-    right after the turns it names, explaining them on the way out."""
-    parent = parent_of[node]
-    kids = children.get(parent, [])
-    if len(kids) < 2:
-        return ""
-    primary = primary_of[parent]
-    assert primary is not None, node
-    if node != primary:
-        return ""
-    priors = ", ".join(format_number(numbering, c) for c in kids if c != primary)
-    return f"prior revisions: {priors}"
-
-
-def render_markdown(
-    order: list[tuple[str, int]],
-    numbering: Mapping[str, tuple[int | None, int]],
-    children: Mapping[str, list[str]],
-    primary_of: Mapping[str, str | None],
-    parent_of: Mapping[str, str],
-    turns: Mapping[str, Turn],
-) -> str:
-    out: list[str] = []
-    prev_depth = -1
-    prev_seq: int | None = None
-    for n, (node, depth) in enumerate(order):
-        turn = turns[node]
-        number = format_number(numbering, node)
-        title = f"# [{number} · {turn.sender} · {turn.time}]({turn.link})"
-        title += format_backlink(node, prev_seq, numbering, parent_of)
-        header = format_subtitle(
-            format_supersession(node, numbering, children, primary_of, parent_of),
-            format_priors(node, numbering, children, primary_of, parent_of),
+    def section(self, node: str, depth: int, prev_seq: int | None) -> str:
+        """The turn's full markdown block, blockquote-indented to its depth."""
+        turn = self.turns[node]
+        title = f"# [{self.number(node)} · {turn.sender} · {turn.time}]({turn.link})"
+        title += self.backlink(node, prev_seq)
+        parts = (
+            title,
+            format_subtitle(self.version_status(node)),
+            turn.body,
+            format_subtitle(self.replies(node)),
         )
-        footer = format_subtitle(
-            format_replies(node, numbering, children, primary_of),
-        )
-        section = (
-            "\n\n".join(s for s in (title, header, turn.body, footer) if s) + "\n"
-        )
-        if depth > 0:
-            prefix = "> " * depth
-            section = "".join(
-                (prefix + line).rstrip() + "\n" for line in section.splitlines()
-            )
-        if n > 0:
-            if depth > 0 and prev_depth == depth:
-                parent = parent_of[node]
-                if parent not in numbering or numbering[parent][1] != prev_seq:
-                    # new sibling branch: divide at the *parent's* depth, which
-                    # closes the previous sibling's blockquote — the two render
-                    # as separate islands, not one quote with a rule inside —
-                    # and can't be confused with a body hr at the turns' depth
-                    outer_blank = ("> " * (depth - 1)).rstrip() + "\n"
-                    out.append(outer_blank + ("> " * (depth - 1)) + "---\n" + outer_blank)
-                else:
-                    out.append(("> " * depth).rstrip() + "\n")
-            else:
-                out.append("\n")
-        out.append(section)
-        prev_depth = depth
-        prev_seq = numbering[node][1]
-    return "".join(out)
+        body = "\n\n".join(s for s in parts if s) + "\n"
+        if depth == 0:
+            return body
+        prefix = "> " * depth
+        return "".join((prefix + line).rstrip() + "\n" for line in body.splitlines())
+
+    def divider(self, node: str, depth: int, prev_depth: int, prev_seq: int | None) -> str:
+        """The blank/rule that separates this section from the previous one."""
+        if depth == 0 or prev_depth != depth:
+            return "\n"
+        parent = self.parent_of[node]
+        if parent in self.numbering and self.numbering[parent][1] == prev_seq:
+            return ("> " * depth).rstrip() + "\n"
+        # new sibling branch: divide at the *parent's* depth, which closes the
+        # previous sibling's blockquote — the two render as separate islands,
+        # not one quote with a rule inside — and can't be confused with a body
+        # hr at the turns' depth
+        outer_blank = ("> " * (depth - 1)).rstrip() + "\n"
+        return outer_blank + ("> " * (depth - 1)) + "---\n" + outer_blank
+
+    def render(self, order: list[tuple[str, int]]) -> str:
+        out: list[str] = []
+        prev_depth = -1
+        prev_seq: int | None = None
+        for n, (node, depth) in enumerate(order):
+            if n > 0:
+                out.append(self.divider(node, depth, prev_depth, prev_seq))
+            out.append(self.section(node, depth, prev_seq))
+            prev_depth = depth
+            prev_seq = self.numbering[node][1]
+        return "".join(out)
 
 
 def read_message_index(messages_dir: Path) -> dict[str, tuple[str, str, str]]:
@@ -366,9 +332,8 @@ def main() -> None:
         parent_of[root] = ""  # before the beginning: never a uuid, never numbered
 
     order, numbering = number_turns(root, children, primary_of, turns)
-    _ = sys.stdout.write(
-        render_markdown(order, numbering, children, primary_of, parent_of, turns)
-    )
+    renderer = Renderer(numbering, children, primary_of, parent_of, turns)
+    _ = sys.stdout.write(renderer.render(order))
 
     print(f"Rendered {len(order)} turn(s).", file=sys.stderr)
 
