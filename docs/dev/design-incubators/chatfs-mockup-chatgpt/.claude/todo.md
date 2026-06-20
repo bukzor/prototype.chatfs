@@ -24,7 +24,8 @@ cost-benefit-sweh:
     rationale: |
       Active prototyping has high context-decay tax. Each 2w of
       delay forces re-learning the incubator's many design choices.
-      The "too-many-changes" worktree is observed to still be active.
+      (The "too-many-changes" freeze was drained 2026-05-19 —
+      archive/too-many-changes; worktree removed.)
     confidence: tentative
 ---
 
