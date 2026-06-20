@@ -46,6 +46,9 @@ Scope: this incubator only. Project-wide tactical work lives in
       remaining: the `chatfs_chatgpt_*.py` siblings and both `*_render.py` (e.g.
       `render.py:primary_child`). Also recheck for fail-soft `.get()` guards and
       `ensure_ascii` while there.
+- [ ] [AI Studio provider — parity ladder](todo.kb/2026-06-20-000-aistudio-provider-parity-ladder.md)
+      — third provider, first JSPB source. Pluck + splat landed 2026-06-20;
+      index, render, orchestrators, and browse automation remain.
 
 ## Claude provider — parity ladder
 
