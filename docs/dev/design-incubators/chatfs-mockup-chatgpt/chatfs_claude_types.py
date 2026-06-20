@@ -5,6 +5,11 @@ from typing import TypeGuard, TypedDict
 from chatfs_json import JsonValue
 
 
+type Several[T] = tuple[T, ...]
+"""A read-only homogeneous sequence — covariant, unlike `list`, so a function
+taking `Several[Base]` accepts a tuple of any subtype."""
+
+
 class IndexItem(TypedDict):
     """A conversation entry from /api/organizations/<org>/chat_conversations_v2.
 
@@ -21,13 +26,15 @@ class IndexItem(TypedDict):
 class ChatMessage(TypedDict):
     """A node in the conversation tree, from conversation.json's `chat_messages`.
 
-    Only the fields the renderer reads are declared; many pass-through fields
-    (sender, text, content, attachments, …) are present but ignored here.
+    Only the fields the renderer reads are declared; pass-through fields
+    (sender, attachments, …) are present but ignored here.
     """
 
     uuid: str
     parent_message_uuid: str  # all-zero UUID sentinel for top-level messages
     created_at: str  # ISO 8601
+    text: str  # flattened body; empty for a bodiless node (e.g. canceled retry)
+    content: list[JsonValue]  # rich content blocks; empty alongside empty text
 
 
 class Conversation(TypedDict):

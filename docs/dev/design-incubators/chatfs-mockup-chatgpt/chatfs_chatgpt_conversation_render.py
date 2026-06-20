@@ -22,14 +22,14 @@ from collections.abc import Mapping
 from chatfs_chatgpt_layout import DATA_DIR_NAME, resolve_chat_dir
 
 
-def walk_to_current(mapping: Mapping[str, dict], current: str) -> list[str]:
-    path: list[str] = []
+def live_ancestors(mapping: Mapping[str, dict], current: str) -> set[str]:
+    """The live set: `current` and every ancestor up to the root."""
+    live: set[str] = set()
     node = current
     while node is not None:
-        path.append(node)
+        live.add(node)
         node = mapping[node].get("parent")
-    path.reverse()
-    return path
+    return live
 
 
 def primary_child(
@@ -75,7 +75,7 @@ def main() -> None:
             ts, role, uuid, content_type = parts
             by_uuid[uuid] = (stem, ts, role, content_type)
 
-    live_set = set(walk_to_current(mapping, current))
+    live_set = live_ancestors(mapping, current)
 
     seq = 0
     prev_depth = -1

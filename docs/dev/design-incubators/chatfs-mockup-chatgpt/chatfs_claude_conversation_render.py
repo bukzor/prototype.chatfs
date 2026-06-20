@@ -38,7 +38,7 @@ from pathlib import Path
 
 import chatfs_json
 from chatfs_claude_layout import DATA_DIR_NAME, resolve_chat_dir
-from chatfs_claude_types import ChatMessage, is_conversation
+from chatfs_claude_types import ChatMessage, Several, is_conversation
 
 
 @dataclass
@@ -52,14 +52,14 @@ class Turn:
     body: str
 
 
-def build_children(chat_messages: list[ChatMessage]) -> dict[str, list[str]]:
+def build_children(chat_messages: Several[ChatMessage]) -> dict[str, list[str]]:
     children: dict[str, list[str]] = {}
     for m in chat_messages:
         children.setdefault(m["parent_message_uuid"], []).append(m["uuid"])
     return children
 
 
-def find_root(chat_messages: list[ChatMessage]) -> str:
+def find_root(chat_messages: Several[ChatMessage]) -> str:
     """Return the virtual root: the all-zero UUID sentinel that every
     top-level message names as parent.
 
@@ -77,14 +77,14 @@ def find_root(chat_messages: list[ChatMessage]) -> str:
     return root_parents.pop()
 
 
-def walk_to_current(by_uuid: Mapping[str, ChatMessage], current: str) -> list[str]:
-    path: list[str] = []
+def live_ancestors(by_uuid: Mapping[str, ChatMessage], current: str) -> set[str]:
+    """The live set: `current` and every ancestor up to the root."""
+    live: set[str] = set()
     node = current
     while node in by_uuid:
-        path.append(node)
+        live.add(node)
         node = by_uuid[node]["parent_message_uuid"]
-    path.reverse()
-    return path
+    return live
 
 
 def primary_child(
@@ -168,12 +168,20 @@ class Renderer:
         prefix = "" if head in (None, seq) else f"{head:03d}/"
         return f"{prefix}{seq:03d}"
 
-    def backlink(self, node: str, prev_seq: int | None) -> str:
-        """` (re: parent)` when the parent isn't the turn just above."""
+    def parent_is_just_above(self, node: str, prev_seq: int | None) -> bool:
+        """Whether this turn's parent is the numbered turn that rendered directly
+        above it — i.e. the live continuation, needing no explicit backref."""
         parent = self.parent_of[node]
-        if parent in self.numbering and self.numbering[parent][1] != prev_seq:
+        return parent in self.numbering and self.numbering[parent][1] == prev_seq
+
+    def backlink(self, node: str, prev_seq: int | None) -> str:
+        """` (re: parent)` when the parent is numbered but isn't the turn just
+        above (an unnumbered parent — root/origin — has no ref to point at)."""
+        parent = self.parent_of[node]
+        if parent in self.numbering and not self.parent_is_just_above(node, prev_seq):
             return f" (re: {self.number(parent)})"
-        return ""
+        else:
+            return ""
 
     def replies(self, node: str) -> str:
         """Footer item at a fork: all replies in render order, the live one last
@@ -227,8 +235,7 @@ class Renderer:
         """The blank/rule that separates this section from the previous one."""
         if depth == 0 or prev_depth != depth:
             return "\n"
-        parent = self.parent_of[node]
-        if parent in self.numbering and self.numbering[parent][1] == prev_seq:
+        if self.parent_is_just_above(node, prev_seq):
             return ("> " * depth).rstrip() + "\n"
         # new sibling branch: divide at the *parent's* depth, which closes the
         # previous sibling's blockquote — the two render as separate islands,
@@ -271,6 +278,27 @@ def load_turns(messages_dir: Path) -> dict[str, Turn]:
     return turns
 
 
+def prune_bodiless_leaves(
+    chat_messages: Several[ChatMessage], rendered: Container[str]
+) -> Several[ChatMessage]:
+    """Drop messages that splatted to a .json but no .md — a bodiless node such
+    as a `user_canceled` retry that emitted nothing. Keeping one would fabricate
+    a fork whose sibling has no turn to number. Only a childless, contentless
+    leaf is prunable; a bodiless node that still carries content or children is a
+    splat/render bug, so it stays and trips the downstream body-coverage check."""
+    parents = {m["parent_message_uuid"] for m in chat_messages}
+    return tuple(
+        m
+        for m in chat_messages
+        if not (
+            m["uuid"] not in rendered
+            and not m["text"]
+            and not m["content"]
+            and m["uuid"] not in parents
+        )
+    )
+
+
 def main() -> None:
     if len(sys.argv) != 2:
         print(f"usage: {sys.argv[0]} <path-to-chat-dir-or-inside>", file=sys.stderr)
@@ -283,20 +311,21 @@ def main() -> None:
     assert is_conversation(conversation), conversation
     messages_dir = chat_dir / "messages"
 
-    chat_messages = conversation["chat_messages"]
+    turns = load_turns(messages_dir)
+    chat_messages = prune_bodiless_leaves(tuple(conversation["chat_messages"]), turns)
     by_uuid = {m["uuid"]: m for m in chat_messages}
     parent_of = {m["uuid"]: m["parent_message_uuid"] for m in chat_messages}
     children = build_children(chat_messages)
     root = find_root(chat_messages)
-    live_set = set(walk_to_current(by_uuid, conversation["current_leaf_message_uuid"]))
+    live_set = live_ancestors(by_uuid, conversation["current_leaf_message_uuid"])
     primary_of = {
         nid: primary_child(children.get(nid, []), live_set, by_uuid)
         for nid in [root, *by_uuid]
     }
 
-    turns = load_turns(messages_dir)
-    # Every conversation message must have a rendered body on disk — a missing
-    # one would silently vanish from numbering, re:-chains, and reply lists.
+    # Every surviving message must have a rendered body on disk — a missing one
+    # would silently vanish from numbering, re:-chains, and reply lists. Bodiless
+    # cancel leaves are pruned above; anything still missing is a real bug.
     assert set(turns) == set(by_uuid), set(turns) ^ set(by_uuid)
 
     # When the first message was edited, the root sentinel has several children
