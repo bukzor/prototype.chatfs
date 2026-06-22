@@ -182,10 +182,6 @@ browse-incidental meta capture.
 
 ## Strategic
 
-- [x] [chat-as-directory layout — propagate to other docs](todo.kb/2026-05-05-000-chat-as-directory-layout--propagate-to-other-docs.md)
-- [x] [Scan design.kb for promotion signals](todo.kb/2026-05-05-001-scan-designkb-for-promotion-signals.md)
-- [x] [Plan and create noun-verb model sub-kb](todo.kb/2026-05-05-002-plan-and-create-noun-verb-model-sub-kb.md)
-- [x] [View as directory-symlink; hide captured exhaust under .data/](todo.kb/2026-05-08-000-view-as-directory-symlink-hide-captured-exhaust-under-data.md)
 - [ ] [claude-code as next provider](todo.kb/2026-05-11-000-claude-code-as-next-provider.md)
       — after claude.ai parity; datasource `~/.claude/`, no BB1
 - [ ] [shared code among providers](todo.kb/2026-05-11-001-shared-code-among-providers.md)

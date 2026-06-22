@@ -19,10 +19,6 @@ cost-benefit-sweh:
 
 Driver: [Harmonize with llm-* skills](todo.kb/2026-01-02-000-harmonize-with-llm-skills.md) — most done; chatfs-local remaining items below.
 
-## Drain too-many-changes freeze (priority: HIGH — clear before more work piles on)
-
-- [ ] [Drain too-many-changes freeze](todo.kb/2026-05-19-000-drain-too-many-changes-freeze.md) — Stream 3 (BARRIER) on main; plan is 2 commits (incubator infra + promoted learnings) plus conservative Stream-2 paper trail, then archive the branch.
-
 ## chatfs-mockup-chatgpt — next sessions
 
 Plan from 2026-05-05 design.kb consolidation. Order is dependency-driven; 1-2 are blocking, 3-4 are deferrable. Incubator-tactical breakdowns at `docs/dev/design-incubators/chatfs-mockup-chatgpt/.claude/todo.kb/`.
@@ -35,7 +31,6 @@ Plan from 2026-05-05 design.kb consolidation. Order is dependency-driven; 1-2 ar
 
 ## Rust port — kb scope refactor
 
-- [x] [Place the rust-port kb at a proper home](todo.kb/2026-05-13-000-place-rust-port-kb-at-proper-home.md) — decided 2026-05-15; audit at `packages/har-browse/dev.kb/rust-port.kb/scope-audit.md`; session record at `~/.claude/sessions.kb/rust-port-kb-scope-refactor.md`
 - [ ] [Execute the rust-port kb scope refactor](todo.kb/2026-05-16-000-execute-rust-port-kb-scope-refactor.md) — 9 steps; must land before commits 0750/1000/1050. Layered with 2026-05-21 meta-planning evolutions (see todo's "Additional decisions" section).
 - [ ] [Polyglot package dir naming — sweep existing packages](todo.kb/2026-05-16-001-polyglot-package-dir-naming-sweep.md) — depends on execute-rust-port above
 - [ ] **Update `packages/har-browse/dev.kb/rust-port.md` charter:** insert commit `0050` (blackbox `.spec.mjs` → CLI conversion + baseline capture) before `0100` scaffold; record commits `0025`/`0035` if diagnostic-events design and Node-side emission want separate commits. Source: `.claude/decision.kb/test-conversion-precedes-port-scaffold.md`.

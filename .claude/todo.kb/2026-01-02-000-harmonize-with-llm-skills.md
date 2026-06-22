@@ -81,11 +81,11 @@ prototype.chatfs predates the llm-* skills and uses outdated conventions:
 
 ### Phase 2 — prototype.chatfs
 
-- [x] [Migrate TODO.md to subtask format](2026-01-02-001-migrate-todo-to-subtask-format.md)
-- [x] [Clean stale references to deleted docs](2026-03-28-000-clean-stale-references-to-deleted-docs.md)
+- [x] Migrate TODO.md to subtask format
+- [x] Clean stale references to deleted docs
 - [~] [Apply skill conventions post-evolution](2026-01-02-002-apply-skill-conventions-post-evolution.md) — STATUS.md / development-plan / design.kb work done; only `milestones.kb/` remains and is deferred
-- [x] [Reconcile design-rationale.md with current architecture](2026-04-20-001-reconcile-design-rationale-with-current-architecture.md) — 2026-04-20
-- [x] [Review lib/chatfs/ for salvageable ideas](2026-04-20-000-review-lib-chatfs-for-integration.md) — promoted to packages/chatfs/, 2026-04-20
+- [x] Reconcile design-rationale.md with current architecture — 2026-04-20
+- [x] Review lib/chatfs/ for salvageable ideas — promoted to packages/chatfs/, 2026-04-20
 - [x] Fix CLAUDE.md `depends:` — migrated to `Skill(X)` form, 2026-04-20
 
 ### Tactical
@@ -110,9 +110,7 @@ prototype.chatfs predates the llm-* skills and uses outdated conventions:
 
 ### Chatfs-local remaining work (actionable now, any order)
 
-1. `2026-04-20-001-reconcile-design-rationale-with-current-architecture.md` — medium priority, medium effort
-2. `2026-04-20-000-review-lib-chatfs-for-integration.md` — low priority, small effort
-3. CLAUDE.md `depends:` fix — tiny, do alongside either of the above
+1. CLAUDE.md `depends:` fix — tiny (success criterion: current skill names + `llm-design-kb`)
 
 ### Upstream work (when motivated; does not block chatfs today)
 
