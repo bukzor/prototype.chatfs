@@ -1,0 +1,37 @@
+#!/bin/bash
+# curl, with AI Studio defaults. It IS curl — every argument is forwarded —
+# but it injects: the captured auth (secrets/aistudio.headers.curl), gzip
+# decoding, http/1.1 (the $rpc front resets h2 streams on errors), and the
+# MakerSuite request Content-Type. A bare METHOD token (no URL scheme) expands
+# to the full $rpc URL; full URLs pass through untouched.
+#
+#   curl-aistudio -d '["<id>"]' ResolveDriveResource                 # positional JSPB
+#   curl-aistudio -d '["<id>"]' 'ResolveDriveResource?alt=json'      # named proto3 JSON
+#   curl-aistudio -d '{}' GetUserPreferences -H 'Accept: application/json'
+#   curl-aistudio -sv "$FULL_URL"                                    # any curl flags
+#
+# Override a default just by passing your own (later curl args win; a Content-Type
+# you supply suppresses the injected one). On HTTP 401 the body is the server's
+# auth error — re-run aistudio-reauth.
+set -euo pipefail
+shopt -s failglob
+
+ROOT="$(git rev-parse --show-toplevel)"
+SECRET="$ROOT/secrets/aistudio.headers.curl"
+[ -s "$SECRET" ] || { echo >&2 "no $SECRET — run: aistudio-reauth  (or refresh-secrets.sh <capture>)"; exit 4; }
+
+host="https://alkalimakersuite-pa.clients6.google.com"
+svc="google.internal.alkali.applications.makersuite.v1.MakerSuiteService"
+
+# Expand a lone METHOD token (Name or Name?query) to the full $rpc URL.
+args=()
+for a in "$@"; do
+  [[ "$a" =~ ^[A-Za-z][A-Za-z0-9]*([?].*)?$ ]] && a="$host/\$rpc/$svc/$a"
+  args+=("$a")
+done
+
+# Inject Content-Type unless the caller set their own.
+ct=(-H 'Content-Type: application/json+protobuf')
+[[ "${*,,}" == *content-type* ]] && ct=()
+
+exec curl -sS --compressed --http1.1 --config "$SECRET" "${ct[@]}" "${args[@]}"

@@ -1,0 +1,18 @@
+#!/bin/bash
+# Refresh AI Studio auth: drive a browser to a prompt, capture CDP, extract auth.
+# Run when curl-aistudio starts returning HTTP 401.
+#
+# Usage: ./aistudio-reauth [PROMPT_URL]
+set -euo pipefail
+shopt -s failglob
+
+HERE="$(cd "$(dirname "$0")" && pwd)"
+ROOT="$(git rev-parse --show-toplevel)"
+PROMPT_URL="${1:-https://aistudio.google.com/prompts/1vU6BlpV69d2MvI6L_oYGo_E-ZqmaI3eR}"
+HARBROWSE="$(command -v har-browse || echo "$ROOT/node_modules/.bin/har-browse")"
+[ -x "$HARBROWSE" ] || { echo >&2 "har-browse not found (build packages/har-browse)"; exit 5; }
+
+cap="$HERE/aistudio.$(date -Ins).cdp.json"        # gitignored (holds live cookies)
+"$HARBROWSE" "$PROMPT_URL" > "$cap"
+"$HERE/refresh-secrets.sh" "$cap"
+echo "captured: $cap"
