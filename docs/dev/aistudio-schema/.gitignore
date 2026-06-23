@@ -2,3 +2,4 @@
 /bundles/
 /.redo/
 *.tmp
+/rosetta/check

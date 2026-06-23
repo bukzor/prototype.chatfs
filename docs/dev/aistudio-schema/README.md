@@ -46,20 +46,66 @@ which obviates positional decoding when you can replay auth. Auth (cookie +
 SAPISIDHASH) is extracted from a CDP capture into gitignored `secrets/`.
 
     # one-time: extract auth from a capture into secrets/aistudio.headers.curl
+    ./aistudio-reauth                 # drive a browser, capture, extract auth
+    # or, from an existing capture:
     ./refresh-secrets.sh aistudio.<stamp>.cdp.jsonl
 
-    ./curl-aistudio -j ResolveDriveResource '["<prompt-id>"]' | jq .   # named JSON
-    ./curl-aistudio    ResolveDriveResource '["<prompt-id>"]'          # positional JSPB
+    ./curl-aistudio -d '["<id>"]' 'ResolveDriveResource?alt=json' | jq .  # named JSON
+    ./curl-aistudio -d '["<id>"]'  ResolveDriveResource          | jq .  # positional JSPB
 
+- `aistudio-reauth` — browser → capture → auth (run when curl-aistudio 401s)
 - `refresh-secrets.sh` — CDP capture → `secrets/aistudio.headers.curl` (auth)
-- `curl-aistudio` — authenticated `$rpc` call; `-j` ⇒ `?alt=json` named output.
-  Exits 7 on HTTP 401 (auth expired → re-capture and re-run `refresh-secrets.sh`)
+- `curl-aistudio` — authenticated `$rpc` call; it *is* curl. A bare `Method`
+  (or `Method?alt=json`) token expands to the full `$rpc` URL; `?alt=json` ⇒
+  named proto3 JSON, omitted ⇒ positional JSPB
 - `live-replay.sh` — one-shot introspection battery (alt=json / discovery /
   reflection) recording what the server does and does not expose
 
 Caveat: `?alt=json` names are server-side only; they do **not** appear in the
 bundles or in a capture's JSPB bodies. Offline decoding of a capture still needs
-the position→name map (see `discourse.kb/`).
+the position→name map (see `discourse.kb/` and `rosetta/` below).
+
+## Converting JSPB → JSON, reproducibly (`rosetta/`)
+
+`rosetta/convert.py` turns a positional JSPB body into the named JSON form,
+driven by a hand-curated `slot → field` SCHEMA. The rest of `rosetta/` exists to
+keep that SCHEMA honest: capture the *same* prompt in both encodings, correlate
+them to author/repair the SCHEMA, and assert the conversion stays faithful.
+
+The Rosetta stone is the **golden pair** — one prompt fetched both ways:
+
+    resolvedrive.jspb.json       # positional (the converter's input)
+    resolvedrive.alt-json.json   # named (the ground truth to match)
+
+Five steps, each a tool (run from `rosetta/`):
+
+    # 1+2. capture the golden pair (live; needs auth — see Live access above)
+    ./capture.sh [PROMPT_ID]
+
+    # 3. correlate the pair → proposed `slot → field` maps per message type
+    ./correlate.py             # ordering heuristic (an AID, not an oracle)
+    ./correlate.py --values    # the other lens: value → jspb index-paths
+
+    # 4. edit SCHEMA in convert.py by hand, guided by step 3 + walk-graph.py
+    ./convert.py < resolvedrive.jspb.json | jq .
+
+    # 5. assert the conversion is "similar enough" to the real alt=json
+    ./verify.py                # name/shape diff; exit 1 on divergence
+
+Step 5 is also the redo gate `rosetta/check` (in `all.do`): it converts the
+committed JSPB fixture and name/shape-diffs it against the committed alt=json,
+offline, failing the build on any divergence.
+
+"Similar enough" = same field **names** and **structure**. Leaf *values*
+legitimately differ between encodings and are not compared: bools (`0/1` vs
+`true/false`), enums (ints vs names), and timestamps (`[seconds, nanos]` vs
+RFC3339 string) — the last differs in shape too, the one tolerated gap.
+
+Why step 4 is hand-curated, not generated: the step-3 ordering heuristic
+mis-assigns slots whenever a field is absent in the sample (the monotonic claim
+skips the null slot). It narrows the search; the bundle field numbers
+(`walk-graph.py`) and populated-slot tree (`body-shape.py`) confirm it. See
+`discourse.kb/questions.kb/can-we-decode-deterministically.md`.
 
 ## Accessor grammar
 
