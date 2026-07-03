@@ -36,6 +36,12 @@ Scope: this incubator only. Project-wide tactical work lives in
 
 ## Next
 
+- [ ] [Cross-provider data-flow drift — pre-unification fixes vs unification scope](todo.kb/2026-07-03-000-cross-provider-data-flow-drift--pre-unification-fixes-vs-unification-scope.md)
+      — from the 2026-07-03 three-provider review. Two live bugs to fix
+      before unification (aistudio splat crashes on massaged
+      `conversation.json`; `create_time` is really lastModified) plus
+      chatgpt failfast conversion; five drift items recorded as
+      requirements for the shared-code refactor, NOT to be fixed in place.
 - [ ] [Rename incubator to chatfs-cli-mockup](../../../../../.claude/todo.kb/2026-05-11-000-rename-incubator-to-chatfs-cli-mockup.md)
       — precursor to multi-provider sketch; current name encodes a single
       provider. Tracked at project level because the rename also touches

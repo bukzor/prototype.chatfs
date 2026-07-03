@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Splat an AI Studio prompt JSON into a `messages/` directory.
+"""Splat an AI Studio conversation JSON into a `messages/` directory.
 
-Input: path to conversation.json (the plucked ResolveDriveResource body,
-a JSPB array — positional fields, not keyed objects).
+Input: path to conversation.json — chatfs_aistudio_conversation_massage_json's
+named projection of the plucked ResolveDriveResource body.
 
-Output: `<src>.splat/messages/<basename>.{json,md}` per turn. The .json
-carries the raw turn array; the .md carries the rendered content. Mirrors
+Output: `<src>.splat/messages/<basename>.{json,md}` per turn, one per
+`prompt.chunkedPrompt.chunks[]` entry. The .json carries the raw turn
+object; the .md carries the rendered content. Mirrors
 chatfs_claude_conversation_splat's directory shape so the two providers
 read side-by-side.
 
@@ -14,8 +15,9 @@ Scope: user prompts and model answers pass their text through; model
 section (the `type` attribute matches the claude side, keeping reasoning
 greppable across providers). The raw turn stays in the .json regardless.
 
-JSPB has no per-turn id or timestamp, so basenames lead with the turn
-index (zero-padded, document order) instead of claude's `{ts}.{uuid}`.
+Turns carry a `createTime` but no unique id, and user/thought turns can
+share a timestamp, so basenames lead with the turn index (zero-padded,
+document order) rather than claude's `{ts}.{uuid}`.
 """
 import json
 import re
@@ -23,34 +25,24 @@ import shutil
 import sys
 from pathlib import Path
 
-# JSPB field indices in the ResolveDriveResource prompt payload.
-PROMPT = 0  # body[PROMPT] is the prompt object
-TURNS = 13  # prompt[TURNS][0] is the live turn list; [1] is the empty draft
 
-# Field indices within a single turn.
-TURN_TEXT = 0
-TURN_ROLE = 8  # "user" | "model"
-TURN_IS_ANSWER = 16  # 1 on a model answer turn
-TURN_IS_THOUGHT = 19  # 1 on a model reasoning turn
+def turns_of(doc: dict) -> list[dict]:
+    return doc["prompt"]["chunkedPrompt"]["chunks"]
 
 
-def turns_of(doc: list) -> list:
-    return doc[PROMPT][TURNS][0]
-
-
-def turn_kind(turn: list) -> str:
+def turn_kind(turn: dict) -> str:
     """One of user | answer | thought; raises on an unclassifiable turn.
 
     Roles are a closed set in the captured payloads; a model turn that is
     neither answer nor thought is a parser gap, not a soft case.
     """
-    role = turn[TURN_ROLE]
+    role = turn["role"]
     if role == "user":
         return "user"
     elif role == "model":
-        if turn[TURN_IS_THOUGHT] == 1:
+        if turn.get("isThought") == 1:
             return "thought"
-        elif turn[TURN_IS_ANSWER] == 1:
+        elif turn.get("finishReason") == 1:
             return "answer"
         else:
             raise AssertionError(("model turn is neither thought nor answer", turn))
@@ -90,9 +82,9 @@ def render_details(kind: str, icon: str, label: str, body: str) -> str:
     )
 
 
-def render_turn(turn: list, kind: str) -> str:
+def render_turn(turn: dict, kind: str) -> str:
     """Render one turn to markdown by kind; thoughts collapse, the rest pass through."""
-    text = turn[TURN_TEXT]
+    text = turn["text"]
     assert isinstance(text, str), turn
     text = text.strip()
     if kind == "thought":

@@ -72,7 +72,7 @@ def main() -> None:
     with raw.open("rb") as src, conversation.open("wb") as dst:
         subprocess.run([str(MASSAGE_JSON)], stdin=src, stdout=dst, check=True)
 
-    doc = json.loads(raw.read_text())
+    doc = json.loads(conversation.read_text())
     item = index_item(doc)
     assert item["id"] == id_, (item["id"], id_)
     place_meta(item, ROOT)

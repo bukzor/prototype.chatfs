@@ -5,10 +5,11 @@ storage and view shapes are identical (`.chat/$UUID/.data/` + a view
 dir-symlink per chat); only the item keys differ.
 
 AI Studio's twist: the source is JSPB (positional arrays), so the
-identity fields are *read out by index* into a synthesized `IndexItem`
-(`index_item`) rather than passed through from a native dict. Once that
-synthesis happens, place_meta is byte-for-byte the chatgpt path —
-which is exactly the seam a shared `chatfs_layout.py` would cut along.
+identity fields are *synthesized* into an `IndexItem` (`index_item`)
+from chatfs_aistudio_conversation_massage_json's named projection,
+rather than passed through from a native dict. Once that synthesis
+happens, place_meta is byte-for-byte the chatgpt path — which is
+exactly the seam a shared `chatfs_layout.py` would cut along.
 """
 
 import json
@@ -20,30 +21,28 @@ from chatfs_aistudio_types import IndexItem
 
 DATA_DIR_NAME = ".data"
 
-# JSPB field indices in the ResolveDriveResource prompt payload.
-PROMPT = 0  # body[PROMPT] is the prompt object
-META = 4  # prompt[META] holds title / author / created
-TITLE = 0  # meta[TITLE]
-CREATED = 4  # meta[CREATED][0][0] is created, unix seconds
 
-
-def index_item(doc: list) -> IndexItem:
-    """Synthesize the identity fields from the positional prompt doc.
+def index_item(doc: dict) -> IndexItem:
+    """Synthesize the identity fields from the massaged conversation doc.
 
     The provider-shaped half of the layout boundary: where chatgpt and
-    claude read keyed fields off a native dict, AI Studio has none, so
-    identity is pulled by index. `[0][0]` is `"prompts/<id>"`; the
-    `prompts/` prefix is dropped so the id matches the URL/Drive id.
-    The created field arrives as a numeric string, coerced to int.
+    claude read keyed fields off a native dict, AI Studio's wire format
+    is positional (see chatfs_aistudio_conversation_massage_json, the
+    only place those positions are named), so identity is synthesized
+    here from its named output instead. `prompt.name` is
+    `"prompts/<id>"`; the `prompts/` prefix is dropped so the id matches
+    the URL/Drive id. The create_time field is `lastModified.revisionTime`
+    (a `[seconds-string, nanos]` pair), coerced to int seconds.
     """
-    prompt = doc[PROMPT]
-    raw_id = prompt[0]
+    prompt = doc["prompt"]
+    raw_id = prompt["name"]
     assert isinstance(raw_id, str) and raw_id.startswith("prompts/"), raw_id
-    meta = prompt[META]
+    metadata = prompt["metadata"]
+    revision_time = metadata["lastModified"]["revisionTime"]
     return IndexItem(
         id=raw_id.removeprefix("prompts/"),
-        title=meta[TITLE],
-        create_time=int(meta[CREATED][0][0]),
+        title=metadata["displayName"],
+        create_time=int(revision_time[0]),
     )
 
 

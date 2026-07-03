@@ -91,12 +91,14 @@ JSPB positional decoding (see `dev.kb/claims.kb/aistudio-jspb-prompt-shape.md`).
 - [ ] `chatfs_aistudio_conversation_path_browse.py` / `..._url_render.py` —
       remaining entry points (`url_browse.py` landed above).
 - [ ] Browse automation (`..._index_browse.sh`) once index pluck exists.
-- [ ] Tech debt: `chatfs_aistudio_conversation_splat.py` still reads raw
-      positional JSPB directly (`PROMPT`/`TURNS`/`TURN_TEXT`/…), duplicating
-      indices `massage_json.py` now names. Once `path_render.py` exists,
-      consider retargeting splat to read `conversation.json`'s
-      `chunkedPrompt.chunks[]` by key instead — mirrors how claude's splat
-      reads `chat_messages` by key, not by index.
+- [x] ~~Tech debt: splat still reads raw positional JSPB~~ **Upgraded to
+      bug** (2026-07-03 review) and **fixed** (2026-07-03): splat and
+      `layout.index_item` now read `conversation.json`'s named projection
+      (`prompt.chunkedPrompt.chunks[]` / `prompt.metadata`) instead of
+      positionally indexing raw JSPB — see
+      [cross-provider data-flow drift](2026-07-03-000-cross-provider-data-flow-drift--pre-unification-fixes-vs-unification-scope.md)
+      for verification. The `create_time`-is-really-`lastModified` mislabel
+      is a separate, still-open item in that same file.
 - [ ] Latent fragility in `turn_kind()` (`chatfs_aistudio_conversation_splat.py`):
       `TURN_IS_ANSWER` (slot 16) is really `finishReason` (per rosetta's
       ground-truth-verified schema — see
