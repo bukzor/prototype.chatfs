@@ -5,7 +5,7 @@ last-checked: 2026-06-20
 evidence:
   - chatfs.demo/claude/.chat/8ca43a18-f002-4916-af92-c77256c82617/.data/conversation.json  # thinking nested in message content[]
   - chatfs.demo/chatgpt/.chat/69de8f14-e80c-8329-b3a8-3e4046c10cb1/.data/conversation.json  # thoughts/reasoning_recap as separate mapping nodes
-  - aistudio.har.jsonl  # thoughts as separate turns ([19]=1)
+  - aistudio.cdp.jsonl  # thoughts as separate turns ([19]=1)
 ---
 
 # Reasoning↔turn mapping differs by provider

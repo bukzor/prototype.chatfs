@@ -1,2 +1,4 @@
 chatfs.demo/
 *.jsonl
+.redo/
+aistudio_conversation.json

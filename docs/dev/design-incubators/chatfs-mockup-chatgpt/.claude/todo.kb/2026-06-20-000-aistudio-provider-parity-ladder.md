@@ -36,20 +36,75 @@ JSPB positional decoding (see `dev.kb/claims.kb/aistudio-jspb-prompt-shape.md`).
       `<src>.splat/messages/NNN.{role}[.thought].{json,md}`; thoughts as
       `<details type="thinking">` (lifts + dedups the `**bold**` header).
 
+## Landed 2026-06-22
+
+- [x] `chatfs_aistudio_types.py` — `IndexItem` TypedDict (id/title/
+      create_time), synthesized rather than passed through (JSPB has no
+      native keyed dict to echo).
+- [x] `chatfs_aistudio_layout.py` — mirrors `chatfs_chatgpt_layout.py` /
+      `chatfs_claude_layout.py`: `index_item()` reads the identity fields
+      out of the positional prompt doc by index (`PROMPT`/`META`/`TITLE`/
+      `CREATED`), `place_meta()` is byte-for-byte the chatgpt path once
+      synthesis happens. Prep work for the index rung below — no
+      `chatfs_aistudio_index_splat.py` yet, since that needs the index
+      capture first.
+
+## Landed 2026-07-03
+
+- [x] `chatfs_aistudio_conversation_massage_json.py` — JSPB → named JSON,
+      schema ported (not imported) from `../aistudio-schema/rosetta/convert.py`
+      and fixed against its golden pair while porting: restored the `"prompt"`
+      top-level wrapper (verified against `resolvedrive.alt-json.json`, the
+      real ground truth) and `Literal["map"]` type precision, both lost in
+      the first draft. Emits the *whole* named document — no re-narrowing to
+      a subset (e.g. just turns) — mirroring what chatgpt/claude get for free
+      from their already-keyed wire format. This is the "named downstream
+      consumer" `aistudio-schema`'s own todo was blocked on.
+- [x] `chatfs_aistudio_conversation_url_browse.py` — capture → pluck →
+      massage → place_meta, entry point by URL (`/prompts/<id>`). Simpler
+      than chatgpt/claude's url_browse: no incidental-index cross-check,
+      since identity (`metadata.displayName`/`lastModified`) arrives in the
+      *same* `ResolveDriveResource` body that becomes `conversation.json` —
+      no second endpoint to reconcile against. Live-tested end-to-end
+      against the real prompt (`1vU6BlpV69d2MvI6L_oYGo_E-ZqmaI3eR`); writes
+      `cdp.jsonl` + `conversation.raw.json` + `conversation.json` +
+      `meta.json` + view symlink, all verified correct.
+- [x] New naming convention (documented in
+      `design.kb/040-design.kb/cli-command-shape.kb/noun=conversation.kb/verb=browse.md`):
+      `conversation.raw.json` (plucked JSPB, for audit) vs. `conversation.json`
+      (named, massage's output) — a split unique to AI Studio; chatgpt/claude
+      have no `.raw.json` since pluck's output is already "good."
+
 ## Remaining rungs (mirror the claude ladder)
 
 - [ ] `chatfs_aistudio_index_pluck.jq` + `chatfs_aistudio_index_splat.py`
-      — needs an index capture (likely `ListPrompts`; not yet reverse-
-      engineered, unlike the conversation body).
+      (consumes `chatfs_aistudio_layout.index_item` + `place_meta`, landed
+      2026-06-22) — needs an index capture (likely `ListPrompts`; not yet
+      reverse-engineered, unlike the conversation body).
 - [ ] `chatfs_aistudio_conversation_render.py` — AI Studio prompts are
       **linear** (a flat turn list, no fork tree observed), so render is
       simpler than claude's DFS — but confirm forks truly can't exist
       before assuming it.
 - [ ] `chatfs_aistudio_conversation_path_render.py` — orchestrator
-      (splat → move up → render `chat.md`).
-- [ ] `chatfs_aistudio_conversation_url_browse.py` /
-      `..._path_browse.py` / `..._url_render.py` — entry points.
+      (splat → move up → render `chat.md`). `url_browse.py` (landed above)
+      does not yet delegate to this, since it doesn't exist.
+- [ ] `chatfs_aistudio_conversation_path_browse.py` / `..._url_render.py` —
+      remaining entry points (`url_browse.py` landed above).
 - [ ] Browse automation (`..._index_browse.sh`) once index pluck exists.
+- [ ] Tech debt: `chatfs_aistudio_conversation_splat.py` still reads raw
+      positional JSPB directly (`PROMPT`/`TURNS`/`TURN_TEXT`/…), duplicating
+      indices `massage_json.py` now names. Once `path_render.py` exists,
+      consider retargeting splat to read `conversation.json`'s
+      `chunkedPrompt.chunks[]` by key instead — mirrors how claude's splat
+      reads `chat_messages` by key, not by index.
+- [ ] Latent fragility in `turn_kind()` (`chatfs_aistudio_conversation_splat.py`):
+      `TURN_IS_ANSWER` (slot 16) is really `finishReason` (per rosetta's
+      ground-truth-verified schema — see
+      `dev.kb/claims.kb/aistudio-jspb-prompt-shape.md`'s 2026-07-03
+      cross-check), and `== 1` is a proxy that happens to hold in every
+      capture seen so far. A future capture with a non-`1` finish reason
+      (`MAX_TOKENS`, `SAFETY`, error) would fall through `turn_kind`'s
+      `raise`. Not yet observed — harden if/when it is.
 
 ## Design questions surfaced
 

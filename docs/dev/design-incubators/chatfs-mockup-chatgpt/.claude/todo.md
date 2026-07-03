@@ -49,7 +49,10 @@ Scope: this incubator only. Project-wide tactical work lives in
       `ensure_ascii` while there.
 - [ ] [AI Studio provider — parity ladder](todo.kb/2026-06-20-000-aistudio-provider-parity-ladder.md)
       — third provider, first JSPB source. Pluck + splat landed 2026-06-20;
-      index, render, orchestrators, and browse automation remain.
+      layout/types 2026-06-22; massage_json + url_browse 2026-07-03 (writes
+      conversation.raw.json + conversation.json + meta.json end-to-end,
+      live-tested). Index rung, render/path_render, and browse automation
+      remain — url_browse doesn't yet delegate to a render step.
 
 ## Claude provider — parity ladder
 

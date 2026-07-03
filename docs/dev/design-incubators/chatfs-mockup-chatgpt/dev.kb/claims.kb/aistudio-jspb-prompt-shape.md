@@ -1,9 +1,11 @@
 ---
 status: observed
 first-recorded: 2026-06-20
-last-checked: 2026-06-20
+last-checked: 2026-07-03
 evidence:
-  - aistudio.har.jsonl  # line 426: ResolveDriveResource body, prompt 1vU6BlpV69d2MvI6L_oYGo_E-ZqmaI3eR
+  - aistudio.cdp.jsonl  # line 426: ResolveDriveResource body, prompt 1vU6BlpV69d2MvI6L_oYGo_E-ZqmaI3eR
+  - chatfs.demo/aistudio/.chat/1vU6BlpV69d2MvI6L_oYGo_E-ZqmaI3eR/.data/conversation.raw.json  # live re-capture, same prompt
+  - ../../aistudio-schema/rosetta/convert.py  # independently-derived, ground-truth-verified schema (cross-check below)
 ---
 
 # AI Studio prompt payload is JSPB (positional arrays)
@@ -39,14 +41,26 @@ Turn (each turn is a 36-field array):
 |---|---|
 | `[0]` | text content (markdown) |
 | `[8]` | role: `"user"` \| `"model"` |
-| `[16]` | `1` on a model **answer** turn |
+| `[16]` | real name **`finishReason`** (see below) — `1` on a model **answer** turn, `null` otherwise, in every turn observed so far |
 | `[18]` | token count |
 | `[19]` | `1` on a model **thought** (reasoning) turn |
 
 A turn is classified user / answer / thought from `[8]`/`[16]`/`[19]`;
 see `chatfs_aistudio_conversation_splat.py` (`turn_kind`), which encodes
-these indices as named constants and treats a model turn that is neither
-answer nor thought as a parser gap (raises).
+these indices as named constants (`TURN_IS_ANSWER` for `[16]`) and treats
+a model turn that is neither answer nor thought as a parser gap (raises).
+
+**Cross-check finding (2026-07-03):** `../../aistudio-schema/rosetta/convert.py`
+independently derived and ground-truth-verified (against a live `?alt=json`
+response) that this same slot's real proto field name is `finishReason`, not
+a bespoke answer flag. `TURN_IS_ANSWER == 1` is an empirical proxy that
+happens to hold in every capture seen so far (both `1vU6BlpV...` captures:
+`{None, 1}` are the only two values ever observed at this slot). If
+`finishReason` is a real enum, other terminal states (`MAX_TOKENS`, `SAFETY`,
+error) would plausibly show up as other non-`1`/non-`null` values on some
+future capture — which `turn_kind`'s `== 1` check would then fail to
+classify as `answer`, falling through to its `raise`. Not yet observed; the
+fragility is latent, not confirmed. See parity-ladder todo.kb.
 
 ## Caveats (single capture)
 
