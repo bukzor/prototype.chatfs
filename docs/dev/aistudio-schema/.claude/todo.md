@@ -32,7 +32,13 @@ against a committed golden pair. See README "Converting JSPB → JSON".
   - [ ] **Exercise stability across prompt types** (repeated, oneof,
     absent/optional) with more golden pairs — full resolution of
     `can-we-decode-deterministically.md`. Today: one golden pair only.
-- [ ] **Confirm offline decode is the actual need** — blocked-soft on the
-  purpose decision (`discourse.kb/questions.kb/how-does-this-serve-chatfs.md`,
-  open). The loop validates *conversion*; wiring it to decode capture JSPB
-  bodies offline waits on a named downstream consumer.
+- [x] **Confirm offline decode is the actual need** — resolved 2026-07-03
+  (`discourse.kb/questions.kb/how-does-this-serve-chatfs.md`). The named
+  downstream consumer landed: `chatfs_aistudio_conversation_massage_json.py`
+  in the sibling `chatfs-mockup-chatgpt` incubator ports (not imports —
+  this package stays exploratory/disposable) `rosetta/convert.py`'s SCHEMA,
+  called from `chatfs_aistudio_conversation_url_browse.py`, live-tested
+  end-to-end. Porting surfaced and fixed two divergences from this
+  package's own convert.py: a dropped `"prompt"` top-level wrapper and a
+  weakened `Literal["map"]` type — both worth double-checking here too if
+  this package is ever revisited.

@@ -1,0 +1,22 @@
+[project]
+name = "aistudio-schema"
+version = "0"
+description = "AI Studio jspb<->JSON schema tools (chatfs design incubator)."
+requires-python = ">=3.13"
+
+[dependency-groups]
+dev = ["basedpyright"]
+
+[tool.uv]
+package = false
+
+# basedpyright is the typechecker here: pinned in uv.lock, installed by `uv sync`,
+# configured below. `uv run basedpyright` is the natural default — it's the only
+# typechecker in the env, and this table is the config it reads.
+[tool.basedpyright]
+typeCheckingMode = "recommended"
+pythonVersion = "3.13"
+exclude = ["trash", "bundles", ".venv"]
+# rosetta/ scripts import their sibling convert.py by bare name (they run with
+# rosetta/ as cwd); put it on the resolution path so the typechecker agrees.
+extraPaths = ["rosetta"]
