@@ -1,0 +1,14 @@
+#!/bin/sh
+# like `uv exec`, idempotently ensure dependencies are up-to-date before running
+# a command
+set -eu
+
+REPO="${REPO:-$(git rev-parse --show-toplevel)}"
+
+# prevent raciness/flakiness
+mkdir -p "$REPO/node_modules"
+# install chatter goes to stderr: stdout belongs to the wrapped command, which
+# may be a stdio protocol (e.g. an LSP server's JSON-RPC wire).
+flock "$REPO/node_modules" \
+  pnpm install >&2
+pnpm exec "$@"

@@ -10,7 +10,11 @@ chatgpt-har2jsonl = "bukzor.chatgpt_export.har2jsonl:main"
 chatgpt-splat = "bukzor.chatgpt_export.splat:main"
 
 [project.optional-dependencies]
-dev = ["pytest", "pytest-pyright", "pyright>=1.1.405"]
+dev = [
+    "basedpyright-as-pyright",
+    "pytest",
+    "pytest-pyright",
+]
 
 [build-system]
 requires = ["hatchling"]
@@ -35,3 +39,6 @@ reportIncompatibleVariableOverride = "error"
 reportMissingImports = "error"
 reportMissingTypeStubs = false
 exclude = [".venv", "__pycache__", "typesafety"]
+
+[tool.uv.sources]
+basedpyright-as-pyright = { path = "../../../basedpyright-as-pyright", editable = true }

@@ -9,7 +9,7 @@ and answer whether the thoughts↔turns mapping is consistent across providers.
 ## What Happened
 
 **The conversation lives in one `ResolveDriveResource` RPC body** (line 426 of
-`aistudio.har.jsonl`), mime `application/json+protobuf` — JSPB, i.e. **positional
+`aistudio.cdp.jsonl`), mime `application/json+protobuf` — JSPB, i.e. **positional
 arrays, not keyed objects**. That single body carries the whole prompt; one
 captured conversation → one doc, same as the chatgpt/claude pluck. The endpoint
 is generic (index/recents reuse it), so the pluck guards on body shape
