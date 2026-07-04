@@ -97,8 +97,11 @@ JSPB positional decoding (see `dev.kb/claims.kb/aistudio-jspb-prompt-shape.md`).
       (`prompt.chunkedPrompt.chunks[]` / `prompt.metadata`) instead of
       positionally indexing raw JSPB — see
       [cross-provider data-flow drift](2026-07-03-000-cross-provider-data-flow-drift--pre-unification-fixes-vs-unification-scope.md)
-      for verification. The `create_time`-is-really-`lastModified` mislabel
-      is a separate, still-open item in that same file.
+      for verification. The `create_time`-is-really-`lastModified` mislabel,
+      tracked as a separate item in that same file, is also **fixed**
+      (2026-07-04): `index_item` now anchors on the first chunk's
+      `createTime` (true creation), not `lastModified.revisionTime`
+      (modification).
 - [ ] Latent fragility in `turn_kind()` (`chatfs_aistudio_conversation_splat.py`):
       `TURN_IS_ANSWER` (slot 16) is really `finishReason` (per rosetta's
       ground-truth-verified schema — see
