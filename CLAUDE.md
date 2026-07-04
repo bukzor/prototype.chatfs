@@ -4,6 +4,7 @@ depends:
   - Skill(llm-subtask)
   - Skill(llm-kb)
   - Skill(llm-design-kb)
+git-caution: personal
 ---
 
 @.claude/focus.md
