@@ -68,3 +68,11 @@ Tactical capture already exists in `todo.md` parity ladder. This
 strategic file holds the *cross-provider abstraction* question
 separately — the tactical line will execute it; this file justifies
 *when* and *where*.
+
+Before starting the extraction, read
+[cross-provider data-flow drift](2026-07-03-000-cross-provider-data-flow-drift--pre-unification-fixes-vs-unification-scope.md)
+§ "Solve by unification — do NOT fix in place" — five requirements
+(shared `capture()`, persist every pluck output, endpoint cross-check
+on all providers, provider-complete `<details>` wrapping, pipe-vs-
+delegation decision) the shared lib must satisfy, discovered by the
+2026-07-03 three-provider review.

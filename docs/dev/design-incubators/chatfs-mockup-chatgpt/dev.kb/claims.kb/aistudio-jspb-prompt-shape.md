@@ -2,6 +2,8 @@
 status: observed
 first-recorded: 2026-06-20
 last-checked: 2026-07-03
+previously-claimed:
+  - '`[0][4][4][0][0]` | created, unix seconds — wrong: it is revisionTime (modification), not creation; fixed 2026-07-03'
 evidence:
   - aistudio.cdp.jsonl  # line 426: ResolveDriveResource body, prompt 1vU6BlpV69d2MvI6L_oYGo_E-ZqmaI3eR
   - chatfs.demo/aistudio/.chat/1vU6BlpV69d2MvI6L_oYGo_E-ZqmaI3eR/.data/conversation.raw.json  # live re-capture, same prompt
@@ -30,7 +32,7 @@ Document (`body`):
 | `[0][3]` | run settings; `[0][3][2]` = model slug (`models/gemini-3-flash-preview`) |
 | `[0][4][0]` | title |
 | `[0][4][2][0]` | author display name |
-| `[0][4][4][0][0]` | created, unix seconds |
+| `[0][4][4][0][0]` | `lastModified.revisionTime`, unix seconds — **not** creation time; advances on every turn. True creation is the first turn's `createTime` (turn field `[32]`, see below). |
 | `[0][13]` | `[live_turns, draft]` — a 2-slot pair |
 | `[0][13][0]` | the live turn list |
 | `[0][13][1]` | a single empty `"user"` draft turn (skip it) |
@@ -44,6 +46,7 @@ Turn (each turn is a 36-field array):
 | `[16]` | real name **`finishReason`** (see below) — `1` on a model **answer** turn, `null` otherwise, in every turn observed so far |
 | `[18]` | token count |
 | `[19]` | `1` on a model **thought** (reasoning) turn |
+| `[32]` | `createTime` — `[seconds-string, nanos]`, per-turn; `chunks[0][32]` is the conversation's true creation time (used by `chatfs_aistudio_layout.index_item`) |
 
 A turn is classified user / answer / thought from `[8]`/`[16]`/`[19]`;
 see `chatfs_aistudio_conversation_splat.py` (`turn_kind`), which encodes

@@ -27,4 +27,4 @@ class IndexItem(TypedDict):
 
     id: str  # Drive prompt id, `prompts/` prefix stripped
     title: str
-    create_time: int  # unix seconds (the JSPB field is a numeric string)
+    create_time: int  # unix seconds, from the first chunk's createTime

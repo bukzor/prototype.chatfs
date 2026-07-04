@@ -75,6 +75,16 @@ def main() -> None:
             ts, role, uuid, content_type = parts
             by_uuid[uuid] = (stem, ts, role, content_type)
 
+    # Every mapping node must have survived the messages_dir round trip — a
+    # missing entry would mean the stem-parsing above silently dropped a
+    # message (e.g. a future field containing '.'), which would then vanish
+    # from the tree instead of tripping a real splat/render bug. (Unlike
+    # claude's tree, most chatgpt nodes are legitimately bodiless — system
+    # placeholders, empty thought summaries — so this checks .json coverage,
+    # not .md coverage; `extract_text_content` raising on an unknown
+    # content_type is what guards the .md side, at splat time.)
+    assert set(by_uuid) == set(mapping), set(mapping) ^ set(by_uuid)
+
     live_set = live_ancestors(mapping, current)
 
     seq = 0

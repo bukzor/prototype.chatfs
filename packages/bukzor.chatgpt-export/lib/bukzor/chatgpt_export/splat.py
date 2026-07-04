@@ -245,7 +245,13 @@ def _extract_tool_metadata(message: JsonObj) -> str | None:
 
 
 def extract_text_content(raw: JsonObj) -> str | None:
-    """Extract renderable text from a raw message node, if present."""
+    """Extract renderable text from a raw message node, if present.
+
+    A node with no `message` or no `content` legitimately has nothing to
+    render (e.g. the root node). But once a `content_type` is present, an
+    unrecognized one raises rather than vanishing silently — mirrors
+    claude's `extract_text` for unknown block types.
+    """
     inner = raw.get("message")
     if inner is None:
         return None
@@ -280,7 +286,7 @@ def extract_text_content(raw: JsonObj) -> str | None:
     elif content_type in ("user_editable_context", "model_editable_context"):
         return _extract_editable_context(content)
     else:
-        return None
+        raise ValueError(f"unexpected content type: {content_type!r}")
 
 
 def parse_messages(mapping: JsonObj, min_ts: Decimal) -> dict[str, Message]:

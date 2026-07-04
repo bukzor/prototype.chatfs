@@ -31,18 +31,29 @@ def index_item(doc: dict) -> IndexItem:
     only place those positions are named), so identity is synthesized
     here from its named output instead. `prompt.name` is
     `"prompts/<id>"`; the `prompts/` prefix is dropped so the id matches
-    the URL/Drive id. The create_time field is `lastModified.revisionTime`
-    (a `[seconds-string, nanos]` pair), coerced to int seconds.
+    the URL/Drive id.
+
+    create_time is the first chunk's `createTime` (a `[seconds-string,
+    nanos]` pair), coerced to int seconds — true creation time, matching
+    chatgpt/claude's semantic (their index date-trees also bucket by
+    creation). `metadata.lastModified.revisionTime` is NOT creation
+    time — it advances on every turn (verified: it trails the last
+    chunk's createTime in a live capture) — and is deliberately not used
+    here, so AI Studio's date tree stays comparable to the other two
+    providers'. There is no separate modified_time field (neither
+    chatgpt's nor claude's IndexItem carries one either).
     """
     prompt = doc["prompt"]
     raw_id = prompt["name"]
     assert isinstance(raw_id, str) and raw_id.startswith("prompts/"), raw_id
     metadata = prompt["metadata"]
-    revision_time = metadata["lastModified"]["revisionTime"]
+    chunks = prompt["chunkedPrompt"]["chunks"]
+    assert chunks, "empty chunkedPrompt.chunks: no first-chunk createTime to anchor on"
+    create_time = chunks[0]["createTime"]
     return IndexItem(
         id=raw_id.removeprefix("prompts/"),
         title=metadata["displayName"],
-        create_time=int(revision_time[0]),
+        create_time=int(create_time[0]),
     )
 
 

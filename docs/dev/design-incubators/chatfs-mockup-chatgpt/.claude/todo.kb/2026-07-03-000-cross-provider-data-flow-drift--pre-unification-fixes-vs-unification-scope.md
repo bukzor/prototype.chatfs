@@ -67,30 +67,51 @@ independent live bug on the chatgpt side.
           actually threading `createTime` into basenames deferred (not
           part of the crash fix). Note: user+thought turns can share a
           timestamp, so keep the index component for ordering.
-- [ ] **Fix the `create_time` mislabel — decide the date-tree anchor.**
-      JSPB meta slot 4 is `lastModified.revisionTime` (verified against
-      rosetta's live `?alt=json` golden pair), but
-      `chatfs_aistudio_layout.py:27` labels it `CREATED` and `meta.json`
-      publishes it as `create_time`. Consequences: the aistudio date tree
-      buckets by *modification* time where chatgpt/claude bucket by
-      *creation* time, and re-capturing an active chat moves it to a new
-      date-dir. Decide: anchor on honest `revision_time`, or derive
-      creation from the first chunk's `createTime`. Then rename fields to
-      match the decision.
-    - [ ] Correct the same mislabel in
+- [x] **Fix the `create_time` mislabel — decide the date-tree anchor.**
+      Decided 2026-07-03: anchor on the first chunk's `createTime`
+      (true creation), not `lastModified.revisionTime` (modification —
+      verified live: revisionTime `12:53:25` trails chunk[0].createTime
+      `12:42:40` by ~11 min on the demo capture). Matches chatgpt/claude's
+      creation-time bucketing; neither provider's `IndexItem` carries a
+      separate modified-time field, so no new field was added.
+      `chatfs_aistudio_layout.index_item` now reads
+      `chunkedPrompt.chunks[0].createTime`. Verified end-to-end: demo
+      chat's view symlink moved from the `12:53:25` bucket to the
+      `12:42:40` bucket; `meta.json` updated; pyright clean.
+    - [x] Corrected the same mislabel in
           `dev.kb/claims.kb/aistudio-jspb-prompt-shape.md`
-          (`[0][4][4][0][0]` is revisionTime, not "created").
-- [ ] **Convert chatgpt failsoft to failfast** (user-confirmed direction:
-      "we want failfast"). Two sites where unknown content silently
-      vanishes from `chat.md`:
-    - [ ] `packages/bukzor.chatgpt-export/lib/bukzor/chatgpt_export/splat.py`
+          (`[0][4][4][0][0]` is revisionTime, not "created"; added
+          `previously-claimed:` entry and the turn-level `[32] createTime`
+          field to the table).
+- [x] **Convert chatgpt failsoft to failfast** (user-confirmed direction:
+      "we want failfast").
+    - [x] `packages/bukzor.chatgpt-export/lib/bukzor/chatgpt_export/splat.py`
           `extract_text_content` — terminal `return None` on unknown
-          `content_type` (line ~283). Should raise, like claude's
-          `extract_text` does for unknown block types.
-    - [ ] `chatfs_chatgpt_conversation_render.py:86-89` — silently skips
-          nodes without an `.md`. Add claude-render's body-coverage
-          assertion (`chatfs_claude_conversation_render.py:329`), with an
-          explicit prune list for legitimately bodiless nodes.
+          `content_type` now `raise ValueError(...)`, mirroring claude's
+          `extract_text`. Verified: the 6 known content_types
+          (text/thoughts/code/reasoning_recap/user_editable_context/
+          model_editable_context) are the only ones present across every
+          captured export in the repo (grepped); no unknown type has been
+          observed yet, so this is latent-bug coverage, not a live fix.
+    - [x] `chatfs_chatgpt_conversation_render.py:86-89` — investigated
+          claude-render's body-coverage assertion
+          (`chatfs_claude_conversation_render.py:329`) as a template, but
+          its leaf-only prune-list design doesn't fit chatgpt's tree:
+          verified against a live 188-message capture that 58 nodes are
+          legitimately bodiless **non-leaf** pass-through nodes (blank
+          system-context messages, empty thought summaries) — the common
+          case here, not a rare edge case like claude's canceled-retry
+          leaves. A leaf-only prune list produced 58 false-positive
+          assertion failures on real data. Landed the narrower, correct
+          invariant instead: `assert set(by_uuid) == set(mapping)`,
+          guarding the stem-parsing directory scan against silently
+          dropping a message id (the actual "vanishing" risk on the
+          render side); the "unknown content_type" risk is fully covered
+          by splat's raise above, at the source. Verified end-to-end:
+          full pipeline re-run on the 188-message capture produced
+          byte-identical `chat.md` output to pre-change; swept every
+          demo chat with a captured `conversation.json` (2 of ~57 have
+          one) — both clean, no assertion trips.
 
 ## Solve by unification — do NOT fix in place
 
@@ -143,16 +164,21 @@ is wasted motion.
 
 ## Success Criteria
 
-- [ ] `chatfs_aistudio_conversation_splat.py conversation.json` runs clean
+- [x] `chatfs_aistudio_conversation_splat.py conversation.json` runs clean
       on the massaged doc; `conversation.raw.json` has exactly one consumer
       (massage) and zero downstream readers.
-- [ ] Positional JSPB indices appear in exactly one file
-      (`chatfs_aistudio_conversation_massage_json.py`).
-- [ ] `meta.json` field names are honest about which timestamp they carry;
-      all three providers' date trees bucket by the same semantic.
-- [ ] An unknown chatgpt content_type raises instead of vanishing.
-- [ ] The unification requirements above are visible from the shared-code
-      todo before its design starts.
+- [x] Positional JSPB indices appear in exactly one file
+      (`chatfs_aistudio_conversation_massage_json.py`) — confirmed: no
+      bracket-index reads remain in splat or layout.
+- [x] `meta.json` field names are honest about which timestamp they carry;
+      all three providers' date trees bucket by the same semantic
+      (creation time).
+- [x] An unknown chatgpt content_type raises instead of vanishing —
+      `extract_text_content`'s terminal `else` now raises `ValueError`.
+- [x] The unification requirements above are visible from the shared-code
+      todo before its design starts — cross-linked from
+      [shared code among providers](2026-05-11-001-shared-code-among-providers.md)
+      Notes.
 
 ## Notes
 
