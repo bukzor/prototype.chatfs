@@ -1,5 +1,18 @@
 ---
 managed-by: Skill(llm-subtask)
+cost-benefit-sweh:
+  timebox:
+    '@value': 2
+    rationale: more golden pairs to exercise slot-alignment stability; package is exploratory/disposable by design
+    confidence: tentative
+  benefit-2w:
+    '@value': 0.3
+    rationale: the named consumer already ported the SCHEMA (2026-07-03); residual value is validating the rosetta loop
+    confidence: tentative
+  cost-of-delay-2w:
+    '@value': 0
+    rationale: nothing bleeds; captures are committed
+    confidence: confident
 ---
 
 # Tactical Tasks — aistudio-schema
