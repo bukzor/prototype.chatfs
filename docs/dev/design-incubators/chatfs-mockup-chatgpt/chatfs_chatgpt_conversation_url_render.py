@@ -34,7 +34,7 @@ def main() -> None:
     )
 
     path_render = Path(__file__).parent / "chatfs_chatgpt_conversation_path_render.py"
-    subprocess.run([str(path_render), str(chat_dir)], check=True)
+    _ = subprocess.run([str(path_render), str(chat_dir)], check=True)
 
 
 if __name__ == "__main__":

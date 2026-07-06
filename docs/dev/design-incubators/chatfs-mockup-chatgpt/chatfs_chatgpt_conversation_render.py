@@ -15,17 +15,18 @@ Usage:
 
 stdout: rendered markdown.
 """
-import json
 import sys
 from collections.abc import Mapping
 
+import chatfs_json
 from chatfs_chatgpt_layout import DATA_DIR_NAME, resolve_chat_dir
+from chatfs_chatgpt_types import Conversation, Node, is_conversation
 
 
-def live_ancestors(mapping: Mapping[str, dict], current: str) -> set[str]:
+def live_ancestors(mapping: Mapping[str, Node], current: str) -> set[str]:
     """The live set: `current` and every ancestor up to the root."""
     live: set[str] = set()
-    node = current
+    node: str | None = current
     while node is not None:
         live.add(node)
         node = mapping[node].get("parent")
@@ -35,7 +36,7 @@ def live_ancestors(mapping: Mapping[str, dict], current: str) -> set[str]:
 def primary_child(
     children: list[str],
     live_set: set[str],
-    mapping: Mapping[str, dict],
+    mapping: Mapping[str, Node],
 ) -> str | None:
     """Pick the child to continue inline. Live child wins; else latest."""
     for c in children:
@@ -45,8 +46,10 @@ def primary_child(
         return None
 
     def ct(c: str) -> float:
-        m = mapping[c].get("message") or {}
-        return m.get("create_time") or 0.0
+        message = mapping[c].get("message")
+        if message is None:
+            return 0.0
+        return message.get("create_time") or 0.0
 
     return max(children, key=ct)
 
@@ -57,7 +60,9 @@ def main() -> None:
         sys.exit(2)
 
     chat_dir = resolve_chat_dir(sys.argv[1])
-    conversation = json.loads((chat_dir / DATA_DIR_NAME / "conversation.json").read_text())
+    parsed = chatfs_json.loads((chat_dir / DATA_DIR_NAME / "conversation.json").read_text())
+    assert is_conversation(parsed), parsed
+    conversation: Conversation = parsed
     messages_dir = chat_dir / "messages"
 
     mapping = conversation["mapping"]
@@ -113,11 +118,11 @@ def main() -> None:
 
                 if seq > 0:
                     if depth > 0 and prev_depth == depth:
-                        # Same dead branch continuing — separator must stay quoted.
-                        sys.stdout.write(("> " * depth).rstrip() + "\n")
+                        # Same dead branch continuing -- separator must stay quoted.
+                        _ = sys.stdout.write(("> " * depth).rstrip() + "\n")
                     else:
-                        sys.stdout.write("\n")
-                sys.stdout.write(section)
+                        _ = sys.stdout.write("\n")
+                _ = sys.stdout.write(section)
                 seq += 1
                 prev_depth = depth
 

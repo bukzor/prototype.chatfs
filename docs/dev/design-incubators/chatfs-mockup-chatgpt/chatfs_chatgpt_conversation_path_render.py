@@ -51,17 +51,17 @@ def main() -> None:
     purge_non_captured(chat_dir)
 
     print(f"Splatting {conversation} ...", file=sys.stderr)
-    subprocess.run(["chatgpt-splat", str(conversation)], check=True)
+    _ = subprocess.run(["chatgpt-splat", str(conversation)], check=True)
     splat = data_dir / "conversation.splat"
     for entry in splat.iterdir():
-        shutil.move(str(entry), str(chat_dir / entry.name))
+        _ = shutil.move(str(entry), str(chat_dir / entry.name))
     splat.rmdir()
 
     render = Path(__file__).parent / "chatfs_chatgpt_conversation_render.py"
     out = chat_dir / "chat.md"
     print(f"Rendering {chat_dir} → chat.md ...", file=sys.stderr)
     with out.open("wb") as f:
-        subprocess.run([str(render), str(chat_dir)], stdout=f, check=True)
+        _ = subprocess.run([str(render), str(chat_dir)], stdout=f, check=True)
 
 
 if __name__ == "__main__":

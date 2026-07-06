@@ -17,7 +17,6 @@ Steps:
     5. place_meta (writes meta.json, purges + places view dir-symlink)
     6. delegate to path_render (splat + render)
 """
-import json
 import shutil
 import subprocess
 import sys
@@ -25,8 +24,9 @@ import tempfile
 from pathlib import Path
 from urllib.parse import urlparse
 
+import chatfs_json
 from chatfs_chatgpt_layout import chat_dir_for, data_dir_for, place_meta
-from chatfs_chatgpt_types import IndexItem
+from chatfs_chatgpt_types import IndexItem, is_index_page
 
 HERE = Path(__file__).parent
 INDEX_PLUCK = HERE / "chatfs_chatgpt_index_pluck.jq"
@@ -56,9 +56,10 @@ def find_index_item(cdp: Path, uuid: str) -> IndexItem:
     for line in result.stdout.decode().splitlines():
         if not line.strip():
             continue
-        page = json.loads(line)
-        for item in page.get("items", []):
-            if item.get("id") == uuid:
+        page = chatfs_json.loads(line)
+        assert is_index_page(page), page
+        for item in page["items"]:
+            if item["id"] == uuid:
                 matches.append(item)
     assert matches, (
         f"no sidebar index page included {uuid}; "
@@ -85,20 +86,20 @@ def main() -> None:
 
         print(f"Capturing {url} → {staged_cdp} ...", file=sys.stderr)
         with staged_cdp.open("wb") as f:
-            subprocess.run(["har-browse", url], stdout=f, check=True)
+            _ = subprocess.run(["har-browse", url], stdout=f, check=True)
 
         print(f"Plucking conversation → {staged_conversation} ...", file=sys.stderr)
         with staged_cdp.open("rb") as src, staged_conversation.open("wb") as dst:
-            subprocess.run([str(CONVERSATION_PLUCK)], stdin=src, stdout=dst, check=True)
+            _ = subprocess.run([str(CONVERSATION_PLUCK)], stdin=src, stdout=dst, check=True)
 
         item = find_index_item(staged_cdp, uuid)
         data_dir = data_dir_for(uuid, ROOT)
         data_dir.mkdir(parents=True, exist_ok=True)
-        shutil.move(str(staged_cdp), data_dir / "cdp.jsonl")
-        shutil.move(str(staged_conversation), data_dir / "conversation.json")
-        place_meta(item, ROOT)
+        _ = shutil.move(str(staged_cdp), data_dir / "cdp.jsonl")
+        _ = shutil.move(str(staged_conversation), data_dir / "conversation.json")
+        _ = place_meta(item, ROOT)
 
-    subprocess.run([str(PATH_RENDER), str(chat_dir_for(uuid, ROOT))], check=True)
+    _ = subprocess.run([str(PATH_RENDER), str(chat_dir_for(uuid, ROOT))], check=True)
 
 
 if __name__ == "__main__":
