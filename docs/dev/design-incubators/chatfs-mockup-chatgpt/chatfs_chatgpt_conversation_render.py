@@ -1,57 +1,101 @@
 #!/usr/bin/env python3
-"""Render a conversation's mapping to markdown on stdout.
+"""Render a chatgpt conversation to readable markdown on stdout.
 
-Walks `mapping` from root, emitting one section per textual turn. The
-live path (root → current_node) renders unprefixed; dead branches off
-each fork are blockquoted at depth = how many forks deep they sit
-inside, and appear right after the fork point so they read as
-quoted-asides between the parent turn and the live continuation.
-
-Each section: a `# [seq · role · time](messages/<stem>.md)` H1 backref
-to the atomic turn-file under the chat dir.
+The fork-fact notation -- what the output guarantees a reader, including
+excerpt readers -- is specified and implemented in `chatfs_render`; this
+module contributes only the chatgpt-shaped parts: message-file stems
+(4-part, with content_type), the `mapping`/`current_node` tree encoding,
+and the repair of chatgpt's legitimately turn-less nodes (system
+placeholders, empty thought summaries) via `normalize_turnless` -- a
+turn-less fork gets a synthetic heading linking its `.json` record, so
+fork facts always have an anchor.
 
 Usage:
     chatfs_chatgpt_conversation_render.py <path-to-chat-dir-or-inside>
 
 stdout: rendered markdown.
 """
+
 import sys
-from collections.abc import Mapping
+from pathlib import Path
+from typing import NamedTuple
 
 import chatfs_json
 from chatfs_chatgpt_layout import DATA_DIR_NAME, resolve_chat_dir
-from chatfs_chatgpt_types import Conversation, Node, is_conversation
+from chatfs_chatgpt_types import Conversation, is_conversation
+from chatfs_render import ConversationTree, Turn, normalize_turnless, render_tree
+
+VIRTUAL_ROOT = ""
+"""Stands in for chatgpt's `parent: null`: the virtual root must be an id
+that is named as a parent but is never a node."""
 
 
-def live_ancestors(mapping: Mapping[str, Node], current: str) -> set[str]:
-    """The live set: `current` and every ancestor up to the root."""
-    live: set[str] = set()
-    node: str | None = current
-    while node is not None:
-        live.add(node)
-        node = mapping[node].get("parent")
-    return live
+class Stem(NamedTuple):
+    """A parsed message-file basename: <iso-ts>.<role>.<uuid>.<content_type>."""
+
+    stem: str
+    ts: str
+    role: str
+    content_type: str
+
+    def note(self) -> str:
+        """The heading qualifier: the content type, except `text` (the norm)."""
+        return "" if self.content_type == "text" else self.content_type.replace("_", " ")
 
 
-def primary_child(
-    children: list[str],
-    live_set: set[str],
-    mapping: Mapping[str, Node],
-) -> str | None:
-    """Pick the child to continue inline. Live child wins; else latest."""
-    for c in children:
-        if c in live_set:
-            return c
-    if not children:
-        return None
+def load_stems(messages_dir: Path) -> dict[str, Stem]:
+    """uuid → its parsed stem, for every splatted message record."""
+    stems: dict[str, Stem] = {}
+    for entry in messages_dir.iterdir():
+        if entry.suffix != ".json":
+            continue
+        parts = entry.stem.split(".")  # iso-ts has no '.'
+        if len(parts) == 4:
+            ts, role, uuid, content_type = parts
+            stems[uuid] = Stem(entry.stem, ts, role, content_type)
+    return stems
 
-    def ct(c: str) -> float:
-        message = mapping[c].get("message")
-        if message is None:
-            return 0.0
-        return message.get("create_time") or 0.0
 
-    return max(children, key=ct)
+def load_turns(messages_dir: Path, stems: dict[str, Stem]) -> dict[str, Turn]:
+    """uuid → its Turn, for every message that rendered to a body. Headings
+    show date-to-the-minute wall-clock time (matching the claude renderer);
+    the full timestamp survives in the link."""
+    turns: dict[str, Turn] = {}
+    for uuid, s in stems.items():
+        md_path = messages_dir / f"{s.stem}.md"
+        if md_path.exists():
+            turns[uuid] = Turn(
+                s.role,
+                s.ts[:16],
+                f"messages/{s.stem}.md",
+                md_path.read_text().rstrip(),
+                s.note(),
+            )
+    return turns
+
+
+def build_tree(conversation: Conversation) -> ConversationTree:
+    """Reshape `mapping` into the shared tree, cross-checking that its
+    parent pointers and children arrays agree."""
+    mapping = conversation["mapping"]
+    children: dict[str, list[str]] = {VIRTUAL_ROOT: []}
+    created: dict[str, float] = {}
+    for nid, node in mapping.items():
+        kids = list(node.get("children") or [])
+        for c in kids:
+            assert mapping[c].get("parent") == nid, (c, nid)
+        children[nid] = kids
+        if node.get("parent") is None:
+            children[VIRTUAL_ROOT].append(nid)
+        message = node.get("message")
+        created[nid] = (message.get("create_time") or 0.0) if message else 0.0
+    return ConversationTree(
+        root=VIRTUAL_ROOT,
+        parent_of={nid: node.get("parent") or VIRTUAL_ROOT for nid, node in mapping.items()},
+        children=children,
+        created=created,
+        current=conversation["current_node"],
+    )
 
 
 def main() -> None:
@@ -60,85 +104,37 @@ def main() -> None:
         sys.exit(2)
 
     chat_dir = resolve_chat_dir(sys.argv[1])
-    parsed = chatfs_json.loads((chat_dir / DATA_DIR_NAME / "conversation.json").read_text())
+    parsed = chatfs_json.loads(
+        (chat_dir / DATA_DIR_NAME / "conversation.json").read_text()
+    )
     assert is_conversation(parsed), parsed
     conversation: Conversation = parsed
     messages_dir = chat_dir / "messages"
 
-    mapping = conversation["mapping"]
-    current = conversation["current_node"]
-
-    # uuid → (stem, ts, role, content_type)
-    by_uuid: dict[str, tuple[str, str, str, str]] = {}
-    for entry in messages_dir.iterdir():
-        if entry.suffix != ".json":
-            continue
-        # stem: <iso-ts>.<role>.<uuid>.<content_type>; iso-ts has no '.'
-        stem = entry.stem
-        parts = stem.split(".")
-        if len(parts) == 4:
-            ts, role, uuid, content_type = parts
-            by_uuid[uuid] = (stem, ts, role, content_type)
-
-    # Every mapping node must have survived the messages_dir round trip — a
+    stems = load_stems(messages_dir)
+    # Every mapping node must have survived the messages_dir round trip -- a
     # missing entry would mean the stem-parsing above silently dropped a
     # message (e.g. a future field containing '.'), which would then vanish
     # from the tree instead of tripping a real splat/render bug. (Unlike
-    # claude's tree, most chatgpt nodes are legitimately bodiless — system
-    # placeholders, empty thought summaries — so this checks .json coverage,
+    # claude's tree, most chatgpt nodes are legitimately bodiless -- system
+    # placeholders, empty thought summaries -- so this checks .json coverage,
     # not .md coverage; `extract_text_content` raising on an unknown
     # content_type is what guards the .md side, at splat time.)
-    assert set(by_uuid) == set(mapping), set(mapping) ^ set(by_uuid)
+    assert set(stems) == set(conversation["mapping"]), (
+        set(conversation["mapping"]) ^ set(stems)
+    )
 
-    live_set = live_ancestors(mapping, current)
+    def make_turn(nid: str) -> Turn:
+        # a turn-less fork's anchor: heading only, linking the .json record
+        s = stems[nid]
+        return Turn(s.role, s.ts[:16], f"messages/{s.stem}.json", "", s.note())
 
-    seq = 0
-    prev_depth = -1
+    turns = load_turns(messages_dir, stems)
+    tree, turns = normalize_turnless(build_tree(conversation), turns, make_turn)
+    markdown, count = render_tree(tree, turns)
+    _ = sys.stdout.write(markdown)
 
-    def emit(node_id: str, depth: int) -> None:
-        nonlocal seq, prev_depth
-        record = by_uuid.get(node_id)
-        if record is not None:
-            stem, ts, role, content_type = record
-            md_path = messages_dir / f"{stem}.md"
-            if md_path.exists():
-                time_of_day = ts[11:19]  # 'HH:MM:SS' from '<date>T<HH:MM:SS>,<ns><tz>'
-                heading_text = f"{seq:03d} · {role} · {time_of_day}"
-                if content_type != "text":
-                    heading_text += f" ({content_type.replace('_', ' ')})"
-                link = f"messages/{stem}.md"
-                body = md_path.read_text().rstrip()
-                section = f"# [{heading_text}]({link})\n\n{body}\n"
-                if depth > 0:
-                    prefix = "> " * depth
-                    section = "".join(
-                        (prefix + line).rstrip() + "\n"
-                        for line in section.splitlines()
-                    )
-
-                if seq > 0:
-                    if depth > 0 and prev_depth == depth:
-                        # Same dead branch continuing -- separator must stay quoted.
-                        _ = sys.stdout.write(("> " * depth).rstrip() + "\n")
-                    else:
-                        _ = sys.stdout.write("\n")
-                _ = sys.stdout.write(section)
-                seq += 1
-                prev_depth = depth
-
-        children = list(mapping[node_id].get("children") or [])
-        primary = primary_child(children, live_set, mapping)
-        for c in children:
-            if c == primary:
-                continue
-            emit(c, depth + 1)
-        if primary is not None:
-            emit(primary, depth)
-
-    root = next(nid for nid, m in mapping.items() if m.get("parent") is None)
-    emit(root, 0)
-
-    print(f"Rendered {seq} turn(s).", file=sys.stderr)
+    print(f"Rendered {count} turn(s).", file=sys.stderr)
 
 
 if __name__ == "__main__":

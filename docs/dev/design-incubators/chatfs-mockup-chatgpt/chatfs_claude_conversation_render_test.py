@@ -7,14 +7,13 @@ from textwrap import dedent
 import pytest
 
 from chatfs_claude_conversation_render import (
-    Turn,
-    live_ancestors,
+    build_tree,
     load_turns,
-    primary_child,
     prune_bodiless_leaves,
     render_conversation,
 )
 from chatfs_claude_types import ChatMessage, ContentBlock, Several
+from chatfs_render import Turn, live_ancestors, primary_child
 
 
 def msg(
@@ -79,21 +78,19 @@ class DescribePruneBodilessLeaves:
 
 
 class DescribePrimaryChild:
-    def it_breaks_created_at_ties_toward_the_last_sibling(self):
+    def it_breaks_creation_time_ties_toward_the_last_sibling(self):
         # equal timestamps happen at claude's second resolution; "latest" then
         # means the one the source listed later
-        msgs = (msg("a", text="x"), msg("b", text="y"))
-        by_uuid = {m["uuid"]: m for m in msgs}
-        assert primary_child(["a", "b"], set[str](), by_uuid) == "b"
+        assert primary_child(["a", "b"], set[str](), {"a": 1.0, "b": 1.0}) == "b"
 
 
 class DescribeLiveAncestors:
     def it_rejects_a_current_leaf_missing_from_the_tree(self):
         # a pruned bodiless cancel could be the recorded current leaf; silently
         # returning an empty live set would demote the whole trunk to <-latest
-        by_uuid = {m["uuid"]: m for m in (msg("a", text="x"),)}
+        tree = build_tree((msg("a", text="x"),), current="gone")
         with pytest.raises(AssertionError):
-            _ = live_ancestors(by_uuid, "gone")
+            _ = live_ancestors(tree)
 
 
 class DescribeRenderConversation:
