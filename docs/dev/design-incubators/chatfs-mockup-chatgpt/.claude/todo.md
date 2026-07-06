@@ -95,6 +95,10 @@ noun-verb rename, the pyright-clean sweep) is recorded in `../../../devlog/`
       implementation; the notation is provider-agnostic. The
       shared-`chatfs_layout.py` refactor this was blocked on has landed
       (2026-07-05), so the notation can now be written once, not twice.
+      Porting note: `←latest` means latest `created_at` (a wire-truth
+      label); chatgpt's `mapping` children arrays carry an order claude
+      lacks — keep the created-time definition rather than array order,
+      so the label stays true across providers.
 - [ ] Promote `provider-plugin-model.md` symlink to a real incubator entry, with
       two-provider lessons (what's truly provider-shaped, what's universal)
 

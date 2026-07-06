@@ -269,7 +269,12 @@ class Renderer:
 def load_turns(messages_dir: Path) -> dict[str, Turn]:
     """uuid → its Turn, for every message that rendered to a non-empty body.
 
-    The time field keeps the date, not just the clock: conversations span days."""
+    The time field keeps the date but truncates to the minute and drops the
+    offset — heading noise costs the reader more than sub-minute precision
+    buys, and per-message wall-clock local time is what a human wants to
+    read. The full timestamp, offset included, survives in the link; the
+    only ambiguity the truncation admits is the annual DST fall-back fold,
+    which the link resolves."""
     turns: dict[str, Turn] = {}
     for entry in messages_dir.iterdir():
         if entry.suffix != ".json":
@@ -282,7 +287,7 @@ def load_turns(messages_dir: Path) -> dict[str, Turn]:
         if not md_path.exists():
             continue
         turns[uuid] = Turn(
-            sender, ts[:19], f"messages/{entry.stem}.md", md_path.read_text().rstrip()
+            sender, ts[:16], f"messages/{entry.stem}.md", md_path.read_text().rstrip()
         )
     return turns
 
@@ -292,20 +297,24 @@ def prune_bodiless_leaves(
 ) -> Several[ChatMessage]:
     """Drop messages that splatted to a .json but no .md — a bodiless node such
     as a `user_canceled` retry that emitted nothing. Keeping one would fabricate
-    a fork whose sibling has no turn to number. Only a childless, contentless
-    leaf is prunable; a bodiless node that still carries content or children is a
-    splat/render bug, so it stays and trips the downstream body-coverage check."""
-    parents = {m["parent_message_uuid"] for m in chat_messages}
-    return tuple(
-        m
-        for m in chat_messages
-        if not (
-            m["uuid"] not in rendered
-            and not m["text"]
-            and not m["content"]
-            and m["uuid"] not in parents
+    a fork whose sibling has no turn to number. Prunes to a fixpoint, so a chain
+    of bodiless nodes falls leaf-first; a bodiless node that still carries
+    content or a surviving child is a splat/render bug, so it stays and trips
+    the downstream body-coverage check."""
+    msgs = tuple(chat_messages)
+    while True:
+        parents = {m["parent_message_uuid"] for m in msgs}
+        kept = tuple(
+            m
+            for m in msgs
+            if m["uuid"] in rendered
+            or m["text"]
+            or m["content"]
+            or m["uuid"] in parents
         )
-    )
+        if len(kept) == len(msgs):
+            return kept
+        msgs = kept
 
 
 def main() -> None:
@@ -344,7 +353,7 @@ def main() -> None:
     if len(children.get(root, [])) > 1:
         turns[root] = Turn(
             "origin",
-            "0000-00-00T00:00:00",
+            "0000-00-00T00:00",
             f"{DATA_DIR_NAME}/conversation.json",
             "",
         )

@@ -160,7 +160,9 @@ def extract_text(content_blocks: Several[ContentBlock]) -> str:
             case {"type": "thinking"}:
                 pieces.append(render_thinking(block))
             case {"type": "tool_use"}:
-                next_block = content_blocks[i + 1]  # each tool_use is paired next
+                # each tool_use is paired with the next block; None at end-of-list
+                # (an interrupted call) falls to the same mispairing raise below
+                next_block = content_blocks[i + 1] if i + 1 < len(content_blocks) else None
                 match next_block:
                     case {"type": "tool_result"}:
                         assert next_block["tool_use_id"] == block["id"], (block, next_block)

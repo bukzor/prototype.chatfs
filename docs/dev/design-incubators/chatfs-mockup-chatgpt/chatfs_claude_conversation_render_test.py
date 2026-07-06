@@ -1,6 +1,8 @@
 """Regression tests for the renderer's pre-render tree pruning."""
 
-from chatfs_claude_conversation_render import prune_bodiless_leaves
+from pathlib import Path
+
+from chatfs_claude_conversation_render import load_turns, prune_bodiless_leaves
 from chatfs_claude_types import ChatMessage, ContentBlock, Several
 
 
@@ -46,6 +48,12 @@ class DescribePruneBodilessLeaves:
         kept = prune_bodiless_leaves(msgs, rendered={"a"})
         assert {m["uuid"] for m in kept} == {"a", "b"}, kept
 
+    def it_prunes_a_chain_of_bodiless_nodes(self):
+        # a cancel whose only child is another cancel: the leaf falls first,
+        # which leaves its parent childless and contentless -- it must fall too.
+        msgs = (msg("a", text="hi"), msg("b", parent="a"), msg("c", parent="b"))
+        assert uuids(prune_bodiless_leaves(msgs, rendered={"a"})) == ["a"]
+
     def it_keeps_a_bodiless_non_leaf(self):
         # an empty node with a child can't be dropped without re-parenting: retain
         # it so the missing-body check fires rather than silently restructuring.
@@ -56,3 +64,25 @@ class DescribePruneBodilessLeaves:
         )
         kept = prune_bodiless_leaves(msgs, rendered={"a", "c"})
         assert {m["uuid"] for m in kept} == {"a", "empty", "c"}, kept
+
+
+class DescribeLoadTurns:
+    def write_message(self, tmp_path: Path, stem: str):
+        _ = (tmp_path / f"{stem}.json").write_text("{}\n")
+        _ = (tmp_path / f"{stem}.md").write_text("hi\n")
+
+    def it_truncates_the_heading_time_to_the_minute(self, tmp_path: Path):
+        self.write_message(tmp_path, "2026-05-10T15:41:14,405121000-0500.human.abc")
+        turns = load_turns(tmp_path)
+        assert turns["abc"].time == "2026-05-10T15:41", turns
+
+    def it_accepts_mixed_offsets(self, tmp_path: Path):
+        # a conversation spanning a DST change has mixed offsets -- normal for
+        # long-lived chats, since each basename carries the offset in effect at
+        # that message's moment. Headings show per-message wall-clock time; the
+        # link keeps the offset for anyone who needs it.
+        self.write_message(tmp_path, "2026-03-08T01:59:00,000000000-0600.human.abc")
+        self.write_message(tmp_path, "2026-03-08T03:01:00,000000000-0500.assistant.xyz")
+        turns = load_turns(tmp_path)
+        assert turns["abc"].time == "2026-03-08T01:59", turns
+        assert turns["xyz"].time == "2026-03-08T03:01", turns
