@@ -36,9 +36,10 @@ Scope: this incubator only. Project-wide tactical work lives in
 
 ## Next
 
-- [ ] [pyright-clean sweep across the incubator](todo.kb/2026-07-05-000-pyright-clean-sweep-across-the-incubator.md)
-      — TypedDict+TypeGuard house pattern, applied provider by provider; AI
-      Studio and chatgpt done, claude next. See the file for the approach.
+- [x] [pyright-clean sweep across the incubator](todo.kb/2026-07-05-000-pyright-clean-sweep-across-the-incubator.md)
+      — TypedDict+TypeGuard house pattern applied to all three providers
+      (AI Studio, chatgpt, claude). `basedpyright .` now 0 errors/0 warnings
+      incubator-wide.
 - [ ] [Cross-provider data-flow drift — pre-unification fixes vs unification scope](todo.kb/2026-07-03-000-cross-provider-data-flow-drift--pre-unification-fixes-vs-unification-scope.md)
       — from the 2026-07-03 three-provider review. All three "fix before
       unification" bugs landed 2026-07-03/04 (aistudio splat retarget,

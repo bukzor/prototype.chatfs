@@ -79,8 +79,8 @@ truth, not this doc.
 
 ## Success Criteria
 
-- [ ] `basedpyright .` reports 0 errors, 0 warnings outside `trash/`
-- [ ] Each touched file's runtime behavior verified unchanged (smoke test)
+- [x] `basedpyright .` reports 0 errors, 0 warnings outside `trash/`
+- [x] Each touched file's runtime behavior verified unchanged (smoke test)
 
 ## Notes
 
