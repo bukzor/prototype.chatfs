@@ -22,8 +22,13 @@ chatfs = { workspace = true }
 bukzor-chatgpt-export = { workspace = true }
 
 [tool.pyright]
-# trash/ holds discarded scratch and superseded originals, not live code.
-exclude = ["**/trash/**"]
+exclude = [
+  "**/node_modules",
+  "**/__pycache__",
+  "**/.venv",
+  "**/trash",
+  "**/typesafety",
+]
 
 # Temporary workaround: design-incubators use flat sibling-importing scripts
 # rather than proper packages. Each incubator dir gets a scoped extraPath so
