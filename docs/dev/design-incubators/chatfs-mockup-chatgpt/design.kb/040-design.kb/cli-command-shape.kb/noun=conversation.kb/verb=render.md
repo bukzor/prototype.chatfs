@@ -35,7 +35,11 @@ positions.
     winner (succession order — the revision chain recoverable in one
     canonical place, landing right after the superseded asides it names).
   - *Below* the body — forward **navigation**: `replies: …` on a fork
-    parent, all children in render order with the live one marked `←live`.
+    parent, all children in render order with the chosen continuation
+    marked `←live` when it's on the path to the conversation's current
+    leaf, or `←latest` when it's merely the most-recently-created child of
+    a branch that's already superseded — the two are different claims and
+    must not share a label.
 - **Spelling is bare `*italics*`, not `<sub>`.** The primary consumers are
   LLMs and plaintext editors, to which `<sub>` tags are token cost and
   visual clutter; in-browser smallness would serve only the third-ranked

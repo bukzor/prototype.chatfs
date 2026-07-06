@@ -127,6 +127,12 @@ def number_turns(
             child_head, child_starts = head, False
             seq += 1
         else:
+            assert node == root, (
+                f"turn-less node {node!r} is not the root — every non-root "
+                "message must have a rendered turn (enforced by the "
+                "set(turns) == set(by_uuid) assert in main(), which must "
+                "run before this walk)"
+            )
             child_head, child_starts = branch_head, starts
         primary = primary_of[node]
         for c in children.get(node, []):
@@ -159,6 +165,7 @@ class Renderer:
     primary_of: Mapping[str, str | None]
     parent_of: Mapping[str, str]
     turns: Mapping[str, Turn]
+    live_set: Container[str]
 
     def number(self, node: str) -> str:
         """`head/seq`, dropping the prefix when the turn is its own branch head —
@@ -184,16 +191,18 @@ class Renderer:
             return ""
 
     def replies(self, node: str) -> str:
-        """Footer item at a fork: all replies in render order, the live one last
-        and explicitly marked `←live` — liveness shouldn't rely on the unstated
-        last-is-live convention."""
+        """Footer item at a fork: all replies in render order, the chosen
+        continuation last and explicitly tagged — `←live` when it's on the
+        path to `current_leaf_message_uuid`, `←latest` when it's merely the
+        most-recently-created child of an already-superseded branch."""
         kids = self.children.get(node, [])
         if len(kids) < 2:
             return ""
         primary = self.primary_of[node]
         assert primary is not None, node
         dead = [self.number(c) for c in kids if c != primary]
-        live = f"{self.number(primary)} ←live"
+        tag = "←live" if primary in self.live_set else "←latest"
+        live = f"{self.number(primary)} {tag}"
         return f"replies: {', '.join([*dead, live])}"
 
     def version_status(self, node: str) -> str:
@@ -342,7 +351,7 @@ def main() -> None:
         parent_of[root] = ""  # before the beginning: never a uuid, never numbered
 
     order, numbering = number_turns(root, children, primary_of, turns)
-    renderer = Renderer(numbering, children, primary_of, parent_of, turns)
+    renderer = Renderer(numbering, children, primary_of, parent_of, turns, live_set)
     _ = sys.stdout.write(renderer.render(order))
 
     print(f"Rendered {len(order)} turn(s).", file=sys.stderr)
