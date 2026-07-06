@@ -5,7 +5,8 @@
 Follow-on from the `chatfs_layout.py` extraction (commit b0665ce, same
 day): re-running `basedpyright .` after that refactor surfaced
 16 pre-existing errors (bare `dict`/`Mapping` generics) and ~170 cascading
-warnings across all three providers. Taskfile:
+warnings across all three providers. Taskfile (garbage-collected after
+landing; this devlog is now the durable record):
 `.claude/todo.kb/2026-07-05-000-pyright-clean-sweep-across-the-incubator.md`.
 Worked provider by provider: AI Studio (390e5f6), chatgpt (2a609cc),
 claude (aa0da11, this session's slice).
@@ -102,13 +103,16 @@ against `chatfs.demo/`.
 
 ## Open Questions
 
-None outstanding for this taskfile — both success criteria are checked
-off and it's closed in `.claude/todo.md`. `trash/` remains explicitly out
-of scope (excluded in `pyproject.toml`'s `[tool.pyright]`).
+None outstanding — both success criteria were checked off and the
+taskfile and its `.claude/todo.md` entry were removed in the same
+session's garbage-collection pass (this devlog is the durable record).
+`trash/` remains explicitly out of scope (excluded in `pyproject.toml`'s
+`[tool.pyright]`).
 
 ## References
 
 - `.claude/todo.kb/2026-07-05-000-pyright-clean-sweep-across-the-incubator.md`
+  (removed after landing — see this devlog for the durable record)
 - `~/.claude/sessions.kb/pyright-clean-sweep-across-the-incubator.md`
 - `chatfs_claude_types.py` — the `ContentBlock` union and its `TypeGuard`s
 - `chatfs_chatgpt_types.py`, `chatfs_aistudio_types.py` — the two earlier
