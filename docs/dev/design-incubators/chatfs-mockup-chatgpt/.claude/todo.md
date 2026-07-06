@@ -2,26 +2,24 @@
 managed-by: Skill(llm-subtask)
 cost-benefit-sweh:
   timebox:
-    "@value": 5.0
+    "@value": 3.0
     rationale: >
-      Residual after the pyright-clean sweep landed (2026-07-05, all
-      checked history moved to devlog). Unchecked items: match/case
+      Residual after chatgpt fork-fact parity landed via shared
+      chatfs_render.py (2026-07-06, devlog). Unchecked items: match/case
       exhaustiveness sweep for chatgpt + both `*_render.py` (~1h),
       har-browse has_more=false wait fix (~2h), branch enumeration in
-      claude splat (~1h), chatgpt render fork-fact parity (~2h, the
-      shared-layout refactor it was blocked on already landed),
-      provider-plugin-model.md promotion (~0.5h), debug-intermediates
-      flag (~0.5h). Strategic items (claude-code provider, shared code,
-      rename, AI Studio ladder, cross-provider drift) tracked as child
-      `.kb` refs with their own estimates.
+      claude splat (~1h), provider-plugin-model.md promotion (~0.5h),
+      debug-intermediates flag (~0.5h). Strategic items (claude-code
+      provider, shared code, rename, AI Studio ladder, cross-provider
+      drift) tracked as child `.kb` refs with their own estimates.
     confidence: tentative
   benefit-2w:
     "@value": 1.0
     rationale: >
       All three providers (chatgpt, claude, AI Studio) are now MVP-complete
-      and pyright-clean; remaining items are polish (fork-fact parity,
-      branch enumeration) or infra hygiene (har-browse wait, debug flag),
-      not blocking further provider work.
+      and pyright-clean; remaining items are polish (branch enumeration)
+      or infra hygiene (har-browse wait, debug flag), not blocking
+      further provider work.
     confidence: tentative
   cost-of-delay-2w:
     "@value": 0.2
@@ -84,21 +82,6 @@ noun-verb rename, the pyright-clean sweep) is recorded in `../../../devlog/`
       `packages/har-browse/.claude/todo.md` 2026-04-24-003).
 - [ ] Branch enumeration in splat — emit `conversations/<branch>.md` symlinks
       per leaf
-- [ ] Bring `chatfs_chatgpt_conversation_render.py` to parity with the claude
-      side's fork-fact notation (the canonical contract in
-      `design.kb/…/noun=conversation.kb/verb=render.md` § Fork-fact notation).
-      The chatgpt renderer predates these decisions and emits **no** fork
-      facts at all — it blockquotes dead branches but adds no branch-prefixed
-      numbering, `(re:)` backlinks, `replies`/`superseded by`/`prior
-      revisions` lines, or `←live` marker. The claude renderer
-      (`chatfs_claude_conversation_render.py`) is the reference
-      implementation; the notation is provider-agnostic. The
-      shared-`chatfs_layout.py` refactor this was blocked on has landed
-      (2026-07-05), so the notation can now be written once, not twice.
-      Porting note: `←latest` means latest `created_at` (a wire-truth
-      label); chatgpt's `mapping` children arrays carry an order claude
-      lacks — keep the created-time definition rather than array order,
-      so the label stays true across providers.
 - [ ] Promote `provider-plugin-model.md` symlink to a real incubator entry, with
       two-provider lessons (what's truly provider-shaped, what's universal)
 

@@ -7,9 +7,14 @@ toward `current_node` in `.data/conversation.json`:
 - Live-path turns render unprefixed.
 - Dead-branch turns appear immediately after their fork point,
   blockquote-prefixed at fork depth — they read as quoted asides between
-  the parent turn and the live continuation.
-- Each turn is `# [seq · role · time](messages/<stem>.md)` — H1 backref
-  to the atomic turn-file under `messages/`.
+  the parent turn and the live continuation. A branch and its own nested
+  asides form one contiguous blockquote island (boundaries inside a
+  branch are blank lines quoted at the shallower depth); a `---` at the
+  fork's depth separates adjacent sibling attempts.
+- Each turn is `# [number · role · time](messages/<stem>.md)` — H1
+  backref to the atomic turn-file under `messages/`. `number` is the
+  branch-prefixed numbering below; `time` is wall-clock date to the
+  minute (the link's stem keeps the full timestamp).
 
 The bare leaf reads `.data/conversation.json` and `messages/*.json` to
 find each turn's stem; it does not manage placement and writes markdown
@@ -48,12 +53,20 @@ positions.
   definition — the heading *is* the anchor, no `<a id>` needed.
 - **`←live` is explicit, not positional.** Liveness must not rely on the
   unstated "last in the list is live" convention.
-- A `---` divider at the *parent's* depth separates adjacent sibling
-  branches, splitting their blockquotes into distinct islands.
+- **Dividers key on branch identity, not depth deltas.** A later sibling
+  attempt gets a `---` at the fork's depth (one shallower than the
+  attempts, so it can't be confused with a body hr); every other boundary
+  is a blank quoted at the shallower of the two adjacent depths, so the
+  blockquote structure mirrors the tree — each branch is one contiguous
+  island containing its nested asides.
 
 This notation is **provider-agnostic** — it's a property of rendering a
-forked conversation, not of any one provider's capture. Both provider
-renderers must emit it identically.
+forked conversation, not of any one provider's capture. It is written
+once, in `chatfs_render.py` (`Turn`/`ConversationTree` in,
+markdown out); each provider renderer reduces its wire shape to that
+seam, repairing legitimately turn-less nodes first (`normalize_turnless`:
+drop turn-less leaves, splice pass-throughs, materialize a synthetic
+heading at a turn-less fork so fork facts always have a numbered anchor).
 
 The orchestrator forms prepare inputs and place outputs. `path render`
 purges non-captured content (allowlist `{.data}`), splats
