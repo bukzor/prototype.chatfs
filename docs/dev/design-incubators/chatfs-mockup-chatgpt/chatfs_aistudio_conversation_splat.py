@@ -25,12 +25,15 @@ import shutil
 import sys
 from pathlib import Path
 
+import chatfs_json
+from chatfs_aistudio_types import Conversation, Turn, is_conversation
 
-def turns_of(doc: dict) -> list[dict]:
+
+def turns_of(doc: Conversation) -> list[Turn]:
     return doc["prompt"]["chunkedPrompt"]["chunks"]
 
 
-def turn_kind(turn: dict) -> str:
+def turn_kind(turn: Turn) -> str:
     """One of user | answer | thought; raises on an unclassifiable turn.
 
     Roles are a closed set in the captured payloads; a model turn that is
@@ -82,11 +85,9 @@ def render_details(kind: str, icon: str, label: str, body: str) -> str:
     )
 
 
-def render_turn(turn: dict, kind: str) -> str:
+def render_turn(turn: Turn, kind: str) -> str:
     """Render one turn to markdown by kind; thoughts collapse, the rest pass through."""
-    text = turn["text"]
-    assert isinstance(text, str), turn
-    text = text.strip()
+    text = turn["text"].strip()
     if kind == "thought":
         label = thought_label(text)
         return render_details("thinking", "💭", label, strip_leading_header(text, label))
@@ -107,8 +108,9 @@ def main() -> None:
         sys.exit(1)
 
     src = Path(sys.argv[1])
-    doc = json.loads(src.read_text())
-    turns = turns_of(doc)
+    parsed = chatfs_json.loads(src.read_text())
+    assert is_conversation(parsed), parsed
+    turns = turns_of(parsed)
 
     base_dir = src.with_suffix(".splat")
     messages_dir = base_dir / "messages"
@@ -120,17 +122,16 @@ def main() -> None:
     for index, turn in enumerate(turns):
         kind = turn_kind(turn)
         basename = basename_for(index, kind)
-        (messages_dir / f"{basename}.json").write_text(
+        _ = (messages_dir / f"{basename}.json").write_text(
             json.dumps(turn, indent=2, ensure_ascii=False) + "\n"
         )
         text = render_turn(turn, kind)
         if text:
-            (messages_dir / f"{basename}.md").write_text(text + "\n")
+            _ = (messages_dir / f"{basename}.md").write_text(text + "\n")
             rendered_count += 1
 
     print(
-        f"wrote {len(turns)} turn(s), {rendered_count} with rendered "
-        f"content, to {base_dir}",
+        f"wrote {len(turns)} turn(s), {rendered_count} with rendered content, to {base_dir}",
         file=sys.stderr,
     )
 

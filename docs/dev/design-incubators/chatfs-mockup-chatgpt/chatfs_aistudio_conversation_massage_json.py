@@ -35,6 +35,8 @@ import sys
 from collections.abc import Mapping, Sequence
 from typing import Literal, TypeAlias, TypeGuard
 
+import chatfs_json
+
 Schema: TypeAlias = Mapping[int, "Field"]
 Field: TypeAlias = (
     str
@@ -182,10 +184,10 @@ def massage(doc: object) -> dict[str, object]:
 
 
 def main() -> None:
-    doc = json.load(sys.stdin)
+    doc = chatfs_json.loads(sys.stdin.read())
     conversation = massage(doc)
     json.dump(conversation, sys.stdout, ensure_ascii=False, indent=2)
-    sys.stdout.write("\n")
+    _ = sys.stdout.write("\n")
 
 
 if __name__ == "__main__":

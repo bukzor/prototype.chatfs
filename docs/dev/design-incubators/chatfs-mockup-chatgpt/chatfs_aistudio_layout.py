@@ -10,7 +10,7 @@ rather than passed through from a native dict.
 from datetime import datetime, timezone
 from pathlib import Path
 
-from chatfs_aistudio_types import IndexItem
+from chatfs_aistudio_types import Conversation, IndexItem
 from chatfs_layout import (
     DATA_DIR_NAME,
     chat_dir_for,
@@ -31,7 +31,7 @@ __all__ = [
 ]
 
 
-def index_item(doc: dict) -> IndexItem:
+def index_item(doc: Conversation) -> IndexItem:
     """Synthesize the identity fields from the massaged conversation doc.
 
     The provider-shaped half of the layout boundary: where chatgpt and
@@ -54,7 +54,7 @@ def index_item(doc: dict) -> IndexItem:
     """
     prompt = doc["prompt"]
     raw_id = prompt["name"]
-    assert isinstance(raw_id, str) and raw_id.startswith("prompts/"), raw_id
+    assert raw_id.startswith("prompts/"), raw_id
     metadata = prompt["metadata"]
     chunks = prompt["chunkedPrompt"]["chunks"]
     assert chunks, "empty chunkedPrompt.chunks: no first-chunk createTime to anchor on"

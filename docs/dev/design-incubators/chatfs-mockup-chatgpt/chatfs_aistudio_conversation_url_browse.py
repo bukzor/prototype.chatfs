@@ -23,13 +23,14 @@ No delegation to a path_render yet: chatfs_aistudio_conversation_render.py
 and chatfs_aistudio_conversation_path_render.py are still unbuilt rungs
 (todo.kb). Run chatfs_aistudio_conversation_splat.py by hand for now.
 """
-import json
 import subprocess
 import sys
 from pathlib import Path
 from urllib.parse import urlparse
 
+import chatfs_json
 from chatfs_aistudio_layout import chat_dir_for, data_dir_for, index_item, place_meta
+from chatfs_aistudio_types import is_conversation
 
 HERE = Path(__file__).parent
 CONVERSATION_PLUCK = HERE / "chatfs_aistudio_conversation_pluck.jq"
@@ -63,19 +64,20 @@ def main() -> None:
 
     print(f"Capturing {url} → {cdp} ...", file=sys.stderr)
     with cdp.open("wb") as f:
-        subprocess.run(["har-browse", url], stdout=f, check=True)
+        _ = subprocess.run(["har-browse", url], stdout=f, check=True)
 
     print(f"Plucking conversation → {conversation} ...", file=sys.stderr)
     with cdp.open("rb") as src, raw.open("wb") as dst:
-        subprocess.run([str(CONVERSATION_PLUCK)], stdin=src, stdout=dst, check=True)
+        _ = subprocess.run([str(CONVERSATION_PLUCK)], stdin=src, stdout=dst, check=True)
 
     with raw.open("rb") as src, conversation.open("wb") as dst:
-        subprocess.run([str(MASSAGE_JSON)], stdin=src, stdout=dst, check=True)
+        _ = subprocess.run([str(MASSAGE_JSON)], stdin=src, stdout=dst, check=True)
 
-    doc = json.loads(conversation.read_text())
-    item = index_item(doc)
+    parsed = chatfs_json.loads(conversation.read_text())
+    assert is_conversation(parsed), parsed
+    item = index_item(parsed)
     assert item["id"] == id_, (item["id"], id_)
-    place_meta(item, ROOT)
+    _ = place_meta(item, ROOT)
 
     print(f"Done: {chat_dir_for(id_, ROOT)}", file=sys.stderr)
 
