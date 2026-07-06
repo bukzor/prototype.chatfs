@@ -78,7 +78,12 @@ def find_root(chat_messages: Several[ChatMessage]) -> str:
 
 
 def live_ancestors(by_uuid: Mapping[str, ChatMessage], current: str) -> set[str]:
-    """The live set: `current` and every ancestor up to the root."""
+    """The live set: `current` and every ancestor up to the root.
+
+    `current` must be a node of the tree — an unknown leaf (e.g. one pruned as
+    bodiless) would yield an empty live set and silently demote every fork to
+    latest-wins."""
+    assert current in by_uuid, current
     live: set[str] = set()
     node = current
     while node in by_uuid:
@@ -92,13 +97,14 @@ def primary_child(
     live_set: Container[str],
     by_uuid: Mapping[str, ChatMessage],
 ) -> str | None:
-    """Pick the child to continue inline. Live child wins; else latest."""
+    """Pick the child to continue inline. Live child wins; else latest,
+    with a created_at tie falling to the last-listed sibling."""
     for c in candidates:
         if c in live_set:
             return c
     if not candidates:
         return None
-    return max(candidates, key=lambda c: by_uuid[c]["created_at"])
+    return max(reversed(candidates), key=lambda c: by_uuid[c]["created_at"])
 
 
 def number_turns(
@@ -241,17 +247,19 @@ class Renderer:
         return "".join((prefix + line).rstrip() + "\n" for line in body.splitlines())
 
     def divider(self, node: str, depth: int, prev_depth: int, prev_seq: int | None) -> str:
-        """The blank/rule that separates this section from the previous one."""
-        if depth == 0 or prev_depth != depth:
-            return "\n"
-        if self.parent_is_just_above(node, prev_seq):
-            return ("> " * depth).rstrip() + "\n"
-        # new sibling branch: divide at the *parent's* depth, which closes the
-        # previous sibling's blockquote — the two render as separate islands,
-        # not one quote with a rule inside — and can't be confused with a body
-        # hr at the turns' depth
-        outer_blank = ("> " * (depth - 1)).rstrip() + "\n"
-        return outer_blank + ("> " * (depth - 1)) + "---\n" + outer_blank
+        """The separator above this section. A later sibling attempt gets a
+        rule at the fork's depth, closing the previous attempt's island; every
+        other boundary is a blank quoted at the shallower of the two depths,
+        which keeps a branch and its nested asides one contiguous blockquote
+        island (and at trunk depth degenerates to a plain blank line)."""
+        head, seq = self.numbering[node]
+        if head == seq and not self.parent_is_just_above(node, prev_seq):
+            # the rule sits one level shallower than the sibling attempts, so
+            # it can't be confused with a body hr at the turns' depth
+            quote = "> " * (depth - 1)
+            blank = quote.rstrip() + "\n"
+            return blank + quote + "---\n" + blank
+        return ("> " * min(depth, prev_depth)).rstrip() + "\n"
 
     def render(self, order: list[tuple[str, int]]) -> str:
         out: list[str] = []
@@ -317,25 +325,20 @@ def prune_bodiless_leaves(
         msgs = kept
 
 
-def main() -> None:
-    if len(sys.argv) != 2:
-        print(f"usage: {sys.argv[0]} <path-to-chat-dir-or-inside>", file=sys.stderr)
-        sys.exit(2)
-
-    chat_dir = resolve_chat_dir(sys.argv[1])
-    conversation = chatfs_json.loads(
-        (chat_dir / DATA_DIR_NAME / "conversation.json").read_text()
-    )
-    assert is_conversation(conversation), conversation
-    messages_dir = chat_dir / "messages"
-
-    turns = load_turns(messages_dir)
-    chat_messages = prune_bodiless_leaves(tuple(conversation["chat_messages"]), turns)
+def render_conversation(
+    chat_messages: Several[ChatMessage],
+    current: str,
+    turns: Mapping[str, Turn],
+) -> tuple[str, int]:
+    """The pure render pipeline: conversation tree + loaded turns → the full
+    markdown document. Returns (markdown, turn count)."""
+    turns = dict(turns)
+    chat_messages = prune_bodiless_leaves(chat_messages, turns)
     by_uuid = {m["uuid"]: m for m in chat_messages}
     parent_of = {m["uuid"]: m["parent_message_uuid"] for m in chat_messages}
     children = build_children(chat_messages)
     root = find_root(chat_messages)
-    live_set = live_ancestors(by_uuid, conversation["current_leaf_message_uuid"])
+    live_set = live_ancestors(by_uuid, current)
     primary_of = {
         nid: primary_child(children.get(nid, []), live_set, by_uuid)
         for nid in [root, *by_uuid]
@@ -361,9 +364,29 @@ def main() -> None:
 
     order, numbering = number_turns(root, children, primary_of, turns)
     renderer = Renderer(numbering, children, primary_of, parent_of, turns, live_set)
-    _ = sys.stdout.write(renderer.render(order))
+    return renderer.render(order), len(order)
 
-    print(f"Rendered {len(order)} turn(s).", file=sys.stderr)
+
+def main() -> None:
+    if len(sys.argv) != 2:
+        print(f"usage: {sys.argv[0]} <path-to-chat-dir-or-inside>", file=sys.stderr)
+        sys.exit(2)
+
+    chat_dir = resolve_chat_dir(sys.argv[1])
+    conversation = chatfs_json.loads(
+        (chat_dir / DATA_DIR_NAME / "conversation.json").read_text()
+    )
+    assert is_conversation(conversation), conversation
+
+    turns = load_turns(chat_dir / "messages")
+    markdown, count = render_conversation(
+        tuple(conversation["chat_messages"]),
+        conversation["current_leaf_message_uuid"],
+        turns,
+    )
+    _ = sys.stdout.write(markdown)
+
+    print(f"Rendered {count} turn(s).", file=sys.stderr)
 
 
 if __name__ == "__main__":
