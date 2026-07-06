@@ -150,7 +150,7 @@ chatgpt side (or better).
 
 **Refactor (after both providers run end-to-end):**
 
-- [ ] Extract provider-agnostic helpers into shared `chatfs_layout.py`; both
+- [x] Extract provider-agnostic helpers into shared `chatfs_layout.py`; both
       `chatfs_chatgpt_layout.py` and `chatfs_claude_layout.py` reduce to
       provider-shaped `place_meta` + shared imports
 - [ ] Promote `provider-plugin-model.md` symlink to a real incubator entry, with

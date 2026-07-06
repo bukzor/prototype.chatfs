@@ -42,13 +42,11 @@ locator parser; splat, render, and layout primitives are shared.
 
 ## Strategic Decisions Pending
 
-- **When to extract:** user-stated trigger is *three providers* (the
-  rule of three). Argument for waiting: two browser-captured providers
-  share too much; the structurally-different third (claude-code, no
-  BB1) is what exposes the real abstraction boundary.
-- **Lib home:** incubator-local `chatfs_layout.py` (today's tactical
-  plan) vs. a sibling-package `packages/chatfs-core/` (promotion out
-  of incubator). Decide at extraction time.
+- **When to extract:** ~~user-stated trigger is *three providers*~~
+  **decided 2026-07-05: extracted**, triggered by the third provider
+  (aistudio) landing.
+- **Lib home:** ~~incubator-local vs. `packages/chatfs-core/`~~
+  **decided 2026-07-05: incubator-local.**
 - **What moves vs. stays:** `chatfs_chatgpt_layout.py` is a starting
   point but not necessarily the boundary — provider-specific code
   may still hide in it.
