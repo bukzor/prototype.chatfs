@@ -33,15 +33,17 @@ chatfs_claude_index_splat.py` (deposits meta.json into the same
 `.data/`) and then `chatfs_claude_conversation_path_render.py` on the
 chat dir (reuses the already-captured cdp.jsonl + conversation.json).
 """
-import json
 import subprocess
 import sys
 from collections.abc import Mapping
 from pathlib import Path
+from typing import cast
 from urllib.parse import urlparse
 
+import chatfs_json
 from chatfs_claude_layout import capture, chat_dir_for, place_meta
-from chatfs_claude_types import IndexItem
+from chatfs_claude_types import IndexItem, is_index_page
+from chatfs_json import JsonObject, JsonValue
 
 HERE = Path(__file__).parent
 INDEX_PLUCK = HERE / "chatfs_claude_index_pluck.jq"
@@ -55,7 +57,9 @@ def uuid_from_url(url: str) -> str:
     return parts[1]
 
 
-def null_tolerant_mismatches(a: Mapping, b: Mapping, prefix: str = "") -> list[str]:
+def null_tolerant_mismatches(
+    a: Mapping[str, JsonValue], b: Mapping[str, JsonValue], prefix: str = ""
+) -> list[str]:
     """Recursive key comparison; missing or None on either side is ok.
 
     Recurses into nested mappings so that one side carrying extra
@@ -91,10 +95,9 @@ def find_index_item(cdp: Path, uuid: str) -> IndexItem:
     for line in result.stdout.decode().splitlines():
         if not line.strip():
             continue
-        page = json.loads(line)
-        for item in page.get("data", []):
-            if item.get("uuid") == uuid:
-                matches.append(item)
+        page = chatfs_json.loads(line)
+        assert is_index_page(page), page
+        matches.extend(item for item in page["data"] if item["uuid"] == uuid)
     assert matches, (
         f"no sidebar index page included {uuid}; "
         f"run `chatfs_claude_index_browse.sh | chatfs_claude_index_splat.py`, "
@@ -121,16 +124,20 @@ def main() -> None:
 
     item = find_index_item(cdp, uuid)
 
-    conv_doc = json.loads(conversation.read_text())
-    mismatches = null_tolerant_mismatches(conv_doc, item)
+    conv_doc = chatfs_json.loads(conversation.read_text())
+    assert isinstance(conv_doc, dict), conv_doc
+    # IndexItem's fields are all str, so this is a safe reinterpretation, not an
+    # unverified cast — TypedDict's synthesized Mapping view widens values to
+    # `object`, which null_tolerant_mismatches can't recurse into.
+    mismatches = null_tolerant_mismatches(conv_doc, cast(JsonObject, dict(item)))
     assert not mismatches, (
         f"meta fields disagree across conversation and index endpoints "
         f"for {uuid}: {mismatches}"
     )
 
-    place_meta(item, ROOT)
+    _ = place_meta(item, ROOT)
 
-    subprocess.run([str(PATH_RENDER), str(chat_dir)], check=True)
+    _ = subprocess.run([str(PATH_RENDER), str(chat_dir)], check=True)
 
 
 if __name__ == "__main__":

@@ -21,7 +21,18 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+import chatfs_json
 from chatfs_claude_layout import safe_filename
+from chatfs_claude_types import (
+    ChatMessage,
+    ContentBlock,
+    Several,
+    ThinkingBlock,
+    ToolResultBlock,
+    ToolUseBlock,
+    is_conversation,
+)
+from chatfs_json import JsonValue
 
 
 def format_timestamp(created_at: str) -> str:
@@ -58,13 +69,13 @@ def render_details(
     )
 
 
-def render_thinking(block: dict) -> str:
+def render_thinking(block: ThinkingBlock) -> str:
     """Render a `thinking` block. Claude's own `summaries` label the disclosure."""
     label = "; ".join(s["summary"] for s in block["summaries"])
     return render_details("thinking", "💭", label or "Thinking", block["thinking"].strip())
 
 
-def render_result_content(content: object) -> str:
+def render_result_content(content: JsonValue) -> str:
     """Render a tool_result `content` payload to markdown.
 
     Tool result schemas are open-ended (each tool returns its own item
@@ -81,12 +92,11 @@ def render_result_content(content: object) -> str:
             for item in content:
                 if not isinstance(item, dict):
                     lines.append(str(item))
-                elif item.get("text"):
-                    lines.append(item["text"].strip())
-                elif item.get("title"):
+                elif isinstance(text := item.get("text"), str) and text:
+                    lines.append(text.strip())
+                elif isinstance(title := item.get("title"), str):
                     url = item.get("url")
-                    title = item["title"]
-                    lines.append(f"- [{title}]({url})" if url else f"- {title}")
+                    lines.append(f"- [{title}]({url})" if isinstance(url, str) else f"- {title}")
                 else:
                     lines.append(fenced_json(item))
             return "\n".join(lines)
@@ -94,7 +104,7 @@ def render_result_content(content: object) -> str:
             return fenced_json(content)
 
 
-def render_tool_call(use: dict, result: dict) -> str:
+def render_tool_call(use: ToolUseBlock, result: ToolResultBlock) -> str:
     """Render a `tool_use` + its `tool_result` as one collapsible pair.
 
     Every tool_use is immediately followed by the tool_result for the
@@ -112,11 +122,15 @@ def render_tool_call(use: dict, result: dict) -> str:
     match name:
         case "web_search":
             assert set(tool_input) == {"query"}, tool_input
-            label = tool_input["query"] + error
+            query = tool_input["query"]
+            assert isinstance(query, str), query
+            label = query + error
             return render_details("tool_call", "🔍", label, result_md, tool=name)
         case "web_fetch":
             assert set(tool_input) == {"url"}, tool_input
-            label = tool_input["url"] + error
+            url = tool_input["url"]
+            assert isinstance(url, str), url
+            label = url + error
             return render_details("tool_call", "🕷️", label, result_md, tool=name)
         case _:
             label = f"{name} — {use['message']}" + error
@@ -127,7 +141,7 @@ def render_tool_call(use: dict, result: dict) -> str:
             return render_details("tool_call", "🛠️", label, body, tool=name)
 
 
-def extract_text(content_blocks: list[dict]) -> str:
+def extract_text(content_blocks: Several[ContentBlock]) -> str:
     """Render content blocks to markdown, in document order.
 
     `text` passes through; `thinking` and each tool_use+tool_result
@@ -139,27 +153,32 @@ def extract_text(content_blocks: list[dict]) -> str:
     i = 0
     while i < len(content_blocks):
         block = content_blocks[i]
-        block_type = block["type"]
-        if block_type == "text":
-            if block["text"]:  # empty text blocks occur; skip them
-                pieces.append(block["text"])
-        elif block_type == "thinking":
-            pieces.append(render_thinking(block))
-        elif block_type == "tool_use":
-            result = content_blocks[i + 1]  # each tool_use is paired next
-            assert result["type"] == "tool_result", (block, result)
-            assert result["tool_use_id"] == block["id"], (block, result)
-            pieces.append(render_tool_call(block, result))
-            i += 1  # consume the paired tool_result
-        elif block_type == "tool_result":
-            raise AssertionError(("tool_result without preceding tool_use", block))
-        else:
-            raise ValueError(f"unexpected content type: {block_type!r}")
+        match block:
+            case {"type": "text", "text": text}:
+                if text:  # empty text blocks occur; skip them
+                    pieces.append(text)
+            case {"type": "thinking"}:
+                pieces.append(render_thinking(block))
+            case {"type": "tool_use"}:
+                next_block = content_blocks[i + 1]  # each tool_use is paired next
+                match next_block:
+                    case {"type": "tool_result"}:
+                        assert next_block["tool_use_id"] == block["id"], (block, next_block)
+                        pieces.append(render_tool_call(block, next_block))
+                    case _:
+                        raise AssertionError(
+                            ("tool_use without following tool_result", block, next_block)
+                        )
+                i += 1  # consume the paired tool_result
+            case {"type": "tool_result"}:
+                raise AssertionError(("tool_result without preceding tool_use", block))
+            case _:
+                raise ValueError(f"unexpected content type: {block['type']!r}")
         i += 1
     return "\n\n".join(pieces)
 
 
-def basename_for(msg: dict) -> str:
+def basename_for(msg: ChatMessage) -> str:
     return safe_filename(
         f"{format_timestamp(msg['created_at'])}.{msg['sender']}.{msg['uuid']}"
     )
@@ -171,7 +190,8 @@ def main() -> None:
         sys.exit(1)
 
     src = Path(sys.argv[1])
-    doc = json.loads(src.read_text())
+    doc = chatfs_json.loads(src.read_text())
+    assert is_conversation(doc), doc
     chat_messages = doc["chat_messages"]
 
     base_dir = src.with_suffix(".splat")
@@ -183,17 +203,17 @@ def main() -> None:
     rendered_count = 0
     for msg in chat_messages:
         basename = basename_for(msg)
-        (messages_dir / f"{basename}.json").write_text(
+        _ = (messages_dir / f"{basename}.json").write_text(
             json.dumps(msg, indent=2, ensure_ascii=False) + "\n"
         )
-        text = extract_text(msg["content"])
+        text = extract_text(tuple(msg["content"]))
         if text:
-            (messages_dir / f"{basename}.md").write_text(text + "\n")
+            _ = (messages_dir / f"{basename}.md").write_text(text + "\n")
             rendered_count += 1
 
     print(
         f"wrote {len(chat_messages)} message(s), {rendered_count} with rendered "
-        f"content, to {base_dir}",
+        + f"content, to {base_dir}",
         file=sys.stderr,
     )
 

@@ -1,19 +1,19 @@
 """Regression tests for the renderer's pre-render tree pruning."""
 
 from chatfs_claude_conversation_render import prune_bodiless_leaves
-from chatfs_claude_types import ChatMessage, Several
-from chatfs_json import JsonValue
+from chatfs_claude_types import ChatMessage, ContentBlock, Several
 
 
 def msg(
     uuid: str,
     parent: str = "root",
     text: str = "",
-    content: list[JsonValue] | None = None,
+    content: list[ContentBlock] | None = None,
 ) -> ChatMessage:
     """A chat_messages node, defaulting to bodiless (no text, no content)."""
     return {
         "uuid": uuid,
+        "sender": "human",
         "parent_message_uuid": parent,
         "created_at": "2026-06-03T00:00:00Z",
         "text": text,
@@ -39,7 +39,10 @@ class DescribePruneBodilessLeaves:
     def it_keeps_a_bodiless_node_that_still_has_content(self):
         # bodiless-but-has-content is a splat/render bug, not a cancel: retain it
         # so the caller's body-coverage assertion fails loudly.
-        msgs = (msg("a", text="hi"), msg("b", parent="a", content=[{"type": "text"}]))
+        msgs = (
+            msg("a", text="hi"),
+            msg("b", parent="a", content=[{"type": "text", "text": "stray"}]),
+        )
         kept = prune_bodiless_leaves(msgs, rendered={"a"})
         assert {m["uuid"] for m in kept} == {"a", "b"}, kept
 

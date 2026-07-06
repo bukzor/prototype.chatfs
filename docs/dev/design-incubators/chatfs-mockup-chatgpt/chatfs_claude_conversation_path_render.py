@@ -53,17 +53,17 @@ def main() -> None:
     here = Path(__file__).parent
     splat_script = here / "chatfs_claude_conversation_splat.py"
     print(f"Splatting {conversation} ...", file=sys.stderr)
-    subprocess.run([str(splat_script), str(conversation)], check=True)
+    _ = subprocess.run([str(splat_script), str(conversation)], check=True)
     splat = data_dir / "conversation.splat"
     for entry in splat.iterdir():
-        shutil.move(str(entry), str(chat_dir / entry.name))
+        _ = shutil.move(str(entry), str(chat_dir / entry.name))
     splat.rmdir()
 
     render = here / "chatfs_claude_conversation_render.py"
     out = chat_dir / "chat.md"
     print(f"Rendering {chat_dir} → chat.md ...", file=sys.stderr)
     with out.open("wb") as f:
-        subprocess.run([str(render), str(chat_dir)], stdout=f, check=True)
+        _ = subprocess.run([str(render), str(chat_dir)], stdout=f, check=True)
 
 
 if __name__ == "__main__":
