@@ -44,6 +44,12 @@ noun-verb rename, the pyright-clean sweep) is recorded in `../../../devlog/`
 
 ## Next
 
+- [ ] Finish `before`..HEAD review: **code half** (`chatfs_render.py`, both
+      provider renderers, tests; lenses per
+      `~/.claude/must-read.kb/when/asked-to-review-work.md`). Docs half done
+      2026-07-06: contract doc reconciled, normative surface demarcated as
+      `[!TODO]` blocks. Commits `ad9ac4c`/`4995320`/`9e1b527` unpushed
+      pending this.
 - [ ] [Cross-provider data-flow drift — pre-unification fixes vs unification scope](todo.kb/2026-07-03-000-cross-provider-data-flow-drift--pre-unification-fixes-vs-unification-scope.md)
       — from the 2026-07-03 three-provider review. All three "fix before
       unification" bugs landed 2026-07-03/04 (aistudio splat retarget,

@@ -1,9 +1,5 @@
 # Technical Policy
 
-> **Status: Partial, unvetted.** Seeded from extracted design artifacts
-> (2026-03-04 ChatGPT session). Not yet reviewed or ratified by the user.
-> Treat as strong defaults, not hard rules, until vetted.
-
 Cross-cutting normative guidance — how we achieve requirements (means, not ends).
 
 ## What belongs here

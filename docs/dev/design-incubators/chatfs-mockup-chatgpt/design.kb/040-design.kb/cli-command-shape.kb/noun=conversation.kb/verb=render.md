@@ -9,12 +9,14 @@ toward `current_node` in `.data/conversation.json`:
   blockquote-prefixed at fork depth — they read as quoted asides between
   the parent turn and the live continuation. A branch and its own nested
   asides form one contiguous blockquote island (boundaries inside a
-  branch are blank lines quoted at the shallower depth); a `---` at the
-  fork's depth separates adjacent sibling attempts.
+  branch are blank lines quoted at the shallower depth); a `---` rule at
+  the fork's depth separates adjacent sibling attempts.
 - Each turn is `# [number · role · time](messages/<stem>.md)` — H1
   backref to the atomic turn-file under `messages/`. `number` is the
   branch-prefixed numbering below; `time` is wall-clock date to the
-  minute (the link's stem keeps the full timestamp).
+  minute (the link's stem keeps the full timestamp). The link form is
+  the discriminator: only turn headings are heading-as-link, so
+  `^(> )*# \[` finds turns and never a body's own `#` headings.
 
 The bare leaf reads `.data/conversation.json` and `messages/*.json` to
 find each turn's stem; it does not manage placement and writes markdown
@@ -30,9 +32,24 @@ positions.
 
 - **Numbering** is branch-prefixed: a branch member is `head/seq`
   (`049/051`); trunk and branch-head turns render bare (`049`). Numbers
-  are stable cross-reference handles, not chronology.
-- **`(re: N)` backlink** on the heading when the parent isn't the turn
-  directly above.
+  are stable cross-reference handles, not chronology -- stable within a
+  render, but regenerating a grown conversation renumbers (seq is emit
+  order); the durable handles are the link stems.
+
+  > [!TODO]
+  > Sought: numbering that never drifts across regenerations -- no
+  > hysteresis, no oracles (technical-policy: `stable-references.md`,
+  > `determinism.md`). Chronological rank is append-stable by
+  > construction (new turns always timestamp last) and collapses toward
+  > the stem ordering -- one reference system -- but numbers stop
+  > matching reading order and the `head/seq` prefix scheme needs
+  > rethinking. A path-shaped scheme (one segment per fork depth) is
+  > the other candidate. Either obsoletes the caveat above.
+
+- **`(re: N)` backlink** on the heading whenever the parent is numbered
+  but isn't the turn rendered directly above -- the fork's live
+  continuation (asides pushed its parent away) and each later sibling
+  attempt both carry it.
 - **Metadata lines** sit in two zones around the body, by *direction*:
   - *Above* the body — version **status**, read before deciding to engage:
     `superseded by: <winner>` on each abandoned sibling (one hop to the
@@ -54,19 +71,43 @@ positions.
 - **`←live` is explicit, not positional.** Liveness must not rely on the
   unstated "last in the list is live" convention.
 - **Dividers key on branch identity, not depth deltas.** A later sibling
-  attempt gets a `---` at the fork's depth (one shallower than the
-  attempts, so it can't be confused with a body hr); every other boundary
+  attempt gets a `---` rule at the fork's depth; every other boundary
   is a blank quoted at the shallower of the two adjacent depths, so the
   blockquote structure mirrors the tree — each branch is one contiguous
   island containing its nested asides.
+
+  > [!TODO]
+  > The rule is `***` (the same thematic break): message bodies --
+  > chatgpt's especially -- are full of `---` hrs at every quote depth,
+  > including bare at depth 0, so a `---` splitter is only heuristically
+  > findable; the demo corpus contains zero `***` lines. Lands with a
+  > `divider()` change plus regenerated goldens and demos.
+
+> [!TODO]
+> Markers are convention-rare, not unambiguous by construction:
+> `^(> )*# \[` and the island rule are reliable on today's corpus, but
+> body text could counterfeit either. Whole-file consumers have
+> `.data/conversation.json`; the excerpt reader has only the window, so
+> the line shapes themselves must discriminate. Sought: shapes body
+> prose cannot produce.
+
+> [!TODO]
+> Deconflict excerpt redundancy with local noise: fork facts repeat
+> across positions for the excerpt reader (governing), at the cost of
+> near-duplicate facts landing within one window (e.g. `(re: N)` two
+> lines below a divider that implies it). Excerpt sufficiency dominates;
+> a design serving both is wanted. **Why not a `re:` divider subtitle**
+> (moving the backlink off later attempts' headings): breaks heading
+> uniformity and starves the heading-centered grep window -- rejected.
 
 This notation is **provider-agnostic** — it's a property of rendering a
 forked conversation, not of any one provider's capture. It is written
 once, in `chatfs_render.py` (`Turn`/`ConversationTree` in,
 markdown out); each provider renderer reduces its wire shape to that
-seam, repairing legitimately turn-less nodes first (`normalize_turnless`:
-drop turn-less leaves, splice pass-throughs, materialize a synthetic
-heading at a turn-less fork so fork facts always have a numbered anchor).
+seam, repairing its legitimately turn-less nodes first — chatgpt via
+`normalize_turnless` (drop turn-less leaves, splice pass-throughs,
+materialize a synthetic heading at a turn-less fork so fork facts always
+have a numbered anchor), claude via the narrower `prune_bodiless_leaves`.
 
 The orchestrator forms prepare inputs and place outputs. `path render`
 purges non-captured content (allowlist `{.data}`), splats
