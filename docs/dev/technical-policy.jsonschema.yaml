@@ -1,2 +1,2 @@
 # yaml-language-server: $schema=https://json-schema.org/draft-07/schema
-$ref: "skill://llm-design-kb/schemas/technical-policy.jsonschema.yaml"
+$ref: "skill://llm-design-kb/jsonschema/technical-policy.jsonschema.yaml"
