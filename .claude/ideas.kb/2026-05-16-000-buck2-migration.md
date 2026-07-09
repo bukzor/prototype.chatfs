@@ -1,16 +1,17 @@
 ---
-anthropic-skill-ownership: llm-subtask
-status: exploring
+managed-by: Skill(llm-subtask)
+status: deferred
 cost-benefit-sweh:
   timebox:
-    @value: "?"
+    "@value": 20
+    confidence: hypothetical
     rationale: |
       Speculative; user mentioned "at some nebulous later date" during
       rust-port kb scope-refactor conversation (2026-05-15). Concrete
       timebox depends on what's getting migrated and Buck2's maturity
       at the time.
   benefit-2w:
-    @value: 0
+    "@value": 0
     rationale: |
       No 2-week payoff. Pure long-horizon refactor.
 ---

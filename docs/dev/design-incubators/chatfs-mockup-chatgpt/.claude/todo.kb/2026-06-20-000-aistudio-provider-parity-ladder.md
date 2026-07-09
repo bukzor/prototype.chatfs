@@ -1,5 +1,5 @@
 ---
-anthropic-skill-ownership: llm-subtask
+managed-by: Skill(llm-subtask)
 cost-benefit-sweh:
   timebox:
     '@value': 4

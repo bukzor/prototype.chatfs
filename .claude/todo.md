@@ -45,3 +45,4 @@ Plan from 2026-05-05 design.kb consolidation. Order is dependency-driven; 1-2 ar
 
 - [ ] llm-kb: complete `.d → .kb` rename in `complete-example/` — tracked at `~/.claude/skills/llm-kb/.claude/todo.kb/2026-01-02-000-complete-d-to-kb-rename.md`
 - [ ] llm-collab: define `milestones.kb/` pattern in skeleton — tracked at `~/.claude/skills/llm-collab/.claude/todo.kb/2025-12-11-000-update-skeleton-to-match-docsdev-pattern-from-git-partial.md`
+- [ ] llm-subtask: teach the todo schema task-graph relational fields (`depends`, `depends-on`, `parent`, `supersedes-question-from`). Three root `.claude/todo.kb/` entries already use them (`2026-01-02-002`, `2026-05-16-000`, `2026-05-16-001`), so the root `.claude/todo.jsonschema.yaml` `skill://` stub is held back (uncommitted) until the upstream schema admits them — tracked in bukzor-agent-skills' `schema-reuse-with-ref` effort. The incubator + har-browse `todo`/`ideas` schema stubs already landed green (2026-07-08).

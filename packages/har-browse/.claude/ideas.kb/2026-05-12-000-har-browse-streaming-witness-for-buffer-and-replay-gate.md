@@ -1,14 +1,14 @@
 ---
-anthropic-skill-ownership: llm-subtask
+managed-by: Skill(llm-subtask)
 cost-benefit-sweh:
   timebox:
-    @value: 1.0  # SWE-hours
+    "@value": 1.0  # SWE-hours
     rationale: |
       One focused session to: rework the test fixture for concurrent
       iteration on `session.events`, add the BARRIER-arrival deadline
       assertion, optionally add body.t timestamps for diagnostic skew.
   benefit-2w:
-    @value: 0.5
+    "@value": 0.5
     rationale: |
       Low immediate payoff: current capture.mjs is streaming, so the
       gate would catch a regression that hasn't happened. Value rises
