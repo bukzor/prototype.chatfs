@@ -17,6 +17,7 @@ stdout: rendered markdown.
 """
 
 import sys
+from collections.abc import Mapping
 from pathlib import Path
 from typing import NamedTuple
 
@@ -98,6 +99,25 @@ def build_tree(conversation: Conversation) -> ConversationTree:
     )
 
 
+def make_turn(nid: str, stems: Mapping[str, Stem]) -> Turn:
+    """A turn-less fork's anchor: heading only, linking the .json record."""
+    s = stems[nid]
+    return Turn(s.role, s.ts[:16], f"messages/{s.stem}.json", "", s.note())
+
+
+def render_conversation(
+    conversation: Conversation,
+    stems: Mapping[str, Stem],
+    turns: Mapping[str, Turn],
+) -> tuple[str, int]:
+    """The pure render pipeline: conversation mapping + stems + loaded turns →
+    the full markdown document. Returns (markdown, turn count)."""
+    tree, turns = normalize_turnless(
+        build_tree(conversation), turns, lambda nid: make_turn(nid, stems)
+    )
+    return render_tree(tree, turns)
+
+
 def main() -> None:
     if len(sys.argv) != 2:
         print(f"usage: {sys.argv[0]} <path-to-chat-dir-or-inside>", file=sys.stderr)
@@ -124,14 +144,8 @@ def main() -> None:
         set(conversation["mapping"]) ^ set(stems)
     )
 
-    def make_turn(nid: str) -> Turn:
-        # a turn-less fork's anchor: heading only, linking the .json record
-        s = stems[nid]
-        return Turn(s.role, s.ts[:16], f"messages/{s.stem}.json", "", s.note())
-
     turns = load_turns(messages_dir, stems)
-    tree, turns = normalize_turnless(build_tree(conversation), turns, make_turn)
-    markdown, count = render_tree(tree, turns)
+    markdown, count = render_conversation(conversation, stems, turns)
     _ = sys.stdout.write(markdown)
 
     print(f"Rendered {count} turn(s).", file=sys.stderr)

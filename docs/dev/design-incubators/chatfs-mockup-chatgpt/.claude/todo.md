@@ -44,14 +44,23 @@ noun-verb rename, the pyright-clean sweep) is recorded in `../../../devlog/`
 
 ## Next
 
-- [ ] Add chatgpt-specific tests for `normalize_turnless`'s synthetic-anchor
+- [x] Add chatgpt-specific tests for `normalize_turnless`'s synthetic-anchor
       path (a turn-less fork materializing a heading) against a real
       `mapping` shape — found while closing the `before`..HEAD code-half
       review (2026-07-08): the 2-conversation demo corpus never triggers it,
       so it's covered only by the generic `chatfs_render_test.py` fixtures,
       never by chatgpt's actual wire shape. `primary_child`'s tie-break is
       similarly unverified against chatgpt's `create_time` (vs. the
-      second-resolution claude case it was written for).
+      second-resolution claude case it was written for). Done 2026-07-09:
+      extracted `make_turn`/`render_conversation` out of `main()` (they were
+      an untestable closure/inline body — same pure-pipeline shape claude's
+      renderer already has) into new
+      `chatfs_chatgpt_conversation_render_test.py`, covering both gaps with
+      chatgpt-shaped fixtures (`mapping`/`message.create_time` float,
+      stem-derived synthetic anchor). Mutation-checked: flipping the
+      tie-break direction and swapping the synthetic anchor's `.json` link
+      for `.md` each turned exactly the new tests red; reverted clean.
+      `basedpyright .` 0/0/0; `pytest .` 19/19 pass (was 15).
 - [ ] [Cross-provider data-flow drift — pre-unification fixes vs unification scope](todo.kb/2026-07-03-000-cross-provider-data-flow-drift--pre-unification-fixes-vs-unification-scope.md)
       — from the 2026-07-03 three-provider review. All three "fix before
       unification" bugs landed 2026-07-03/04 (aistudio splat retarget,
