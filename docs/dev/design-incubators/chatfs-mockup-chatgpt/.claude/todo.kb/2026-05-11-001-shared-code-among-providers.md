@@ -15,8 +15,10 @@ cost-benefit-sweh:
 
 # shared code among providers
 
-**Priority:** Low (signal weak at two providers; load-bearing once
-three exist)
+**Priority:** Low — the trigger fired and the extraction landed
+2026-07-05 (`chatfs_layout.py` / `chatfs_render.py`, all three providers
+verified end-to-end); what remains is boundary refinement (see Open
+Questions), not a from-scratch decision.
 **Complexity:** Medium — touches all providers' scripts and `place_meta`
 boundary; correctness verified by all-providers end-to-end.
 
@@ -53,9 +55,12 @@ locator parser; splat, render, and layout primitives are shared.
 
 ## Open Questions
 
-- Does the rule-of-three logic actually hold here, or is two providers
-  enough signal because of how shared the chatgpt and claude.ai
-  pipelines already look? (Revisit when claude.ai parity lands.)
+- ~~Does the rule-of-three logic actually hold here, or is two providers
+  enough signal...~~ **Resolved 2026-07-05:** two wasn't enough —
+  extraction didn't happen until AI Studio (the third provider) landed.
+  See `design.kb/040-design.kb/provider-plugin-model.md` "Revised
+  rule-of-three take": the keyed-vs-positional (JSPB) split stress-tested
+  the adapter shape more than a fourth keyed provider would have.
 - Does the eventual lib justify promotion out of the incubator (into
   `packages/chatfs-core/`), or stay incubator-local until BB2/BB3
   stabilize?

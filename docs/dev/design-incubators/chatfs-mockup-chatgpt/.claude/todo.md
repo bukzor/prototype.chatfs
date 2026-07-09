@@ -105,7 +105,8 @@ noun-verb rename, the pyright-clean sweep) is recorded in `../../../devlog/`
 - [ ] Branch enumeration in splat — emit `conversations/<branch>.md` symlinks
       per leaf
 - [x] Promote `provider-plugin-model.md` symlink to a real incubator entry, with
-      two-provider lessons (what's truly provider-shaped, what's universal).
+      three-provider lessons (what's truly provider-shaped, what's universal;
+      wording was stale from before aistudio landed as the third provider).
       Done 2026-07-09: replaced the symlink to the parent project's abstract
       spec with a real entry recording the concrete three-way split verified
       against the landed code (identical-verbatim → `chatfs_layout.py`/
@@ -120,7 +121,9 @@ noun-verb rename, the pyright-clean sweep) is recorded in `../../../devlog/`
 - [ ] [claude-code as next provider](todo.kb/2026-05-11-000-claude-code-as-next-provider.md)
       — after claude.ai parity; datasource `~/.claude/`, no BB1
 - [ ] [shared code among providers](todo.kb/2026-05-11-001-shared-code-among-providers.md)
-      — strategic placement of the parity-ladder Refactor entry
+      — the extraction itself landed 2026-07-05; open only on boundary
+      refinement (what else belongs in `chatfs_layout.py`) and incubator-local
+      vs. promoting to `packages/chatfs-core/`
 
 ## Later
 
