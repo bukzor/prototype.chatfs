@@ -104,8 +104,16 @@ noun-verb rename, the pyright-clean sweep) is recorded in `../../../devlog/`
       `packages/har-browse/.claude/todo.md` 2026-04-24-003).
 - [ ] Branch enumeration in splat — emit `conversations/<branch>.md` symlinks
       per leaf
-- [ ] Promote `provider-plugin-model.md` symlink to a real incubator entry, with
-      two-provider lessons (what's truly provider-shaped, what's universal)
+- [x] Promote `provider-plugin-model.md` symlink to a real incubator entry, with
+      two-provider lessons (what's truly provider-shaped, what's universal).
+      Done 2026-07-09: replaced the symlink to the parent project's abstract
+      spec with a real entry recording the concrete three-way split verified
+      against the landed code (identical-verbatim → `chatfs_layout.py`/
+      `chatfs_render.py`; the 3-value `id`/`title`/`created` adapter every
+      `place_meta` wrapper shares; what's genuinely provider-only) and a
+      revised rule-of-three take (AI Studio's JSPB-vs-keyed split, not the
+      claude-code trigger originally expected, turned out sufficient).
+      `llm.kb-validate` clean.
 
 ## Strategic
 
