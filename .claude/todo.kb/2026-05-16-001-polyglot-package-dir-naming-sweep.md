@@ -1,6 +1,6 @@
 ---
 managed-by: Skill(llm-subtask)
-depends:
+blocked-by:
   - 2026-05-16-000-execute-rust-port-kb-scope-refactor.md
 cost-benefit-sweh:
   timebox:

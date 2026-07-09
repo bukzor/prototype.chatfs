@@ -6,8 +6,7 @@ required-reading:
 suggested-reading:
   - ~/.claude/skills/llm-collab/references.kb/file-types.kb/
   - ~/.claude/skills/llm-collab/references.kb/file-types.kb/devlog.md
-parent: 2026-01-02-000-harmonize-with-llm-skills.md
-depends-on:
+blocked-by:
   - ~/.claude/skills/llm.kb/.claude/todo.kb/2026-01-02-000-complete-d-to-kb-rename.md
   - ~/.claude/skills/llm-collab/.claude/todo.kb/2025-12-11-000-update-skeleton-to-match-docsdev-pattern-from-git-partial.md
 cost-benefit-sweh:

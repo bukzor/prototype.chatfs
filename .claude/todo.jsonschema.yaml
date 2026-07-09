@@ -1,0 +1,10 @@
+# yaml-language-server: $schema=https://json-schema.org/draft/2020-12/schema
+$ref: "skill://llm-subtask/jsonschema/todo.jsonschema.yaml#base"
+properties:
+  supersedes-question-from:
+    type: string
+    description: |
+      This task's decision supersedes a question raised in another task
+      (value: that task's filename or path). Local extension; not yet
+      general enough for the canonical schema.
+unevaluatedProperties: false

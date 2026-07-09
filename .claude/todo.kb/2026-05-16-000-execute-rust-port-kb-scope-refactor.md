@@ -1,6 +1,6 @@
 ---
 managed-by: Skill(llm-subtask)
-depends:
+blocked-by:
   - packages/har-browse/dev.kb/rust-port.kb/scope-audit.md
   - ~/.claude/sessions.kb/rust-port-kb-scope-refactor.md
 supersedes-question-from: 2026-05-13-000-place-rust-port-kb-at-proper-home.md
