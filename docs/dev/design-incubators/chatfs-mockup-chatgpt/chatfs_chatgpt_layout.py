@@ -32,7 +32,8 @@ def _created(create_time: str | float) -> datetime:
     """
     if isinstance(create_time, (int, float)):
         return datetime.fromtimestamp(create_time, tz=timezone.utc)
-    return datetime.fromisoformat(create_time.replace("Z", "+00:00"))
+    else:
+        return datetime.fromisoformat(create_time.replace("Z", "+00:00"))
 
 
 def place_meta(item: IndexItem, root: Path) -> Path:

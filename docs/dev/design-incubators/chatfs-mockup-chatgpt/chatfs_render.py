@@ -91,12 +91,13 @@ def primary_child(
 ) -> str | None:
     """Pick the child to continue inline. Live child wins; else latest,
     with a creation-time tie falling to the last-listed sibling."""
-    for c in candidates:
-        if c in live_set:
-            return c
-    if not candidates:
+    live = next((c for c in candidates if c in live_set), None)
+    if live is not None:
+        return live
+    elif not candidates:
         return None
-    return max(reversed(candidates), key=lambda c: created[c])
+    else:
+        return max(reversed(candidates), key=lambda c: created[c])
 
 
 def normalize_turnless(
@@ -297,7 +298,8 @@ class Renderer:
             quote = "> " * (depth - 1)
             blank = quote.rstrip() + "\n"
             return blank + quote + "---\n" + blank
-        return ("> " * min(depth, prev_depth)).rstrip() + "\n"
+        else:
+            return ("> " * min(depth, prev_depth)).rstrip() + "\n"
 
     def render(self, order: list[tuple[str, int]]) -> str:
         out: list[str] = []

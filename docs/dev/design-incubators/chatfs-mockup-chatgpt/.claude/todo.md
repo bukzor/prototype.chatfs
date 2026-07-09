@@ -65,14 +65,19 @@ noun-verb rename, the pyright-clean sweep) is recorded in `../../../devlog/`
       — precursor to multi-provider sketch; current name encodes a single
       provider. Tracked at project level because the rename also touches
       `pyproject.toml` and the project ADR.
-- [ ] Scan the rest of the incubator code for the implicit-match /
+- [x] Scan the rest of the incubator code for the implicit-match /
       `if X: return` … fall-through pattern and convert to explicit
-      `match`/`case _:` (house exhaustive-case rule).
-      `chatfs_claude_conversation_splat.py` already swept (2026-07-05, both
-      the original session and the pyright-clean rewrite use `match`/`case`
-      throughout); remaining: the `chatfs_chatgpt_*.py` siblings and both
-      `*_render.py` (e.g. `render.py:primary_child`). Also recheck for
-      fail-soft `.get()` guards and `ensure_ascii` while there.
+      `match`/`case _:` (house exhaustive-case rule). Done 2026-07-09:
+      swept `chatfs_chatgpt_*.py` + both `*_render.py` — only three
+      genuine violations found (none are enum/variant dispatch, so
+      each became explicit `if`/`elif`/`else` rather than `match`/`case`):
+      `chatfs_render.py::primary_child`, `chatfs_render.py::divider`,
+      `chatfs_chatgpt_layout.py::_created`. Checked `.get()` call sites
+      (all legitimate `NotRequired` TypedDict access, already
+      assert-guarded) and `ensure_ascii` (consistently `False` everywhere
+      it appears; chatgpt's splat lives outside this incubator, in
+      `packages/bukzor.chatgpt-export/`, out of scope here) — no changes
+      needed. Verified: `basedpyright .` 0/0/0; `pytest .` 15/15 pass.
 - [ ] [AI Studio provider — parity ladder](todo.kb/2026-06-20-000-aistudio-provider-parity-ladder.md)
       — third provider, first JSPB source. Pluck + splat landed 2026-06-20;
       layout/types 2026-06-22; massage_json + url_browse 2026-07-03 (writes
