@@ -67,9 +67,12 @@ noun-verb rename, the pyright-clean sweep) is recorded in `../../../devlog/`
       `create_time` mislabel, chatgpt failsoft→failfast) — the aistudio
       unification gate is clear. File stays open only for its "Solve by
       unification" section: five drift items recorded as requirements for
-      the shared-code refactor, deliberately NOT fixed in place — see
-      `~/.claude/sessions.kb/provider-code-reuse-stutter-step.md`
-      (outside this repo; not a resolvable link).
+      the shared-code refactor, deliberately NOT fixed in place — the
+      seam analysis backing this (identical-verbatim vs. the 3-method
+      adapter vs. genuinely provider-only) previously lived only in a
+      sessions.kb note; that note is gone now (its follow-ups landed),
+      superseded by
+      `design.kb/040-design.kb/provider-plugin-model.md`.
 - [ ] [Rename incubator to chatfs-cli-mockup](../../../../../.claude/todo.kb/2026-05-11-000-rename-incubator-to-chatfs-cli-mockup.md)
       — precursor to multi-provider sketch; current name encodes a single
       provider. Tracked at project level because the rename also touches

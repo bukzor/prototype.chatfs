@@ -3,7 +3,8 @@ shared storage/view-tree helpers this wraps.
 
 `capture()` stays here (not shared yet): it's an orchestration helper
 misfiled in "layout", tracked separately for the shared-capture()
-unification (see ~/.claude/sessions.kb/provider-code-reuse-stutter-step.md).
+unification (see `.claude/todo.kb/2026-07-03-000-cross-provider-data-flow-drift--pre-unification-fixes-vs-unification-scope.md`
+§ "Solve by unification").
 """
 
 import subprocess
