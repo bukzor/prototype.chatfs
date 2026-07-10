@@ -135,3 +135,14 @@ noun-verb rename, the pyright-clean sweep) is recorded in `../../../devlog/`
       stderr; higher-level orchestrators take URL or ts-dir args and tee
       debug intermediates (e.g. `chatgpt.index.cdp.jsonl`, `<ts-dir>/cdp.jsonl`)
       unconditionally today.
+- [ ] `design.kb/040-design.kb/cli-command-shape.md`'s unquoted
+      `last-updated: 2026-05-11` fails `llm.kb-validate` (schema wants a
+      string; YAML parses the bare date as `datetime.date`). Found
+      2026-07-09 doing an unrelated gate check. Fix by either quoting the
+      value here or adding the `format: date` datetime.date-passthrough
+      accommodation to `040-design.jsonschema.yaml` (the sibling
+      `claims.jsonschema.yaml` already documents that accommodation for
+      its own date fields — copy its approach). Didn't fix inline: looks
+      like it may overlap an active cross-repo schema migration in
+      another session (`~/.claude/sessions.kb/penguin/schema-migrate-string-pattern-to-date.md`)
+      — check there first so this doesn't collide with a broader fix.
