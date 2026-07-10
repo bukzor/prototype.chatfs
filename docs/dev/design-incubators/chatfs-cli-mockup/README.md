@@ -122,4 +122,4 @@ libraryized.
 - [x] Per-conversation pluck (`/backend-api/conversation/{id}`)
 - [x] Render `$TITLE.md` from `current_node` walk
 - [x] Dead-branch forks rendered as nested blockquoted asides
-- [ ] Multi-provider sketch (claude.ai under same tree?)
+- [x] Multi-provider: claude.ai (2026-05-11) and AI Studio (2026-06-20..07-03) landed under the same tree

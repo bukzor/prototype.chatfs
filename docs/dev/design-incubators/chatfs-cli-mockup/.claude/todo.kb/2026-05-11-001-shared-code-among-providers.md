@@ -61,9 +61,12 @@ locator parser; splat, render, and layout primitives are shared.
   See `design.kb/040-design.kb/provider-plugin-model.md` "Revised
   rule-of-three take": the keyed-vs-positional (JSPB) split stress-tested
   the adapter shape more than a fourth keyed provider would have.
-- Does the eventual lib justify promotion out of the incubator (into
+- ~~Does the eventual lib justify promotion out of the incubator (into
   `packages/chatfs-core/`), or stay incubator-local until BB2/BB3
-  stabilize?
+  stabilize?~~ **Resolved 2026-07-10 (user):** destination is
+  `$REPO/lib/chatfs/` once things are more libraryized — stay
+  incubator-local until then; neither `packages/chatfs-core/` nor
+  permanent incubator residence.
 
 ## Notes
 

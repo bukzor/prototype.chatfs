@@ -145,12 +145,15 @@ is wasted motion.
       (Related, already tracked in todo.md: bring chatgpt render to the
       fork-fact notation contract — same "claude is the reference
       implementation" shape.)
-- [ ] **Decide the driver model: pipe vs delegation.** Index flow is
+- [x] **Decide the driver model: pipe vs delegation.** Index flow is
       user-composed (`index_browse.sh | index_splat.py`); conversation flow
       is nested delegation (url_browse → path_render → splat + render).
       Possibly intentional (bulk output has multiple consumers) but nowhere
-      stated. Decide once, document in
-      `design.kb/040-design.kb/cli-command-shape.kb/`, apply uniformly.
+      stated. Decided 2026-07-10 (user): not either/or — each stage becomes
+      an importable generator function, and the pipe and delegation
+      surfaces are both thin drivers over the same library.
+    - [ ] Document in `design.kb/040-design.kb/cli-command-shape.kb/` and
+          apply during the unification refactor.
 
 ## Explicitly out of scope
 
