@@ -34,9 +34,6 @@ worktree/
 
 # secrets
 .env.secret
-
-# per-worktree agent focus (see CLAUDE.md)
-**/.claude/focus.md
 secrets/
 
 # CDP captures contain live auth cookies/tokens — never commit

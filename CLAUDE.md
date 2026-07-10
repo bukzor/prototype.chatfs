@@ -7,8 +7,6 @@ depends:
 git-caution: personal
 ---
 
-@.claude/focus.md
-
 # chatfs - Development Guide for Claude
 
 ## Architecture Overview

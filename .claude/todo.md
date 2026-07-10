@@ -39,7 +39,6 @@ Plan from 2026-05-05 design.kb consolidation. Order is dependency-driven; 1-2 ar
 ## Deferred
 
 - [ ] Create `docs/dev/milestones.kb/` — double-blocked (no milestone content yet; skills-repo pattern not defined)
-- [ ] Write ADR for `.claude/focus.md` as symlink-to-active-artifact convention (target type = `todo.kb/<entry>.md` for plan phases, `commits.kb/<NNNN>-slug.md` for commit phases; gitignored; per-user). Adopted ad-hoc 2026-05-16 at workspace level; codify before applying to har-browse and other packages.
 
 ## Upstream (mirrors of skills-repo todos; kept here for visibility)
 
