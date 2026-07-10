@@ -3,7 +3,8 @@ status: observed
 first-recorded: 2026-06-20
 last-checked: 2026-07-03
 previously-claimed:
-  - '`[0][4][4][0][0]` | created, unix seconds — wrong: it is revisionTime (modification), not creation; fixed 2026-07-03'
+  - text: '`[0][4][4][0][0]` | created, unix seconds — wrong: it is revisionTime (modification), not creation'
+    when: 2026-07-03
 evidence:
   - aistudio.cdp.jsonl  # line 426: ResolveDriveResource body, prompt 1vU6BlpV69d2MvI6L_oYGo_E-ZqmaI3eR
   - chatfs.demo/aistudio/.chat/1vU6BlpV69d2MvI6L_oYGo_E-ZqmaI3eR/.data/conversation.raw.json  # live re-capture, same prompt
