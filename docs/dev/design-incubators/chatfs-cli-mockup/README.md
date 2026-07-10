@@ -85,7 +85,7 @@ see `design.kb/040-design.kb/deterministic-regeneration.md`.
 ## Run it
 
 ```bash
-cd docs/dev/design-incubators/chatfs-mockup-chatgpt
+cd docs/dev/design-incubators/chatfs-cli-mockup
 
 # single conversation by URL — common case
 ./chatfs_chatgpt_conversation_url_browse.py https://chatgpt.com/c/<uuid>
@@ -109,8 +109,11 @@ look like?** Decisions to settle here:
 - Filename collisions (titles, timestamps): suffix scheme? UUID fallback?
 - Per-conversation layout: single file? `messages/`, `forks/` subdirs?
 
-Once the shape feels right, fold lessons back into design.kb and
-delete or archive this incubator.
+This is a prototype of a future `chatfs-cli` that will be load-bearing
+for the final chatfs — the same CLI surface FUSE invokes lazily under
+the hood. Lessons settled here get folded back to project-level
+`design.kb/`; the code itself graduates to `lib/chatfs/` once
+libraryized.
 
 ## Status
 

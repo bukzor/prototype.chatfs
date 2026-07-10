@@ -45,6 +45,6 @@ confirming the data model works in practice.
 it as separate nodes/turns, with different cardinality). So *where reasoning
 lands in this model is a per-parser decision*, and a uniform "one response = one
 unit" view must be synthesized in BB2/BB3 rather than read off the source. See
-the incubator claim `chatfs-mockup-chatgpt/dev.kb/claims.kb/reasoning-turn-mapping-differs-by-provider.md`.
+the incubator claim `chatfs-cli-mockup/dev.kb/claims.kb/reasoning-turn-mapping-differs-by-provider.md`.
 
 See also: `rotate-90-degrees-layout.md` for the on-disk representation.

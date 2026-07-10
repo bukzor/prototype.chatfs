@@ -3,7 +3,7 @@ depends:
   - Skill(llm-design-kb)
 ---
 
-# chatfs-mockup-chatgpt — Design Knowledge
+# chatfs-cli-mockup — Design Knowledge
 
 Decisions specific to this incubator that are worth persisting beyond the
 current session. Mission/goals/requirements live in the parent

@@ -35,7 +35,7 @@ exclude = [
 # pyright resolves intra-incubator imports without polluting the global module
 # namespace. Drop entries here when an incubator graduates to packages/*.
 executionEnvironments = [
-  { root = "docs/dev/design-incubators/chatfs-mockup-chatgpt", extraPaths = ["docs/dev/design-incubators/chatfs-mockup-chatgpt"] },
+  { root = "docs/dev/design-incubators/chatfs-cli-mockup", extraPaths = ["docs/dev/design-incubators/chatfs-cli-mockup"] },
 ]
 
 [tool.pytest.ini_options]

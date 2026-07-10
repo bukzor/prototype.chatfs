@@ -48,7 +48,7 @@ against a committed golden pair. See README "Converting JSPB → JSON".
 - [x] **Confirm offline decode is the actual need** — resolved 2026-07-03
   (`discourse.kb/questions.kb/how-does-this-serve-chatfs.md`). The named
   downstream consumer landed: `chatfs_aistudio_conversation_massage_json.py`
-  in the sibling `chatfs-mockup-chatgpt` incubator ports (not imports —
+  in the sibling `chatfs-cli-mockup` incubator ports (not imports —
   this package stays exploratory/disposable) `rosetta/convert.py`'s SCHEMA,
   called from `chatfs_aistudio_conversation_url_browse.py`, live-tested
   end-to-end. Porting surfaced and fixed two divergences from this

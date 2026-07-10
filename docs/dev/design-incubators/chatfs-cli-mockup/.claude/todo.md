@@ -31,7 +31,7 @@ cost-benefit-sweh:
     confidence: tentative
 ---
 
-# Tactical Tasks — chatfs-mockup-chatgpt
+# Tactical Tasks — chatfs-cli-mockup
 
 Scope: this incubator only. Project-wide tactical work lives in
 `../../../../.claude/todo.md`.
@@ -73,10 +73,10 @@ noun-verb rename, the pyright-clean sweep) is recorded in `../../../devlog/`
       sessions.kb note; that note is gone now (its follow-ups landed),
       superseded by
       `design.kb/040-design.kb/provider-plugin-model.md`.
-- [ ] [Rename incubator to chatfs-cli-mockup](../../../../../.claude/todo.kb/2026-05-11-000-rename-incubator-to-chatfs-cli-mockup.md)
-      — precursor to multi-provider sketch; current name encodes a single
-      provider. Tracked at project level because the rename also touches
-      `pyproject.toml` and the project ADR.
+- [x] [Rename incubator to chatfs-cli-mockup](../../../../../.claude/todo.kb/2026-05-11-000-rename-incubator-to-chatfs-cli-mockup.md)
+      — done 2026-07-10 (Immediate plan step 1, above); this bullet was a
+      stale duplicate left unchecked. That file's own Success Criteria are
+      all `[x]`, verified 2026-07-10.
 - [x] Scan the rest of the incubator code for the implicit-match /
       `if X: return` … fall-through pattern and convert to explicit
       `match`/`case _:` (house exhaustive-case rule). Done 2026-07-09:

@@ -17,13 +17,13 @@ The accessor primitive (`_.l`, `_.X`, `_.xi`, …) encodes the field type.
 
 A CDP network capture whose `Network.responseReceived` events carry response
 bodies (`.params.response.body`) for the `boq-makersuite` JS modules. The
-existing `../design-incubators/chatfs-mockup-chatgpt/aistudio.cdp.jsonl`
+existing `../design-incubators/chatfs-cli-mockup/aistudio.cdp.jsonl`
 qualifies.
 
 ## Pipeline
 
     # 1. capture -> bundles/<module-id>.js (raw), then format in place
-    ./extract-bundles.py ../design-incubators/chatfs-mockup-chatgpt/aistudio.cdp.jsonl
+    ./extract-bundles.py ../design-incubators/chatfs-cli-mockup/aistudio.cdp.jsonl
     ./prettify-bundles.sh
 
     # 2. bundles -> flat accessor table
@@ -139,7 +139,7 @@ request ctor, then the response ctor:
 `walk-graph.py --rpc <Method>` resolves the response ctor and walks it for you.
 Follow each `_.X`/`_.xi` edge down. Cross-check field numbers against the
 positional indices in
-`../design-incubators/chatfs-mockup-chatgpt/dev.kb/claims.kb/aistudio-jspb-prompt-shape.md`.
+`../design-incubators/chatfs-cli-mockup/dev.kb/claims.kb/aistudio-jspb-prompt-shape.md`.
 
 **Coverage caveat — getter recovery is partial per message.** `ResolveDriveResource`
 *does* carry the whole conversation (its response Prompt's `Name` is

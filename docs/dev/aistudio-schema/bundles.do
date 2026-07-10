@@ -3,7 +3,7 @@
 # so the live bundles/ is never half-written.
 exec >&2  # directory target: keep stray stdout out of redo's $3
 
-capture=../design-incubators/chatfs-mockup-chatgpt/aistudio.cdp.jsonl
+capture=../design-incubators/chatfs-cli-mockup/aistudio.cdp.jsonl
 redo-ifchange extract-bundles.py prettify-bundles.sh "$capture"
 
 tmp=$3.tmp

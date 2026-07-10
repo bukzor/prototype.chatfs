@@ -66,29 +66,53 @@ incubator→release promotion, not auto-trigger it.
 
 ## Implementation Steps
 
-- [ ] `git mv docs/dev/design-incubators/chatfs-mockup-chatgpt docs/dev/design-incubators/chatfs-cli-mockup`
-- [ ] Update live references (string `chatfs-mockup-chatgpt` → `chatfs-cli-mockup`):
-    - [ ] `pyproject.toml` — pyright `extraPaths`
-    - [ ] `.claude/todo.md` (project) — section header + path references in items 1, 3
-    - [ ] `docs/dev/adr/2026-04-29-000-no-freshness-caches.md` — `Scope:` line + See-also paths (keep title; historical)
-    - [ ] Incubator interior: `README.md`, `design.kb/CLAUDE.md`, `design.kb/040-design.kb/CLAUDE.md`, `.claude/todo.kb/2026-05-05-001-…`, `.claude/todo.kb/2026-05-05-002-…`, `.claude/todo.md`
-- [ ] Rewrite README closing paragraph with sharpened framing (proposed text in Notes below).
-- [ ] Leave devlog filenames and in-body path references alone (historical record; rename is a discoverable point in `git log`).
-- [ ] Commit as one rename commit.
-- [ ] Restart Claude from the new path (old cwd dangles after `git mv`).
+- [x] `git mv docs/dev/design-incubators/chatfs-mockup-chatgpt docs/dev/design-incubators/chatfs-cli-mockup`
+      (2026-07-10)
+- [x] Update live references (string `chatfs-mockup-chatgpt` → `chatfs-cli-mockup`):
+    - [x] `pyproject.toml` — pyright `extraPaths`
+    - [x] `.claude/todo.md` (project) — section header + path reference in
+          item 3 (item 1's reference turned out to be a devlog filename —
+          kept, historical)
+    - [x] `docs/dev/adr/2026-04-29-000-no-freshness-caches.md` — `Scope:` line +
+          design.kb See-also path (title and devlog See-also kept; historical)
+    - [x] Incubator interior: `README.md`, `design.kb/CLAUDE.md`,
+          `design.kb/040-design.kb/CLAUDE.md`, `.claude/todo.md`,
+          `dev.kb/claims.kb/har-browse-cdp-may-trail-visual-interactability.md`
+          (the `2026-05-05-*` todo.kb files from the 2026-05-11 survey no
+          longer existed). References accreted since the survey, also swept:
+          `docs/dev/aistudio-schema/` (README, bundles.do, .claude/todo.md,
+          2 discourse.kb files) and
+          `docs/dev/design.kb/040-design.kb/canonical-conversation-graph.md`.
+- [x] Rewrite README closing paragraph with sharpened framing (proposed text in
+      Notes below, amended: graduation target is `$REPO/lib/chatfs/`, per the
+      2026-07-10 libraryization decision — not `packages/chatfs-cli/`).
+- [x] Leave devlog filenames and in-body path references alone (historical
+      record; rename is a discoverable point in `git log`).
+- [x] Commit as one rename commit. (2026-07-10; concurrent unrelated edits
+      committed separately.)
+- [x] Restart Claude from the new path (old cwd dangles after `git mv`).
+      Turned out unnecessary: the harness followed the moved cwd mid-session.
 
 ## Open Questions
 
 - [x] Naming: `chatfs-cli-mockup` (vs `chatfs-mockup`, `chatfs-cli`). Resolved 2026-05-11.
 - [x] Devlog policy: leave in-body path references alone. Resolved 2026-05-11.
-- [ ] README reframing text — proposed in Notes; pending user sign-off.
+- [x] README reframing text — proposed in Notes; approved 2026-07-10 with one
+      amendment: graduation target `$REPO/lib/chatfs/` once libraryized.
 
 ## Success Criteria
 
-- [ ] `grep -r chatfs-mockup-chatgpt` returns only devlog hits (historical).
-- [ ] `tree docs/dev/design-incubators/chatfs-cli-mockup/` renders without dangling internal refs.
-- [ ] pyright still clean against the renamed `extraPaths`.
-- [ ] `git log --oneline` shows one rename commit, not interleaved with content changes.
+- [x] `grep -r chatfs-mockup-chatgpt` returns only historical hits: devlog
+      filenames/bodies, devlog-filename refs in project todo.md, the ADR title,
+      and this file's own record. Verified 2026-07-10.
+- [x] `tree docs/dev/design-incubators/chatfs-cli-mockup/` renders without
+      dangling internal refs; no symlink targets the old path
+      (`find docs -type l -lname '*chatfs-mockup-chatgpt*'` empty).
+- [x] pyright still clean against the renamed `extraPaths` (basedpyright
+      0/0/0; pytest 19/19).
+- [x] `git log --oneline` shows one rename commit, not interleaved with content
+      changes (concurrent todo/plan edits and the focus.md removal committed
+      separately).
 
 ## Notes
 

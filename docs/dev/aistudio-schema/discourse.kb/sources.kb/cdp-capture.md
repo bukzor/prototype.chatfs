@@ -1,7 +1,7 @@
 ---
 kind: dataset
 title: "aistudio.cdp.jsonl — CDP network capture"
-url: "../../design-incubators/chatfs-mockup-chatgpt/aistudio.cdp.jsonl"
+url: "../../design-incubators/chatfs-cli-mockup/aistudio.cdp.jsonl"
 tags: [aistudio, capture, cdp]
 ---
 

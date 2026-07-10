@@ -1,4 +1,4 @@
-# Design — chatfs-mockup-chatgpt
+# Design — chatfs-cli-mockup
 
 Decisions about the shape of the capture/splat/render pipeline and the CLI
 surface that drives it.

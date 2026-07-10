@@ -6,7 +6,7 @@ evidence:
   - claude.chat.b0f46746-e087-44de-9d34-ce0e15027d6b.jsonl  # exhibit: chat capture missing /chat_conversations_v2
 previously-claimed:
   - text: "/recents doesn't fire chat_conversations_v2 until the user scrolls"
-    where: docs/dev/design-incubators/chatfs-mockup-chatgpt/.claude/todo.md (parity ladder, Browse-side automation; corrected 2026-05-12)
+    where: docs/dev/design-incubators/chatfs-cli-mockup/.claude/todo.md (parity ladder, Browse-side automation; corrected 2026-05-12)
     when: 2026-05-11
 ---
 

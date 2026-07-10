@@ -1,7 +1,7 @@
 # 2026-04-29 — Drop Freshness Caches in chatfs-mockup-chatgpt Pipeline
 
 **Status:** Accepted
-**Scope:** `docs/dev/design-incubators/chatfs-mockup-chatgpt/`
+**Scope:** `docs/dev/design-incubators/chatfs-cli-mockup/`
 
 ## Context
 
@@ -41,5 +41,5 @@ has no such flag.
 
 ## See also
 
-- `docs/dev/design-incubators/chatfs-mockup-chatgpt/design.kb/040-design.kb/deterministic-regeneration.md` — forward-facing rule.
+- `docs/dev/design-incubators/chatfs-cli-mockup/design.kb/040-design.kb/deterministic-regeneration.md` — forward-facing rule.
 - `docs/dev/devlog/2026-04-29-000-chatfs-mockup-chatgpt-url-flow-and-determinism.md` — session that landed the change.
