@@ -54,3 +54,22 @@ share a filename.
 - If a future flow legitimately has only partial data, give the partial
   artifact a different filename (e.g. `meta.partial.json`) and document
   the schema explicitly.
+
+## Corollary: applies to fields, not just files
+
+The same rule one level down: don't launder one field's value into
+another field's name just because they're close enough. A field name is
+a claim about what the value means and how precisely it's known.
+
+AI Studio's `IndexItem.create_time` is the motivating case
+(`chatfs_aistudio_layout.py::index_item`). A full `ResolveDriveResource`
+fetch knows true creation time (the first turn's `createTime`); a
+`ListPrompts` index entry carries no turn content and so cannot — the
+only timestamp it has is `metadata.lastModified.revisionTime`, which is
+last-*modified* time, not creation time. Writing that value into a field
+named `create_time` would be exactly this rule's failure mode at field
+granularity. Instead: `create_time` is `NotRequired` (present only when
+actually known), and `last_modified` is its own always-present, honestly
+named field. See `chat-as-directory.md`'s `Created=`/`LastModified=`
+view-tree labels for how this same distinction surfaces in the derived
+view, not just the captured artifact.
