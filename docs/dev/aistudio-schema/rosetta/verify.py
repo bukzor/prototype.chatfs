@@ -24,8 +24,8 @@ import sys
 
 from convert import from_jspb, is_mapping, is_sequence, load_json
 
-FIXTURE_JSPB = "resolvedrive.jspb.json"
-FIXTURE_ALT = "resolvedrive.alt-json.json"
+FIXTURE_JSPB = "listprompts.jspb.json"
+FIXTURE_ALT = "listprompts.alt-json.json"
 
 
 def is_number(v: object) -> bool:

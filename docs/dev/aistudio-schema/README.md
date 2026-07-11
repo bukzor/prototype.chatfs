@@ -69,25 +69,32 @@ the position→name map (see `discourse.kb/` and `rosetta/` below).
 
 `rosetta/convert.py` turns a positional JSPB body into the named JSON form,
 driven by a hand-curated `slot → field` SCHEMA. The rest of `rosetta/` exists to
-keep that SCHEMA honest: capture the *same* prompt in both encodings, correlate
+keep that SCHEMA honest: capture the *same* subject in both encodings, correlate
 them to author/repair the SCHEMA, and assert the conversion stays faithful.
 
-The Rosetta stone is the **golden pair** — one prompt fetched both ways:
+The Rosetta stone is the **golden pair** — currently `ListPrompts` (the
+index/library RPC — chatfs-cli-mockup's step 2, the AI Studio index rung),
+fetched both ways:
 
-    resolvedrive.jspb.json       # positional (the converter's input)
-    resolvedrive.alt-json.json   # named (the ground truth to match)
+    listprompts.jspb.json       # positional (the converter's input)
+    listprompts.alt-json.json   # named (the ground truth to match)
+
+Each entry in the page reuses the same PROMPT/METADATA message types as
+`ResolveDriveResource`'s single-prompt response — verified by `verify.py`
+below — just sparser (no `runSettings`/`systemInstruction`; `chunkedPrompt`
+present but empty, since the index carries no turn content).
 
 Five steps, each a tool (run from `rosetta/`):
 
     # 1+2. capture the golden pair (live; needs auth — see Live access above)
-    ./capture.sh [PROMPT_ID]
+    ./capture.sh [PAGE_SIZE]
 
     # 3. correlate the pair → proposed `slot → field` maps per message type
     ./correlate.py             # ordering heuristic (an AID, not an oracle)
     ./correlate.py --values    # the other lens: value → jspb index-paths
 
     # 4. edit SCHEMA in convert.py by hand, guided by step 3 + walk-graph.py
-    ./convert.py < resolvedrive.jspb.json | jq .
+    ./convert.py < listprompts.jspb.json | jq .
 
     # 5. assert the conversion is "similar enough" to the real alt=json
     ./verify.py                # name/shape diff; exit 1 on divergence
@@ -95,6 +102,11 @@ Five steps, each a tool (run from `rosetta/`):
 Step 5 is also the redo gate `rosetta/check` (in `all.do`): it converts the
 committed JSPB fixture and name/shape-diffs it against the committed alt=json,
 offline, failing the build on any divergence.
+
+Previously pivoted from `ResolveDriveResource` (the conversation-fetch RPC,
+already SCHEMA-stable) to `ListPrompts` — the golden pair is one subject at a
+time, not accumulated; the superseded `resolvedrive.*` fixtures are recoverable
+from git history if that pair needs re-verifying later.
 
 "Similar enough" = same field **names** and **structure**. Leaf *values*
 legitimately differ between encodings and are not compared: bools (`0/1` vs

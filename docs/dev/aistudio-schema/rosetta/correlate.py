@@ -30,8 +30,8 @@ from collections.abc import Iterator
 
 from convert import is_mapping, is_sequence, load_json
 
-FIXTURE_JSPB = "resolvedrive.jspb.json"
-FIXTURE_ALT = "resolvedrive.alt-json.json"
+FIXTURE_JSPB = "listprompts.jspb.json"
+FIXTURE_ALT = "listprompts.alt-json.json"
 
 
 def kind(v: object) -> str:
@@ -139,7 +139,9 @@ def main() -> None:
 
     assert is_sequence(pos), pos
     assert is_mapping(named), named
-    named_prompt, pos_prompt = named["prompt"], pos[0]
+    # Correlate on one representative entry — align() expects a single
+    # named-dict/positional-list pair, not a repeated list of them.
+    named_prompt, pos_prompt = named["prompts"][0], pos[0][0]
 
     if values:
         print_values(named_prompt, pos_prompt)

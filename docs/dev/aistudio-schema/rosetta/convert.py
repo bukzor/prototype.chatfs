@@ -1,9 +1,15 @@
 #!/usr/bin/env python3
 """Convert AI Studio's positional jspb dump into its named-JSON form.
 
-AI Studio serializes a prompt two ways: a named JSON object, and a `jspb`
-array where every protobuf field sits at a fixed slot. Null/absent slots have
-no named counterpart, so the named form is sparse.
+AI Studio serializes a ListPrompts page two ways: a named JSON object, and a
+`jspb` array where every protobuf field sits at a fixed slot. Null/absent
+slots have no named counterpart, so the named form is sparse.
+
+Each entry in the page reuses the same PROMPT/METADATA message types as
+ResolveDriveResource's single-prompt response (verified by structural
+alignment against the two subjects' golden pairs) — just sparser: no
+`runSettings`/`systemInstruction`, and `chunkedPrompt` present but empty
+(`{}`), since the index doesn't carry turn content.
 
 This converter is driven by SCHEMA: a sparse `slot -> field` map per message
 type. We name only the slots we've identified; unknown and null slots are
@@ -157,9 +163,11 @@ def fold_map(pairs: object) -> dict[object, object]:
 
 
 def from_jspb(jspb: object) -> dict[str, object]:
-    """Top-level: the jspb array's first slot is the prompt message."""
+    """Top-level: the jspb array's first slot is a repeated list of prompt messages."""
     assert is_sequence(jspb), jspb
-    return {"prompt": from_message(jspb[0], PROMPT)}
+    prompts = jspb[0]
+    assert is_sequence(prompts), prompts
+    return {"prompts": [from_message(p, PROMPT) for p in prompts]}
 
 
 def load_json(fp: IO[str]) -> object:

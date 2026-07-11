@@ -1,0 +1,1306 @@
+{
+  "prompts": [
+    {
+      "name": "prompts/1vU6BlpV69d2MvI6L_oYGo_E-ZqmaI3eR",
+      "metadata": {
+        "displayName": "Tools for Rigorous Programming Languages",
+        "owner": {
+          "displayName": "Buck Evan",
+          "isMe": true,
+          "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+        },
+        "lastModified": {
+          "revisionTime": "2026-06-20T17:53:25.161Z",
+          "user": {
+            "displayName": "Buck Evan",
+            "isMe": true,
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+          }
+        },
+        "capabilities": {
+          "canEdit": true,
+          "canShare": true,
+          "canCopy": true
+        },
+        "multimodalAttributes": {},
+        "customProperties": {
+          "version": "1",
+          "hasImages": "false",
+          "promptType": "CHUNKED_PROMPT"
+        }
+      },
+      "chunkedPrompt": {}
+    },
+    {
+      "name": "prompts/1FcrPh1UEV067wBx3Kl0keL7Y6VjocMzC",
+      "metadata": {
+        "displayName": "Proton Information Storage Limits",
+        "owner": {
+          "displayName": "Buck Evan",
+          "isMe": true,
+          "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+        },
+        "lastModified": {
+          "revisionTime": "2026-01-18T21:40:48.279Z",
+          "user": {
+            "displayName": "Buck Evan",
+            "isMe": true,
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+          }
+        },
+        "capabilities": {
+          "canEdit": true,
+          "canShare": true,
+          "canCopy": true
+        },
+        "multimodalAttributes": {},
+        "customProperties": {
+          "hasImages": "false",
+          "version": "1",
+          "promptType": "CHUNKED_PROMPT"
+        }
+      },
+      "chunkedPrompt": {}
+    },
+    {
+      "name": "prompts/1WNixup70_ZnFKyhoMSvyIfJ1bk1lHEaI",
+      "metadata": {
+        "displayName": "AI and Materialism",
+        "owner": {
+          "displayName": "Buck Evan",
+          "isMe": true,
+          "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+        },
+        "lastModified": {
+          "revisionTime": "2026-01-18T21:10:23.659Z",
+          "user": {
+            "displayName": "Buck Evan",
+            "isMe": true,
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+          }
+        },
+        "capabilities": {
+          "canEdit": true,
+          "canShare": true,
+          "canCopy": true
+        },
+        "multimodalAttributes": {},
+        "customProperties": {
+          "promptType": "CHUNKED_PROMPT",
+          "hasImages": "false",
+          "version": "1"
+        }
+      },
+      "chunkedPrompt": {}
+    },
+    {
+      "name": "prompts/1Q0jrpiym6xQZs8yqDM_PmYjNnBfMP2h-",
+      "metadata": {
+        "displayName": "Conformal End Mirror Structure",
+        "owner": {
+          "displayName": "Buck Evan",
+          "isMe": true,
+          "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+        },
+        "lastModified": {
+          "revisionTime": "2026-01-18T20:58:13.969Z",
+          "user": {
+            "displayName": "Buck Evan",
+            "isMe": true,
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+          }
+        },
+        "capabilities": {
+          "canEdit": true,
+          "canShare": true,
+          "canCopy": true
+        },
+        "multimodalAttributes": {},
+        "customProperties": {
+          "hasImages": "false",
+          "version": "1",
+          "promptType": "CHUNKED_PROMPT"
+        }
+      },
+      "chunkedPrompt": {}
+    },
+    {
+      "name": "prompts/1F5iDwkwkEkD5NLAzAkqTFgTLJfIVtpeI",
+      "metadata": {
+        "displayName": "Future Conformal Boundary CPT Mirrors",
+        "owner": {
+          "displayName": "Buck Evan",
+          "isMe": true,
+          "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+        },
+        "lastModified": {
+          "revisionTime": "2026-01-07T23:06:47.625Z",
+          "user": {
+            "displayName": "Buck Evan",
+            "isMe": true,
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+          }
+        },
+        "capabilities": {
+          "canEdit": true,
+          "canShare": true,
+          "canCopy": true
+        },
+        "multimodalAttributes": {},
+        "customProperties": {
+          "version": "1",
+          "hasImages": "false",
+          "promptType": "CHUNKED_PROMPT"
+        }
+      },
+      "chunkedPrompt": {}
+    },
+    {
+      "name": "prompts/167bOARMeJr2qCy41UTOZChHciLcneJ_K",
+      "metadata": {
+        "displayName": "Double-Ended CPT Mirror Cosmology.",
+        "owner": {
+          "displayName": "Buck Evan",
+          "isMe": true,
+          "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+        },
+        "lastModified": {
+          "revisionTime": "2026-01-07T22:54:24.768Z",
+          "user": {
+            "displayName": "Buck Evan",
+            "isMe": true,
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+          }
+        },
+        "capabilities": {
+          "canEdit": true,
+          "canShare": true,
+          "canCopy": true
+        },
+        "multimodalAttributes": {},
+        "customProperties": {
+          "hasImages": "false",
+          "version": "1",
+          "promptType": "CHUNKED_PROMPT"
+        }
+      },
+      "chunkedPrompt": {}
+    },
+    {
+      "name": "prompts/1Jc_q117CpdyUG-WXP_wclL8UxEpWg54V",
+      "metadata": {
+        "displayName": "Penrose's Black Hole Theory.",
+        "owner": {
+          "displayName": "Buck Evan",
+          "isMe": true,
+          "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+        },
+        "lastModified": {
+          "revisionTime": "2026-01-07T21:52:35.809Z",
+          "user": {
+            "displayName": "Buck Evan",
+            "isMe": true,
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+          }
+        },
+        "capabilities": {
+          "canEdit": true,
+          "canShare": true,
+          "canCopy": true
+        },
+        "multimodalAttributes": {},
+        "customProperties": {
+          "promptType": "CHUNKED_PROMPT",
+          "version": "1",
+          "hasImages": "false"
+        }
+      },
+      "chunkedPrompt": {}
+    },
+    {
+      "name": "prompts/11wUvktgdv7aQUN3Z6tXd3GWQOndOBO4S",
+      "metadata": {
+        "displayName": "Human Time Budget Taxonomy",
+        "owner": {
+          "displayName": "Buck Evan",
+          "isMe": true,
+          "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+        },
+        "lastModified": {
+          "revisionTime": "2026-01-07T20:35:17.832Z",
+          "user": {
+            "displayName": "Buck Evan",
+            "isMe": true,
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+          }
+        },
+        "capabilities": {
+          "canEdit": true,
+          "canShare": true,
+          "canCopy": true
+        },
+        "multimodalAttributes": {},
+        "customProperties": {
+          "hasImages": "false",
+          "version": "1",
+          "promptType": "CHUNKED_PROMPT"
+        }
+      },
+      "chunkedPrompt": {}
+    },
+    {
+      "name": "prompts/1EuUygbMHzXJAfAxE0_pJT3MBMsIVFKlQ",
+      "metadata": {
+        "displayName": "Dog Crabbing: A Common Quirk",
+        "owner": {
+          "displayName": "Buck Evan",
+          "isMe": true,
+          "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+        },
+        "lastModified": {
+          "revisionTime": "2026-01-07T03:24:46.257Z",
+          "user": {
+            "displayName": "Buck Evan",
+            "isMe": true,
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+          }
+        },
+        "capabilities": {
+          "canEdit": true,
+          "canShare": true,
+          "canCopy": true
+        },
+        "multimodalAttributes": {},
+        "customProperties": {
+          "promptType": "CHUNKED_PROMPT",
+          "hasImages": "false",
+          "version": "1"
+        }
+      },
+      "chunkedPrompt": {}
+    },
+    {
+      "name": "prompts/1XXmaHIfr-RQadexrDUfk4C8YI2ebqZe-",
+      "metadata": {
+        "displayName": "Fusion Power: Scaling Up Neutron Output",
+        "owner": {
+          "displayName": "Buck Evan",
+          "isMe": true,
+          "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+        },
+        "lastModified": {
+          "revisionTime": "2026-01-06T20:53:51.924Z",
+          "user": {
+            "displayName": "Buck Evan",
+            "isMe": true,
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+          }
+        },
+        "capabilities": {
+          "canEdit": true,
+          "canShare": true,
+          "canCopy": true
+        },
+        "multimodalAttributes": {},
+        "customProperties": {
+          "promptType": "CHUNKED_PROMPT",
+          "hasImages": "false",
+          "version": "1"
+        }
+      },
+      "chunkedPrompt": {}
+    },
+    {
+      "name": "prompts/1GlYJAwFt2zQP00yoWk4vLVrrzxMu1yd8",
+      "metadata": {
+        "displayName": "Founder's Paradox: Explorer vs. Provider",
+        "owner": {
+          "displayName": "Buck Evan",
+          "isMe": true,
+          "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+        },
+        "lastModified": {
+          "revisionTime": "2026-01-06T20:02:21.580Z",
+          "user": {
+            "displayName": "Buck Evan",
+            "isMe": true,
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+          }
+        },
+        "capabilities": {
+          "canEdit": true,
+          "canShare": true,
+          "canCopy": true
+        },
+        "multimodalAttributes": {},
+        "customProperties": {
+          "promptType": "CHUNKED_PROMPT",
+          "version": "1",
+          "hasImages": "false"
+        }
+      },
+      "chunkedPrompt": {}
+    },
+    {
+      "name": "prompts/1f8sHC0FvlIRuZzI9TW-VRKX7Jg4x69Vu",
+      "metadata": {
+        "displayName": "Android Game Recommendations",
+        "owner": {
+          "displayName": "Buck Evan",
+          "isMe": true,
+          "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+        },
+        "lastModified": {
+          "revisionTime": "2026-01-04T07:19:44.716Z",
+          "user": {
+            "displayName": "Buck Evan",
+            "isMe": true,
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+          }
+        },
+        "capabilities": {
+          "canEdit": true,
+          "canShare": true,
+          "canCopy": true
+        },
+        "multimodalAttributes": {},
+        "customProperties": {
+          "promptType": "CHUNKED_PROMPT",
+          "hasImages": "false",
+          "version": "1"
+        }
+      },
+      "chunkedPrompt": {}
+    },
+    {
+      "name": "prompts/1I7QNl13QDGOP9Dls_eZjYqoMO25rzysn",
+      "metadata": {
+        "displayName": "Quantum Bootstrap Universe Model",
+        "owner": {
+          "displayName": "Buck Evan",
+          "isMe": true,
+          "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+        },
+        "lastModified": {
+          "revisionTime": "2025-12-31T02:14:02.280Z",
+          "user": {
+            "displayName": "Buck Evan",
+            "isMe": true,
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+          }
+        },
+        "capabilities": {
+          "canEdit": true,
+          "canShare": true,
+          "canCopy": true
+        },
+        "multimodalAttributes": {},
+        "customProperties": {
+          "hasImages": "false",
+          "version": "1",
+          "promptType": "CHUNKED_PROMPT"
+        }
+      },
+      "chunkedPrompt": {}
+    },
+    {
+      "name": "prompts/17b8duVCEK3ZKEDioYMo5k-zcy3M9iOf7",
+      "metadata": {
+        "displayName": "Safely Peek Rocketeer Locations",
+        "owner": {
+          "displayName": "Buck Evan",
+          "isMe": true,
+          "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+        },
+        "lastModified": {
+          "revisionTime": "2025-12-30T07:39:45.148Z",
+          "user": {
+            "displayName": "Buck Evan",
+            "isMe": true,
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+          }
+        },
+        "capabilities": {
+          "canEdit": true,
+          "canShare": true,
+          "canCopy": true
+        },
+        "multimodalAttributes": {},
+        "customProperties": {
+          "hasImages": "false",
+          "version": "1",
+          "promptType": "CHUNKED_PROMPT"
+        }
+      },
+      "chunkedPrompt": {}
+    },
+    {
+      "name": "prompts/1FLkF2XeCirkflrQv7ewVzHGEmnJ3s3L5",
+      "metadata": {
+        "displayName": "Git-S3 Analogy With Boto.",
+        "owner": {
+          "displayName": "Buck Evan",
+          "isMe": true,
+          "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+        },
+        "lastModified": {
+          "revisionTime": "2025-12-29T22:22:54.146Z",
+          "user": {
+            "displayName": "Buck Evan",
+            "isMe": true,
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+          }
+        },
+        "capabilities": {
+          "canEdit": true,
+          "canShare": true,
+          "canCopy": true
+        },
+        "multimodalAttributes": {},
+        "customProperties": {
+          "hasImages": "false",
+          "version": "1",
+          "promptType": "CHUNKED_PROMPT"
+        }
+      },
+      "chunkedPrompt": {}
+    },
+    {
+      "name": "prompts/1EGwaFiScYa9lqZsP7eW8SqvBoMm642u0",
+      "metadata": {
+        "displayName": "Physics Substack Branding (2)",
+        "owner": {
+          "displayName": "Buck Evan",
+          "isMe": true,
+          "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+        },
+        "lastModified": {
+          "revisionTime": "2025-12-28T22:23:51.612Z",
+          "user": {
+            "displayName": "Buck Evan",
+            "isMe": true,
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+          }
+        },
+        "capabilities": {
+          "canEdit": true,
+          "canShare": true,
+          "canCopy": true
+        },
+        "multimodalAttributes": {},
+        "customProperties": {
+          "promptType": "CHUNKED_PROMPT",
+          "hasImages": "false",
+          "version": "1"
+        }
+      },
+      "chunkedPrompt": {}
+    },
+    {
+      "name": "prompts/19YO2fEqyrjrBQLKlP7LCzPCnrkwqXF1H",
+      "metadata": {
+        "displayName": "Physics Substack Branding",
+        "owner": {
+          "displayName": "Buck Evan",
+          "isMe": true,
+          "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+        },
+        "lastModified": {
+          "revisionTime": "2025-12-28T22:23:43.360Z",
+          "user": {
+            "displayName": "Buck Evan",
+            "isMe": true,
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+          }
+        },
+        "capabilities": {
+          "canEdit": true,
+          "canShare": true,
+          "canCopy": true
+        },
+        "multimodalAttributes": {},
+        "customProperties": {
+          "hasImages": "false",
+          "version": "1",
+          "promptType": "CHUNKED_PROMPT"
+        }
+      },
+      "chunkedPrompt": {}
+    },
+    {
+      "name": "prompts/1yitUcF9eIfBCs8PO3AXqGHpM_rqcUYo2",
+      "metadata": {
+        "displayName": "Measurement Problem: Entanglement and Its Issues",
+        "owner": {
+          "displayName": "Buck Evan",
+          "isMe": true,
+          "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+        },
+        "lastModified": {
+          "revisionTime": "2025-12-28T22:13:41.598Z",
+          "user": {
+            "displayName": "Buck Evan",
+            "isMe": true,
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+          }
+        },
+        "capabilities": {
+          "canEdit": true,
+          "canShare": true,
+          "canCopy": true
+        },
+        "multimodalAttributes": {},
+        "customProperties": {
+          "promptType": "CHUNKED_PROMPT",
+          "hasImages": "false",
+          "version": "1"
+        }
+      },
+      "chunkedPrompt": {}
+    },
+    {
+      "name": "prompts/1mJWcMSaSISUguvEhxhsUBXy2OiGmkdzI",
+      "metadata": {
+        "displayName": "Redo's Content-Addressable Evolution.",
+        "owner": {
+          "displayName": "Buck Evan",
+          "isMe": true,
+          "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+        },
+        "lastModified": {
+          "revisionTime": "2025-12-27T22:41:33.228Z",
+          "user": {
+            "displayName": "Buck Evan",
+            "isMe": true,
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+          }
+        },
+        "capabilities": {
+          "canEdit": true,
+          "canShare": true,
+          "canCopy": true
+        },
+        "multimodalAttributes": {},
+        "customProperties": {
+          "version": "1",
+          "hasImages": "false",
+          "promptType": "CHUNKED_PROMPT"
+        }
+      },
+      "chunkedPrompt": {}
+    },
+    {
+      "name": "prompts/1qe1RAmt5EjA9_i-ENoc-gX7TxgVkszCM",
+      "metadata": {
+        "displayName": "Decision Framework Corners Identified.",
+        "owner": {
+          "displayName": "Buck Evan",
+          "isMe": true,
+          "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+        },
+        "lastModified": {
+          "revisionTime": "2025-12-27T21:41:43.744Z",
+          "user": {
+            "displayName": "Buck Evan",
+            "isMe": true,
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+          }
+        },
+        "capabilities": {
+          "canEdit": true,
+          "canShare": true,
+          "canCopy": true
+        },
+        "multimodalAttributes": {},
+        "customProperties": {
+          "version": "1",
+          "hasImages": "false",
+          "promptType": "CHUNKED_PROMPT"
+        }
+      },
+      "chunkedPrompt": {}
+    },
+    {
+      "name": "prompts/1T28HqCjkOAbuYBqkplTnjfKhrMJ_QdyD",
+      "metadata": {
+        "displayName": "Idempotent Build Pipeline Analogy",
+        "owner": {
+          "displayName": "Buck Evan",
+          "isMe": true,
+          "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+        },
+        "lastModified": {
+          "revisionTime": "2025-12-27T20:55:30.433Z",
+          "user": {
+            "displayName": "Buck Evan",
+            "isMe": true,
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+          }
+        },
+        "capabilities": {
+          "canEdit": true,
+          "canShare": true,
+          "canCopy": true
+        },
+        "multimodalAttributes": {},
+        "customProperties": {
+          "promptType": "CHUNKED_PROMPT",
+          "version": "1",
+          "hasImages": "false"
+        }
+      },
+      "chunkedPrompt": {}
+    },
+    {
+      "name": "prompts/1c73U74Xho4Di5qLh0h9NGjssj3PI5tGn",
+      "metadata": {
+        "displayName": "Reduction's Etymological Journey Explained.",
+        "owner": {
+          "displayName": "Buck Evan",
+          "isMe": true,
+          "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+        },
+        "lastModified": {
+          "revisionTime": "2025-12-22T21:58:46.089Z",
+          "user": {
+            "displayName": "Buck Evan",
+            "isMe": true,
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+          }
+        },
+        "capabilities": {
+          "canEdit": true,
+          "canShare": true,
+          "canCopy": true
+        },
+        "multimodalAttributes": {},
+        "customProperties": {
+          "promptType": "CHUNKED_PROMPT",
+          "version": "1",
+          "hasImages": "false"
+        }
+      },
+      "chunkedPrompt": {}
+    },
+    {
+      "name": "prompts/1BDSh1qj5WZWfRdB_KcdOHpd0Zsg9QQvI",
+      "metadata": {
+        "displayName": "AI's Engine: Linear Algebra And Curves",
+        "owner": {
+          "displayName": "Buck Evan",
+          "isMe": true,
+          "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+        },
+        "lastModified": {
+          "revisionTime": "2025-12-22T20:13:49.706Z",
+          "user": {
+            "displayName": "Buck Evan",
+            "isMe": true,
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+          }
+        },
+        "capabilities": {
+          "canEdit": true,
+          "canShare": true,
+          "canCopy": true
+        },
+        "multimodalAttributes": {},
+        "customProperties": {
+          "hasImages": "false",
+          "version": "1",
+          "promptType": "CHUNKED_PROMPT"
+        }
+      },
+      "chunkedPrompt": {}
+    },
+    {
+      "name": "prompts/1AWlss0mbmHtRMocMxy3mUmCmGjQtpTZP",
+      "metadata": {
+        "displayName": "The Principle of Explosion Explained",
+        "owner": {
+          "displayName": "Buck Evan",
+          "isMe": true,
+          "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+        },
+        "lastModified": {
+          "revisionTime": "2025-12-21T16:39:31.853Z",
+          "user": {
+            "displayName": "Buck Evan",
+            "isMe": true,
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+          }
+        },
+        "capabilities": {
+          "canEdit": true,
+          "canShare": true,
+          "canCopy": true
+        },
+        "multimodalAttributes": {},
+        "customProperties": {
+          "version": "1",
+          "hasImages": "false",
+          "promptType": "CHUNKED_PROMPT"
+        }
+      },
+      "chunkedPrompt": {}
+    },
+    {
+      "name": "prompts/1aFpnciNqr-vMtTpKIKjZezBSCmnjfnUI",
+      "metadata": {
+        "displayName": "Biological Complexity and Moore's Law",
+        "owner": {
+          "displayName": "Buck Evan",
+          "isMe": true,
+          "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+        },
+        "lastModified": {
+          "revisionTime": "2025-12-17T16:26:18.622Z",
+          "user": {
+            "displayName": "Buck Evan",
+            "isMe": true,
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+          }
+        },
+        "capabilities": {
+          "canEdit": true,
+          "canShare": true,
+          "canCopy": true
+        },
+        "multimodalAttributes": {},
+        "customProperties": {
+          "promptType": "CHUNKED_PROMPT",
+          "version": "1",
+          "hasImages": "false"
+        }
+      },
+      "chunkedPrompt": {}
+    },
+    {
+      "name": "prompts/17n91n2R1h0wL7POzeoykYgpqepUlZVwX",
+      "metadata": {
+        "displayName": "Memristor Technology and Its Evolution.",
+        "owner": {
+          "displayName": "Buck Evan",
+          "isMe": true,
+          "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+        },
+        "lastModified": {
+          "revisionTime": "2025-12-17T15:59:46.649Z",
+          "user": {
+            "displayName": "Buck Evan",
+            "isMe": true,
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+          }
+        },
+        "capabilities": {
+          "canEdit": true,
+          "canShare": true,
+          "canCopy": true
+        },
+        "multimodalAttributes": {},
+        "customProperties": {
+          "promptType": "CHUNKED_PROMPT",
+          "hasImages": "false",
+          "version": "1"
+        }
+      },
+      "chunkedPrompt": {}
+    },
+    {
+      "name": "prompts/1RksGTTbYi2nd3ftR7mnPXZI0B7q6hvbz",
+      "metadata": {
+        "displayName": "Memristor's Missing Link",
+        "owner": {
+          "displayName": "Buck Evan",
+          "isMe": true,
+          "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+        },
+        "lastModified": {
+          "revisionTime": "2025-12-17T15:22:08.229Z",
+          "user": {
+            "displayName": "Buck Evan",
+            "isMe": true,
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+          }
+        },
+        "capabilities": {
+          "canEdit": true,
+          "canShare": true,
+          "canCopy": true
+        },
+        "multimodalAttributes": {},
+        "customProperties": {
+          "hasImages": "false",
+          "version": "1",
+          "promptType": "CHUNKED_PROMPT"
+        }
+      },
+      "chunkedPrompt": {}
+    },
+    {
+      "name": "prompts/1S_WioYMINMoGoSZsMF-M4SxdR8CAnUQq",
+      "metadata": {
+        "displayName": "Branch of Consciousness Versus A Vortex",
+        "owner": {
+          "displayName": "Buck Evan",
+          "isMe": true,
+          "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+        },
+        "lastModified": {
+          "revisionTime": "2025-12-16T20:57:47.677Z",
+          "user": {
+            "displayName": "Buck Evan",
+            "isMe": true,
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+          }
+        },
+        "capabilities": {
+          "canEdit": true,
+          "canShare": true,
+          "canCopy": true
+        },
+        "multimodalAttributes": {},
+        "customProperties": {
+          "version": "1",
+          "hasImages": "false",
+          "promptType": "CHUNKED_PROMPT"
+        }
+      },
+      "chunkedPrompt": {}
+    },
+    {
+      "name": "prompts/11SWnvv5ZBrVcOH3wic39HzTqMvolJlUR",
+      "metadata": {
+        "displayName": "Consciousness Versus A Vortex",
+        "owner": {
+          "displayName": "Buck Evan",
+          "isMe": true,
+          "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+        },
+        "lastModified": {
+          "revisionTime": "2025-12-16T20:23:46.781Z",
+          "user": {
+            "displayName": "Buck Evan",
+            "isMe": true,
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+          }
+        },
+        "capabilities": {
+          "canEdit": true,
+          "canShare": true,
+          "canCopy": true
+        },
+        "multimodalAttributes": {},
+        "customProperties": {
+          "hasImages": "false",
+          "version": "1",
+          "promptType": "CHUNKED_PROMPT"
+        }
+      },
+      "chunkedPrompt": {}
+    },
+    {
+      "name": "prompts/1B2xtghfpLkL3hsEYyAwyOu-lh3NL1N8U",
+      "metadata": {
+        "displayName": "Predicting ARC-AGI Solution Timeline",
+        "owner": {
+          "displayName": "Buck Evan",
+          "isMe": true,
+          "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+        },
+        "lastModified": {
+          "revisionTime": "2025-12-15T15:19:48.207Z",
+          "user": {
+            "displayName": "Buck Evan",
+            "isMe": true,
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+          }
+        },
+        "capabilities": {
+          "canEdit": true,
+          "canShare": true,
+          "canCopy": true
+        },
+        "multimodalAttributes": {},
+        "customProperties": {
+          "hasImages": "false",
+          "version": "1",
+          "promptType": "CHUNKED_PROMPT"
+        }
+      },
+      "chunkedPrompt": {}
+    },
+    {
+      "name": "prompts/1GCvJa0-O99OWON6GrXr90Dig9U1u_pr-",
+      "metadata": {
+        "displayName": "Ratio of Universe To Planck Length",
+        "owner": {
+          "displayName": "Buck Evan",
+          "isMe": true,
+          "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+        },
+        "lastModified": {
+          "revisionTime": "2025-12-12T08:45:25.140Z",
+          "user": {
+            "displayName": "Buck Evan",
+            "isMe": true,
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+          }
+        },
+        "capabilities": {
+          "canEdit": true,
+          "canShare": true,
+          "canCopy": true
+        },
+        "multimodalAttributes": {},
+        "customProperties": {
+          "promptType": "CHUNKED_PROMPT",
+          "hasImages": "false",
+          "version": "1"
+        }
+      },
+      "chunkedPrompt": {}
+    },
+    {
+      "name": "prompts/1BMxnQuiM0JOAx4-F5t7cwuO1U-kqsqYt",
+      "metadata": {
+        "displayName": "Banach-Tarski: Counterintuitive But Accepted",
+        "owner": {
+          "displayName": "Buck Evan",
+          "isMe": true,
+          "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+        },
+        "lastModified": {
+          "revisionTime": "2025-12-11T06:13:30.825Z",
+          "user": {
+            "displayName": "Buck Evan",
+            "isMe": true,
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+          }
+        },
+        "capabilities": {
+          "canEdit": true,
+          "canShare": true,
+          "canCopy": true
+        },
+        "multimodalAttributes": {},
+        "customProperties": {
+          "promptType": "CHUNKED_PROMPT",
+          "version": "1",
+          "hasImages": "false"
+        }
+      },
+      "chunkedPrompt": {}
+    },
+    {
+      "name": "prompts/1xj8-3-i7yAxpAKBD1B58ZF3riAs-BIhG",
+      "metadata": {
+        "displayName": "Netflix Cast Policy Change",
+        "owner": {
+          "displayName": "Buck Evan",
+          "isMe": true,
+          "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+        },
+        "lastModified": {
+          "revisionTime": "2025-12-07T23:16:24.707Z",
+          "user": {
+            "displayName": "Buck Evan",
+            "isMe": true,
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+          }
+        },
+        "capabilities": {
+          "canEdit": true,
+          "canShare": true,
+          "canCopy": true
+        },
+        "multimodalAttributes": {},
+        "customProperties": {
+          "promptType": "CHUNKED_PROMPT",
+          "version": "1",
+          "hasImages": "false"
+        }
+      },
+      "chunkedPrompt": {}
+    },
+    {
+      "name": "prompts/1jR5mSsLGl1NAdecirfDeBZtV0DR_YeD8",
+      "metadata": {
+        "displayName": "Adult Topics and Safety Guidelines",
+        "owner": {
+          "displayName": "Buck Evan",
+          "isMe": true,
+          "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+        },
+        "lastModified": {
+          "revisionTime": "2025-12-07T20:58:46.548Z",
+          "user": {
+            "displayName": "Buck Evan",
+            "isMe": true,
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+          }
+        },
+        "capabilities": {
+          "canEdit": true,
+          "canShare": true,
+          "canCopy": true
+        },
+        "multimodalAttributes": {},
+        "customProperties": {
+          "version": "1",
+          "hasImages": "false",
+          "promptType": "CHUNKED_PROMPT"
+        }
+      },
+      "chunkedPrompt": {}
+    },
+    {
+      "name": "prompts/1-xXDuZzVPPbEIpIkqJ-1Wk2mMRiEcG-H",
+      "metadata": {
+        "displayName": "Arc Raiders Loot Explained.",
+        "owner": {
+          "displayName": "Buck Evan",
+          "isMe": true,
+          "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+        },
+        "lastModified": {
+          "revisionTime": "2025-12-07T20:44:36.834Z",
+          "user": {
+            "displayName": "Buck Evan",
+            "isMe": true,
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+          }
+        },
+        "capabilities": {
+          "canEdit": true,
+          "canShare": true,
+          "canCopy": true
+        },
+        "multimodalAttributes": {},
+        "customProperties": {
+          "version": "1",
+          "hasImages": "false",
+          "promptType": "CHUNKED_PROMPT"
+        }
+      },
+      "chunkedPrompt": {}
+    },
+    {
+      "name": "prompts/1cyMOEGC3vDUPeZL9FRFgn7iwtt85zbgn",
+      "metadata": {
+        "displayName": "Tools, Google Search, and Function Calling",
+        "owner": {
+          "displayName": "Buck Evan",
+          "isMe": true,
+          "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+        },
+        "lastModified": {
+          "revisionTime": "2025-12-07T19:48:11.265Z",
+          "user": {
+            "displayName": "Buck Evan",
+            "isMe": true,
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+          }
+        },
+        "capabilities": {
+          "canEdit": true,
+          "canShare": true,
+          "canCopy": true
+        },
+        "multimodalAttributes": {},
+        "customProperties": {
+          "promptType": "CHUNKED_PROMPT",
+          "hasImages": "false",
+          "version": "1"
+        }
+      },
+      "chunkedPrompt": {}
+    },
+    {
+      "name": "prompts/1gIYOWliwyYigPqd627rk1lzZ1nS1vfVO",
+      "metadata": {
+        "displayName": "Geometric Framework for U(1)",
+        "owner": {
+          "displayName": "Buck Evan",
+          "isMe": true,
+          "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+        },
+        "lastModified": {
+          "revisionTime": "2025-12-07T17:34:24.512Z",
+          "user": {
+            "displayName": "Buck Evan",
+            "isMe": true,
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+          }
+        },
+        "capabilities": {
+          "canEdit": true,
+          "canShare": true,
+          "canCopy": true
+        },
+        "multimodalAttributes": {},
+        "customProperties": {
+          "hasImages": "false",
+          "version": "1",
+          "promptType": "CHUNKED_PROMPT"
+        }
+      },
+      "chunkedPrompt": {}
+    },
+    {
+      "name": "prompts/1D7-dEwDzwI9rwAlSG63fBDMWQTJk66N_",
+      "metadata": {
+        "displayName": "Practicing Elocution and Offering Help",
+        "owner": {
+          "displayName": "Buck Evan",
+          "isMe": true,
+          "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+        },
+        "lastModified": {
+          "revisionTime": "2025-12-04T15:16:52.886Z",
+          "user": {
+            "displayName": "Buck Evan",
+            "isMe": true,
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+          }
+        },
+        "capabilities": {
+          "canEdit": true,
+          "canShare": true,
+          "canCopy": true
+        },
+        "multimodalAttributes": {},
+        "customProperties": {
+          "promptType": "CHUNKED_PROMPT",
+          "version": "1",
+          "hasImages": "false"
+        }
+      },
+      "chunkedPrompt": {}
+    },
+    {
+      "name": "prompts/1IBsLWVovuR6eCLTGUwzy2b5geEG9HgJ5",
+      "metadata": {
+        "displayName": "Literary Sci-Fi Book Recommendations",
+        "owner": {
+          "displayName": "Buck Evan",
+          "isMe": true,
+          "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+        },
+        "lastModified": {
+          "revisionTime": "2025-12-02T02:23:13.494Z",
+          "user": {
+            "displayName": "Buck Evan",
+            "isMe": true,
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+          }
+        },
+        "capabilities": {
+          "canEdit": true,
+          "canShare": true,
+          "canCopy": true
+        },
+        "multimodalAttributes": {},
+        "customProperties": {
+          "hasImages": "false",
+          "version": "1",
+          "promptType": "CHUNKED_PROMPT"
+        }
+      },
+      "chunkedPrompt": {}
+    },
+    {
+      "name": "prompts/1EEbi89iCrgy2rv1i3tUs7rqm5w69mERB",
+      "metadata": {
+        "displayName": "The Lens I Look Through",
+        "owner": {
+          "displayName": "Buck Evan",
+          "isMe": true,
+          "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+        },
+        "lastModified": {
+          "revisionTime": "2025-12-02T01:48:57.830Z",
+          "user": {
+            "displayName": "Buck Evan",
+            "isMe": true,
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+          }
+        },
+        "capabilities": {
+          "canEdit": true,
+          "canShare": true,
+          "canCopy": true
+        },
+        "multimodalAttributes": {},
+        "customProperties": {
+          "promptType": "CHUNKED_PROMPT",
+          "version": "1",
+          "hasImages": "false"
+        }
+      },
+      "chunkedPrompt": {}
+    },
+    {
+      "name": "prompts/1qLifKnYa2Q0mOAxK7wL_7Rfj3BTYCcbw",
+      "metadata": {
+        "displayName": "Branch of Unified Hypothesis: Boundary Collision.",
+        "owner": {
+          "displayName": "Buck Evan",
+          "isMe": true,
+          "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+        },
+        "lastModified": {
+          "revisionTime": "2025-12-02T01:14:02.909Z",
+          "user": {
+            "displayName": "Buck Evan",
+            "isMe": true,
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+          }
+        },
+        "capabilities": {
+          "canEdit": true,
+          "canShare": true,
+          "canCopy": true
+        },
+        "multimodalAttributes": {},
+        "customProperties": {
+          "promptType": "CHUNKED_PROMPT",
+          "hasImages": "false",
+          "version": "1"
+        }
+      },
+      "chunkedPrompt": {}
+    },
+    {
+      "name": "prompts/13j7Yt1osRXkZEsyMgrLhpXcUiFMjF-JT",
+      "metadata": {
+        "displayName": "Unified Hypothesis: Boundary Collision.",
+        "owner": {
+          "displayName": "Buck Evan",
+          "isMe": true,
+          "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+        },
+        "lastModified": {
+          "revisionTime": "2025-12-01T23:41:31.159Z",
+          "user": {
+            "displayName": "Buck Evan",
+            "isMe": true,
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJmbT2OXEMIsC0580k5QcBf1bIPhnwZDwN1bBNFMg97N-7Xgq62Ew=s64"
+          }
+        },
+        "capabilities": {
+          "canEdit": true,
+          "canShare": true,
+          "canCopy": true
+        },
+        "multimodalAttributes": {},
+        "customProperties": {
+          "promptType": "CHUNKED_PROMPT",
+          "hasImages": "false",
+          "version": "1"
+        }
+      },
+      "chunkedPrompt": {}
+    }
+  ]
+}

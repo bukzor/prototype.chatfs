@@ -1,11 +1,12 @@
 #!/bin/bash
-# Capture the golden pair for one prompt: the SAME conversation in both
-# encodings — positional JSPB and named alt=json. Steps 1-2 of the
-# reproducibility loop (see ../README.md); the pair verify.py checks against.
+# Capture the golden pair for ListPrompts (the index/library RPC): the SAME
+# page of prompts in both encodings — positional JSPB and named alt=json.
+# Steps 1-2 of the reproducibility loop (see ../README.md); the pair
+# verify.py checks against.
 #
 # Needs live auth. If ../curl-aistudio returns HTTP 401, run ../aistudio-reauth.
 #
-# Usage: ./capture.sh [PROMPT_ID]
+# Usage: ./capture.sh [PAGE_SIZE]
 set -euo pipefail
 shopt -s failglob
 export DEBUG="${DEBUG:-0}"
@@ -14,12 +15,12 @@ trap onerror ERR
 (( DEBUG > 0 )) && set -x
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
-ID="${1:-1vU6BlpV69d2MvI6L_oYGo_E-ZqmaI3eR}"
-body="[\"$ID\"]"
+PAGE_SIZE="${1:-100}"
+body="[$PAGE_SIZE]"
 
-"$HERE/../curl-aistudio" -d "$body" ResolveDriveResource \
-  | jq . > "$HERE/resolvedrive.jspb.json"
-"$HERE/../curl-aistudio" -d "$body" 'ResolveDriveResource?alt=json' -H 'Accept: application/json' \
-  | jq . > "$HERE/resolvedrive.alt-json.json"
+"$HERE/../curl-aistudio" -d "$body" ListPrompts \
+  | jq . > "$HERE/listprompts.jspb.json"
+"$HERE/../curl-aistudio" -d "$body" 'ListPrompts?alt=json' -H 'Accept: application/json' \
+  | jq . > "$HERE/listprompts.alt-json.json"
 
-echo >&2 "wrote resolvedrive.jspb.json + resolvedrive.alt-json.json for $ID"
+echo >&2 "wrote listprompts.jspb.json + listprompts.alt-json.json (page size $PAGE_SIZE)"
