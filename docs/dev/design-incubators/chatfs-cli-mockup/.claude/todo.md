@@ -92,6 +92,17 @@ claude-code-as-provider (needs its design discussion first).
 
 ## Next
 
+- [ ] `chatfs_layout.py::time_dir_for`/`place_meta` have zero direct test
+      coverage (checked 2026-07-11: no `*layout_test.py`, no grep hits
+      for either name in any `*_test.py`) — pre-existing gap, but the
+      2026-07-11 `label=`/"graduation" behavior (aistudio's
+      `Created=`/`LastModified=` switch, purge-and-replace when a
+      `LastModified=`-placed entry later gets real `create_time`) landed
+      with none either. Worth a focused test: `time_dir_for` with/without
+      `label`, and `place_meta` called twice for the same id/root with
+      different labels asserting the first symlink is gone and the
+      second is in its place.
+
 - [x] Add chatgpt-specific tests for `normalize_turnless`'s synthetic-anchor
       path (a turn-less fork materializing a heading) against a real `mapping`
       shape — found while closing the `before`..HEAD code-half review
