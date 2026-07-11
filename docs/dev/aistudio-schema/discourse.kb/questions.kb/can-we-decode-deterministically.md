@@ -29,6 +29,12 @@ position→name map, then decode offline forever. The finding splits the questio
   and cross-checked against the bundle (`claims.kb/offline-decode-needs-curation.md`).
 
 So the offline goal is met in practice, at the cost of a one-time RE pass; the
-"no RE" form is refuted for the alignment-only approach. Still untested:
-stability across prompt types (repeated fields, oneofs, more absent/optional
-slots) — only one golden pair exercised so far, so the question stays **open**.
+"no RE" form is refuted for the alignment-only approach. Partially tested:
+`rosetta/` now holds two golden pairs concurrently — `ResolveDriveResource`
+(one prompt) and `ListPrompts` (an index page) — both passing `verify.py`
+against the *same* SCHEMA (`../../devlog/2026-07-11-001-rosetta-holds-n-golden-pairs.md`),
+real evidence the SCHEMA generalizes across structurally different subjects
+(populated vs. empty `chunkedPrompt`, singular vs. repeated top-level shape).
+Still untested: a repeated field, a oneof, or a field present in one encoding
+and absent in the other — none of the current pairs specifically exercise
+those, so the question stays **open**.

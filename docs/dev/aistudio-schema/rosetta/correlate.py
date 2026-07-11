@@ -26,12 +26,37 @@ the ordering heuristic is ambiguous.
 """
 
 import sys
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 
 from convert import is_mapping, is_sequence, load_json
+from verify import subject_of
 
 FIXTURE_JSPB = "listprompts.jspb.json"
 FIXTURE_ALT = "listprompts.alt-json.json"
+
+
+def representative_resolvedrive(named: object, pos: object) -> tuple[object, object]:
+    assert is_mapping(named), named
+    assert is_sequence(pos), pos
+    return named["prompt"], pos[0]
+
+
+def representative_listprompts(named: object, pos: object) -> tuple[object, object]:
+    assert is_mapping(named), named
+    assert is_sequence(pos), pos
+    named_prompts, pos_prompts = named["prompts"], pos[0]
+    assert is_sequence(named_prompts), named_prompts
+    assert is_sequence(pos_prompts), pos_prompts
+    return named_prompts[0], pos_prompts[0]
+
+
+# One representative-entry accessor per subject: align() wants a single
+# named-dict/positional-list pair, not resolvedrive's singular prompt or
+# listprompts' repeated page of them.
+REPRESENTATIVE: dict[str, Callable[[object, object], tuple[object, object]]] = {
+    "resolvedrive": representative_resolvedrive,
+    "listprompts": representative_listprompts,
+}
 
 
 def kind(v: object) -> str:
@@ -141,7 +166,7 @@ def main() -> None:
     assert is_mapping(named), named
     # Correlate on one representative entry — align() expects a single
     # named-dict/positional-list pair, not a repeated list of them.
-    named_prompt, pos_prompt = named["prompts"][0], pos[0][0]
+    named_prompt, pos_prompt = REPRESENTATIVE[subject_of(jspb_path)](named, pos)
 
     if values:
         print_values(named_prompt, pos_prompt)

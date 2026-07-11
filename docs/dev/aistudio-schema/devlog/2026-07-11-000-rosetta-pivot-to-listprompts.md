@@ -33,20 +33,14 @@ standalone. `redo check` passes.
 
 ## Conventions Established
 
-- `rosetta/` holds one golden-pair subject at a time and is expected to be
+- ~~`rosetta/` holds one golden-pair subject at a time and is expected to be
   repointed (not extended) when the live investigative focus moves to a
-  different RPC.
+  different RPC.~~ **Superseded same-day** by
+  `2026-07-11-001-rosetta-holds-n-golden-pairs.md`: holding pairs
+  concurrently turned out to be worth more than swapping them.
 
 ## Open Questions
 
-- This "one pair at a time" convention is itself under review the same day
-  it was written: holding N golden pairs concurrently (keyed by fixture
-  filename, e.g. `resolvedrive.*` alongside `listprompts.*`) would let
-  `verify.py` prove SCHEMA stability across structurally different subjects
-  simultaneously, rather than resetting the evidence on each pivot — closer
-  to actually resolving
-  `../discourse.kb/questions.kb/can-we-decode-deterministically.md`'s open
-  "exercise stability across prompt types" item. Not yet implemented.
 - `ListPrompts` pagination shape (cursor/`has_more` field name and behavior)
   remains unobserved — this account's prompt count never triggered a second
   page against a 100-entry page-size request. Revisit if/when a larger

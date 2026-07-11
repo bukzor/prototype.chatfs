@@ -14,18 +14,41 @@ The timestamp case differs in SHAPE (list vs scalar), so the structural diff
 treats a short all-numeric list as scalar-equivalent — the one tolerated shape
 gap. Every other shape or name mismatch is a real divergence.
 
-    ./verify.py                       # the committed golden pair (default)
-    ./verify.py a.jspb.json a.json    # any captured pair
+    ./verify.py                       # every committed golden pair (default)
+    ./verify.py a.jspb.json a.json    # one specific pair (subject from filename)
 
-Exit 0 when names + shape match; 1 (with a divergence report on stderr) otherwise.
+No-arg mode discovers pairs by filename: every `*.jspb.json` paired with its
+`*.alt-json.json`. That pairing — one file per subject — IS the registry of
+known golden pairs; convert.py's `TOP_LEVEL` needs a matching entry for each.
+
+Exit 0 when ALL pairs' names + shape match; 1 (with a divergence report on
+stderr per failing pair) otherwise.
 """
 
 import sys
+from pathlib import Path
 
 from convert import from_jspb, is_mapping, is_sequence, load_json
 
-FIXTURE_JSPB = "listprompts.jspb.json"
-FIXTURE_ALT = "listprompts.alt-json.json"
+JSPB_SUFFIX = ".jspb.json"
+ALT_SUFFIX = ".alt-json.json"
+
+
+def subject_of(jspb_path: str) -> str:
+    """The fixture filename's stem is also its convert.py TOP_LEVEL key."""
+    name = Path(jspb_path).name
+    assert name.endswith(JSPB_SUFFIX), f"{jspb_path} doesn't end in {JSPB_SUFFIX}"
+    return name.removesuffix(JSPB_SUFFIX)
+
+
+def discover_pairs() -> list[tuple[str, str]]:
+    """Every `<subject>.jspb.json` in cwd paired with its `.alt-json.json` twin."""
+    pairs: list[tuple[str, str]] = []
+    for jspb_path in sorted(Path().glob(f"*{JSPB_SUFFIX}")):
+        alt_path = jspb_path.with_name(subject_of(str(jspb_path)) + ALT_SUFFIX)
+        assert alt_path.exists(), f"{jspb_path} has no matching {alt_path}"
+        pairs.append((str(jspb_path), str(alt_path)))
+    return pairs
 
 
 def is_number(v: object) -> bool:
@@ -84,12 +107,10 @@ def diff(ours: object, real: object, path: str, out: list[str]) -> None:
     # both scalar leaves: values may differ (bool/enum/etc.) — not compared
 
 
-def main() -> int:
-    jspb_path = sys.argv[1] if len(sys.argv) > 1 else FIXTURE_JSPB
-    alt_path = sys.argv[2] if len(sys.argv) > 2 else FIXTURE_ALT
-
+def check_pair(jspb_path: str, alt_path: str) -> bool:
+    """Convert + diff one pair; print its OK/DIVERGENT report. Returns True if OK."""
     with open(jspb_path) as fp:
-        ours = from_jspb(load_json(fp))
+        ours = from_jspb(load_json(fp), subject_of(jspb_path))
     with open(alt_path) as fp:
         real = load_json(fp)
 
@@ -100,9 +121,19 @@ def main() -> int:
         print(f"DIVERGENT: {jspb_path} -> json  vs  {alt_path}", file=sys.stderr)
         for line in out:
             print(f"  {line}", file=sys.stderr)
-        return 1
+        return False
     print(f"OK: {jspb_path} converts similar-enough to {alt_path}", file=sys.stderr)
-    return 0
+    return True
+
+
+def main() -> int:
+    if len(sys.argv) > 1:
+        pairs = [(sys.argv[1], sys.argv[2])]
+    else:
+        pairs = discover_pairs()
+
+    results = [check_pair(jspb_path, alt_path) for jspb_path, alt_path in pairs]
+    return 0 if all(results) else 1
 
 
 if __name__ == "__main__":

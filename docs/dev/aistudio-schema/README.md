@@ -72,41 +72,47 @@ driven by a hand-curated `slot → field` SCHEMA. The rest of `rosetta/` exists 
 keep that SCHEMA honest: capture the *same* subject in both encodings, correlate
 them to author/repair the SCHEMA, and assert the conversion stays faithful.
 
-The Rosetta stone is the **golden pair** — currently `ListPrompts` (the
-index/library RPC — chatfs-cli-mockup's step 2, the AI Studio index rung),
-fetched both ways:
+The Rosetta stones are **golden pairs**, one per subject, held concurrently —
+the fixture filename's stem doubles as the subject key (`convert.py`'s
+`TOP_LEVEL`, `correlate.py`'s `REPRESENTATIVE`):
 
-    listprompts.jspb.json       # positional (the converter's input)
-    listprompts.alt-json.json   # named (the ground truth to match)
+    resolvedrive.jspb.json       # positional — ResolveDriveResource, one prompt
+    resolvedrive.alt-json.json   # named ground truth
+    listprompts.jspb.json        # positional — ListPrompts, a page of prompts
+    listprompts.alt-json.json    # named ground truth
 
-Each entry in the page reuses the same PROMPT/METADATA message types as
-`ResolveDriveResource`'s single-prompt response — verified by `verify.py`
-below — just sparser (no `runSettings`/`systemInstruction`; `chunkedPrompt`
-present but empty, since the index carries no turn content).
+Both subjects reuse the same PROMPT/METADATA message types — verified by
+`verify.py` checking both pairs against the *one* shared SCHEMA — just
+`listprompts` entries are sparser (no `runSettings`/`systemInstruction`;
+`chunkedPrompt` present but empty, since the index carries no turn content).
+Holding both pairs at once is the point: it proves SCHEMA stability across
+structurally different subjects simultaneously, not just per-pivot.
 
 Five steps, each a tool (run from `rosetta/`):
 
-    # 1+2. capture the golden pair (live; needs auth — see Live access above)
-    ./capture.sh [PAGE_SIZE]
+    # 1+2. capture a golden pair (live; needs auth — see Live access above)
+    ./capture.sh resolvedrive [PROMPT_ID]
+    ./capture.sh listprompts [PAGE_SIZE]
 
-    # 3. correlate the pair → proposed `slot → field` maps per message type
-    ./correlate.py             # ordering heuristic (an AID, not an oracle)
-    ./correlate.py --values    # the other lens: value → jspb index-paths
+    # 3. correlate a pair → proposed `slot → field` maps per message type
+    ./correlate.py <subject>.jspb.json <subject>.alt-json.json
+    ./correlate.py --values <subject>.jspb.json <subject>.alt-json.json
 
     # 4. edit SCHEMA in convert.py by hand, guided by step 3 + walk-graph.py
-    ./convert.py < listprompts.jspb.json | jq .
+    ./convert.py <subject> < <subject>.jspb.json | jq .
 
-    # 5. assert the conversion is "similar enough" to the real alt=json
-    ./verify.py                # name/shape diff; exit 1 on divergence
+    # 5. assert every pair converts "similar enough" to its real alt=json
+    ./verify.py                # all committed pairs; exit 1 on any divergence
 
-Step 5 is also the redo gate `rosetta/check` (in `all.do`): it converts the
-committed JSPB fixture and name/shape-diffs it against the committed alt=json,
-offline, failing the build on any divergence.
+Step 5 is also the redo gate `rosetta/check` (in `all.do`): it converts every
+committed `*.jspb.json` fixture and name/shape-diffs it against its committed
+`*.alt-json.json`, offline, failing the build on any pair's divergence. New
+subjects need no edit to `check.do` — the fixture glob picks them up.
 
-Previously pivoted from `ResolveDriveResource` (the conversation-fetch RPC,
-already SCHEMA-stable) to `ListPrompts` — the golden pair is one subject at a
-time, not accumulated; the superseded `resolvedrive.*` fixtures are recoverable
-from git history if that pair needs re-verifying later.
+A new subject needs an entry in both `convert.py`'s `TOP_LEVEL` and
+`correlate.py`'s `REPRESENTATIVE`, keyed by the fixture filename's stem — the
+top-level wrapper shape (singular vs. repeated, etc.) is the only thing that
+varies per subject; PROMPT/METADATA stay one shared SCHEMA.
 
 "Similar enough" = same field **names** and **structure**. Leaf *values*
 legitimately differ between encodings and are not compared: bools (`0/1` vs

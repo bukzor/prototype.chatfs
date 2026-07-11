@@ -44,7 +44,13 @@ against a committed golden pair. See README "Converting JSPB → JSON".
   cross-checked against `walk-graph.py` field numbers; correlate.py is an aid.
   - [ ] **Exercise stability across prompt types** (repeated, oneof,
     absent/optional) with more golden pairs — full resolution of
-    `can-we-decode-deterministically.md`. Today: one golden pair only.
+    `can-we-decode-deterministically.md`. Advanced 2026-07-11: `rosetta/`
+    now holds `resolvedrive` and `listprompts` concurrently (not swapped —
+    see `devlog/2026-07-11-001-rosetta-holds-n-golden-pairs.md`), both
+    passing against one shared SCHEMA. Still open: neither pair specifically
+    exercises a repeated field, a oneof, or a field present-in-one/
+    absent-in-the-other — a third pair chosen for one of those cases would
+    be stronger evidence than a third pair chosen merely for breadth.
 - [x] **Confirm offline decode is the actual need** — resolved 2026-07-03
   (`discourse.kb/questions.kb/how-does-this-serve-chatfs.md`). The named
   downstream consumer landed: `chatfs_aistudio_conversation_massage_json.py`
