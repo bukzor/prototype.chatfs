@@ -18,9 +18,9 @@ landed as the third provider (2026-06-20), and fixing it first makes
 "everything afterward just a bit more clear and easy" — a small,
 low-risk win worth taking before the bigger unification work. Landed as
 three commits: the `git mv` + full repo-wide reference sweep (`8579b7d`),
-the plan/decision recording (`871e917`), and an unrelated fork's
+the plan/decision recording (`982f4a9`), and an unrelated fork's
 `.claude/focus.md` cleanup that had accreted in the same working tree
-(`d1758bc`, kept separate since it's a different concern).
+(`ddc52a9`, kept separate since it's a different concern).
 
 **Scope note:** the original rename plan (`todo.kb/2026-05-11-000-...`)
 targeted graduation to `packages/chatfs-cli/`. The user corrected this
@@ -83,6 +83,6 @@ knowledge all graduate together). Recorded in
   — driver-model decision
 - `docs/dev/design-incubators/chatfs-cli-mockup/.claude/todo.kb/2026-05-11-001-shared-code-among-providers.md`
   — lib-destination decision
-- Commits: `8579b7d`, `871e917`, `d1758bc`
+- Commits: `8579b7d`, `982f4a9`, `ddc52a9`
 - `~/.claude/sessions.kb/penguin/chatfs-cli-mockup-open-todo-sweep.md` —
   session tracking note, renamed and updated this session

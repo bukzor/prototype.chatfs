@@ -49,7 +49,7 @@ Sequence agreed with user; details live in the items/files referenced.
       (graduation target `$REPO/lib/chatfs/`, not `packages/chatfs-cli/`),
       done-notes in project todo, pyright + pytest clean, one rename-only
       commit (`8579b7d`; the concurrent focus.md removal committed
-      separately, `d1758bc`). Full verification in
+      separately, `ddc52a9`). Full verification in
       `../../../../../.claude/todo.kb/2026-05-11-000-rename-incubator-to-chatfs-cli-mockup.md`.
 - [ ] 2. **Live-capture sitting — AI Studio index** (needs user at an
       authenticated browser): reverse-engineer the index endpoint (likely
