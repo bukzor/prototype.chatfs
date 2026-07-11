@@ -48,16 +48,24 @@ def _iso_offset(dt: datetime) -> str:
     return f"{sign}{h:02d}:{m:02d}"
 
 
-def time_dir_for(created: datetime) -> Path:
+def time_dir_for(created: datetime, *, label: str = "Created") -> Path:
     """Render an ISO 8601 path-friendly timestamp in system local time.
 
     Takes an already-parsed, tz-aware datetime — parsing a provider's
     own wire-format timestamp (ISO string, unix float, unix int-string,
     ...) into one is provider-shaped and lives in that provider's
     `_created()`.
+
+    `label` prefixes the year segment as `f"{label}={year}"` — every
+    date-based view is labeled, uniformly, with what the timestamp
+    actually is (`Created=`, the default, for true creation time;
+    `LastModified=` when that's all a provider's capture can supply).
+    Multiple date-based views can then coexist under `root` without
+    colliding or implying a claim they can't back up. See
+    `design.kb/040-design.kb/no-partial-synthesis.md`.
     """
     dt = created.astimezone()
-    return Path(f"{dt:%Y/%m/%d/%H:%M:%S}{_iso_offset(dt)}")
+    return Path(f"{label}={dt:%Y}/{dt:%m/%d/%H:%M:%S}{_iso_offset(dt)}")
 
 
 def chat_dir_for(uuid: str, root: Path) -> Path:
@@ -107,6 +115,8 @@ def place_meta(
     created: datetime,
     item: Mapping[str, object],
     root: Path,
+    *,
+    label: str = "Created",
 ) -> Path:
     """Write meta.json into .chat/$UUID/.data/, refresh the view dir-symlink.
 
@@ -117,6 +127,13 @@ def place_meta(
     so an empty-titled chat never collapses its view symlink onto
     `view_dir` itself.
 
+    `label` forwards to `time_dir_for` — see there. Storage placement
+    (`.chat/$UUID/`) and the identity-scoped symlink purge are
+    unaffected by it: only the derived view-tree segment changes, so a
+    later `place_meta` call with real creation time (different `label`)
+    still finds and replaces this call's symlink by uuid, moving the
+    chat from the labeled tree to the true date tree.
+
     Returns the chat dir.
     """
     chat_dir = chat_dir_for(id, root)
@@ -126,7 +143,7 @@ def place_meta(
 
     _purge_view_symlinks(id, root)
 
-    view_dir = root / time_dir_for(created)
+    view_dir = root / time_dir_for(created, label=label)
     view_dir.mkdir(parents=True, exist_ok=True)
 
     title_link = view_dir / safe_filename(title or id)

@@ -6,11 +6,12 @@ so their `conversation.json` is the raw API response, verbatim. AI Studio's
 is JSPB (positional arrays) — a stage has to assign names before the result
 is "good" json, i.e. the same shape of thing chatgpt/claude get for free.
 
-Input (stdin): conversation.raw.json — the plucked ResolveDriveResource body
-(one JSPB array). Plucking (picking this body out of the CDP capture) is a
-separate, earlier step (chatfs_aistudio_conversation_pluck.jq); this script
-does not re-narrow the result to any subset (e.g. just turns) — it emits the
-whole named document, mirroring what chatgpt/claude already have whole.
+Input (stdin): conversation.raw.json — one plucked prompt message (a JSPB
+array; chatfs_aistudio_conversation_pluck.jq already unwraps the
+ResolveDriveResource envelope). Plucking (picking this body out of the CDP
+capture) is a separate, earlier step; this script does not re-narrow the
+result to any subset (e.g. just turns) — it emits the whole named document,
+mirroring what chatgpt/claude already have whole.
 
 Output (stdout): conversation.json — the complete named projection, not a
 partial guess: per design.kb/040-design.kb/no-partial-synthesis.md, a schema
@@ -33,9 +34,10 @@ A field spec is one of:
 import json
 import sys
 from collections.abc import Mapping, Sequence
-from typing import Literal, TypeAlias, TypeGuard
+from typing import Literal, TypeAlias
 
 import chatfs_json
+from chatfs_json import JsonObject, JsonValue, is_json_array
 
 Schema: TypeAlias = Mapping[int, "Field"]
 Field: TypeAlias = (
@@ -121,23 +123,10 @@ PROMPT: Schema = {
 }
 
 
-def is_sequence(o: object) -> TypeGuard[Sequence[object]]:
-    """Narrow a decoded-JSON value to a positional array (a jspb message/list).
-
-    Excludes str/bytes: a scalar string is a Sequence but never a message.
-    """
-    return isinstance(o, Sequence) and not isinstance(o, (str, bytes))
-
-
-def is_mapping(o: object) -> TypeGuard[Mapping[str, object]]:
-    """Narrow a decoded-JSON value to an object — JSON keys are always strings."""
-    return isinstance(o, Mapping)
-
-
-def from_message(values: object, schema: Schema) -> dict[str, object]:
+def from_message(values: JsonValue, schema: Schema) -> JsonObject:
     """Project a positional message onto its named fields, dropping null slots."""
-    assert is_sequence(values), values
-    out: dict[str, object] = {}
+    assert is_json_array(values), values
+    out: JsonObject = {}
     for slot, spec in schema.items():
         if slot >= len(values) or values[slot] is None:
             continue
@@ -146,14 +135,14 @@ def from_message(values: object, schema: Schema) -> dict[str, object]:
     return out
 
 
-def name_and_value(spec: Field, value: object) -> tuple[str, object]:
+def name_and_value(spec: Field, value: JsonValue) -> tuple[str, JsonValue]:
     match spec:
         case str(name):
             return name, value
         case (name, dict() as sub):
             return name, from_message(value, sub)
         case (name, [sub]):
-            assert is_sequence(value), value
+            assert is_json_array(value), value
             return name, [from_message(elem, sub) for elem in value]
         case (name, "map"):
             return name, fold_map(value)
@@ -161,26 +150,26 @@ def name_and_value(spec: Field, value: object) -> tuple[str, object]:
             raise AssertionError(spec)
 
 
-def fold_map(pairs: object) -> dict[object, object]:
+def fold_map(pairs: JsonValue) -> JsonObject:
     """Fold a jspb map field — repeated [key, value] pairs — into an object."""
-    assert is_sequence(pairs), pairs
-    out: dict[object, object] = {}
+    assert is_json_array(pairs), pairs
+    out: JsonObject = {}
     for pair in pairs:
-        assert is_sequence(pair) and len(pair) == 2, pair
+        assert is_json_array(pair) and len(pair) == 2, pair
         key, value = pair
+        assert isinstance(key, str), key
         out[key] = value
     return out
 
 
-def massage(doc: object) -> dict[str, object]:
-    """Top-level: the jspb array's first slot is the prompt message.
+def massage(doc: JsonValue) -> JsonObject:
+    """Project one plucked prompt message onto the named PROMPT schema.
 
     Wrapped in a `prompt` key to match the real named API response shape
     (verified against aistudio-schema/rosetta/resolvedrive.alt-json.json,
     whose top-level key is `prompt`) — not an arbitrary envelope choice.
     """
-    assert is_sequence(doc), doc
-    return {"prompt": from_message(doc[0], PROMPT)}
+    return {"prompt": from_message(doc, PROMPT)}
 
 
 def main() -> None:

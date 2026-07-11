@@ -25,9 +25,30 @@ chatfs.demo/chatgpt/
                 meta.json          # captured (index endpoint item)
                 conversation.json  # captured (conversation endpoint mapping doc)
                 cdp.jsonl          # captured (raw CDP)
-    YYYY/MM/DD/HH:MM:SS±HH:MM/
+    Created=YYYY/MM/DD/HH:MM:SS±HH:MM/
         Quantum Gravity and UV Catastrophe -> ../../../../.chat/69dfa575-…
 ```
+
+## Multiple labeled date-trees
+
+The year segment carries a `Label=` prefix (`time_dir_for`'s `label`
+param, default `Created`) naming what the timestamp actually is —
+uniformly, not just for the exceptional case — so multiple date-based
+views can coexist under `root` without colliding or implying a claim
+the underlying data can't back up:
+
+- `Created=YYYY/…` — true creation time (the default; every provider
+  that can supply it uses this).
+- `LastModified=YYYY/…` — AI Studio's index rung (`ListPrompts`) has no
+  turn content, so it can't derive a first-chunk creation time; rather
+  than launder its `lastModified` timestamp into a false `Created=`
+  claim (see `no-partial-synthesis.md`), it gets its own honestly
+  labeled tree. Once the same chat is later fetched in full (real
+  `create_time` known), re-`place_meta` purges the `LastModified=`
+  symlink by uuid and re-places it under `Created=` — it "graduates."
+
+Same mechanism as future by-tag/by-model/by-starred views: a differently
+labeled tree, still just symlinks into `.chat/`.
 
 The view entry is a single directory-symlink: the named view path *is*
 the chat directory. `cat 2026/.../$TITLE/chat.md` resolves to

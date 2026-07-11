@@ -25,11 +25,27 @@ class IndexItem(TypedDict):
     Only the fields layout reads are declared. Written verbatim to
     meta.json — but synthesized, not a verbatim service payload, since
     JSPB has no keyed object to pass through.
+
+    `create_time` is NotRequired: it's only known once the first
+    chunk's true createTime has actually been fetched (a full
+    ResolveDriveResource capture). A ListPrompts index entry carries no
+    turn content, so it can't supply one — `last_modified` (which every
+    entry does carry) is NOT a substitute for it here: per
+    design.kb/040-design.kb/no-partial-synthesis.md, we don't write an
+    approximate value into a field named for something more precise.
+    See chatfs_aistudio_layout.index_item/place_meta for how the two
+    provenances are told apart and how the view tree reflects the
+    difference.
     """
 
     id: str  # Drive prompt id, `prompts/` prefix stripped
     title: str
-    create_time: int  # unix seconds, from the first chunk's createTime
+    last_modified: (
+        int  # unix seconds, metadata.lastModified.revisionTime — always known
+    )
+    create_time: NotRequired[
+        int
+    ]  # unix seconds, first chunk's createTime — only known once fetched
 
 
 class Turn(TypedDict):
@@ -47,12 +63,22 @@ class Turn(TypedDict):
     finishReason: NotRequired[int]  # 1 == STOP, present on completed model turns
 
 
+class LastModified(TypedDict):
+    revisionTime: tuple[
+        str, int
+    ]  # [seconds-string, nanos] pair — same shape as Turn.createTime
+
+
 class Metadata(TypedDict):
     displayName: str
+    lastModified: LastModified
 
 
 class ChunkedPrompt(TypedDict):
-    chunks: list[Turn]
+    # NotRequired: present-but-empty ({}) on a ListPrompts index entry —
+    # the index carries no turn content, only identity/metadata. See
+    # IndexItem's create_time.
+    chunks: NotRequired[list[Turn]]
 
 
 class Prompt(TypedDict):
@@ -87,5 +113,8 @@ def is_conversation(value: JsonValue) -> TypeGuard[Conversation]:
         return False
     if not isinstance(metadata.get("displayName"), str):
         return False
-    chunks = chunked_prompt.get("chunks")
+    # NotRequired: absent (or present-but-empty) on a ListPrompts index
+    # entry — no turn content. `.get("chunks", [])` accepts that, matching
+    # ChunkedPrompt's declared shape (see IndexItem.create_time).
+    chunks = chunked_prompt.get("chunks", [])
     return isinstance(chunks, list) and all(is_turn(c) for c in chunks)

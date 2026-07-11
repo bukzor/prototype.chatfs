@@ -19,6 +19,7 @@ Turns carry a `createTime` but no unique id, and user/thought turns can
 share a timestamp, so basenames lead with the turn index (zero-padded,
 document order) rather than claude's `{ts}.{uuid}`.
 """
+
 import json
 import re
 import shutil
@@ -30,7 +31,14 @@ from chatfs_aistudio_types import Conversation, Turn, is_conversation
 
 
 def turns_of(doc: Conversation) -> list[Turn]:
-    return doc["prompt"]["chunkedPrompt"]["chunks"]
+    chunks = doc["prompt"]["chunkedPrompt"].get("chunks")
+    # NotRequired: absent on a ListPrompts index entry (no turn content).
+    # A splat target is always a full conversation fetch — fail loudly
+    # rather than silently splat zero turns if that assumption breaks.
+    assert (
+        chunks is not None
+    ), "empty chunkedPrompt.chunks: not a full conversation fetch"
+    return chunks
 
 
 def turn_kind(turn: Turn) -> str:
@@ -90,7 +98,9 @@ def render_turn(turn: Turn, kind: str) -> str:
     text = turn["text"].strip()
     if kind == "thought":
         label = thought_label(text)
-        return render_details("thinking", "💭", label, strip_leading_header(text, label))
+        return render_details(
+            "thinking", "💭", label, strip_leading_header(text, label)
+        )
     else:
         return text
 

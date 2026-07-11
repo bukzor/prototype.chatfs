@@ -11,14 +11,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from chatfs_aistudio_types import Conversation, IndexItem
-from chatfs_layout import (
-    DATA_DIR_NAME,
-    chat_dir_for,
-    data_dir_for,
-    resolve_chat_dir,
-    safe_filename,
-)
+from chatfs_layout import DATA_DIR_NAME, chat_dir_for, data_dir_for
 from chatfs_layout import place_meta as _place_meta
+from chatfs_layout import resolve_chat_dir, safe_filename
 
 __all__ = [
     "DATA_DIR_NAME",
@@ -42,42 +37,68 @@ def index_item(doc: Conversation) -> IndexItem:
     `"prompts/<id>"`; the `prompts/` prefix is dropped so the id matches
     the URL/Drive id.
 
-    create_time is the first chunk's `createTime` (a `[seconds-string,
-    nanos]` pair), coerced to int seconds — true creation time, matching
-    chatgpt/claude's semantic (their index date-trees also bucket by
-    creation). `metadata.lastModified.revisionTime` is NOT creation
-    time — it advances on every turn (verified: it trails the last
-    chunk's createTime in a live capture) — and is deliberately not used
-    here, so AI Studio's date tree stays comparable to the other two
-    providers'. There is no separate modified_time field (neither
-    chatgpt's nor claude's IndexItem carries one either).
+    Two provenances feed this function through the same `Conversation`
+    shape — both decode via the identical PROMPT/METADATA jspb schema
+    (cross-checked in ../aistudio-schema/rosetta/'s ListPrompts golden
+    pair, which shares this schema with ResolveDriveResource's):
+
+    - A full `ResolveDriveResource` fetch: `chunkedPrompt.chunks` is
+      populated, so `create_time` — the first chunk's true `createTime`
+      (a `[seconds-string, nanos]` pair) — is known. This matches
+      chatgpt/claude's semantic (their index date-trees also bucket by
+      creation).
+    - A `ListPrompts` index entry: `chunkedPrompt` is present but
+      *empty* — the index carries no turn content — so `create_time`
+      can't be derived at all. `metadata.lastModified.revisionTime` is
+      always present but is NOT creation time (it advances on every
+      turn — verified: it trails the last chunk's createTime in a live
+      capture); per no-partial-synthesis.md we don't launder it into
+      `create_time`. It's recorded honestly as `last_modified` instead,
+      and `create_time` is simply omitted (NotRequired) — see
+      `place_meta`, which reflects the difference in the view tree.
     """
     prompt = doc["prompt"]
     raw_id = prompt["name"]
     assert raw_id.startswith("prompts/"), raw_id
     metadata = prompt["metadata"]
-    chunks = prompt["chunkedPrompt"]["chunks"]
-    assert chunks, "empty chunkedPrompt.chunks: no first-chunk createTime to anchor on"
-    create_time = chunks[0]["createTime"]
-    return IndexItem(
+    item = IndexItem(
         id=raw_id.removeprefix("prompts/"),
         title=metadata["displayName"],
-        create_time=int(create_time[0]),
+        last_modified=int(metadata["lastModified"]["revisionTime"][0]),
     )
+    chunks = prompt["chunkedPrompt"].get("chunks")
+    if chunks:
+        item["create_time"] = int(chunks[0]["createTime"][0])
+    return item
 
 
-def _created(create_time: int) -> datetime:
-    """Parse AI Studio's created field — unix seconds only.
+def _created(unix_seconds: int) -> datetime:
+    """Parse one of AI Studio's unix-seconds timestamp fields.
 
-    No ISO-string variant to handle (cf. chatgpt, which returns both
-    shapes).
+    Shared by create_time and last_modified — same jspb shape, coerced
+    to int the same way (see index_item). No ISO-string variant to
+    handle (cf. chatgpt, which returns both shapes).
     """
-    return datetime.fromtimestamp(create_time, tz=timezone.utc)
+    return datetime.fromtimestamp(unix_seconds, tz=timezone.utc)
 
 
 def place_meta(item: IndexItem, root: Path) -> Path:
     """Write meta.json into .chat/$UUID/.data/, refresh the view dir-symlink.
 
+    View-tree placement prefers true creation time when `index_item`
+    found one (`Created=`-labeled year segment, time_dir_for's
+    default); falls back to `last_modified` under `LastModified=`
+    otherwise, so the date tree never implies a creation-time claim
+    this entry can't back up. A later `place_meta` call for the same id
+    with real `create_time` — e.g. once the conversation is actually
+    fetched — purges the old labeled symlink (identity-scoped cleanup,
+    shared place_meta) and re-places it under `Created=`: this entry
+    "graduates."
+
     Returns the chat dir.
     """
-    return _place_meta(item["id"], item["title"], _created(item["create_time"]), item, root)
+    if "create_time" in item:
+        created, label = _created(item["create_time"]), "Created"
+    else:
+        created, label = _created(item["last_modified"]), "LastModified"
+    return _place_meta(item["id"], item["title"], created, item, root, label=label)

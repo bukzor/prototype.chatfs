@@ -75,12 +75,30 @@ JSPB positional decoding (see `dev.kb/claims.kb/aistudio-jspb-prompt-shape.md`).
       (named, massage's output) — a split unique to AI Studio; chatgpt/claude
       have no `.raw.json` since pluck's output is already "good."
 
+## Landed 2026-07-11
+
+- [x] `chatfs_aistudio_index_pluck.jq` + `chatfs_aistudio_index_splat.py`
+      + `chatfs_aistudio_index_browse.sh` — the index rung (consumes
+      `chatfs_aistudio_layout.index_item` + `place_meta`, landed
+      2026-06-22). Index endpoint confirmed as `ListPrompts` (fires from
+      `/library` and any `/prompts/<id>` page alike), reusing
+      `ResolveDriveResource`'s PROMPT/METADATA schema unchanged — pluck
+      now flattens either RPC's response to one prompt-message per line
+      (`.[]`/`.[0][]`), and `massage_json`/`index_splat` share the same
+      `PROMPT` projection regardless of which endpoint supplied the
+      message (see devlog). Reverse-engineering this endpoint surfaced a
+      real bug: `index_item()`/`IndexItem` assumed `create_time` from
+      the first chunk's `createTime`, unavailable on a `ListPrompts`
+      entry (no turn content) — fixed, `create_time` is `NotRequired`
+      with an honest always-present `last_modified` alongside it (see
+      `no-partial-synthesis.md`). Live-tested against this account's 42
+      prompts (one `ListPrompts` page, no pagination token observed) —
+      pluck/splat/browse don't special-case page count, so a
+      multi-page account needs no further code, only a capture to
+      verify against.
+
 ## Remaining rungs (mirror the claude ladder)
 
-- [ ] `chatfs_aistudio_index_pluck.jq` + `chatfs_aistudio_index_splat.py`
-      (consumes `chatfs_aistudio_layout.index_item` + `place_meta`, landed
-      2026-06-22) — needs an index capture (likely `ListPrompts`; not yet
-      reverse-engineered, unlike the conversation body).
 - [ ] `chatfs_aistudio_conversation_render.py` — AI Studio prompts are
       **linear** (a flat turn list, no fork tree observed), so render is
       simpler than claude's DFS — but confirm forks truly can't exist
@@ -90,7 +108,6 @@ JSPB positional decoding (see `dev.kb/claims.kb/aistudio-jspb-prompt-shape.md`).
       does not yet delegate to this, since it doesn't exist.
 - [ ] `chatfs_aistudio_conversation_path_browse.py` / `..._url_render.py` —
       remaining entry points (`url_browse.py` landed above).
-- [ ] Browse automation (`..._index_browse.sh`) once index pluck exists.
 - [x] ~~Tech debt: splat still reads raw positional JSPB~~ **Upgraded to
       bug** (2026-07-03 review) and **fixed** (2026-07-03): splat and
       `layout.index_item` now read `conversation.json`'s named projection

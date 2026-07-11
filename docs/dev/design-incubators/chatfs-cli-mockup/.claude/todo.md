@@ -51,14 +51,25 @@ Sequence agreed with user; details live in the items/files referenced.
       commit (`8579b7d`; the concurrent focus.md removal committed
       separately, `ddc52a9`). Full verification in
       `../../../../../.claude/todo.kb/2026-05-11-000-rename-incubator-to-chatfs-cli-mockup.md`.
-- [ ] 2. **Live-capture sitting — AI Studio index** (needs user at an
+- [x] 2. **Live-capture sitting — AI Studio index** (needs user at an
       authenticated browser): reverse-engineer the index endpoint (likely
       `ListPrompts`), then write the index rung at the same sitting —
       `chatfs_aistudio_index_pluck.jq` + `chatfs_aistudio_index_splat.py`
       + `..._index_browse.sh` (the layout half landed 2026-06-22).
-      Piggyback: reproduce har-browse's `has_more=false` premature stop
-      (see Claude parity gaps below); optionally capture a second prompt
-      (forks/images) to stress the single-capture JSPB schema.
+      Done 2026-07-11 (devlog): endpoint confirmed as `ListPrompts`
+      (fires from `/library` and any `/prompts/<id>` page alike), shares
+      `ResolveDriveResource`'s PROMPT/METADATA schema verified via
+      `aistudio-schema/rosetta/` (pivoted to this RPC). Surfaced and
+      fixed a real bug this unblocked: `chatfs_aistudio_layout.py::
+      index_item()`/`IndexItem` assumed `create_time` from
+      `chunkedPrompt.chunks[0]`, unavailable on index entries — now
+      `NotRequired`, with an honest always-present `last_modified`
+      alongside it (no-partial-synthesis.md), and the view tree labels
+      every date-based placement (`Created=`/`LastModified=`,
+      `chat-as-directory.md`). `_pluck.jq`/`_splat.py`/`_index_browse.sh`
+      written and live-tested against this account's 42 prompts — no
+      pagination token observed (account's prompt count fits one
+      `ListPrompts` page).
 - [ ] 3. **Finish AI Studio's conversation side** — `conversation_render`
       (verify the linear/no-forks assumption first), `path_render`, and
       `url_browse` delegating to it. Deliberately NOT
@@ -131,10 +142,12 @@ claude-code-as-provider (needs its design discussion first).
       — third provider, first JSPB source. Pluck + splat landed 2026-06-20;
       layout/types 2026-06-22; massage_json + url_browse 2026-07-03 (writes
       conversation.raw.json + conversation.json + meta.json end-to-end,
-      live-tested). Index rung, render/path_render, and browse automation remain
-      — url_browse doesn't yet delegate to a render step. Remaining rungs
-      sequenced as Immediate plan steps 2-4 (index at the live sitting;
-      render/path_render next; entry points inside unification).
+      live-tested); index rung (pluck/splat/browse + the IndexItem honesty
+      fix it surfaced) landed 2026-07-11. render/path_render and browse
+      automation for the conversation side remain — url_browse doesn't yet
+      delegate to a render step. Remaining rungs sequenced as Immediate
+      plan steps 3-4 (conversation render/path_render next; entry points
+      inside unification).
 
 ## Claude provider — remaining parity gaps
 
@@ -143,9 +156,7 @@ claude-code-as-provider (needs its design discussion first).
       CDP stream missing later index pages — cause underdetermined. Plan: a
       stop-when filter downstream of pluck breaks on `has_more=false`;
       har-browse receives EPIPE and shuts down cleanly (per
-      `packages/har-browse/.claude/todo.md` 2026-04-24-003). Reproduce
-      during Immediate plan step 2's browser sitting (same authenticated
-      session).
+      `packages/har-browse/.claude/todo.md` 2026-04-24-003).
 - [ ] Branch enumeration in splat — emit `conversations/<branch>.md` symlinks
       per leaf
 - [x] Promote `provider-plugin-model.md` symlink to a real incubator entry, with
