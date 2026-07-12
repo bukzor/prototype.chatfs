@@ -1,12 +1,16 @@
 #!/bin/bash
-# Capture the golden pair for one subject: the SAME subject in both
+# Capture the golden pair for one endpoint: the SAME subject in both
 # encodings — positional JSPB and named alt=json. Steps 1-2 of the
 # reproducibility loop (see ../README.md); the pair verify.py checks against.
 #
+# Endpoint-specific method/param shape lives in ENDPOINT_DIR/meta.json
+# (method, default_param, body — a "{param}"-templated request body). A new
+# endpoint needs no edit here, just a new endpoint/<name>/meta.json.
+#
 # Needs live auth. If ../curl-aistudio returns HTTP 401, run ../aistudio-reauth.
 #
-# Usage: ./capture.sh resolvedrive [PROMPT_ID]
-#        ./capture.sh listprompts [PAGE_SIZE]
+# Usage: ./capture.sh endpoint/resolvedrive [PROMPT_ID]
+#        ./capture.sh endpoint/listprompts [PAGE_SIZE]
 set -euo pipefail
 shopt -s failglob
 export DEBUG="${DEBUG:-0}"
@@ -15,28 +19,17 @@ trap onerror ERR
 (( DEBUG > 0 )) && set -x
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
-SUBJECT="${1:?usage: capture.sh {resolvedrive|listprompts} [param]}"
+ENDPOINT_DIR="${1:?usage: capture.sh ENDPOINT_DIR [param]}"
+META="$ENDPOINT_DIR/meta.json"
 
-case "$SUBJECT" in
-resolvedrive)
-  PARAM="${2:-1vU6BlpV69d2MvI6L_oYGo_E-ZqmaI3eR}"
-  body="[\"$PARAM\"]"
-  METHOD=ResolveDriveResource
-  ;;
-listprompts)
-  PARAM="${2:-100}"
-  body="[$PARAM]"
-  METHOD=ListPrompts
-  ;;
-*)
-  echo >&2 "unknown subject: $SUBJECT (want resolvedrive|listprompts)"
-  exit 1
-  ;;
-esac
+METHOD="$(jq -r .method "$META")"
+PARAM="${2:-$(jq -r .default_param "$META")}"
+BODY_TEMPLATE="$(jq -r .body "$META")"
+BODY="${BODY_TEMPLATE//\{param\}/$PARAM}"
 
-"$HERE/../curl-aistudio" -d "$body" "$METHOD" \
-  | jq . > "$HERE/$SUBJECT.jspb.json"
-"$HERE/../curl-aistudio" -d "$body" "$METHOD?alt=json" -H 'Accept: application/json' \
-  | jq . > "$HERE/$SUBJECT.alt-json.json"
+"$HERE/../curl-aistudio" -d "$BODY" "$METHOD" \
+  | jq . > "$ENDPOINT_DIR/jspb.json"
+"$HERE/../curl-aistudio" -d "$BODY" "$METHOD?alt=json" -H 'Accept: application/json' \
+  | jq . > "$ENDPOINT_DIR/alt-json.json"
 
-echo >&2 "wrote $SUBJECT.jspb.json + $SUBJECT.alt-json.json ($METHOD, param $PARAM)"
+echo >&2 "wrote $ENDPOINT_DIR/{jspb,alt-json}.json ($METHOD, param $PARAM)"

@@ -3,3 +3,4 @@
 /.redo/
 *.tmp
 /rosetta/check
+/rosetta/endpoint/*/check

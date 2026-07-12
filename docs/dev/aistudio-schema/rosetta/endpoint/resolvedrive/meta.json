@@ -1,0 +1,7 @@
+{
+  "method": "ResolveDriveResource",
+  "default_param": "1vU6BlpV69d2MvI6L_oYGo_E-ZqmaI3eR",
+  "body": "[\"{param}\"]",
+  "top_level_key": "prompt",
+  "repeated": false
+}

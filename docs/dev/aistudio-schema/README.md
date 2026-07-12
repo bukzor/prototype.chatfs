@@ -72,47 +72,59 @@ driven by a hand-curated `slot → field` SCHEMA. The rest of `rosetta/` exists 
 keep that SCHEMA honest: capture the *same* subject in both encodings, correlate
 them to author/repair the SCHEMA, and assert the conversion stays faithful.
 
-The Rosetta stones are **golden pairs**, one per subject, held concurrently —
-the fixture filename's stem doubles as the subject key (`convert.py`'s
-`TOP_LEVEL`, `correlate.py`'s `REPRESENTATIVE`):
+The Rosetta stones are **golden pairs**, one per endpoint, held concurrently —
+each in its own `endpoint/<name>/` directory, which localizes everything that
+varies for that endpoint:
 
-    resolvedrive.jspb.json       # positional — ResolveDriveResource, one prompt
-    resolvedrive.alt-json.json   # named ground truth
-    listprompts.jspb.json        # positional — ListPrompts, a page of prompts
-    listprompts.alt-json.json    # named ground truth
+    endpoint/resolvedrive/jspb.json       # positional — ResolveDriveResource, one prompt
+    endpoint/resolvedrive/alt-json.json   # named ground truth
+    endpoint/resolvedrive/meta.json       # method, param, top-level wrapper shape
+    endpoint/listprompts/jspb.json        # positional — ListPrompts, a page of prompts
+    endpoint/listprompts/alt-json.json    # named ground truth
+    endpoint/listprompts/meta.json        # method, param, top-level wrapper shape
 
-Both subjects reuse the same PROMPT/METADATA message types — verified by
-`verify.py` checking both pairs against the *one* shared SCHEMA — just
-`listprompts` entries are sparser (no `runSettings`/`systemInstruction`;
-`chunkedPrompt` present but empty, since the index carries no turn content).
-Holding both pairs at once is the point: it proves SCHEMA stability across
-structurally different subjects simultaneously, not just per-pivot.
+Both endpoints are HYPOTHESIZED to reuse the same PROMPT/METADATA message
+types — one shared SCHEMA in `convert.py`, which `verify.py` keeps testing per
+endpoint against that endpoint's real alt=json (not a settled fact — see
+`discourse.kb/questions.kb/can-we-decode-deterministically.md`). Only the
+top-level wrapper shape is declared to differ, in each endpoint's `meta.json`
+(`top_level_key`/`repeated`) — `listprompts` entries are additionally sparser
+(no `runSettings`/`systemInstruction`; `chunkedPrompt` present but empty,
+since the index carries no turn content), but that's a data difference, not a
+schema one. Holding both pairs at once is the point: it's evidence for SCHEMA
+stability across structurally different endpoints simultaneously, not just
+per-pivot.
 
-Five steps, each a tool (run from `rosetta/`):
+Five steps, each a tool (run from `rosetta/`), all parameterized by
+`ENDPOINT_DIR`:
 
     # 1+2. capture a golden pair (live; needs auth — see Live access above)
-    ./capture.sh resolvedrive [PROMPT_ID]
-    ./capture.sh listprompts [PAGE_SIZE]
+    ./capture.sh endpoint/resolvedrive [PROMPT_ID]
+    ./capture.sh endpoint/listprompts [PAGE_SIZE]
 
     # 3. correlate a pair → proposed `slot → field` maps per message type
-    ./correlate.py <subject>.jspb.json <subject>.alt-json.json
-    ./correlate.py --values <subject>.jspb.json <subject>.alt-json.json
+    ./correlate.py endpoint/<name>
+    ./correlate.py --values endpoint/<name>
 
     # 4. edit SCHEMA in convert.py by hand, guided by step 3 + walk-graph.py
-    ./convert.py <subject> < <subject>.jspb.json | jq .
+    ./convert.py endpoint/<name> < endpoint/<name>/jspb.json | jq .
 
-    # 5. assert every pair converts "similar enough" to its real alt=json
-    ./verify.py                # all committed pairs; exit 1 on any divergence
+    # 5. assert one endpoint's pair converts "similar enough" to its real alt=json
+    ./verify.py                    # every endpoint/*/ with a golden pair (default)
+    ./verify.py endpoint/<name>    # one endpoint
 
-Step 5 is also the redo gate `rosetta/check` (in `all.do`): it converts every
-committed `*.jspb.json` fixture and name/shape-diffs it against its committed
-`*.alt-json.json`, offline, failing the build on any pair's divergence. New
-subjects need no edit to `check.do` — the fixture glob picks them up.
+Step 5 is also the redo gate `rosetta/check` (in `all.do`) — but not as one
+combined check: each `endpoint/<name>/check.do` verifies just its own pair,
+independently redo-cacheable, so one endpoint's untouched fixture doesn't
+force a sibling to reconvert. `rosetta/check.do` aggregates them. A new
+endpoint needs no edit to any `.do` file — both the aggregator and `verify.py`'s
+default mode discover endpoints by directory listing.
 
-A new subject needs an entry in both `convert.py`'s `TOP_LEVEL` and
-`correlate.py`'s `REPRESENTATIVE`, keyed by the fixture filename's stem — the
-top-level wrapper shape (singular vs. repeated, etc.) is the only thing that
-varies per subject; PROMPT/METADATA stay one shared SCHEMA.
+A new endpoint needs an `endpoint/<name>/` directory: its golden pair, a
+`meta.json` (`method`, `default_param`, `body`, `top_level_key`, `repeated`),
+and a `check.do` (copy an existing one verbatim — it's endpoint-agnostic).
+PROMPT/METADATA stay the one shared SCHEMA in `convert.py`; nothing
+endpoint-specific belongs there.
 
 "Similar enough" = same field **names** and **structure**. Leaf *values*
 legitimately differ between encodings and are not compared: bools (`0/1` vs

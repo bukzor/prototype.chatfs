@@ -1,0 +1,7 @@
+{
+  "method": "ListPrompts",
+  "default_param": "100",
+  "body": "[{param}]",
+  "top_level_key": "prompts",
+  "repeated": true
+}

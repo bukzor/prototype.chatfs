@@ -14,41 +14,38 @@ The timestamp case differs in SHAPE (list vs scalar), so the structural diff
 treats a short all-numeric list as scalar-equivalent — the one tolerated shape
 gap. Every other shape or name mismatch is a real divergence.
 
-    ./verify.py                       # every committed golden pair (default)
-    ./verify.py a.jspb.json a.json    # one specific pair (subject from filename)
+    ./verify.py                    # every endpoint/*/ with a golden pair (default)
+    ./verify.py endpoint/listprompts endpoint/resolvedrive   # specific endpoints
 
-No-arg mode discovers pairs by filename: every `*.jspb.json` paired with its
-`*.alt-json.json`. That pairing — one file per subject — IS the registry of
-known golden pairs; convert.py's `TOP_LEVEL` needs a matching entry for each.
+No-arg mode discovers endpoints by directory: every `endpoint/*/` holding a
+`jspb.json` + `alt-json.json` pair. Each is checked independently — one
+endpoint's divergence doesn't hide another's, and doesn't block reporting on
+the rest.
 
-Exit 0 when ALL pairs' names + shape match; 1 (with a divergence report on
-stderr per failing pair) otherwise.
+Exit 0 when ALL endpoints' names + shape match; 1 (with a divergence report on
+stderr per failing endpoint) otherwise.
 """
 
 import sys
 from pathlib import Path
 
-from convert import from_jspb, is_mapping, is_sequence, load_json
+from convert import from_jspb, is_mapping, is_sequence, load_json, load_meta
 
-JSPB_SUFFIX = ".jspb.json"
-ALT_SUFFIX = ".alt-json.json"
-
-
-def subject_of(jspb_path: str) -> str:
-    """The fixture filename's stem is also its convert.py TOP_LEVEL key."""
-    name = Path(jspb_path).name
-    assert name.endswith(JSPB_SUFFIX), f"{jspb_path} doesn't end in {JSPB_SUFFIX}"
-    return name.removesuffix(JSPB_SUFFIX)
+JSPB_NAME = "jspb.json"
+ALT_NAME = "alt-json.json"
 
 
-def discover_pairs() -> list[tuple[str, str]]:
-    """Every `<subject>.jspb.json` in cwd paired with its `.alt-json.json` twin."""
-    pairs: list[tuple[str, str]] = []
-    for jspb_path in sorted(Path().glob(f"*{JSPB_SUFFIX}")):
-        alt_path = jspb_path.with_name(subject_of(str(jspb_path)) + ALT_SUFFIX)
-        assert alt_path.exists(), f"{jspb_path} has no matching {alt_path}"
-        pairs.append((str(jspb_path), str(alt_path)))
-    return pairs
+def discover_endpoints() -> list[Path]:
+    """Every `endpoint/*/` directory holding a jspb.json + alt-json.json pair."""
+    dirs: list[Path] = []
+    for jspb_path in sorted(Path("endpoint").glob(f"*/{JSPB_NAME}")):
+        endpoint_dir = jspb_path.parent
+        assert (endpoint_dir / ALT_NAME).exists(), f"{endpoint_dir} has no {ALT_NAME}"
+        dirs.append(endpoint_dir)
+    assert dirs, (
+        "no endpoint/*/jspb.json found — run from rosetta/, or pass ENDPOINT_DIR"
+    )
+    return dirs
 
 
 def is_number(v: object) -> bool:
@@ -107,32 +104,42 @@ def diff(ours: object, real: object, path: str, out: list[str]) -> None:
     # both scalar leaves: values may differ (bool/enum/etc.) — not compared
 
 
-def check_pair(jspb_path: str, alt_path: str) -> bool:
-    """Convert + diff one pair; print its OK/DIVERGENT report. Returns True if OK."""
-    with open(jspb_path) as fp:
-        ours = from_jspb(load_json(fp), subject_of(jspb_path))
-    with open(alt_path) as fp:
+def check_endpoint(endpoint_dir: Path) -> bool:
+    """Convert + diff one endpoint's pair; print its OK/DIVERGENT report.
+
+    Returns True if OK.
+    """
+    meta = load_meta(endpoint_dir)
+    with open(endpoint_dir / JSPB_NAME) as fp:
+        ours = from_jspb(load_json(fp), meta)
+    with open(endpoint_dir / ALT_NAME) as fp:
         real = load_json(fp)
 
     out: list[str] = []
     diff(ours, real, "", out)
 
     if out:
-        print(f"DIVERGENT: {jspb_path} -> json  vs  {alt_path}", file=sys.stderr)
+        print(
+            f"DIVERGENT: {endpoint_dir}/{JSPB_NAME} -> json  vs  {ALT_NAME}",
+            file=sys.stderr,
+        )
         for line in out:
             print(f"  {line}", file=sys.stderr)
         return False
-    print(f"OK: {jspb_path} converts similar-enough to {alt_path}", file=sys.stderr)
+    print(
+        f"OK: {endpoint_dir}/{JSPB_NAME} converts similar-enough to {ALT_NAME}",
+        file=sys.stderr,
+    )
     return True
 
 
 def main() -> int:
     if len(sys.argv) > 1:
-        pairs = [(sys.argv[1], sys.argv[2])]
+        endpoints = [Path(a) for a in sys.argv[1:]]
     else:
-        pairs = discover_pairs()
+        endpoints = discover_endpoints()
 
-    results = [check_pair(jspb_path, alt_path) for jspb_path, alt_path in pairs]
+    results = [check_endpoint(d) for d in endpoints]
     return 0 if all(results) else 1
 
 

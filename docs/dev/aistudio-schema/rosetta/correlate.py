@@ -21,42 +21,35 @@ each named field in order and claim the next type-compatible jspb slot.
 index-path holding that value. Useful to locate a specific field by hand when
 the ordering heuristic is ambiguous.
 
-    ./correlate.py [JSPB ALT]            # slot maps (default)
-    ./correlate.py --values [JSPB ALT]   # value -> jspb index-paths
+    ./correlate.py ENDPOINT_DIR            # slot maps (default)
+    ./correlate.py --values ENDPOINT_DIR   # value -> jspb index-paths
 """
 
 import sys
-from collections.abc import Callable, Iterator
+from collections.abc import Iterator, Mapping
+from pathlib import Path
 
-from convert import is_mapping, is_sequence, load_json
-from verify import subject_of
-
-FIXTURE_JSPB = "listprompts.jspb.json"
-FIXTURE_ALT = "listprompts.alt-json.json"
+from convert import is_mapping, is_sequence, load_json, load_meta
 
 
-def representative_resolvedrive(named: object, pos: object) -> tuple[object, object]:
+def representative(
+    named: object, pos: object, meta: Mapping[str, object]
+) -> tuple[object, object]:
+    """Extract one representative prompt (named, positional) pair, per the
+    endpoint's meta.json — align() wants a single named-dict/positional-list
+    pair, not resolvedrive's singular prompt or listprompts' repeated page of
+    them.
+    """
     assert is_mapping(named), named
     assert is_sequence(pos), pos
-    return named["prompt"], pos[0]
-
-
-def representative_listprompts(named: object, pos: object) -> tuple[object, object]:
-    assert is_mapping(named), named
-    assert is_sequence(pos), pos
-    named_prompts, pos_prompts = named["prompts"], pos[0]
-    assert is_sequence(named_prompts), named_prompts
-    assert is_sequence(pos_prompts), pos_prompts
-    return named_prompts[0], pos_prompts[0]
-
-
-# One representative-entry accessor per subject: align() wants a single
-# named-dict/positional-list pair, not resolvedrive's singular prompt or
-# listprompts' repeated page of them.
-REPRESENTATIVE: dict[str, Callable[[object, object], tuple[object, object]]] = {
-    "resolvedrive": representative_resolvedrive,
-    "listprompts": representative_listprompts,
-}
+    key = meta["top_level_key"]
+    assert isinstance(key, str), meta
+    if meta["repeated"]:
+        named_list, pos_list = named[key], pos[0]
+        assert is_sequence(named_list), named_list
+        assert is_sequence(pos_list), pos_list
+        return named_list[0], pos_list[0]
+    return named[key], pos[0]
 
 
 def kind(v: object) -> str:
@@ -154,19 +147,21 @@ def main() -> None:
     argv = sys.argv[1:]
     values = "--values" in argv
     argv = [a for a in argv if a != "--values"]
-    jspb_path = argv[0] if argv else FIXTURE_JSPB
-    alt_path = argv[1] if len(argv) > 1 else FIXTURE_ALT
+    if len(argv) != 1:
+        raise SystemExit("usage: correlate.py [--values] ENDPOINT_DIR")
+    endpoint_dir = Path(argv[0])
+    meta = load_meta(endpoint_dir)
 
-    with open(jspb_path) as fp:
+    with open(endpoint_dir / "jspb.json") as fp:
         pos = load_json(fp)
-    with open(alt_path) as fp:
+    with open(endpoint_dir / "alt-json.json") as fp:
         named = load_json(fp)
 
     assert is_sequence(pos), pos
     assert is_mapping(named), named
     # Correlate on one representative entry — align() expects a single
     # named-dict/positional-list pair, not a repeated list of them.
-    named_prompt, pos_prompt = REPRESENTATIVE[subject_of(jspb_path)](named, pos)
+    named_prompt, pos_prompt = representative(named, pos, meta)
 
     if values:
         print_values(named_prompt, pos_prompt)

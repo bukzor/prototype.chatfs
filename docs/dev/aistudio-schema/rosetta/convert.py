@@ -5,15 +5,16 @@ AI Studio serializes each subject two ways: a named JSON object, and a `jspb`
 array where every protobuf field sits at a fixed slot. Null/absent slots have
 no named counterpart, so the named form is sparse.
 
-Two subjects are known, both built from the *same* PROMPT/METADATA message
-types (confirmed by structural alignment across their golden pairs):
-    resolvedrive   ResolveDriveResource — one prompt, `{"prompt": {...}}`
-    listprompts    ListPrompts — a page of prompts, `{"prompts": [...]}`,
-                   each entry sparser: no `runSettings`/`systemInstruction`,
-                   `chunkedPrompt` present but empty (`{}`) — the index
-                   doesn't carry turn content.
-Only the top-level wrapper differs (TOP_LEVEL below); PROMPT/METADATA are one
-shared SCHEMA, which is the thing this loop exists to keep honest across both.
+Every endpoint under `endpoint/<name>/` is HYPOTHESIZED to share the same
+PROMPT/METADATA message types — one SCHEMA below. That hypothesis is not
+settled here; it's what `verify.py` keeps testing, per endpoint, against each
+endpoint's real alt=json golden pair (see `../discourse.kb/questions.kb/
+can-we-decode-deterministically.md` for current status — open, not confirmed).
+Only the top-level wrapper shape is declared to differ per endpoint (singular
+vs. repeated, and the wrapper key), via that endpoint's own `meta.json`
+(`top_level_key`, `repeated`) rather than baked in here. A future endpoint
+whose golden pair diverges under this one SCHEMA is evidence against the
+hypothesis, not a bug in this converter.
 
 This converter is driven by SCHEMA: a sparse `slot -> field` map per message
 type. We name only the slots we've identified; unknown and null slots are
@@ -28,7 +29,8 @@ A field spec is one of:
 """
 
 import json
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
+from pathlib import Path
 from typing import IO, Literal, TypeAlias, TypeGuard
 
 Schema: TypeAlias = Mapping[int, "Field"]
@@ -166,34 +168,21 @@ def fold_map(pairs: object) -> dict[object, object]:
     return out
 
 
-def from_jspb_resolvedrive(jspb: object) -> dict[str, object]:
-    """Top-level: the jspb array's first slot is the one prompt message."""
-    assert is_sequence(jspb), jspb
-    return {"prompt": from_message(jspb[0], PROMPT)}
+def from_jspb(jspb: object, meta: Mapping[str, object]) -> dict[str, object]:
+    """Top-level: unwrap per the endpoint's meta.json.
 
-
-def from_jspb_listprompts(jspb: object) -> dict[str, object]:
-    """Top-level: the jspb array's first slot is a repeated list of prompt messages."""
-    assert is_sequence(jspb), jspb
-    prompts = jspb[0]
-    assert is_sequence(prompts), prompts
-    return {"prompts": [from_message(p, PROMPT) for p in prompts]}
-
-
-TOP_LEVEL: Mapping[str, Callable[[object], dict[str, object]]] = {
-    "resolvedrive": from_jspb_resolvedrive,
-    "listprompts": from_jspb_listprompts,
-}
-
-
-def from_jspb(jspb: object, subject: str) -> dict[str, object]:
-    """Dispatch to the named subject's top-level unwrapper.
-
-    `subject` is a TOP_LEVEL key — by convention, also the fixture filename's
-    stem (`<subject>.jspb.json`), so callers with a real path derive it from
-    the filename rather than guessing from shape.
+    `top_level_key` names the wrapper field; `repeated` picks singular
+    (`{key: <msg>}`, e.g. resolvedrive's one prompt) vs. repeated
+    (`{key: [<msg>, ...]}`, e.g. listprompts' page of prompts).
     """
-    return TOP_LEVEL[subject](jspb)
+    assert is_sequence(jspb), jspb
+    key = meta["top_level_key"]
+    assert isinstance(key, str), meta
+    if meta["repeated"]:
+        prompts = jspb[0]
+        assert is_sequence(prompts), prompts
+        return {key: [from_message(p, PROMPT) for p in prompts]}
+    return {key: from_message(jspb[0], PROMPT)}
 
 
 def load_json(fp: IO[str]) -> object:
@@ -204,16 +193,26 @@ def load_json(fp: IO[str]) -> object:
     return json.load(fp)  # pyright: ignore[reportAny]
 
 
+def load_meta(endpoint_dir: Path) -> Mapping[str, object]:
+    """Load `ENDPOINT_DIR/meta.json` — the endpoint-specific config every
+    rosetta/ script reads: `top_level_key`/`repeated` (this module),
+    `method`/`default_param`/`body` (capture.sh)."""
+    with open(endpoint_dir / "meta.json") as fp:
+        meta = load_json(fp)
+    assert is_mapping(meta), meta
+    return meta
+
+
 def main():
     import sys
 
     argv = sys.argv[1:]
-    if len(argv) != 1 or argv[0] not in TOP_LEVEL:
-        raise SystemExit(f"usage: convert.py {{{'|'.join(TOP_LEVEL)}}} < x.jspb.json")
-    subject = argv[0]
+    if len(argv) != 1:
+        raise SystemExit("usage: convert.py ENDPOINT_DIR < jspb.json")
+    meta = load_meta(Path(argv[0]))
 
     jspb = load_json(sys.stdin)
-    json.dump(from_jspb(jspb, subject), sys.stdout, ensure_ascii=False, indent=2)
+    json.dump(from_jspb(jspb, meta), sys.stdout, ensure_ascii=False, indent=2)
     _ = sys.stdout.write("\n")
 
 

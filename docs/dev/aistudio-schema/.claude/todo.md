@@ -51,6 +51,11 @@ against a committed golden pair. See README "Converting JSPB → JSON".
     exercises a repeated field, a oneof, or a field present-in-one/
     absent-in-the-other — a third pair chosen for one of those cases would
     be stronger evidence than a third pair chosen merely for breadth.
+    Reorganized same day into `rosetta/endpoint/<name>/` directories (see
+    `devlog/2026-07-11-002-rosetta-localizes-endpoint-differences.md`) — a
+    third pair means a new `endpoint/<name>/` directory (golden pair +
+    `meta.json` + `check.do`), not a new `<subject>.*.json` fixture pair at
+    `rosetta/` top level.
 - [x] **Confirm offline decode is the actual need** — resolved 2026-07-03
   (`discourse.kb/questions.kb/how-does-this-serve-chatfs.md`). The named
   downstream consumer landed: `chatfs_aistudio_conversation_massage_json.py`
