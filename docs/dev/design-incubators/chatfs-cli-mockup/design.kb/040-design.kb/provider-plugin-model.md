@@ -45,20 +45,28 @@ def place_meta(item, root) -> Path:
 Every provider's `place_meta` wrapper is this shape, verified identical in
 structure across `chatfs_{chatgpt,claude,aistudio}_layout.py` — only the
 key names (`id`/`title`/`create_time` vs `uuid`/`name`/`created_at` vs
-`id`/`title`/`create_time`) and `_created`'s input type (str | float vs
-str vs int) differ. This one seam absorbs both the key-name divergence
-and the timestamp-type divergence; nothing else about `place_meta` varies.
+`id`/`title`/`create_time`) and the timestamp parser's input type
+(str | float vs str vs int) differ. This one seam absorbs both the
+key-name divergence and the timestamp-type divergence; nothing else
+about `place_meta` varies.
+
+`capture()` (landed shared 2026-07-11, see
+`../../.claude/todo.kb/2026-07-03-000-cross-provider-data-flow-drift--pre-unification-fixes-vs-unification-scope.md`
+§ "Solve by unification") turned out to be the same adapter shape, one
+level simpler — a 2-value tuple (`pluck_script`,
+`conversation_filename`) instead of a 3-value tuple plus parser, since
+browse+pluck orchestration itself has no provider-shaped logic at all,
+only provider-shaped *inputs*:
+
+```python
+def capture(url, chat_dir) -> Path:
+    return _capture(url, chat_dir, CONVERSATION_PLUCK)  # + conversation_filename= for aistudio
+```
 
 **Genuinely provider-only** (stays out of the shared lib entirely):
 - AI Studio's `index_item()` — synthesizes an `IndexItem` from positional
   JSPB, since JSPB has no native keyed dict to echo (chatgpt/claude get
   `IndexItem` for free from their already-keyed wire format).
-- Claude's `capture()` — browse+pluck orchestration, currently misfiled in
-  claude's layout module. Not actually claude-specific; the other two
-  providers just haven't had this factored out yet (tracked as a shared-lib
-  requirement, not a provider-model lesson — see
-  `../../.claude/todo.kb/2026-07-03-000-cross-provider-data-flow-drift--pre-unification-fixes-vs-unification-scope.md`
-  § "Solve by unification").
 - Each provider's extractor (HAR-pluck, CDP+pluck, JSONL-read) and content
   splat — genuinely different wire formats, the opaque-extractor boundary
   (`../../../../technical-policy.kb/`) puts these out of scope for sharing
