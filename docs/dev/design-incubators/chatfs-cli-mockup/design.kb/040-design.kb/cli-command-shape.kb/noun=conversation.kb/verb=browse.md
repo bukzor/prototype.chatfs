@@ -46,5 +46,5 @@ capture-and-pluck shape, but two things differ from chatgpt/claude:
   `meta.json` straight from it — no second endpoint, no cross-check, no
   `find_index_item`-style fallback.
 
-`url_browse.py` does not yet delegate to a `path render` step — AI
-Studio's render/path_render don't exist yet (parity-ladder todo.kb).
+`url_browse.py` delegates to `path render` like the other two providers
+(landed 2026-07-11; see `verb=render.md`'s AI Studio divergence note).

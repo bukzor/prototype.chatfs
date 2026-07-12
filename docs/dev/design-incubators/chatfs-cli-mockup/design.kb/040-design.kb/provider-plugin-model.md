@@ -21,8 +21,16 @@ landed 2026-07-05 as `chatfs_layout.py` + `chatfs_render.py`.
 view-symlink placement). Same story on the render side:
 `chatfs_render.py`'s tree algorithms (`live_ancestors`, `primary_child`,
 `normalize_turnless`, `number_turns`, the fork-fact `Renderer`) are one
-shared implementation; `chatfs_chatgpt_conversation_render.py` and
-`chatfs_claude_conversation_render.py` contribute only wire-shape parsing.
+shared implementation; `chatfs_chatgpt_conversation_render.py`,
+`chatfs_claude_conversation_render.py`, and (landed 2026-07-11)
+`chatfs_aistudio_conversation_render.py` contribute only wire-shape
+parsing. AI Studio's contribution is the strongest evidence yet that the
+render-side seam is right: its wire shape has *no fork representation at
+all* (a flat, linear turn list — see
+`dev.kb/claims.kb/aistudio-jspb-prompt-shape.md`), so its renderer feeds
+`render_tree` a degenerate single-child-chain tree; the shared fork-fact
+machinery costs nothing on that input rather than needing a
+provider-specific bypass.
 
 **Provider-shaped, but collapses to a fixed small adapter** — not a
 free-form interface, a **3-value tuple** (`id`, `title`,

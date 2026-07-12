@@ -119,3 +119,17 @@ and delegates to `path render`.
 Deterministic regen: orchestrator forms rebuild the splat tree and
 `chat.md` from `.data/conversation.json` on every invocation. See
 `../../deterministic-regeneration.md`.
+
+## AI Studio divergence
+
+AI Studio's wire shape has no fork representation at all — no
+parent/child field anywhere, a flat `chunkedPrompt.chunks` list in
+document order (see `dev.kb/claims.kb/aistudio-jspb-prompt-shape.md`,
+"Turn order is linear"). `chatfs_aistudio_conversation_render.py`
+builds a straight predecessor chain (each turn's parent is the one
+before it) and hands it to the *same* `chatfs_render.render_tree` —
+no bespoke linear renderer. The fork-fact notation above degenerates
+to a no-op on every node (no `replies:`/`superseded by:`/`(re: N)`
+ever appears), by construction, not by a provider-specific special
+case. `path render`'s splat produces only `messages/`, never
+`conversations/` — there is no branch to enumerate.
