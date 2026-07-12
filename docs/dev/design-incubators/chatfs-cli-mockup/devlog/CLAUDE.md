@@ -24,4 +24,9 @@ Devlogs capture what diffs can't — reasoning, principles, conventions:
 
 ## Creating Entries
 
-Use: `llm-collab-devlog --title "Entry title" -C ../`
+`llm-collab-devlog` hardcodes a `docs/dev/devlog/` path and cannot target
+this bare `devlog/` (verified 2026-07-12 — `-C ../` from here still looks
+for `docs/dev/devlog/` under the incubator root, which doesn't exist).
+Create entries by hand: `YYYY-MM-DD-NNN-slug.md`, numbering restarts at
+`000` per date, following the existing entries' structure (skeleton:
+`~/.claude/skills/llm-collab/skeleton/docs/dev/devlog/YYYY-MM-DD-000-example-entry.md`).

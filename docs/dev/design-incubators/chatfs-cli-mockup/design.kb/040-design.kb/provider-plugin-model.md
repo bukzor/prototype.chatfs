@@ -50,9 +50,10 @@ key names (`id`/`title`/`create_time` vs `uuid`/`name`/`created_at` vs
 key-name divergence and the timestamp-type divergence; nothing else
 about `place_meta` varies.
 
-`capture()` (landed shared 2026-07-11, see
-`../../.claude/todo.kb/2026-07-03-000-cross-provider-data-flow-drift--pre-unification-fixes-vs-unification-scope.md`
-§ "Solve by unification") turned out to be the same adapter shape, one
+`capture()` (landed shared 2026-07-11, see devlog
+`../../devlog/2026-07-11-002-unification-shared-capture-and-drift-fixes.md`
+— the driving todo.kb file's "Solve by unification" is deleted now that
+it's fully executed) turned out to be the same adapter shape, one
 level simpler — a 2-value tuple (`pluck_script`,
 `conversation_filename`) instead of a 3-value tuple plus parser, since
 browse+pluck orchestration itself has no provider-shaped logic at all,
@@ -74,8 +75,9 @@ def capture(url, chat_dir) -> Path:
 
 ## Revised rule-of-three take
 
-The pre-registration in
-`../../.claude/todo.kb/2026-05-11-001-shared-code-among-providers.md`
+The pre-registration (formerly `todo.kb/2026-05-11-001-shared-code-among-providers.md`,
+deleted 2026-07-12 once fully resolved — see devlog
+`../../devlog/2026-07-11-002-unification-shared-capture-and-drift-fixes.md`)
 expected claude-code (a fourth, non-browser provider) to be the extraction
 trigger. AI Studio — a third *browser-captured* provider, but the first
 non-keyed (JSPB) one — turned out to be sufficient signal on its own: the

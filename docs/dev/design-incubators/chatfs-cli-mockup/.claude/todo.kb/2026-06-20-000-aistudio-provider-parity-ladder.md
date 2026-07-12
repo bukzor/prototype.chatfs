@@ -134,10 +134,12 @@ JSPB positional decoding (see `dev.kb/claims.kb/aistudio-jspb-prompt-shape.md`).
       bug** (2026-07-03 review) and **fixed** (2026-07-03): splat and
       `layout.index_item` now read `conversation.json`'s named projection
       (`prompt.chunkedPrompt.chunks[]` / `prompt.metadata`) instead of
-      positionally indexing raw JSPB — see
-      [cross-provider data-flow drift](2026-07-03-000-cross-provider-data-flow-drift--pre-unification-fixes-vs-unification-scope.md)
-      for verification. The `create_time`-is-really-`lastModified` mislabel,
-      tracked as a separate item in that same file, is also **fixed**
+      positionally indexing raw JSPB — see devlog
+      `../../devlog/2026-07-11-002-unification-shared-capture-and-drift-fixes.md`
+      for verification (the driving todo.kb file, cross-provider-data-flow-drift,
+      is deleted now that it's fully executed). The `create_time`-is-really-
+      `lastModified` mislabel, tracked as a separate item in that same file,
+      is also **fixed**
       (2026-07-04): `index_item` now anchors on the first chunk's
       `createTime` (true creation), not `lastModified.revisionTime`
       (modification).
@@ -167,7 +169,8 @@ JSPB positional decoding (see `dev.kb/claims.kb/aistudio-jspb-prompt-shape.md`).
   A second prompt — especially one with images, multiple parts, or any
   fork — may refute the 36-field turn width or the 1:1 thought↔answer
   ratio.
-- AI Studio is a third *browser-captured* provider. This strengthens
-  the shared-lib signal earlier than the claude-code trigger assumed in
-  `2026-05-11-001-shared-code-among-providers.md`; revisit that entry's
-  rule-of-three argument once this ladder progresses.
+- AI Studio is a third *browser-captured* provider. This strengthened
+  the shared-lib signal earlier than the claude-code trigger originally
+  assumed (in the now-deleted `todo.kb/2026-05-11-001-shared-code-among-providers.md`) —
+  already revisited in `design.kb/040-design.kb/provider-plugin-model.md`
+  § "Revised rule-of-three take".
