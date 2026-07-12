@@ -120,7 +120,7 @@ claude-code-as-provider (needs its design discussion first).
 
 ## Next
 
-- [ ] `chatfs_layout.py::time_dir_for`/`place_meta` have zero direct test
+- [x] `chatfs_layout.py::time_dir_for`/`place_meta` have zero direct test
       coverage (checked 2026-07-11: no `*layout_test.py`, no grep hits
       for either name in any `*_test.py`) — pre-existing gap, but the
       2026-07-11 `label=`/"graduation" behavior (aistudio's
@@ -129,7 +129,14 @@ claude-code-as-provider (needs its design discussion first).
       with none either. Worth a focused test: `time_dir_for` with/without
       `label`, and `place_meta` called twice for the same id/root with
       different labels asserting the first symlink is gone and the
-      second is in its place.
+      second is in its place. Done 2026-07-12: new `chatfs_layout_test.py`
+      (4 tests, TZ pinned to `America/Chicago` via the same
+      `monkeypatch`+`time.tzset()` pattern the aistudio render test uses),
+      covering both cases named above. Mutation-checked by hand: dropping
+      the `label=` prefix in `time_dir_for` turned all 4 tests red;
+      disabling `_purge_view_symlinks` in `place_meta` turned exactly the
+      relabel test red; both reverted clean. `basedpyright .` 0/0/0;
+      `pytest .` 32/32 pass (was 28).
 
 - [x] Add chatgpt-specific tests for `normalize_turnless`'s synthetic-anchor
       path (a turn-less fork materializing a heading) against a real `mapping`
