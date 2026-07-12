@@ -26,11 +26,11 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 import chatfs_json
-from chatfs_aistudio_layout import data_dir_for, index_item, place_meta
+from chatfs_aistudio_layout import capture, chat_dir_for, index_item, place_meta
 from chatfs_aistudio_types import is_conversation
+from chatfs_layout import run_pluck
 
 HERE = Path(__file__).parent
-CONVERSATION_PLUCK = HERE / "chatfs_aistudio_conversation_pluck.jq"
 MASSAGE_JSON = HERE / "chatfs_aistudio_conversation_massage_json.py"
 PATH_RENDER = HERE / "chatfs_aistudio_conversation_path_render.py"
 ROOT = HERE / "chatfs.demo" / "aistudio"
@@ -50,26 +50,13 @@ def main() -> None:
     url = sys.argv[1]
     id_ = id_from_url(url)
 
-    data_dir = data_dir_for(id_, ROOT)
-    data_dir.mkdir(parents=True, exist_ok=True)
-    cdp = data_dir / "cdp.jsonl"
+    chat_dir = chat_dir_for(id_, ROOT)
+    data_dir = capture(url, chat_dir)
     raw = data_dir / "conversation.raw.json"
     conversation = data_dir / "conversation.json"
 
-    cdp.unlink(missing_ok=True)
-    raw.unlink(missing_ok=True)
-    conversation.unlink(missing_ok=True)
-
-    print(f"Capturing {url} → {cdp} ...", file=sys.stderr)
-    with cdp.open("wb") as f:
-        _ = subprocess.run(["har-browse", url], stdout=f, check=True)
-
-    print(f"Plucking conversation → {conversation} ...", file=sys.stderr)
-    with cdp.open("rb") as src, raw.open("wb") as dst:
-        _ = subprocess.run([str(CONVERSATION_PLUCK)], stdin=src, stdout=dst, check=True)
-
-    with raw.open("rb") as src, conversation.open("wb") as dst:
-        _ = subprocess.run([str(MASSAGE_JSON)], stdin=src, stdout=dst, check=True)
+    print(f"Massaging {raw} → {conversation} ...", file=sys.stderr)
+    run_pluck(MASSAGE_JSON, raw, conversation)
 
     parsed = chatfs_json.loads(conversation.read_text())
     assert is_conversation(parsed), parsed

@@ -20,7 +20,8 @@ ever changes shape.
 Steps:
     1. browse $url → .chat/$UUID/.data/cdp.jsonl
     2. conversation pluck → .chat/$UUID/.data/conversation.json
-    3. index pluck → filter to .uuid == $UUID → meta (fail loudly if absent)
+    3. index pluck → .chat/$UUID/.data/index-pages.jsonl; filter to
+       .uuid == $UUID → meta (fail loudly if absent)
     4. cross-check conversation doc vs index item, null-tolerant
     5. place_meta (writes meta.json, purges + places view dir-symlink)
     6. delegate to path_render
@@ -35,7 +36,6 @@ chat dir (reuses the already-captured cdp.jsonl + conversation.json).
 """
 import subprocess
 import sys
-from collections.abc import Mapping
 from pathlib import Path
 from typing import cast
 from urllib.parse import urlparse
@@ -43,7 +43,9 @@ from urllib.parse import urlparse
 import chatfs_json
 from chatfs_claude_layout import capture, chat_dir_for, place_meta
 from chatfs_claude_types import IndexItem, is_index_page
-from chatfs_json import JsonObject, JsonValue
+from chatfs_json import JsonObject
+from chatfs_layout import run_pluck
+from chatfs_url_browse import null_tolerant_mismatches
 
 HERE = Path(__file__).parent
 INDEX_PLUCK = HERE / "chatfs_claude_index_pluck.jq"
@@ -57,42 +59,18 @@ def uuid_from_url(url: str) -> str:
     return parts[1]
 
 
-def null_tolerant_mismatches(
-    a: Mapping[str, JsonValue], b: Mapping[str, JsonValue], prefix: str = ""
-) -> list[str]:
-    """Recursive key comparison; missing or None on either side is ok.
-
-    Recurses into nested mappings so that one side carrying extra
-    None-valued keys (common when one endpoint returns a superset
-    schema with unset fields) does not register as a mismatch.
-    """
-    out: list[str] = []
-    for k in set(a) | set(b):
-        va, vb = a.get(k), b.get(k)
-        if va is None or vb is None:
-            continue
-        path = f"{prefix}{k}"
-        if isinstance(va, Mapping) and isinstance(vb, Mapping):
-            out.extend(null_tolerant_mismatches(va, vb, prefix=f"{path}."))
-            continue
-        if va != vb:
-            out.append(f"{path}: {va!r} != {vb!r}")
-    return out
-
-
-def find_index_item(cdp: Path, uuid: str) -> IndexItem:
-    """Pluck index pages from CDP; return the item matching uuid.
+def find_index_item(data_dir: Path, uuid: str) -> IndexItem:
+    """Pluck index pages from CDP into index-pages.jsonl; return the item
+    matching uuid.
 
     Fails loudly if no incidentally-captured index page mentioned this
     uuid — recovery is the two-step (index_browse → index_splat →
     path_browse).
     """
-    with cdp.open("rb") as src:
-        result = subprocess.run(
-            [str(INDEX_PLUCK)], stdin=src, capture_output=True, check=True
-        )
+    index_pages = data_dir / "index-pages.jsonl"
+    run_pluck(INDEX_PLUCK, data_dir / "cdp.jsonl", index_pages)
     matches: list[IndexItem] = []
-    for line in result.stdout.decode().splitlines():
+    for line in index_pages.read_text().splitlines():
         if not line.strip():
             continue
         page = chatfs_json.loads(line)
@@ -119,10 +97,9 @@ def main() -> None:
 
     chat_dir = chat_dir_for(uuid, ROOT)
     data_dir = capture(url, chat_dir)
-    cdp = data_dir / "cdp.jsonl"
     conversation = data_dir / "conversation.json"
 
-    item = find_index_item(cdp, uuid)
+    item = find_index_item(data_dir, uuid)
 
     conv_doc = chatfs_json.loads(conversation.read_text())
     assert isinstance(conv_doc, dict), conv_doc

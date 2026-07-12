@@ -4,33 +4,52 @@
 Usage:
     chatfs_chatgpt_conversation_url_browse.py <chatgpt-url>
 
-One browse call captures both the conversation document and the sidebar
-index page that mentions it (see browse-incidental-capture.md). We use
-the latter to derive `meta.json` byte-for-byte from the index endpoint,
-avoiding partial synthesis.
+Assumes (per browse-incidental-capture.md) that visiting `/c/$UUID` also
+fires `/backend-api/conversations` for the sidebar, so one browse trip
+captures both the conversation document and an index page that mentions
+this UUID.
+
+If that assumption is ever violated, `find_index_item` fails loudly and
+the recovery path is two-step: `chatfs_chatgpt_index_browse.sh` →
+`chatfs_chatgpt_index_splat.py` → `chatfs_chatgpt_conversation_path_browse.py`.
+
+A second cross-check asserts that the identity fields agree across the
+two endpoints (null-tolerant) — catches schema drift if either side
+ever changes shape. Unlike claude, where the conversation doc and index
+item share literal key names and representations, chatgpt's
+conversation doc names the id field `conversation_id` (not `id`) and
+carries `create_time` as a unix float where the index returns an ISO
+string — `_index_shaped` normalizes both before the diff so the check
+stays meaningful instead of null-tolerance silently skipping every
+field.
 
 Steps:
-    1. browse $url → staging/cdp.jsonl
-    2. conversation pluck → staging/conversation.json
-    3. index pluck → filter to .id == $UUID → meta (fail loudly if absent)
-    4. ensure .chat/$UUID/.data/ exists; move captures into it
+    1. browse $url → .chat/$UUID/.data/cdp.jsonl
+    2. conversation pluck → .chat/$UUID/.data/conversation.json
+    3. index pluck → .chat/$UUID/.data/index-pages.jsonl; filter to
+       .id == $UUID → meta (fail loudly if absent)
+    4. cross-check conversation doc vs index item, null-tolerant
     5. place_meta (writes meta.json, purges + places view dir-symlink)
-    6. delegate to path_render (splat + render)
+    6. delegate to path_render
+
+Captures are written directly into `.chat/$UUID/.data/` — no temp
+staging (matches claude's `capture()` policy). If a later step fails,
+the captures remain there for inspection.
 """
-import shutil
 import subprocess
 import sys
-import tempfile
 from pathlib import Path
 from urllib.parse import urlparse
 
 import chatfs_json
-from chatfs_chatgpt_layout import chat_dir_for, data_dir_for, place_meta
+from chatfs_chatgpt_layout import capture, chat_dir_for, created_at, place_meta
 from chatfs_chatgpt_types import IndexItem, is_index_page
+from chatfs_json import JsonObject
+from chatfs_layout import run_pluck
+from chatfs_url_browse import null_tolerant_mismatches
 
 HERE = Path(__file__).parent
 INDEX_PLUCK = HERE / "chatfs_chatgpt_index_pluck.jq"
-CONVERSATION_PLUCK = HERE / "chatfs_chatgpt_conversation_pluck.jq"
 PATH_RENDER = HERE / "chatfs_chatgpt_conversation_path_render.py"
 ROOT = HERE / "chatfs.demo" / "chatgpt"
 
@@ -41,19 +60,18 @@ def uuid_from_url(url: str) -> str:
     return parts[1]
 
 
-def find_index_item(cdp: Path, uuid: str) -> IndexItem:
-    """Run index pluck; return the single item matching uuid.
+def find_index_item(data_dir: Path, uuid: str) -> IndexItem:
+    """Pluck index pages from CDP into index-pages.jsonl; return the item
+    matching uuid.
 
     Fails loudly if no sidebar page included this conversation — the
     user's recovery is to run `index browse` then `conversation path
     browse` against the resulting chat dir.
     """
-    with cdp.open("rb") as src:
-        result = subprocess.run(
-            [str(INDEX_PLUCK)], stdin=src, capture_output=True, check=True
-        )
+    index_pages = data_dir / "index-pages.jsonl"
+    run_pluck(INDEX_PLUCK, data_dir / "cdp.jsonl", index_pages)
     matches: list[IndexItem] = []
-    for line in result.stdout.decode().splitlines():
+    for line in index_pages.read_text().splitlines():
         if not line.strip():
             continue
         page = chatfs_json.loads(line)
@@ -71,6 +89,22 @@ def find_index_item(cdp: Path, uuid: str) -> IndexItem:
     return matches[0]
 
 
+def _index_shaped(conv_doc: JsonObject) -> JsonObject:
+    """Project the conversation doc's identity fields into IndexItem shape.
+
+    `conversation_id` -> `id`; `create_time` reparsed to ISO 8601 so it
+    compares equal to the index endpoint's string, regardless of which
+    side's representation the doc happens to carry.
+    """
+    create_time = conv_doc["create_time"]
+    assert isinstance(create_time, (int, float, str)), create_time
+    return {
+        "id": conv_doc["conversation_id"],
+        "title": conv_doc["title"],
+        "create_time": created_at(create_time).isoformat(),
+    }
+
+
 def main() -> None:
     if len(sys.argv) != 2:
         print(f"usage: {sys.argv[0]} <chatgpt-url>", file=sys.stderr)
@@ -79,27 +113,29 @@ def main() -> None:
     url = sys.argv[1]
     uuid = uuid_from_url(url)
 
-    with tempfile.TemporaryDirectory(prefix="chatfs-url-browse.") as tmp:
-        staging = Path(tmp)
-        staged_cdp = staging / "cdp.jsonl"
-        staged_conversation = staging / "conversation.json"
+    chat_dir = chat_dir_for(uuid, ROOT)
+    data_dir = capture(url, chat_dir)
+    conversation = data_dir / "conversation.json"
 
-        print(f"Capturing {url} → {staged_cdp} ...", file=sys.stderr)
-        with staged_cdp.open("wb") as f:
-            _ = subprocess.run(["har-browse", url], stdout=f, check=True)
+    item = find_index_item(data_dir, uuid)
 
-        print(f"Plucking conversation → {staged_conversation} ...", file=sys.stderr)
-        with staged_cdp.open("rb") as src, staged_conversation.open("wb") as dst:
-            _ = subprocess.run([str(CONVERSATION_PLUCK)], stdin=src, stdout=dst, check=True)
+    conv_doc = chatfs_json.loads(conversation.read_text())
+    assert isinstance(conv_doc, dict), conv_doc
+    projected = _index_shaped(conv_doc)
+    item_normalized: JsonObject = {
+        "id": item["id"],
+        "title": item["title"],
+        "create_time": created_at(item["create_time"]).isoformat(),
+    }
+    mismatches = null_tolerant_mismatches(projected, item_normalized)
+    assert not mismatches, (
+        f"meta fields disagree across conversation and index endpoints "
+        f"for {uuid}: {mismatches}"
+    )
 
-        item = find_index_item(staged_cdp, uuid)
-        data_dir = data_dir_for(uuid, ROOT)
-        data_dir.mkdir(parents=True, exist_ok=True)
-        _ = shutil.move(str(staged_cdp), data_dir / "cdp.jsonl")
-        _ = shutil.move(str(staged_conversation), data_dir / "conversation.json")
-        _ = place_meta(item, ROOT)
+    _ = place_meta(item, ROOT)
 
-    _ = subprocess.run([str(PATH_RENDER), str(chat_dir_for(uuid, ROOT))], check=True)
+    _ = subprocess.run([str(PATH_RENDER), str(chat_dir)], check=True)
 
 
 if __name__ == "__main__":

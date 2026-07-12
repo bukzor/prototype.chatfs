@@ -86,3 +86,8 @@ conversation that the orchestrator captures and places.
 Orchestrators do not chain via stdio because their work is inherently
 multi-file. They chain by *position* — `path_browse` writes the files
 that `path_render` reads, both keyed off the same `<ts-dir>`.
+
+Pipe composition and delegation composition are shape choices at this
+level, not competing implementations underneath — see
+`driver-model.md` for how both surfaces stay thin drivers over the
+same importable stage functions.

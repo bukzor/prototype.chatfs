@@ -15,10 +15,10 @@ cost-benefit-sweh:
 
 # shared code among providers
 
-**Priority:** Low — the trigger fired and the extraction landed
+**Priority:** Done 2026-07-11 — the trigger fired and the extraction landed
 2026-07-05 (`chatfs_layout.py` / `chatfs_render.py`, all three providers
-verified end-to-end); what remains is boundary refinement (see Open
-Questions), not a from-scratch decision.
+verified end-to-end); boundary refinement (see Open Questions) resolved
+by the unification pass.
 **Complexity:** Medium — touches all providers' scripts and `place_meta`
 boundary; correctness verified by all-providers end-to-end.
 
@@ -49,9 +49,15 @@ locator parser; splat, render, and layout primitives are shared.
   (aistudio) landing.
 - **Lib home:** ~~incubator-local vs. `packages/chatfs-core/`~~
   **decided 2026-07-05: incubator-local.**
-- **What moves vs. stays:** `chatfs_chatgpt_layout.py` is a starting
+- **What moves vs. stays:** ~~`chatfs_chatgpt_layout.py` is a starting
   point but not necessarily the boundary — provider-specific code
-  may still hide in it.
+  may still hide in it.~~ **Resolved 2026-07-11:** the unification
+  pass (cross-provider-drift's "Solve by unification") found one more
+  seam: `capture()`/`run_pluck()` joined `chatfs_layout.py` (storage/
+  view-tree concerns), but the endpoint cross-check
+  (`null_tolerant_mismatches`) got its own `chatfs_url_browse.py`
+  instead — url-browse orchestration is a different boundary than
+  storage layout, not a subset of it.
 
 ## Open Questions
 

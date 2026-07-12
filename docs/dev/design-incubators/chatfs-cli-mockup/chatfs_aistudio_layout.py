@@ -12,6 +12,7 @@ from pathlib import Path
 
 from chatfs_aistudio_types import Conversation, IndexItem
 from chatfs_layout import DATA_DIR_NAME, chat_dir_for, data_dir_for
+from chatfs_layout import capture as _capture
 from chatfs_layout import place_meta as _place_meta
 from chatfs_layout import resolve_chat_dir, safe_filename
 
@@ -21,9 +22,23 @@ __all__ = [
     "data_dir_for",
     "resolve_chat_dir",
     "safe_filename",
+    "capture",
     "index_item",
     "place_meta",
 ]
+
+HERE = Path(__file__).parent
+CONVERSATION_PLUCK = HERE / "chatfs_aistudio_conversation_pluck.jq"
+
+
+def capture(url: str, chat_dir: Path) -> Path:
+    """Browse $url and pluck the raw JSPB doc — massage is a separate stage.
+
+    `conversation.raw.json`, not `conversation.json`: unlike
+    chatgpt/claude, AI Studio's pluck output isn't yet named — see
+    `chatfs_aistudio_conversation_massage_json.py`.
+    """
+    return _capture(url, chat_dir, CONVERSATION_PLUCK, conversation_filename="conversation.raw.json")
 
 
 def index_item(doc: Conversation) -> IndexItem:

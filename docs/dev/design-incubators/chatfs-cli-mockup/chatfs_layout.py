@@ -16,12 +16,16 @@ directory-symlink per chat pointing at `.chat/$UUID/`. See
 design.kb/040-design.kb/chat-as-directory.md.
 
 Provider-shaped work (parsing a provider's own timestamp shape into a
-tz-aware `datetime`, and reading a provider's own IndexItem key names)
-stays in each `chatfs_<provider>_layout.py`; everything below is
-byte-for-byte identical across chatgpt/claude/aistudio.
+tz-aware `datetime`, reading a provider's own IndexItem key names, and
+naming a provider's own conversation pluck script) stays in each
+`chatfs_<provider>_layout.py`'s thin `capture()`/`place_meta()`
+wrappers; everything below is byte-for-byte identical across
+chatgpt/claude/aistudio.
 """
 import json
 import os
+import subprocess
+import sys
 from collections.abc import Mapping
 from datetime import datetime
 from pathlib import Path
@@ -95,6 +99,63 @@ def resolve_chat_dir(arg: str | os.PathLike[str]) -> Path:
         p = p.parent
     assert p.is_dir(), p
     return p
+
+
+def run_pluck(script: Path, src: Path, dst: Path) -> None:
+    """Run a `*-pluck.jq`-shaped filter: read src, write its stdout to dst.
+
+    Shared low-level primitive behind every "tee the filtered stream to
+    disk" step in an orchestrator — `capture()`'s conversation pluck,
+    each provider's incidental-index pluck, AI Studio's massage stage.
+    Centralizing it means every pluck output lands on disk in the same
+    way, satisfying the persist-every-pluck-output requirement by
+    construction rather than by remembering to tee at each call site.
+    """
+    with src.open("rb") as fin, dst.open("wb") as fout:
+        _ = subprocess.run([str(script)], stdin=fin, stdout=fout, check=True)
+
+
+def capture(
+    url: str,
+    chat_dir: Path,
+    pluck_script: Path,
+    *,
+    conversation_filename: str = "conversation.json",
+) -> Path:
+    """Browse $url and pluck the conversation into chat_dir/.data/.
+
+    Ensures `.data/` exists, clears any prior cdp.jsonl /
+    `conversation_filename` from a previous run, then runs har-browse
+    followed by `pluck_script`. Returns the data dir for callers that
+    need to deposit meta.json or similar siblings.
+
+    `pluck_script` and `conversation_filename` are the provider-shaped
+    half: each provider's `capture()` wrapper supplies its own
+    conversation pluck (and, for AI Studio, `conversation.raw.json`
+    instead of the default `conversation.json`, since that provider's
+    pluck output still needs a massage pass before it's named).
+
+    The intermediate-data policy is the load-bearing piece: captures
+    land directly in `.chat/$UUID/.data/`, never a tempdir. Failures
+    leave the bytes inspectable; success hands off to splat/render
+    without a move.
+    """
+    data_dir = chat_dir / DATA_DIR_NAME
+    data_dir.mkdir(parents=True, exist_ok=True)
+    cdp = data_dir / "cdp.jsonl"
+    conversation = data_dir / conversation_filename
+
+    cdp.unlink(missing_ok=True)
+    conversation.unlink(missing_ok=True)
+
+    print(f"Capturing {url} → {cdp} ...", file=sys.stderr)
+    with cdp.open("wb") as f:
+        _ = subprocess.run(["har-browse", url], stdout=f, check=True)
+
+    print(f"Plucking conversation → {conversation} ...", file=sys.stderr)
+    run_pluck(pluck_script, cdp, conversation)
+
+    return data_dir
 
 
 def _purge_view_symlinks(uuid: str, root: Path) -> None:

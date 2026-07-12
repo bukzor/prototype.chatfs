@@ -184,6 +184,67 @@ class DescribeExtractTextContent:
         }
         assert M.extract_text_content(raw) is None
 
+    def it_wraps_thoughts_in_details_thinking(self):
+        raw: JsonObj = {
+            "message": {
+                "content": {
+                    "content_type": "thoughts",
+                    "thoughts": [{"content": "Considering the options"}],
+                }
+            }
+        }
+        result = M.extract_text_content(raw)
+        assert result is not None
+        assert result.startswith('<details type="thinking">')
+        assert result.endswith("</details>")
+        assert "Considering the options" in result
+
+    def it_wraps_reasoning_recap_in_details_thinking(self):
+        raw: JsonObj = {
+            "message": {
+                "content": {
+                    "content_type": "reasoning_recap",
+                    "content": "Recapped the reasoning",
+                }
+            }
+        }
+        result = M.extract_text_content(raw)
+        assert result is not None
+        assert result.startswith('<details type="thinking">')
+        assert "Recapped the reasoning" in result
+
+    def it_wraps_code_in_details_tool_call(self):
+        raw: JsonObj = {
+            "message": {
+                "content": {
+                    "content_type": "code",
+                    "text": "print('hi')",
+                    "language": "python",
+                },
+                "recipient": "python",
+            }
+        }
+        result = M.extract_text_content(raw)
+        assert result is not None
+        assert result.startswith('<details type="tool_call"')
+        assert "```python" in result
+        assert "print('hi')" in result
+
+    def it_wraps_tool_metadata_in_details_tool_call(self):
+        raw: JsonObj = {
+            "message": {
+                "content": {"content_type": "text", "parts": []},
+                "author": {"role": "tool"},
+                "metadata": {
+                    "search_model_queries": {"queries": ["climbing gyms near me"]}
+                },
+            }
+        }
+        result = M.extract_text_content(raw)
+        assert result is not None
+        assert result.startswith('<details type="tool_call"')
+        assert "climbing gyms near me" in result
+
 
 class DescribePrepareMessage:
     def it_replaces_text_parts_with_placeholder(self):

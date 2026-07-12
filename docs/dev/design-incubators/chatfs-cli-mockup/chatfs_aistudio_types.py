@@ -93,6 +93,15 @@ class Conversation(TypedDict):
     prompt: Prompt
 
 
+def is_index_item(value: JsonValue) -> TypeGuard[IndexItem]:
+    return (
+        isinstance(value, dict)
+        and isinstance(value.get("id"), str)
+        and isinstance(value.get("title"), str)
+        and isinstance(value.get("last_modified"), int)
+    )
+
+
 def is_turn(value: JsonValue) -> TypeGuard[Turn]:
     return (
         isinstance(value, dict)

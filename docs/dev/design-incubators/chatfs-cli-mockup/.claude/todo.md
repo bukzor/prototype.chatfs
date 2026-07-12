@@ -84,18 +84,37 @@ Sequence agreed with user; details live in the items/files referenced.
       mutation-checked). Deliberately did NOT write
       `path_browse`/`url_render`: those fold into step 4. `basedpyright .`
       0/0/0; `pytest .` 28/28 pass (was 19).
-- [ ] 4. **Unify** — execute
+- [x] 4. **Unify** — done 2026-07-11: executed
       [cross-provider drift](todo.kb/2026-07-03-000-cross-provider-data-flow-drift--pre-unification-fixes-vs-unification-scope.md)
-      § "Solve by unification" (all five requirements). Driver model
-      resolved 2026-07-10: not either/or — stages become importable
-      generator functions; the pipe and delegation surfaces are thin
-      drivers over the same library; document in `cli-command-shape.kb`.
-      Write aistudio `path_browse`/`url_render` once against the shared
-      `capture()`. Lib destination decided 2026-07-10: `$REPO/lib/chatfs/`
-      once libraryized (supersedes the `packages/chatfs-core/` question).
-      Closes the drift file and the shared-code file's tactical half.
+      § "Solve by unification", all five requirements (see that file for
+      per-item verification). `chatfs_layout.py` gained shared
+      `capture(url, chat_dir, pluck_script, *, conversation_filename=...)`
+      and `run_pluck(script, src, dst)`; every provider's `capture()` is
+      now a thin wrapper over the shared one, and chatgpt's url_browse
+      dropped its tempdir+move idiom for claude's direct-to-`.data/`
+      policy. New shared `chatfs_url_browse.py` holds
+      `null_tolerant_mismatches`, now exercised by chatgpt too (with a
+      `_index_shaped()` normalization step chatgpt needs that claude
+      doesn't — see the drift file). `packages/bukzor.chatgpt-export`'s
+      splat now wraps reasoning/tool content in
+      `<details type="thinking"|"tool_call">` like claude/aistudio
+      (TDD, 4 new tests, verified live against a real 262-message
+      capture). New `chatfs_aistudio_conversation_path_browse.py` +
+      `..._url_render.py` close AI Studio's entry-point gap, built
+      against the shared `capture()` (required adding
+      `chatfs_aistudio_types.is_index_item`, mirroring
+      claude/chatgpt). Driver-model decision documented in new
+      `design.kb/040-design.kb/driver-model.md` (sibling to
+      `cli-command-shape.md`, not nested inside it — see that doc for
+      why), naming today's `capture()`/`run_pluck()` unification as its
+      first landed instance and flagging splat/render's still-
+      subprocess-composed orchestration as an explicit follow-on, not
+      required to close this item. `basedpyright` 0/0/0 (incubator);
+      `pytest` 76/76 pass (incubator 28 + chatgpt-export 48, was 28 + 44).
+      Lib destination (`$REPO/lib/chatfs/` once libraryized) is a
+      separate, later promotion step, not part of this unification.
 
-Not scheduled here, still open after step 4: branch enumeration, the
+Not scheduled here, still open: branch enumeration, the
 debug-intermediates flag, the `last-updated` schema fix (all below), and
 claude-code-as-provider (needs its design discussion first).
 
@@ -128,19 +147,12 @@ claude-code-as-provider (needs its design discussion first).
       direction and swapping the synthetic anchor's `.json` link for `.md` each
       turned exactly the new tests red; reverted clean. `basedpyright .` 0/0/0;
       `pytest .` 19/19 pass (was 15).
-- [ ] [Cross-provider data-flow drift — pre-unification fixes vs unification scope](todo.kb/2026-07-03-000-cross-provider-data-flow-drift--pre-unification-fixes-vs-unification-scope.md)
-      — from the 2026-07-03 three-provider review. All three "fix before
-      unification" bugs landed 2026-07-03/04 (aistudio splat retarget,
-      `create_time` mislabel, chatgpt failsoft→failfast) — the aistudio
-      unification gate is clear. File stays open only for its "Solve by
-      unification" section: five drift items recorded as requirements for the
-      shared-code refactor, deliberately NOT fixed in place — the seam analysis
-      backing this (identical-verbatim vs. the 3-method adapter vs. genuinely
-      provider-only) previously lived only in a sessions.kb note; that note is
-      gone now (its follow-ups landed), superseded by
-      `design.kb/040-design.kb/provider-plugin-model.md`. The last open
-      decision (driver model) was resolved 2026-07-10 — see Immediate
-      plan step 4; execution closes this file.
+- [x] [Cross-provider data-flow drift — pre-unification fixes vs unification scope](todo.kb/2026-07-03-000-cross-provider-data-flow-drift--pre-unification-fixes-vs-unification-scope.md)
+      — done 2026-07-11: every item in both the "Fix before unification" and
+      "Solve by unification" sections, plus Success Criteria, is now `[x]`
+      (Immediate plan step 4 executed the latter). File can be archived/
+      deleted at a future session-end; left in place for now as the
+      verification record.
 - [x] [Rename incubator to chatfs-cli-mockup](../../../../../.claude/todo.kb/2026-05-11-000-rename-incubator-to-chatfs-cli-mockup.md)
       — done 2026-07-10 (Immediate plan step 1, above); this bullet was a
       stale duplicate left unchecked. That file's own Success Criteria are
@@ -162,12 +174,13 @@ claude-code-as-provider (needs its design discussion first).
       — third provider, first JSPB source. Pluck + splat landed 2026-06-20;
       layout/types 2026-06-22; massage_json + url_browse 2026-07-03 (writes
       conversation.raw.json + conversation.json + meta.json end-to-end,
-      live-tested); index rung (pluck/splat/browse + the IndexItem honesty
-      fix it surfaced) landed 2026-07-11. render/path_render and browse
-      automation for the conversation side remain — url_browse doesn't yet
-      delegate to a render step. Remaining rungs sequenced as Immediate
-      plan steps 3-4 (conversation render/path_render next; entry points
-      inside unification).
+      live-tested). 2026-07-11: index rung (pluck/splat/browse + the
+      IndexItem honesty fix it surfaced), render + path_render, and
+      path_browse + url_render (Immediate plan step 4, built against the
+      shared `capture()`) all landed — every entry point now exists.
+      Remaining: `turn_kind()`'s latent `finishReason == 1` fragility
+      (harden if/when a non-1 value is observed) and the reasoning-turn-
+      mapping design question.
 
 ## Claude provider — remaining parity gaps
 
@@ -195,12 +208,16 @@ claude-code-as-provider (needs its design discussion first).
 
 - [ ] [claude-code as next provider](todo.kb/2026-05-11-000-claude-code-as-next-provider.md)
       — after claude.ai parity; datasource `~/.claude/`, no BB1
-- [ ] [shared code among providers](todo.kb/2026-05-11-001-shared-code-among-providers.md)
-      — the extraction itself landed 2026-07-05; open only on boundary
-      refinement (what else belongs in `chatfs_layout.py`). Destination
-      resolved 2026-07-10: `$REPO/lib/chatfs/` once libraryized (not
-      `packages/chatfs-core/`); the boundary question gets answered by
-      Immediate plan step 4's unification work.
+- [x] [shared code among providers](todo.kb/2026-05-11-001-shared-code-among-providers.md)
+      — done 2026-07-11: the extraction landed 2026-07-05; boundary
+      refinement answered by Immediate plan step 4 — `capture()`/
+      `run_pluck()` joined `chatfs_layout.py`, but the endpoint
+      cross-check (`null_tolerant_mismatches`) got its own
+      `chatfs_url_browse.py` rather than also landing in `chatfs_layout.py`
+      (storage/view-tree concerns vs. url-browse-orchestration concerns
+      are different boundaries). Destination for eventual promotion out
+      of the incubator remains `$REPO/lib/chatfs/` once libraryized (not
+      `packages/chatfs-core/`) — that promotion itself is not scheduled.
 
 ## Later
 

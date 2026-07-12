@@ -12,6 +12,7 @@ from chatfs_layout import (
     resolve_chat_dir,
     safe_filename,
 )
+from chatfs_layout import capture as _capture
 from chatfs_layout import place_meta as _place_meta
 
 __all__ = [
@@ -20,11 +21,16 @@ __all__ = [
     "data_dir_for",
     "resolve_chat_dir",
     "safe_filename",
+    "capture",
+    "created_at",
     "place_meta",
 ]
 
+HERE = Path(__file__).parent
+CONVERSATION_PLUCK = HERE / "chatfs_chatgpt_conversation_pluck.jq"
 
-def _created(create_time: str | float) -> datetime:
+
+def created_at(create_time: str | float) -> datetime:
     """Parse chatgpt's create_time — both shapes it returns.
 
     - str: index endpoint, e.g. '2026-04-15T14:53:42.270850Z'
@@ -36,9 +42,13 @@ def _created(create_time: str | float) -> datetime:
         return datetime.fromisoformat(create_time.replace("Z", "+00:00"))
 
 
+def capture(url: str, chat_dir: Path) -> Path:
+    return _capture(url, chat_dir, CONVERSATION_PLUCK)
+
+
 def place_meta(item: IndexItem, root: Path) -> Path:
     """Write meta.json into .chat/$UUID/.data/, refresh the view dir-symlink.
 
     Returns the chat dir.
     """
-    return _place_meta(item["id"], item["title"], _created(item["create_time"]), item, root)
+    return _place_meta(item["id"], item["title"], created_at(item["create_time"]), item, root)

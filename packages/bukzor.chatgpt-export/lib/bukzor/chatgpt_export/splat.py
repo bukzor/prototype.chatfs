@@ -16,6 +16,20 @@ from .json import JsonObj
 MARKDOWN_PLACEHOLDER = "$MARKDOWN"
 
 
+def render_details(kind: str, icon: str, label: str, body: str, tool: str | None = None) -> str:
+    """Wrap non-answer content in a collapsible `<details>`, tagged for grep.
+
+    `type="{kind}"` mirrors claude/aistudio's splat so `grep 'type="thinking"'`
+    or `grep 'type="tool_call"'` spans every provider; `tool="{tool}"` further
+    distinguishes tool calls by name, matching claude's attribute.
+    """
+    tool_attr = f' tool="{tool}"' if tool else ""
+    return (
+        f'<details type="{kind}"{tool_attr}><summary>{icon} {label}</summary>'
+        f"\n\n{body}\n\n</details>"
+    )
+
+
 @dataclass
 class Message:
     """A parsed message from the ChatGPT export."""
@@ -251,6 +265,12 @@ def extract_text_content(raw: JsonObj) -> str | None:
     render (e.g. the root node). But once a `content_type` is present, an
     unrecognized one raises rather than vanishing silently — mirrors
     claude's `extract_text` for unknown block types.
+
+    Reasoning (`thoughts`, `reasoning_recap`) and tool content (`code`,
+    tool-role search metadata) render inside a collapsible
+    `<details type="thinking"|"tool_call">`, matching claude/aistudio's
+    splat — so `grep 'type="thinking"'` finds every provider's reasoning
+    instead of silently missing chatgpt's bare markdown.
     """
     inner = raw.get("message")
     if inner is None:
@@ -269,20 +289,28 @@ def extract_text_content(raw: JsonObj) -> str | None:
             return text
         author = inner.get("author")
         if isinstance(author, Mapping) and author.get("role") == "tool":
-            return _extract_tool_metadata(inner)
+            meta = _extract_tool_metadata(inner)
+            if meta is None:
+                return None
+            return render_details("tool_call", "🔍", "Search", meta, tool="search")
         return None
     elif content_type == "thoughts":
-        return _extract_thoughts(content)
+        thoughts = _extract_thoughts(content)
+        if thoughts is None:
+            return None
+        return render_details("thinking", "💭", "Thinking", thoughts)
     elif content_type == "code":
         code = _extract_code(content)
         if code is None:
             return None
         recipient = inner.get("recipient")
-        if isinstance(recipient, str) and recipient != "all":
-            return f"$ {recipient}\n{code}"
-        return code
+        tool = recipient if isinstance(recipient, str) and recipient != "all" else None
+        return render_details("tool_call", "🛠️", tool or "Code", code, tool=tool)
     elif content_type == "reasoning_recap":
-        return _extract_reasoning_recap(content)
+        recap = _extract_reasoning_recap(content)
+        if recap is None:
+            return None
+        return render_details("thinking", "💭", "Reasoning recap", recap)
     elif content_type in ("user_editable_context", "model_editable_context"):
         return _extract_editable_context(content)
     else:

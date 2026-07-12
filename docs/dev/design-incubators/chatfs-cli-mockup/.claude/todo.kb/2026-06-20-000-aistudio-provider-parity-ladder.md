@@ -120,10 +120,16 @@ JSPB positional decoding (see `dev.kb/claims.kb/aistudio-jspb-prompt-shape.md`).
       → move `messages/` up → render `chat.md`). `url_browse.py` now
       delegates to it (was: stopped after `place_meta`, splat run by
       hand). Live-tested end-to-end against the demo capture.
-- [ ] `chatfs_aistudio_conversation_path_browse.py` / `..._url_render.py` —
-      remaining entry points (`url_browse.py` landed above). Deliberately
-      deferred — these fold into the unification work (project todo.md's
-      "Immediate plan" step 4), not written a third time first.
+- [x] `chatfs_aistudio_conversation_path_browse.py` / `..._url_render.py` —
+      done 2026-07-11 (Immediate plan step 4), byte-for-byte the
+      claude/chatgpt shape, built against the newly-shared
+      `chatfs_layout.capture()` rather than written a third time from
+      scratch. `path_browse` required adding
+      `chatfs_aistudio_types.is_index_item` (claude/chatgpt already had
+      one; aistudio didn't yet). Verified end-to-end with a stubbed
+      `har-browse` replaying a real captured CDP stream, in an isolated
+      scratch chat dir: capture → massage → splat → render produced the
+      same 15-turn, 439-line `chat.md` as the existing demo fixture.
 - [x] ~~Tech debt: splat still reads raw positional JSPB~~ **Upgraded to
       bug** (2026-07-03 review) and **fixed** (2026-07-03): splat and
       `layout.index_item` now read `conversation.json`'s named projection

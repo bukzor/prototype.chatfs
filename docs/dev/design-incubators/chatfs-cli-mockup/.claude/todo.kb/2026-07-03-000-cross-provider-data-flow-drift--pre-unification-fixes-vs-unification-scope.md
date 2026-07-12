@@ -120,7 +120,7 @@ Requirements the shared-code refactor
 here so they aren't re-discovered. Fixing any of these per-provider first
 is wasted motion.
 
-- [ ] **One shared `capture()`** (browse ⋅ pluck composition). Today: five
+- [x] **One shared `capture()`** (browse ⋅ pluck composition). Today: five
       copies, four idioms — claude's `layout.capture()` (direct-to-`.data/`,
       unlink-then-write), chatgpt url_browse (tempdir+move), chatgpt
       path_browse (direct+unlink, disagreeing with its own url_browse),
@@ -128,16 +128,42 @@ is wasted motion.
       documented policy: captures land in `.data/`, failures leave bytes
       inspectable. Note `capture()` is currently misfiled in a "layout"
       module — the shared-capture module wants to exist.
-- [ ] **Persist every pluck output.** The conversation url_browse scripts
+      Done 2026-07-11: `chatfs_layout.py::capture(url, chat_dir,
+      pluck_script, *, conversation_filename="conversation.json")` is now
+      the one implementation; each provider's `chatfs_<provider>_layout.py`
+      wraps it with its own pluck script (aistudio's also overrides
+      `conversation_filename` to `conversation.raw.json`, since its pluck
+      output still needs a massage pass). chatgpt's url_browse dropped the
+      tempdir+move idiom for claude's direct-to-`.data/` policy; chatgpt's
+      path_browse now calls the shared `capture()` instead of inlining
+      subprocess calls. Verified end-to-end against real captured demo data
+      for all three providers (see devlog).
+- [x] **Persist every pluck output.** The conversation url_browse scripts
       (chatgpt, claude) run the index pluck a second time over the same CDP
       with `capture_output=True`; it's the only pluck whose output isn't
       tee'd to disk, contradicting the README's tee-intermediates policy.
       The shared orchestrator should tee it (e.g. `.data/index-pages.jsonl`).
-- [ ] **Port claude's endpoint cross-check to all providers with two
+      Done 2026-07-11: new `chatfs_layout.py::run_pluck(script, src, dst)`
+      is the one "run a pluck filter, tee stdout to disk" primitive, used by
+      `capture()`'s conversation pluck, both providers'
+      `find_index_item`(now writing `.data/index-pages.jsonl`), and
+      aistudio's massage stage. Verified: replaying a real captured
+      `cdp.jsonl` through `find_index_item` produces a non-empty
+      `index-pages.jsonl` and still finds the matching item.
+- [x] **Port claude's endpoint cross-check to all providers with two
       endpoints.** `null_tolerant_mismatches` (conversation doc vs index
       item) exists only on the claude side; chatgpt has the same two
       endpoints and no check. Belongs in the shared url_browse.
-- [ ] **Make the `<details type=...>` grep contract provider-complete.**
+      Done 2026-07-11: `null_tolerant_mismatches` moved to new shared
+      `chatfs_url_browse.py`. chatgpt's conversation doc and index item
+      don't share claude's literal key names/representations
+      (`conversation_id` not `id`; `create_time` as a unix float vs the
+      index's ISO string) — a verbatim port would null-tolerantly skip `id`
+      and always flag `create_time`, so `_index_shaped()` normalizes both
+      sides (via the now-public `chatfs_chatgpt_layout.created_at`) before
+      diffing. Verified against a real captured chatgpt conversation.json +
+      meta.json pair: zero mismatches.
+- [x] **Make the `<details type=...>` grep contract provider-complete.**
       claude and aistudio splats wrap reasoning/tool content in
       `<details type="thinking|tool_call">`; chatgpt's splat writes them as
       bare markdown, so `grep 'type="thinking"'` silently misses chatgpt.
@@ -145,6 +171,13 @@ is wasted motion.
       (Related, already tracked in todo.md: bring chatgpt render to the
       fork-fact notation contract — same "claude is the reference
       implementation" shape.)
+      Done 2026-07-11 (TDD, `packages/bukzor.chatgpt-export/`): added
+      `render_details()` (mirrors claude/aistudio) and wrapped `thoughts` +
+      `reasoning_recap` as `type="thinking"`, `code` and tool-role search
+      metadata as `type="tool_call"`. 4 new tests (48/48 pass); verified
+      live against a real 262-message capture — thoughts, code,
+      reasoning_recap, and tool-search metadata all render wrapped.
+      Pyright: 12 pre-existing warnings, unchanged (0 new).
 - [x] **Decide the driver model: pipe vs delegation.** Index flow is
       user-composed (`index_browse.sh | index_splat.py`); conversation flow
       is nested delegation (url_browse → path_render → splat + render).
@@ -152,8 +185,18 @@ is wasted motion.
       stated. Decided 2026-07-10 (user): not either/or — each stage becomes
       an importable generator function, and the pipe and delegation
       surfaces are both thin drivers over the same library.
-    - [ ] Document in `design.kb/040-design.kb/cli-command-shape.kb/` and
+    - [x] Document in `design.kb/040-design.kb/cli-command-shape.kb/` and
           apply during the unification refactor.
+          Done 2026-07-11: `design.kb/040-design.kb/driver-model.md` (not
+          nested under `cli-command-shape.kb/` — that collection is scoped
+          to CLI naming/partition rationale per its CLAUDE.md; driver model
+          is internal architecture, so it sits as a sibling to
+          `cli-command-shape.md`/`stdio-pipeline-shape.md` instead, with a
+          cross-link from the latter). Records the decision and names
+          today's shared `capture()`/`run_pluck()` as its first landed
+          instance; flags splat/render's remaining subprocess-composed
+          orchestration as a `[!TODO]` follow-on, not required to close
+          this item.
 
 ## Explicitly out of scope
 
