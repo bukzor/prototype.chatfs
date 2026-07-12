@@ -12,6 +12,13 @@ invoked**:
 Everything else — `purge_non_captured` allowlist `{".data"}`, the
 move-from-splat loop, the render hand-off — survived byte-identical.
 
+A third provider confirms it: `chatfs_aistudio_conversation_path_render.py`
+(landed 2026-07-11) invokes splat the claude way (sibling `.py`) and is
+otherwise byte-for-byte the same shape too — despite AI Studio's wire
+format and render tree both being genuinely different from claude's
+(JSPB vs. keyed JSON; a fork-less chain vs. a real tree). The orchestrator
+shape is invariant to both of those differences.
+
 ## Implication for the eventual lib
 
 When the parity ladder reaches the lib-extraction rung, `path_render`
