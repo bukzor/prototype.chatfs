@@ -2,21 +2,24 @@
 managed-by: Skill(llm-subtask)
 cost-benefit-sweh:
   timebox:
-    "@value": 3.0
+    "@value": 3.5
     rationale: >
-      Residual after chatgpt fork-fact parity landed via shared chatfs_render.py
-      (2026-07-06, devlog). Unchecked items: match/case exhaustiveness sweep for
-      chatgpt + both `*_render.py` (~1h), har-browse has_more=false wait fix
-      (~2h), branch enumeration in claude splat (~1h), provider-plugin-model.md
-      promotion (~0.5h), debug-intermediates flag (~0.5h). Strategic items
-      (claude-code provider, shared code, rename, AI Studio ladder,
-      cross-provider drift) tracked as child `.kb` refs with their own
-      estimates.
+      Updated 2026-07-12: match/case sweep and provider-plugin-model.md
+      promotion (previously counted here) landed 2026-07-09; the Immediate
+      plan (rename, AI Studio index/render/unification) closed 2026-07-11.
+      Remaining unchecked items: har-browse has_more=false wait fix (~2h,
+      cause still underdetermined), branch enumeration in claude splat
+      (~1h), debug-intermediates flag (~0.5h). AI Studio's turn_kind()
+      hardening and the reasoning-turn-mapping design question are
+      deliberately unscheduled (deferred until/if a triggering capture is
+      observed), not counted here. Strategic items (claude-code provider)
+      tracked as a child `.kb` ref with its own estimate.
     confidence: tentative
   benefit-2w:
     "@value": 1.0
     rationale: >
-      All three providers (chatgpt, claude, AI Studio) are now MVP-complete and
+      All three providers (chatgpt, claude, AI Studio) are now feature-complete
+      (render/path_render/entry points/unification all landed) and
       pyright-clean; remaining items are polish (branch enumeration) or infra
       hygiene (har-browse wait, debug flag), not blocking further provider work.
     confidence: tentative
