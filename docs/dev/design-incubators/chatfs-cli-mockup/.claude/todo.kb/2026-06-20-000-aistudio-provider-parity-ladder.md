@@ -99,15 +99,31 @@ JSPB positional decoding (see `dev.kb/claims.kb/aistudio-jspb-prompt-shape.md`).
 
 ## Remaining rungs (mirror the claude ladder)
 
-- [ ] `chatfs_aistudio_conversation_render.py` — AI Studio prompts are
-      **linear** (a flat turn list, no fork tree observed), so render is
-      simpler than claude's DFS — but confirm forks truly can't exist
-      before assuming it.
-- [ ] `chatfs_aistudio_conversation_path_render.py` — orchestrator
-      (splat → move up → render `chat.md`). `url_browse.py` (landed above)
-      does not yet delegate to this, since it doesn't exist.
+- [x] `chatfs_aistudio_conversation_render.py` — landed 2026-07-11.
+      Confirmed linear/fork-less first (see
+      `dev.kb/claims.kb/aistudio-jspb-prompt-shape.md`'s "Turn order is
+      linear" section): the 15-turn demo capture is a flat, strictly
+      increasing-`createTime` list with no parent/child field anywhere
+      in the wire shape, so `build_tree` is a straight predecessor
+      chain reusing `chatfs_render.render_tree` — the fork machinery
+      (replies/superseded-by/backlinks) degenerates to a no-op on every
+      node, verified against the live-rendered `chat.md` (no `re:`,
+      `replies:`, or `superseded` strings anywhere in the 15-turn
+      output). `chatfs_aistudio_conversation_render_test.py` covers
+      stem parsing, turn loading (including the epoch→local-wall-clock
+      conversion and the bodiless-turn skip), tree chaining, and the
+      plain-sequence render; two hand mutations (dropped `.thought`
+      note, broken chain parent) each turned exactly one test red,
+      reverted clean.
+- [x] `chatfs_aistudio_conversation_path_render.py` — landed 2026-07-11,
+      byte-for-byte the claude shape (purge non-`.data` contents → splat
+      → move `messages/` up → render `chat.md`). `url_browse.py` now
+      delegates to it (was: stopped after `place_meta`, splat run by
+      hand). Live-tested end-to-end against the demo capture.
 - [ ] `chatfs_aistudio_conversation_path_browse.py` / `..._url_render.py` —
-      remaining entry points (`url_browse.py` landed above).
+      remaining entry points (`url_browse.py` landed above). Deliberately
+      deferred — these fold into the unification work (project todo.md's
+      "Immediate plan" step 4), not written a third time first.
 - [x] ~~Tech debt: splat still reads raw positional JSPB~~ **Upgraded to
       bug** (2026-07-03 review) and **fixed** (2026-07-03): splat and
       `layout.index_item` now read `conversation.json`'s named projection

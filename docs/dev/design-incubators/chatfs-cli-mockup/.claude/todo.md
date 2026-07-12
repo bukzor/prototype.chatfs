@@ -70,11 +70,20 @@ Sequence agreed with user; details live in the items/files referenced.
       written and live-tested against this account's 42 prompts — no
       pagination token observed (account's prompt count fits one
       `ListPrompts` page).
-- [ ] 3. **Finish AI Studio's conversation side** — `conversation_render`
-      (verify the linear/no-forks assumption first), `path_render`, and
-      `url_browse` delegating to it. Deliberately NOT
-      `path_browse`/`url_render`: those would copy the capture idiom a
-      sixth time — they fold into step 4.
+- [x] 3. **Finish AI Studio's conversation side** — done 2026-07-11:
+      `chatfs_aistudio_conversation_render.py` (verified the
+      linear/no-forks assumption first — see
+      `dev.kb/claims.kb/aistudio-jspb-prompt-shape.md`'s "Turn order is
+      linear" section — then reused `chatfs_render.render_tree` over a
+      degenerate straight-chain tree), `chatfs_aistudio_conversation_path_render.py`
+      (byte-for-byte the claude shape), and `url_browse` now delegates
+      to it (was: stopped after `place_meta`, splat run by hand). Live
+      end-to-end tested against the demo capture (15 turns, no fork
+      artifacts in the output); new
+      `chatfs_aistudio_conversation_render_test.py` (9 tests,
+      mutation-checked). Deliberately did NOT write
+      `path_browse`/`url_render`: those fold into step 4. `basedpyright .`
+      0/0/0; `pytest .` 28/28 pass (was 19).
 - [ ] 4. **Unify** — execute
       [cross-provider drift](todo.kb/2026-07-03-000-cross-provider-data-flow-drift--pre-unification-fixes-vs-unification-scope.md)
       § "Solve by unification" (all five requirements). Driver model

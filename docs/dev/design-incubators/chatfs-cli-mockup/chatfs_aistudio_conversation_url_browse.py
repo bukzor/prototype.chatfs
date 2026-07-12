@@ -18,10 +18,7 @@ Steps:
     2. conversation pluck -> .data/conversation.raw.json (raw JSPB array)
     3. massage -> .data/conversation.json (named, matches chatgpt/claude shape)
     4. place_meta from the raw doc (writes meta.json, view dir-symlink)
-
-No delegation to a path_render yet: chatfs_aistudio_conversation_render.py
-and chatfs_aistudio_conversation_path_render.py are still unbuilt rungs
-(todo.kb). Run chatfs_aistudio_conversation_splat.py by hand for now.
+    5. delegate to path_render
 """
 import subprocess
 import sys
@@ -29,12 +26,13 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 import chatfs_json
-from chatfs_aistudio_layout import chat_dir_for, data_dir_for, index_item, place_meta
+from chatfs_aistudio_layout import data_dir_for, index_item, place_meta
 from chatfs_aistudio_types import is_conversation
 
 HERE = Path(__file__).parent
 CONVERSATION_PLUCK = HERE / "chatfs_aistudio_conversation_pluck.jq"
 MASSAGE_JSON = HERE / "chatfs_aistudio_conversation_massage_json.py"
+PATH_RENDER = HERE / "chatfs_aistudio_conversation_path_render.py"
 ROOT = HERE / "chatfs.demo" / "aistudio"
 
 
@@ -77,9 +75,9 @@ def main() -> None:
     assert is_conversation(parsed), parsed
     item = index_item(parsed)
     assert item["id"] == id_, (item["id"], id_)
-    _ = place_meta(item, ROOT)
+    chat_dir = place_meta(item, ROOT)
 
-    print(f"Done: {chat_dir_for(id_, ROOT)}", file=sys.stderr)
+    _ = subprocess.run([str(PATH_RENDER), str(chat_dir)], check=True)
 
 
 if __name__ == "__main__":

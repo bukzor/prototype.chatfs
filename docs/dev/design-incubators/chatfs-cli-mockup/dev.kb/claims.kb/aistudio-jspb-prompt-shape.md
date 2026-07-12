@@ -1,7 +1,7 @@
 ---
 status: observed
 first-recorded: 2026-06-20
-last-checked: 2026-07-03
+last-checked: 2026-07-11
 previously-claimed:
   - text: '`[0][4][4][0][0]` | created, unix seconds — wrong: it is revisionTime (modification), not creation'
     when: 2026-07-03
@@ -65,6 +65,29 @@ error) would plausibly show up as other non-`1`/non-`null` values on some
 future capture — which `turn_kind`'s `== 1` check would then fail to
 classify as `answer`, falling through to its `raise`. Not yet observed; the
 fragility is latent, not confirmed. See parity-ladder todo.kb.
+
+## Turn order is linear -- no fork/branch representation (2026-07-11)
+
+`[0][13]` is a 2-slot pair, `[live_turns, draft]` -- there is no third
+slot for abandoned branches. Checked against the 15-turn demo capture
+(`chatfs.demo/aistudio/.chat/1vU6BlpV69d2MvI6L_oYGo_E-ZqmaI3eR/.data/conversation.json`):
+`chunks[]` is a flat array in strictly increasing `createTime` order
+(user, thought, answer, repeating), and no `Turn` field names a
+parent/child/sibling relationship at all (contrast claude's
+`parent_message_uuid`, chatgpt's `mapping`). Editing/regenerating a
+past turn in the AI Studio UI therefore has nowhere to put a
+superseded version -- unlike claude/chatgpt, which persist dead forks
+alongside the live path, AI Studio's wire shape can only ever encode
+one line of history per prompt.
+
+This is an inference from data shape, not a captured edit/regenerate
+round-trip (not yet observed directly) -- promote to `settled` if a
+future capture of an edited AI Studio prompt confirms the prior
+version is gone rather than preserved. Consequence:
+`chatfs_aistudio_conversation_render.py` builds a straight
+predecessor chain instead of a real tree; `chatfs_render.py`'s
+fork-fact machinery (replies/supersedes footers) degenerates to a
+no-op on every node, by construction, not by omission.
 
 ## Caveats (single capture)
 
