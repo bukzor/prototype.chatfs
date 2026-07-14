@@ -6,7 +6,9 @@ cost-benefit-sweh:
     rationale: |
       File-level estimate for a 6-item rollup that's mostly tracking
       upstream skill work. Only the mockup-chatgpt rename is actual
-      tactical work here.
+      tactical work here. (2026-07-13: the graduation & integration
+      umbrella carries its own ~40h rollup in its kb file — not counted
+      here.)
   benefit-2w:
     "@value": 0.5
     rationale: |
@@ -18,6 +20,17 @@ cost-benefit-sweh:
 # Tactical Tasks
 
 Driver: [Harmonize with llm-* skills](todo.kb/2026-01-02-000-harmonize-with-llm-skills.md) — most done; chatfs-local remaining items below.
+
+## Graduation & integration — active arc
+
+- [ ] [Graduation & integration umbrella](todo.kb/2026-07-13-000-graduation-and-integration.md)
+      — incubator → `packages/chatfs-cli` → `chatfs mount`. Six children
+      with `blocked-by` edges in
+      `todo.kb/2026-07-13-000-graduation-and-integration.kb/`; own
+      cost-benefit rollup. Planned 2026-07-13 — devlog
+      `docs/dev/devlog/2026-07-13-000-graduation-and-integration-planning.md`;
+      decided names/conventions in
+      `docs/dev/design.kb/040-design.kb/package-division.md`.
 
 ## chatfs-cli-mockup — next sessions
 
@@ -42,6 +55,7 @@ Plan from 2026-05-05 design.kb consolidation. Order is dependency-driven; 1-2 ar
 
 ## Upstream (mirrors of skills-repo todos; kept here for visibility)
 
+- [ ] llm-kb: cross-kb cooperation conventions (symlinks, cross-kb references, maintenance-traversal scope; llm-design-kb layer-crossing policy rider) — tracked at `~/.claude/skills/llm-kb/.claude/todo.kb/2026-07-13-000-cross-kb-cooperation-conventions.md`; this repo proceeds on interim conventions (see graduation umbrella)
 - [ ] llm-kb: complete `.d → .kb` rename in `complete-example/` — tracked at `~/.claude/skills/llm-kb/.claude/todo.kb/2026-01-02-000-complete-d-to-kb-rename.md`
 - [ ] llm-collab: define `milestones.kb/` pattern in skeleton — tracked at `~/.claude/skills/llm-collab/.claude/todo.kb/2025-12-11-000-update-skeleton-to-match-docsdev-pattern-from-git-partial.md`
 - [x] llm-subtask: task-graph relations now modeled (2026-07-09), resolved per-field rather than one field per name. Hard dependency: canonical `blocked-by` field added to the llm-subtask base schema (`depends`/`depends-on` renamed to it). Parent/subtask-of: sub-kb nesting -- `2026-01-02-002` moved under `2026-01-02-000-harmonize-with-llm-skills.kb/`, `parent:` dropped. `supersedes-question-from`: chatfs-local `#base` extender in `.claude/todo.jsonschema.yaml`. Root stub no longer held back; `llm.kb-validate .claude` green (33 files).
