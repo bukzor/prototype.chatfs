@@ -49,6 +49,10 @@ render/path_render, and the four-provider unification) closed 2026-07-11 —
 
 ## Next
 
+- [ ] [Atomic chat-dir regeneration — stage and rename, never rewrite in place](todo.kb/2026-07-13-000-Atomic-chat-dir-regeneration---stage-and-rename--never-rewrite-in-place.md)
+      — first priority (user call, 2026-07-13 planning session): requirement
+      `030-requirements.kb/atomic-cache-updates.md` is violated by in-place
+      purge-and-rebuild; precondition for fuser-vfs integration.
 - [ ] [AI Studio provider — parity ladder](todo.kb/2026-06-20-000-aistudio-provider-parity-ladder.md)
       — third provider, first JSPB source. Pluck + splat landed 2026-06-20;
       layout/types 2026-06-22; massage_json + url_browse 2026-07-03 (writes
