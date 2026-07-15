@@ -20,6 +20,16 @@ Inside `.chat/$UUID/`, contents split by lifecycle:
         cdp.jsonl
 ```
 
+> [!TODO]
+> The quarantine moves up a level: captured artifacts live in the
+> parallel tree `.data/$UUID/`, and `.chat/$UUID/` is wholly derived,
+> with a `.data` symlink for inspection (layout:
+> `../chat-as-directory.md` !TODO). The purge-allowlist below goes away
+> with it: nothing is cleared in advance -- a regenerated chat dir is
+> staged as a sibling and atomically promoted over the old one,
+> superseding all derived outputs at once
+> (`../deterministic-regeneration.md` !TODO).
+
 ## Allowlist `.data/`, purge the rest
 
 Path-render's pre-cleanup keeps the captured *directory* and purges

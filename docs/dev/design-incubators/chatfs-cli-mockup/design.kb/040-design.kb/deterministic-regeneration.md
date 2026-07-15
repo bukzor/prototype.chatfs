@@ -15,6 +15,20 @@ Before a verb writes its outputs, it removes any prior artifact those
 outputs supersede. After the verb runs, the outputs are a pure function
 of the inputs and the verb's code — never a mixture of old and new.
 
+> [!TODO]
+> The removal half of this rule is superseded by staged promotion
+> (owning task: `.claude/todo.kb/2026-07-13-000-…`): a verb builds its
+> complete output in a destination-adjacent scratch (`.tmp` sibling)
+> and atomically promotes it over the prior artifact -- supersession
+> happens at the rename, with no advance purge and no window where
+> outputs are absent, partial, or mixed. The purity guarantee above is
+> unchanged. Failed attempts are preserved as `.fail` siblings
+> (latest-wins, cleared by the next success), so a crash leaves the
+> in-progress bytes on disk for inspection. Identity-scoped symlink
+> cleanup inverts to place-then-purge: the new view symlink is placed
+> first, then stale ones for the same identity are swept, excluding the
+> fresh one.
+
 This applies to:
 
 - `index browse` — re-runs har-browse every time; no mtime check on

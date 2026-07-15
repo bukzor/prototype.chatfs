@@ -2,126 +2,129 @@
 managed-by: Skill(llm-subtask)
 cost-benefit-sweh:
   timebox:
-    "@value": 2.0
+    "@value": 5.0
     rationale: >
-      Mechanical: the staging + swap design is settled (2026-07-14, see
-      Proposed Solution) down to the helper function bodies. path_render
-      already builds splat output in a staging-like dir
-      (.data/conversation.splat/) before moving it; the change is to route
-      the whole regenerated surface (messages/, conversations/, chat.md)
-      through two small shared helpers instead of purge-then-rebuild.
+      Design settled 2026-07-15; the normative surface is written down
+      (layout and flow as design.kb !TODO blocks, mechanism as the
+      chatfs_atomic.py sketch), so what remains is wiring and tests.
+      Scope grew from the original 2.0 estimate: not just the render
+      flow but a layout migration (.data/$UUID extraction) across three
+      providers, a splat output-dir argument, the capture/meta.json
+      ride-alongs, and crash-matrix tests.
     confidence: confident
   benefit-2w:
     "@value": 0.5
     rationale: >
       No live consumer races today (regeneration is human-driven, single
-      user), but this is a hard precondition for the fuser integration —
+      user), but this is a hard precondition for the fuser integration --
       requirement 030/atomic-cache-updates's kill-mid-sync test must pass
       before a mount serves these trees. Doing it pre-promotion means the
       code graduates already-compliant.
     confidence: tentative
 ---
 
-# Atomic chat-dir regeneration — stage and rename, never rewrite in place
+# Atomic chat-dir regeneration -- stage and promote, never rewrite in place
 
-**Priority:** First — top of the tactical list as of 2026-07-13 (user call,
+**Priority:** First -- top of the tactical list as of 2026-07-13 (user call,
 planning session). Precondition for fuser-vfs integration; should land
 before or with the module-shape refactor so promoted code is born compliant.
-**Complexity:** Low-Medium
 **Context:** `docs/dev/design.kb/030-requirements.kb/atomic-cache-updates.md`
-("Readers always see either the old complete state or the new complete
-state, never a partial update. Verification: kill a sync mid-flight; the
-mount continues serving the previous content without errors.") See also
-`docs/dev/design.kb/040-design.kb/work-enqueueing-model.md` (staging/<jobid>
-→ atomic rename) and this incubator's
-`design.kb/040-design.kb/deterministic-regeneration.md`.
+(verification: kill a sync mid-flight; the mount continues serving the
+previous content without errors) and
+`docs/dev/design.kb/040-design.kb/work-enqueueing-model.md`
+(staging -> atomic rename; last-known-good untouched).
 
-## Problem Statement
+## Problem
 
-The requirement is violated today: regeneration mutates the live chat dir
-in place. A reader (today: a human mid-`ls`; tomorrow: the FUSE mount) can
-observe a half-built chat dir, and a sync killed mid-flight leaves the
-previous content destroyed rather than intact.
+One shape in five places: **destroy-then-rebuild with readers unprotected.**
 
-## Current Situation
+- `chatfs_*_conversation_path_render.py` purges all derived content
+  (`messages/`, `conversations/`, `chat.md`), then rebuilds over seconds.
+  A crash destroys last-known-good; readers see empty/partial states on
+  every run (`chat.md` streams incrementally from render's stdout).
+- `place_meta` truncate-overwrites `meta.json` in place -- a crash leaves
+  partial JSON, and it's an *input*, so downstream verbs break on it.
+- `capture()` deletes `cdp.jsonl`/`conversation.json`, then runs the most
+  failure-prone stage (browser automation). A failed browse destroys the
+  prior capture -- the one artifact class that is not locally
+  re-derivable.
+- `_purge_view_symlinks` unlinks before `place_meta` re-places -- a crash
+  makes the chat vanish from every view until the next index splat.
 
-`chatfs_*_conversation_path_render.py` purges non-captured contents of the
-chat dir (allowlist `{".data"}`), then splats into `.data/conversation.splat/`,
-moves `messages/` and `conversations/` up into the chat-dir root, and
-redirects render stdout into `chat.md`. Between the purge and the last move,
-the chat dir is incomplete; a crash strands it that way. Index splat's
-view-symlink purge/replace has the same shape in miniature.
+## Design (settled 2026-07-15)
 
-## Proposed Solution
+The design lives in its normative homes, not here:
 
-`redo` was considered (its `foo.d.do` directory-target recipe in
-`~/.claude/design-rules.kb/redo.kb/` is this exact pattern, already used
-in-repo for `docs/dev/aistudio-schema/bundles.do`) and rejected for this
-use: it isn't packaged as a library, only a standalone binary, and it
-would become a runtime dependency of shipped `chatfs-cli` (not dev-only
-tooling like its `aistudio-schema` usage), which its packaging can't
-support cleanly. Decided 2026-07-14. Its atomicity primitive — build to a
-sibling tmp path, `rename(2)` into place — is a single OS syscall
-guarantee, not something redo owns; use it directly via `os.replace`.
+- **Layout:** `design.kb/040-design.kb/chat-as-directory.md` !TODO --
+  captured exhaust moves to a parallel `.data/$UUID/` tree;
+  `.chat/$UUID/` becomes 100% derived (with a `.data` inspection
+  symlink) and is THE staged unit, swapped whole. Sub-kb consequences in
+  `captured-vs-derived.md`, `pipeline-implications.md`,
+  `view-symlink.md` !TODOs.
+- **Flow:** `design.kb/040-design.kb/deterministic-regeneration.md`
+  !TODO -- supersession by atomic promotion replaces advance purge;
+  failed attempts preserved as `.fail`; view-symlink cleanup inverts to
+  place-then-purge.
+- **Mechanism:** `chatfs_atomic.py` -- a design-sketch module, imported
+  nowhere yet: three public names (`read_locked`/`write_locked`/
+  `staged`) over a private `_promote` kernel. Its docstrings carry the
+  contracts (locking, sibling naming, `.fail` lifecycle, crash recovery,
+  fsync out of scope); its bodies are the spec.
 
-Per-artifact swap, not whole-chat-dir: `.data/` (captured exhaust) is
-input, never a swap target and never touched. Only the derived contents
-(`messages/`, `conversations/`, `chat.md`) each swap independently. This
-sidesteps the whole-dir-vs-per-artifact question entirely — there is no
-single rename covering `.data/` plus derived output.
+**Alternatives rejected:**
 
-Two shared helpers, alongside `chatfs_layout.py`/`chatfs_json.py`
-(new module, working name `chatfs_atomic.py`):
-
-- `atomic_write(target, data)` — write to `target.tmp`, `os.replace(tmp,
-  target)`. Single rename, no gap. Used for `chat.md`.
-- `atomic_replace_dir(target)` — context manager: caller populates a
-  yielded `target.tmp` dir; on clean exit, swap via `target.old` (two
-  renames: `target→old`, `tmp→target`) then remove `old`; on exception,
-  remove `tmp` and leave `target` untouched. Used for `messages/`,
-  `conversations/`.
-
-**Crash-recovery subtlety (design it in, don't discover it later):**
-`atomic_replace_dir`'s two-rename swap has a window a `kill -9` can land
-in — no `except` clause runs for SIGKILL. If that happens, `target` is
-missing and `old` holds the real prior content until something notices.
-Fix: on entry, if `target` is absent but `old` exists, that's the
-fingerprint of an interrupted swap — rename `old` back to `target` before
-proceeding. `atomic_write`'s single rename has no equivalent gap.
+- `redo` (2026-07-14): its `foo.d.do` directory-target recipe is this
+  exact pattern, but it isn't packaged as a library and would become a
+  runtime dependency of shipped `chatfs-cli`, which its packaging can't
+  support cleanly.
+- Per-artifact helpers, v2 (2026-07-14, superseded 2026-07-15):
+  in-memory `atomic_write(data)` plus `atomic_replace_dir` swapping
+  `messages/`, `conversations/`, `chat.md` independently. Rejected on a
+  ground-up problem inventory: mixed old/new artifact sets visible to
+  all readers (chat.md hyperlinks into messages/ by stem); an ENOENT
+  window in its two-rename swap on every run; a crash between renames
+  leaves the tree broken until some later run heals it; in-progress
+  output buffered in memory instead of spooled to disk.
 
 ## Implementation Steps
 
-- [ ] Add `chatfs_atomic.py` with `atomic_write` and `atomic_replace_dir`
-      (including the crash-recovery check), unit-tested directly:
-      interrupted-populate leaves `target` untouched; interrupted-swap
-      (manually placed `.old` with no `target`) self-heals on next call;
-      stale leftover `.tmp` is cleared on entry.
-- [ ] Rework the shared path-render flow (`chatfs_*_conversation_path_render.py`)
-      to call the helpers instead of `purge_non_captured` + in-place
-      writes/moves.
-- [ ] Same treatment for index splat's view-symlink replacement (purge +
-      re-place is a smaller window, but the same in-place mutation).
-- [ ] Tests: kill-mid-regeneration leaves the prior complete state
-      readable; successful regeneration is observable only as complete.
+- [ ] `chatfs_atomic.py`: unit tests against the sketch -- crash matrix
+      (kill during populate / between `_swap_via_old` renames / before
+      `.old` cleanup / stale `.tmp` on entry), file<->dir type change
+      across versions, `.fail` lifecycle (latest-wins, cleared on
+      success), `_exchange` fallback path
+- [ ] Layout migration to `.data/$UUID`: `chatfs_layout.py`
+      (`data_dir_for`, `place_meta`, `capture`, `resolve_chat_dir`) and
+      the three provider layouts; `.data` symlink inside the chat dir
+- [ ] Splat scripts gain an output-dir argument (today they derive
+      `<src>.splat` themselves)
+- [ ] Rewrite the three `chatfs_*_conversation_path_render.py` to the
+      one-staged-call shape (see `chatfs_atomic.py` module docstring);
+      delete `purge_non_captured` and the move-up loop
+- [ ] Ride-alongs: `capture()` outputs and `meta.json` through `staged`;
+      view-symlink place-then-purge inversion
+- [ ] Docs: unwrap the !TODO blocks in `chat-as-directory.md`,
+      `captured-vs-derived.md`, `pipeline-implications.md`,
+      `view-symlink.md`, `deterministic-regeneration.md`
+- [ ] Kill-mid-flight test per the requirement's verification, killing
+      at each stage boundary and inside the promote
 
 ## Success Criteria
 
-- [ ] Requirement doc's verification passes: kill regeneration mid-flight
-      at any point (including between `atomic_replace_dir`'s two renames);
-      the previous complete chat dir contents still serve.
-- [ ] No pipeline stage rewrites a live derived artifact in place.
-- [ ] A run started right after an interrupted swap self-heals (recovers
-      `old`→`target`) before regenerating, no manual cleanup needed.
-- [ ] Full test suite + basedpyright clean.
+- [ ] Requirement verification passes for ALL readers -- no lock needed
+      to observe only old-complete or new-complete chat dirs
+- [ ] No verb destroys data before its replacement is secured --
+      including `capture()` (a failed browse leaves the prior capture
+      intact)
+- [ ] A crashed run's partial output is preserved on disk for
+      inspection; the next run self-heals with no manual cleanup
+- [ ] Full test suite + basedpyright clean
 
 ## Notes
 
 Created 2026-07-13 during the promotion/integration planning session, from
 the observation that requirement `atomic-cache-updates` had no owning task.
-Re-homes with the code when the incubator graduates to `packages/`
-(per the same session's decision: unclosed todos move with the code).
+Re-homes with the code when the incubator graduates to `packages/`.
 
-Design settled 2026-07-14: `redo` considered and rejected (packaging isn't
-library-friendly enough for a runtime dependency of shipped `chatfs-cli`);
-hand-rolled `chatfs_atomic.py` helpers instead, same underlying primitive
-(sibling tmp + `rename(2)`) without the dependency. See Proposed Solution.
+Design v2 (2026-07-14) superseded 2026-07-15 after a ground-up problem
+inventory and design session; see Alternatives rejected.
