@@ -78,11 +78,15 @@ def pluck_index_pages(cdp_lines: Iterable[str]) -> Iterator[JsonValue]:
 def capture(url: str, chat_dir: Path) -> Path:
     """Browse $url and pluck the raw JSPB doc — massage is a separate stage.
 
-    `conversation.raw.json`, not `conversation.json`: unlike
-    chatgpt/claude, AI Studio's pluck output isn't yet named — see
+    `conversation.json.d/raw.json`, not `conversation.json`: unlike
+    chatgpt/claude, AI Studio's pluck output isn't yet named, so it's
+    scratch reserved under the eventual contract file's `.d/` sibling
+    (`path-ownership.md`) rather than a second contract name — see
     `chatfs_aistudio_conversation_massage_json.py`.
     """
-    return _capture(url, chat_dir, pluck_conversation, conversation_filename="conversation.raw.json")
+    return _capture(
+        url, chat_dir, pluck_conversation, conversation_filename="conversation.json.d/raw.json"
+    )
 
 
 def index_item(doc: Conversation) -> IndexItem:

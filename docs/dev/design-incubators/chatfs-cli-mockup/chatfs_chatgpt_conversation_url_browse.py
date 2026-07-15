@@ -26,8 +26,8 @@ field.
 Steps:
     1. browse $url → .chat/$UUID/.data/cdp.jsonl
     2. conversation pluck → .chat/$UUID/.data/conversation.json
-    3. index pluck → .chat/$UUID/.data/index-pages.jsonl; filter to
-       .id == $UUID → meta (fail loudly if absent)
+    3. index pluck → .chat/$UUID/.data/cdp.jsonl.d/index-pages.jsonl;
+       filter to .id == $UUID → meta (fail loudly if absent)
     4. cross-check conversation doc vs index item, null-tolerant
     5. place_meta (writes meta.json, purges + places view dir-symlink)
     6. delegate to path_render
@@ -66,14 +66,16 @@ def uuid_from_url(url: str) -> str:
 
 
 def find_index_item(data_dir: Path, uuid: str) -> IndexItem:
-    """Pluck index pages from CDP into index-pages.jsonl; return the item
-    matching uuid.
+    """Pluck index pages from CDP into cdp.jsonl.d/index-pages.jsonl;
+    return the item matching uuid.
 
-    Fails loudly if no sidebar page included this conversation — the
-    user's recovery is to run `index browse` then `conversation path
-    browse` against the resulting chat dir.
+    A cross-check dump, not a contract file — scratch reserved under
+    `cdp.jsonl`'s `.d/` sibling per `path-ownership.md`. Fails loudly if
+    no sidebar page included this conversation — the user's recovery is
+    to run `index browse` then `conversation path browse` against the
+    resulting chat dir.
     """
-    index_pages = data_dir / "index-pages.jsonl"
+    index_pages = data_dir / "cdp.jsonl.d" / "index-pages.jsonl"
     pluck(pluck_index_pages, data_dir / "cdp.jsonl", index_pages)
     matches: list[IndexItem] = []
     for line in index_pages.read_text().splitlines():

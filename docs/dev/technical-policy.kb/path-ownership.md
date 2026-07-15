@@ -56,17 +56,14 @@ single-browse-trip optimization, anything internal to producing or
 cross-checking one contract file. No other stage may depend on a
 scratch file's name or presence.
 
-> [!TODO] Today those land as ad hoc extra files at the top level of
-> `.data/`, distinguished from the contract files only by *not* being
-> one of the three names above — not by any structural marker. The
-> simplified standard going forward: every top-level contract name `X`
-> reserves the sibling `X.d/` for scratch related to producing or
-> checking it (`conversation.json.d/` for a pre-normalization pluck,
-> `cdp.jsonl.d/` for a cross-check dump derived from it) — `ls`-legible
-> by position, and the reservation costs nothing for contract files
-> that never need scratch. Same pattern as `/etc/apt/sources.list.d/`;
-> applies wherever a top-level contract name exists, not just here.
-> Not yet implemented.
+Every top-level contract name `X` reserves the sibling `X.d/` for scratch
+related to producing or checking it — `ls`-legible by position, and the
+reservation costs nothing for contract files that never need scratch.
+Same pattern as `/etc/apt/sources.list.d/`; applies wherever a top-level
+contract name exists, not just here. Implemented 2026-07-15: AI Studio's
+pre-normalization pluck lives at `conversation.json.d/raw.json`;
+chatgpt/claude's incidental-capture cross-check dump lives at
+`cdp.jsonl.d/index-pages.jsonl`.
 
 ### Derived members (`messages/`, `conversations/`, `chat.md`)
 

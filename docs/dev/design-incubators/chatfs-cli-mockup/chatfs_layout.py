@@ -8,8 +8,10 @@ Storage is flat and UUID-keyed:
         conversations/   # derived (splat output)
         .data/           # captured exhaust (hidden from default ls)
             meta.json
-            conversation.json (or conversation.raw.json + conversation.json)
+            conversation.json
+            conversation.json.d/raw.json  # AI Studio only: pre-massage pluck
             cdp.jsonl
+            cdp.jsonl.d/index-pages.jsonl # chatgpt/claude only: cross-check dump
 
 The view tree at $root/YYYY/MM/DD/HH:MM:SS±HH:MM/$TITLE/ is a single
 directory-symlink per chat pointing at `.chat/$UUID/`. See
@@ -110,8 +112,8 @@ def run_pluck(script: Path, src: Path, dst: Path) -> None:
 
     Shared low-level primitive behind every remaining "tee the filtered
     stream to disk" step that still shells out to a separate script —
-    today, only AI Studio's massage stage (`conversation.raw.json` ->
-    `conversation.json`), since every provider's conversation/index pluck
+    today, only AI Studio's massage stage (`conversation.json.d/raw.json`
+    -> `conversation.json`), since every provider's conversation/index pluck
     is now an in-process generator run through `pluck()` instead. Kept
     generic (any script, not just massage) in case a future stage needs
     the same "external filter, teed to disk" shape.
@@ -176,9 +178,12 @@ def pluck(
 
     Pure-Python counterpart to `run_pluck`: `fn` is `iter_responses_matching`
     (or a provider's thin wrapper around it) in place of an external
-    filter script/subprocess.
+    filter script/subprocess. Creates `dst`'s parent so callers can freely
+    target a not-yet-existing `X.d/` scratch dir (`path-ownership.md`)
+    without a separate mkdir at each call site.
     """
     print(f"Plucking → {dst} ...", file=sys.stderr)
+    dst.parent.mkdir(parents=True, exist_ok=True)
     with src.open() as fin, dst.open("w") as fout:
         dump_jsonl(fn(fin), fout)
 
@@ -199,9 +204,12 @@ def capture(
 
     `pluck_fn` and `conversation_filename` are the provider-shaped
     half: each provider's `capture()` wrapper supplies its own
-    conversation pluck (and, for AI Studio, `conversation.raw.json`
+    conversation pluck (and, for AI Studio, `conversation.json.d/raw.json`
     instead of the default `conversation.json`, since that provider's
-    pluck output still needs a massage pass before it's named).
+    pluck output still needs a massage pass before it's named — the `.d/`
+    scratch convention is `path-ownership.md`'s: a top-level contract
+    name `X` reserves the sibling `X.d/` for scratch involved in
+    producing or checking it).
 
     The intermediate-data policy is the load-bearing piece: captures
     land directly in `.chat/$UUID/.data/`, never a tempdir. Failures

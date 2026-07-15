@@ -56,7 +56,8 @@ render/path_render, and the four-provider unification) closed 2026-07-11 —
 - [ ] [AI Studio provider — parity ladder](todo.kb/2026-06-20-000-aistudio-provider-parity-ladder.md)
       — third provider, first JSPB source. Pluck + splat landed 2026-06-20;
       layout/types 2026-06-22; massage_json + url_browse 2026-07-03 (writes
-      conversation.raw.json + conversation.json + meta.json end-to-end,
+      conversation.raw.json [renamed conversation.json.d/raw.json
+      2026-07-15] + conversation.json + meta.json end-to-end,
       live-tested). 2026-07-11: index rung (pluck/splat/browse + the
       IndexItem honesty fix it surfaced), render + path_render, and
       path_browse + url_render (Immediate plan step 4, built against the
@@ -83,6 +84,14 @@ render/path_render, and the four-provider unification) closed 2026-07-11 —
 
 ## Later
 
+- [ ] Live-verify AI Studio's `conversation.json.d/raw.json` round-trip —
+      run `chatfs_aistudio_conversation_url_browse.py` against a real
+      prompt URL and confirm a correct `conversation.json` results. The
+      2026-07-15 `.data/` scratch dot-d migration (devlog
+      `devlog/2026-07-15-001-migrate-data-scratch-files-into-dot-d-sibling-directories.md`)
+      was verified by test suite + basedpyright + a unit-level `pluck()`
+      mkdir check only — no live Chromium/network access in that
+      session's sandbox.
 - [ ] [AI Studio: thread per-turn createTime into splat basenames](todo.kb/2026-07-12-000-AI-Studio--thread-per-turn-createTime-into-splat-basenames.md)
       — small, well-scoped; promoted 2026-07-12 from the deleted
       cross-provider-drift file's deferred scope. Closes the render-time
