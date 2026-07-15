@@ -16,7 +16,7 @@ evidence:
 An AI Studio prompt is Drive-backed: the whole conversation arrives in a
 single `ResolveDriveResource` RPC response, mime
 `application/json+protobuf` (JSPB — **positional arrays, not keyed
-objects**). The pluck step (`chatfs_aistudio_conversation_pluck.jq`)
+objects**). The pluck step (`chatfs_aistudio_layout.pluck_conversation`)
 emits that one decoded array; the splat reads it by field index.
 
 The endpoint is generic (index/recents calls reuse it), so identity is

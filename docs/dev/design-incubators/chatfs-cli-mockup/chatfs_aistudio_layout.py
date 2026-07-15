@@ -7,13 +7,16 @@ from chatfs_aistudio_conversation_massage_json's named projection,
 rather than passed through from a native dict.
 """
 
+import re
+from collections.abc import Iterable, Iterator
 from datetime import datetime, timezone
 from pathlib import Path
 
 from chatfs_aistudio_types import Conversation, IndexItem
+from chatfs_json import JsonValue, is_json_array
 from chatfs_layout import DATA_DIR_NAME, chat_dir_for, data_dir_for
 from chatfs_layout import capture as _capture
-from chatfs_layout import place_meta as _place_meta
+from chatfs_layout import iter_responses_matching, place_meta as _place_meta
 from chatfs_layout import resolve_chat_dir, safe_filename
 
 __all__ = [
@@ -25,10 +28,51 @@ __all__ = [
     "capture",
     "index_item",
     "place_meta",
+    "pluck_conversation",
+    "pluck_index_pages",
 ]
 
-HERE = Path(__file__).parent
-CONVERSATION_PLUCK = HERE / "chatfs_aistudio_conversation_pluck.jq"
+# ResolveDriveResource resolves any Drive resource, not just prompts, so URL
+# alone doesn't guarantee a prompt body — pluck_conversation guards on shape
+# too.
+CONVERSATION_URL = re.compile(r"[./]MakerSuiteService/ResolveDriveResource$")
+INDEX_URL = re.compile(r"[./]MakerSuiteService/ListPrompts$")
+
+
+def pluck_conversation(cdp_lines: Iterable[str]) -> Iterator[JsonValue]:
+    """Pluck each prompt message out of a ResolveDriveResource response body.
+
+    AI Studio prompts are Drive-backed; the whole conversation arrives in
+    this RPC as application/json+protobuf (JSPB — positional arrays, not
+    keyed objects). Guards on shape, not just URL: the first message's
+    `[0]` is `"prompts/<id>"`; yielding each envelope element flattens to
+    one message per line (mirrors the old `.jq`'s `.[]`).
+    """
+    for envelope in iter_responses_matching(cdp_lines, CONVERSATION_URL):
+        assert is_json_array(envelope), envelope
+        first = envelope[0] if envelope else None
+        first_id = first[0] if is_json_array(first) and first else ""
+        if not (isinstance(first_id, str) and first_id.startswith("prompts/")):
+            continue
+        yield from envelope
+
+
+def pluck_index_pages(cdp_lines: Iterable[str]) -> Iterator[JsonValue]:
+    """Pluck each ListPrompts index entry, one per line.
+
+    A response body is the JSPB envelope `[[<entry>, ...]]`; flattening
+    `envelope[0]` yields individual entries so downstream doesn't need to
+    know how many response bodies were captured (i.e. doesn't need to
+    care about pagination — see chatfs_aistudio_index_splat.py). Entries
+    share ResolveDriveResource's PROMPT/METADATA schema (see
+    chatfs_aistudio_conversation_massage_json) with an empty
+    chunkedPrompt (index entries carry no turn content).
+    """
+    for envelope in iter_responses_matching(cdp_lines, INDEX_URL):
+        assert is_json_array(envelope) and envelope, envelope
+        entries = envelope[0]
+        assert is_json_array(entries), entries
+        yield from entries
 
 
 def capture(url: str, chat_dir: Path) -> Path:
@@ -38,7 +82,7 @@ def capture(url: str, chat_dir: Path) -> Path:
     chatgpt/claude, AI Studio's pluck output isn't yet named — see
     `chatfs_aistudio_conversation_massage_json.py`.
     """
-    return _capture(url, chat_dir, CONVERSATION_PLUCK, conversation_filename="conversation.raw.json")
+    return _capture(url, chat_dir, pluck_conversation, conversation_filename="conversation.raw.json")
 
 
 def index_item(doc: Conversation) -> IndexItem:

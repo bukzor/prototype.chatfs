@@ -21,10 +21,11 @@ cost-benefit-sweh:
 
 **Priority:** High — first child of the graduation umbrella.
 **Complexity:** Medium
-**Context:** `docs/dev/design-incubators/chatfs-cli-mockup/` holds ~30 flat
+**Context:** `docs/dev/design-incubators/chatfs-cli-mockup/` holds ~42 flat
 sibling-importing scripts (`chatfs_<provider>_<noun>_<verb>.py`, shared
-`chatfs_layout.py` / `chatfs_render.py` / `chatfs_json.py`, `*.jq`, two
-`.sh`). Naming design: the incubator's
+`chatfs_layout.py` / `chatfs_render.py` / `chatfs_json.py` — all Python as
+of 2026-07-15's jq/sh port, no `*.jq`/`.sh` left). Naming design: the
+incubator's
 `design.kb/040-design.kb/cli-command-shape.md`; shared/provider split:
 its `provider-plugin-model.md`.
 
@@ -66,8 +67,9 @@ locator today, an extra level buys nothing.
             splat_test.py
           index/
             splat.py
-            browse.py          # ported from .sh, see Implementation Steps
-            pluck.jq
+            browse.py          # was chatfs_claude_index_browse.py — pluck
+                                # lives as layout.pluck_index_pages, no
+                                # separate file (jq/sh port landed 2026-07-15)
         chatgpt/  ...          # same shape, no conversation/splat.py
         aistudio/ ...          # same shape, + conversation/massage_json.py
 
@@ -78,12 +80,11 @@ surfaces) is the guide.
 
 ## Implementation Steps
 
-- [ ] [Port `.jq`/`.sh` pipeline scripts to Python](2026-07-14-000-port-jq-sh-to-python.md)
-      — extracted 2026-07-14 as its own tracked task (`related-effort`,
-      not `blocked-by`: it runs against the current flat layout and
-      doesn't need this task's package-tree decision). Ideally lands
-      before or alongside the next step for whichever family it covers,
-      but isn't a hard gate — do it inline here if it hasn't landed yet.
+- [x] Port `.jq`/`.sh` pipeline scripts to Python — landed 2026-07-15, see
+      devlog
+      `docs/dev/design-incubators/chatfs-cli-mockup/devlog/2026-07-15-000-port-jq-sh-pluck-pipeline-to-python.md`
+      (extracted 2026-07-14 as its own tracked task, now closed and
+      deleted). No `*.jq`/`.sh` remain in the incubator.
 - [ ] Move one provider family end-to-end (suggest claude — has the most
       tests), tests green, as the template.
 - [ ] Sweep remaining families + shared modules; delete flat scripts as

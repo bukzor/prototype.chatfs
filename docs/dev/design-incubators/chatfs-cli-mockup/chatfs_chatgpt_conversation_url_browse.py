@@ -10,7 +10,7 @@ captures both the conversation document and an index page that mentions
 this UUID.
 
 If that assumption is ever violated, `find_index_item` fails loudly and
-the recovery path is two-step: `chatfs_chatgpt_index_browse.sh` →
+the recovery path is two-step: `chatfs_chatgpt_index_browse.py` →
 `chatfs_chatgpt_index_splat.py` → `chatfs_chatgpt_conversation_path_browse.py`.
 
 A second cross-check asserts that the identity fields agree across the
@@ -42,14 +42,19 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 import chatfs_json
-from chatfs_chatgpt_layout import capture, chat_dir_for, created_at, place_meta
+from chatfs_chatgpt_layout import (
+    capture,
+    chat_dir_for,
+    created_at,
+    place_meta,
+    pluck_index_pages,
+)
 from chatfs_chatgpt_types import IndexItem, is_index_page
 from chatfs_json import JsonObject
-from chatfs_layout import run_pluck
+from chatfs_layout import pluck
 from chatfs_url_browse import null_tolerant_mismatches
 
 HERE = Path(__file__).parent
-INDEX_PLUCK = HERE / "chatfs_chatgpt_index_pluck.jq"
 PATH_RENDER = HERE / "chatfs_chatgpt_conversation_path_render.py"
 ROOT = HERE / "chatfs.demo" / "chatgpt"
 
@@ -69,7 +74,7 @@ def find_index_item(data_dir: Path, uuid: str) -> IndexItem:
     browse` against the resulting chat dir.
     """
     index_pages = data_dir / "index-pages.jsonl"
-    run_pluck(INDEX_PLUCK, data_dir / "cdp.jsonl", index_pages)
+    pluck(pluck_index_pages, data_dir / "cdp.jsonl", index_pages)
     matches: list[IndexItem] = []
     for line in index_pages.read_text().splitlines():
         if not line.strip():
@@ -81,7 +86,7 @@ def find_index_item(data_dir: Path, uuid: str) -> IndexItem:
                 matches.append(item)
     assert matches, (
         f"no sidebar index page included {uuid}; "
-        f"run `chatfs_chatgpt_index_browse.sh` and use `conversation_path_browse.py`"
+        f"run `chatfs_chatgpt_index_browse.py` and use `conversation_path_browse.py`"
     )
     assert all(m == matches[0] for m in matches), (
         f"index endpoint returned divergent items for {uuid}: {matches}"

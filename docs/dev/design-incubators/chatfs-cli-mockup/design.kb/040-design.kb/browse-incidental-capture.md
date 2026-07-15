@@ -20,13 +20,13 @@ target conversation as one of its `items[]`.
 
 ## Consequence
 
-`conversation url browse` runs both pluck filters against its single
-captured CDP file, placing the outputs in `.chat/$UUID/`:
+`conversation url browse` runs both plucks against its single captured
+CDP file, placing the outputs in `.chat/$UUID/`:
 
-- `chatfs-chatgpt-conversation-pluck.jq` → `conversation.json` (the
+- `chatfs_chatgpt_layout.pluck_conversation` → `conversation.json` (the
   mapping document)
-- `chatfs-chatgpt-index-pluck.jq` → filtered to `.items[] | select(.id
-  == $UUID)` → `meta.json`
+- `chatfs_chatgpt_layout.pluck_index_pages` → filtered to `item["id"]
+  == $UUID` → `meta.json`
 
 This makes `.chat/$UUID/meta.json` deterministic from the same browse
 run that fetched the conversation, with no synthesis (see

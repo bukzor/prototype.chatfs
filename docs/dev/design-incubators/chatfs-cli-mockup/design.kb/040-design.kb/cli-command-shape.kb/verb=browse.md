@@ -4,7 +4,8 @@
 implementation invokes `har-browse` — a Playwright/CDP harness that opens
 a Chromium window, lets the page run, and records the CDP stream to
 jsonl. Each browse command then plucks the recorded jsonl through a
-verb-specific `*-pluck.jq` filter to produce the captured JSON.
+verb-specific pluck function (`chatfs_<provider>_layout.pluck_*`, built
+on `chatfs_layout.iter_responses_matching`) to produce the captured JSON.
 
 ## Commands
 

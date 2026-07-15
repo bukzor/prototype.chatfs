@@ -45,10 +45,11 @@ stderr). Higher-level orchestrators take an addressable target (URL or
 ts-dir), tee intermediate streams to disk for debuggability, and drive
 the leaves.
 
-1. **Index browse** (`chatfs_chatgpt_index_browse.sh`) — drives
+1. **Index browse** (`chatfs_chatgpt_index_browse.py`) — drives
    `har-browse` against `https://chatgpt.com`, tees the raw CDP to
-   `chatgpt.index.cdp.jsonl` (debug intermediate), pipes through
-   `chatfs_chatgpt_index_pluck.jq`, emits index pages on stdout.
+   `chatgpt.index.cdp.jsonl` (debug intermediate), plucks it in-process
+   (`chatfs_chatgpt_layout.pluck_index_pages`), emits index pages on
+   stdout.
 2. **Index splat** (`chatfs_chatgpt_index_splat.py`) — reads index
    pages on stdin; per item, writes `.chat/$UUID/.data/meta.json`,
    purges any prior view symlinks for that UUID, and places a fresh
@@ -91,7 +92,7 @@ cd docs/dev/design-incubators/chatfs-cli-mockup
 ./chatfs_chatgpt_conversation_url_browse.py https://chatgpt.com/c/<uuid>
 
 # bulk: index first, then iterate chat dirs
-./chatfs_chatgpt_index_browse.sh | ./chatfs_chatgpt_index_splat.py
+./chatfs_chatgpt_index_browse.py | ./chatfs_chatgpt_index_splat.py
 ./chatfs_chatgpt_conversation_path_browse.py chatfs.demo/chatgpt/.chat/<uuid>/
 
 tree chatfs.demo/chatgpt/ | head -20

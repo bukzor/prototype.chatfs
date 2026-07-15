@@ -10,7 +10,7 @@ captures both the conversation document and an index page that mentions
 this UUID.
 
 If that assumption is ever violated, `find_index_item` fails loudly and
-the recovery path is two-step: `chatfs_claude_index_browse.sh` →
+the recovery path is two-step: `chatfs_claude_index_browse.py` →
 `chatfs_claude_index_splat.py` → `chatfs_claude_conversation_path_browse.py`.
 
 A second cross-check asserts that the meta-shaped fields agree across
@@ -29,7 +29,7 @@ Steps:
 Captures are written directly into `.chat/$UUID/.data/` — no temp
 staging. If a later step fails, the captures remain there for
 inspection. Recovery from the long-tail "sidebar didn't include this
-uuid" case is to run `chatfs_claude_index_browse.sh |
+uuid" case is to run `chatfs_claude_index_browse.py |
 chatfs_claude_index_splat.py` (deposits meta.json into the same
 `.data/`) and then `chatfs_claude_conversation_path_render.py` on the
 chat dir (reuses the already-captured cdp.jsonl + conversation.json).
@@ -41,14 +41,13 @@ from typing import cast
 from urllib.parse import urlparse
 
 import chatfs_json
-from chatfs_claude_layout import capture, chat_dir_for, place_meta
+from chatfs_claude_layout import capture, chat_dir_for, place_meta, pluck_index_pages
 from chatfs_claude_types import IndexItem, is_index_page
 from chatfs_json import JsonObject
-from chatfs_layout import run_pluck
+from chatfs_layout import pluck
 from chatfs_url_browse import null_tolerant_mismatches
 
 HERE = Path(__file__).parent
-INDEX_PLUCK = HERE / "chatfs_claude_index_pluck.jq"
 PATH_RENDER = HERE / "chatfs_claude_conversation_path_render.py"
 ROOT = HERE / "chatfs.demo" / "claude"
 
@@ -68,7 +67,7 @@ def find_index_item(data_dir: Path, uuid: str) -> IndexItem:
     path_browse).
     """
     index_pages = data_dir / "index-pages.jsonl"
-    run_pluck(INDEX_PLUCK, data_dir / "cdp.jsonl", index_pages)
+    pluck(pluck_index_pages, data_dir / "cdp.jsonl", index_pages)
     matches: list[IndexItem] = []
     for line in index_pages.read_text().splitlines():
         if not line.strip():
@@ -78,7 +77,7 @@ def find_index_item(data_dir: Path, uuid: str) -> IndexItem:
         matches.extend(item for item in page["data"] if item["uuid"] == uuid)
     assert matches, (
         f"no sidebar index page included {uuid}; "
-        f"run `chatfs_claude_index_browse.sh | chatfs_claude_index_splat.py`, "
+        f"run `chatfs_claude_index_browse.py | chatfs_claude_index_splat.py`, "
         f"then use `chatfs_claude_conversation_path_browse.py`"
     )
     assert all(m == matches[0] for m in matches), (
