@@ -12,7 +12,7 @@ import sys
 from pathlib import Path
 from urllib.parse import urlparse
 
-from chatfs_aistudio_layout import DATA_DIR_NAME, chat_dir_for
+from chatfs_aistudio_layout import chat_dir_for, data_dir_for
 
 ROOT = Path(__file__).parent / "chatfs.demo" / "aistudio"
 
@@ -28,8 +28,9 @@ def main() -> None:
         print(f"usage: {sys.argv[0]} <aistudio-url>", file=sys.stderr)
         sys.exit(2)
 
-    chat_dir = chat_dir_for(id_from_url(sys.argv[1]), ROOT)
-    assert (chat_dir / DATA_DIR_NAME / "meta.json").exists(), (
+    id_ = id_from_url(sys.argv[1])
+    chat_dir = chat_dir_for(id_, ROOT)
+    assert (data_dir_for(id_, ROOT) / "meta.json").exists(), (
         f"chat not yet placed: {chat_dir} (run conversation url browse first)"
     )
 

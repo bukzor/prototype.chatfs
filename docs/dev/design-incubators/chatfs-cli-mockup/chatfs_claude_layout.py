@@ -10,6 +10,8 @@ from chatfs_layout import (
     DATA_DIR_NAME,
     chat_dir_for,
     data_dir_for,
+    data_dir_of,
+    link_data_dir,
     resolve_chat_dir,
     safe_filename,
 )
@@ -20,6 +22,8 @@ __all__ = [
     "DATA_DIR_NAME",
     "chat_dir_for",
     "data_dir_for",
+    "data_dir_of",
+    "link_data_dir",
     "resolve_chat_dir",
     "safe_filename",
     "capture",

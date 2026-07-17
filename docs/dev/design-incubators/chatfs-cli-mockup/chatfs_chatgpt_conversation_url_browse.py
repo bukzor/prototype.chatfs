@@ -24,17 +24,17 @@ stays meaningful instead of null-tolerance silently skipping every
 field.
 
 Steps:
-    1. browse $url → .chat/$UUID/.data/cdp.jsonl
-    2. conversation pluck → .chat/$UUID/.data/conversation.json
-    3. index pluck → .chat/$UUID/.data/index-pages.jsonl; filter to
+    1. browse $url → .data/$UUID/cdp.jsonl
+    2. conversation pluck → .data/$UUID/conversation.json
+    3. index pluck → .data/$UUID/index-pages.jsonl; filter to
        .id == $UUID → meta (fail loudly if absent)
     4. cross-check conversation doc vs index item, null-tolerant
     5. place_meta (writes meta.json, purges + places view dir-symlink)
     6. delegate to path_render
 
-Captures are written directly into `.chat/$UUID/.data/` — no temp
-staging (matches claude's `capture()` policy). If a later step fails,
-the captures remain there for inspection.
+Captures are written directly into `.data/$UUID/` — no temp staging
+(matches claude's `capture()` policy). If a later step fails, the
+captures remain there for inspection.
 """
 import subprocess
 import sys

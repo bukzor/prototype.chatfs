@@ -86,6 +86,31 @@ The design lives in its normative homes, not here:
   leaves the tree broken until some later run heals it; in-progress
   output buffered in memory instead of spooled to disk.
 
+## Coordination note (2026-07-17, from the parallel locks/design session)
+
+Commit `bf9a443` landed `chatfs_locks.py` — a process-tree-reentrant
+lock table (`registry` + `__CHATFS_LOCKS` env var) that supersedes
+`chatfs_atomic`'s `read_locked`/`write_locked`. For the step-4/5 wiring
+below:
+
+- **Import locks from `chatfs_locks`, not `chatfs_atomic`.**
+  `chatfs_atomic`'s copies are non-reentrant: a write-locked
+  orchestrator whose subprocess locks the same anchor self-deadlocks
+  (flock is per-OFD), and re-flocking a held fd *converts* the lock
+  (LOCK_SH under EX silently downgrades). `chatfs_locks` borrows the
+  inherited fd instead (dev/ino probe, no syscall).
+- **Spawn lock-holding children via `chatfs_locks.run()`** — bare
+  `subprocess.run` drops the fds (PEP 446 non-inheritable default).
+- `chatfs_atomic`'s lock helpers + its 3 `DescribeLocking` tests are
+  slated to migrate into `chatfs_locks`; deliberately deferred so this
+  session's in-flight work doesn't break. Tracked in
+  `2026-07-17-000-chatfs-locks--...md` — take it if convenient,
+  otherwise it lands after you do.
+- Environment landmine, already defused: a stale `__pycache__` pyc had
+  `read_locked` compiled as `LOCK_EX` (same-second, same-length edit —
+  mtime+size validation can never catch it). If phantom lock-test
+  failures appear, `rm -r __pycache__` first.
+
 ## Implementation Steps
 
 - [x] `chatfs_atomic.py`: unit tests against the sketch -- crash matrix
@@ -96,9 +121,41 @@ The design lives in its normative homes, not here:
       `chatfs_atomic_test.py`, 18 tests (incl. locking semantics);
       pytest 18/18, basedpyright 0/0/0 (closes the skipped-re-run
       loose end from devlog 2026-07-15-000)
-- [ ] Layout migration to `.data/$UUID`: `chatfs_layout.py`
+- [x] Layout migration to `.data/$UUID`: `chatfs_layout.py`
       (`data_dir_for`, `place_meta`, `capture`, `resolve_chat_dir`) and
-      the three provider layouts; `.data` symlink inside the chat dir
+      the three provider layouts; `.data` symlink inside the chat dir --
+      done 2026-07-17: `data_dir_for` now returns `root/.data/$uuid`
+      (moved out from under chat_dir); new `data_dir_of(chat_dir)` and
+      `link_data_dir(dst, uuid)` helpers (the latter's fixed relative
+      target, `../../.data/$UUID`, is valid unchanged from both the
+      final chat_dir and a same-depth staged scratch sibling -- tested
+      directly). `resolve_chat_dir` rewritten to climb by
+      `p.parent.name` instead of `is_dir()`, so a not-yet-rendered
+      (nonexistent) chat_dir or a dangling view symlink resolves
+      correctly instead of requiring existence -- verified against the
+      old algorithm (4 tests fail without the fix). Caught and fixed a
+      second latent bug along the way: `_purge_view_symlinks` swept by
+      "target string contains uuid", which also matched the new
+      `.chat/$UUID/.data` inspection symlink -- a re-`place_meta` after
+      a render would have deleted it (verified: fails without the fix).
+      `capture`/`place_meta` no longer touch `.chat/$UUID/` at all
+      (may not exist yet); the three `path_render.py`'s
+      `purge_non_captured` simplified to an unconditional reset (no
+      more `.data` allowlist, since nothing under `.chat/$UUID/` is
+      captured anymore) plus an explicit `link_data_dir` call --
+      interim shape, still purge-then-rebuild-in-place (step 4 replaces
+      this with `staged()`). All `chat_dir / DATA_DIR_NAME / ...`
+      call sites (path_browse, path_render, the bare render leaves,
+      url_render) switched to `data_dir_of`/`data_dir_for`; stale
+      docstrings referencing the old nested path fixed throughout.
+      Hand-verified end-to-end against the real claude scripts: index
+      splat -> dangling view symlink -> path_render through that
+      dangling path -> chat.md correct, `.data` symlink correct,
+      re-render idempotent, re-place_meta (title change) preserves the
+      `.data` inspection symlink and moves the view symlink. pytest
+      62/62 (16 new/updated in `chatfs_layout_test.py`), basedpyright
+      0/0/0 (chatfs_locks* excluded -- parallel session's work, out of
+      scope here).
 - [x] Splat scripts gain an output-dir argument (today they derive
       `<src>.splat` themselves) -- done 2026-07-17: optional 2nd argv on
       all three (`chatfs_claude_conversation_splat.py`,

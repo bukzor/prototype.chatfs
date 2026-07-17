@@ -1,15 +1,21 @@
 """Shared layout helpers, factored out of the three provider layouts.
 
-Storage is flat and UUID-keyed:
+Storage is flat and UUID-keyed, split by lifecycle into two parallel
+trees:
 
-    $root/.chat/$UUID/
-        chat.md          # derived
-        messages/        # derived (splat output)
-        conversations/   # derived (splat output)
-        .data/           # captured exhaust (hidden from default ls)
-            meta.json
-            conversation.json (or conversation.raw.json + conversation.json)
-            cdp.jsonl
+    $root/.data/$UUID/       # captured exhaust -- input, never purged
+        meta.json
+        conversation.json (or conversation.raw.json + conversation.json)
+        cdp.jsonl
+    $root/.chat/$UUID/       # 100% derived -- THE staged/promoted unit
+        chat.md
+        messages/            # derived (splat output)
+        conversations/       # derived (splat output)
+        .data -> ../../.data/$UUID   # inspection symlink
+
+`.chat/$UUID/` does not exist before first render -- only `.data/$UUID/`
+does. `resolve_chat_dir` and the view dir-symlink both tolerate this
+(see their own docstrings).
 
 The view tree at $root/YYYY/MM/DD/HH:MM:SS±HH:MM/$TITLE/ is a single
 directory-symlink per chat pointing at `.chat/$UUID/`. See
@@ -77,28 +83,60 @@ def chat_dir_for(uuid: str, root: Path) -> Path:
 
 
 def data_dir_for(uuid: str, root: Path) -> Path:
-    return chat_dir_for(uuid, root) / DATA_DIR_NAME
+    return root / DATA_DIR_NAME / uuid
+
+
+def data_dir_of(chat_dir: Path) -> Path:
+    """The `.data/$UUID/` twin for a `.chat/$UUID/` dir.
+
+    Derives root and uuid from chat_dir's own path -- chat_dir_for's
+    shape (`root/.chat/$UUID`) is preserved by resolve_chat_dir too, so
+    this works on any chat_dir a caller has in hand without threading
+    root through separately.
+    """
+    return data_dir_for(chat_dir.name, chat_dir.parent.parent)
+
+
+def link_data_dir(dst: Path, uuid: str) -> None:
+    """Create/refresh `dst/.data` as a symlink to `.data/$UUID`.
+
+    Fixed relative target (`../../.data/$UUID`), valid unchanged
+    whether `dst` is the final chat_dir (`root/.chat/$UUID/`) or a
+    same-depth staged scratch sibling (`root/.chat/.{$UUID}.tmp/`) --
+    both sit two levels below `root`. `uuid` is taken explicitly rather
+    than `dst.name`, since that assumption breaks for the scratch case.
+    """
+    link = dst / DATA_DIR_NAME
+    if link.is_symlink() or link.exists():
+        link.unlink()
+    link.symlink_to(Path("..", "..", DATA_DIR_NAME, uuid))
 
 
 def resolve_chat_dir(arg: str | os.PathLike[str]) -> Path:
     """Resolve any path-into-or-pointing-at a `.chat/$UUID/` to that dir.
 
-    Handles: the chat dir itself, files or subdirs inside it, view
-    dir-symlinks (which resolve straight to the chat dir), and paths
-    descending through view dir-symlinks (e.g. `view/$TITLE/.data/foo`).
+    Handles: the chat dir itself, files or subdirs inside it, its
+    `.data` inspection symlink (and paths descending through it into
+    the real `.data/$UUID/` tree), a `.data/$UUID/` path reached
+    directly, view dir-symlinks, and paths descending through view
+    dir-symlinks (e.g. `view/$TITLE/.data/foo`) -- climbing by
+    `p.parent.name` rather than `is_dir()`, so a not-yet-rendered
+    (nonexistent) chat_dir or a dangling view symlink resolves
+    correctly instead of requiring existence.
 
-    Asserts the result is an existing `.chat/$UUID/` directory so that
-    callers can treat the return value as canonical and fail loudly on
-    bad input here rather than later via missing-file errors.
+    Does not assert the result exists: `.chat/$UUID/` legitimately
+    doesn't, before first render (see module docstring). Callers that
+    need captured state present check for it explicitly (e.g. via
+    `data_dir_of`).
     """
     p = Path(arg).resolve()
-    if not p.is_dir():
+    while True:
+        if p.parent.name == ".chat":
+            return p
+        if p.parent.name == ".data":
+            return chat_dir_for(p.name, p.parent.parent)
+        assert p.parent != p, f"reached fs root without finding .chat or .data: {arg}"
         p = p.parent
-    while p.parent.name != ".chat":
-        assert p.parent != p, f"reached fs root without finding .chat: {arg}"
-        p = p.parent
-    assert p.is_dir(), p
-    return p
 
 
 def run_pluck(script: Path, src: Path, dst: Path) -> None:
@@ -122,12 +160,14 @@ def capture(
     *,
     conversation_filename: str = "conversation.json",
 ) -> Path:
-    """Browse $url and pluck the conversation into chat_dir/.data/.
+    """Browse $url and pluck the conversation into `.data/$UUID/`.
 
-    Ensures `.data/` exists, clears any prior cdp.jsonl /
+    Ensures the data dir exists, clears any prior cdp.jsonl /
     `conversation_filename` from a previous run, then runs har-browse
     followed by `pluck_script`. Returns the data dir for callers that
-    need to deposit meta.json or similar siblings.
+    need to deposit meta.json or similar siblings. Does not touch
+    `chat_dir` itself -- `.chat/$UUID/` may not exist yet (see module
+    docstring); only its `data_dir_of` twin is written here.
 
     `pluck_script` and `conversation_filename` are the provider-shaped
     half: each provider's `capture()` wrapper supplies its own
@@ -136,11 +176,11 @@ def capture(
     pluck output still needs a massage pass before it's named).
 
     The intermediate-data policy is the load-bearing piece: captures
-    land directly in `.chat/$UUID/.data/`, never a tempdir. Failures
-    leave the bytes inspectable; success hands off to splat/render
-    without a move.
+    land directly in `.data/$UUID/`, never a tempdir. Failures leave
+    the bytes inspectable; success hands off to splat/render without a
+    move.
     """
-    data_dir = chat_dir / DATA_DIR_NAME
+    data_dir = data_dir_of(chat_dir)
     data_dir.mkdir(parents=True, exist_ok=True)
     cdp = data_dir / "cdp.jsonl"
     conversation = data_dir / conversation_filename
@@ -159,13 +199,20 @@ def capture(
 
 
 def _purge_view_symlinks(uuid: str, root: Path) -> None:
-    """Remove every symlink under `root` whose target mentions `uuid`.
+    """Remove every view-tree symlink under `root` whose target mentions
+    `uuid`.
 
     Identity-scoped cleanup: derived view paths can move when
     derivation logic changes (TZ format, view shape); we sweep by
-    identity, not path.
+    identity, not path. Skips `.chat/` and `.data/` -- those hold
+    storage-internal symlinks (e.g. `.chat/$UUID/.data`'s inspection
+    link back to `.data/$UUID/`), not views, and their targets
+    legitimately contain the uuid too.
     """
     for path in root.rglob("*"):
+        rel_parts = path.relative_to(root).parts
+        if ".chat" in rel_parts or ".data" in rel_parts:
+            continue
         if path.is_symlink() and uuid in os.readlink(path):
             path.unlink()
 
@@ -179,7 +226,7 @@ def place_meta(
     *,
     label: str = "Created",
 ) -> Path:
-    """Write meta.json into .chat/$UUID/.data/, refresh the view dir-symlink.
+    """Write meta.json into `.data/$UUID/`, refresh the view dir-symlink.
 
     `item` is serialized verbatim into meta.json (the provider's full
     index entry, pass-through fields included); `id`/`title`/`created`
@@ -189,16 +236,18 @@ def place_meta(
     `view_dir` itself.
 
     `label` forwards to `time_dir_for` — see there. Storage placement
-    (`.chat/$UUID/`) and the identity-scoped symlink purge are
+    (`.data/$UUID/`) and the identity-scoped symlink purge are
     unaffected by it: only the derived view-tree segment changes, so a
     later `place_meta` call with real creation time (different `label`)
     still finds and replaces this call's symlink by uuid, moving the
     chat from the labeled tree to the true date tree.
 
-    Returns the chat dir.
+    Does not touch `.chat/$UUID/` -- it may not exist yet (see module
+    docstring); that's render's job. Returns the (possibly
+    not-yet-existing) chat dir, for callers that pass it on to render.
     """
     chat_dir = chat_dir_for(id, root)
-    data_dir = chat_dir / DATA_DIR_NAME
+    data_dir = data_dir_for(id, root)
     data_dir.mkdir(parents=True, exist_ok=True)
     _ = (data_dir / "meta.json").write_text(json.dumps(item, indent=2) + "\n")
 

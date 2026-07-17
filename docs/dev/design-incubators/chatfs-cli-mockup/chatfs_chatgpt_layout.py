@@ -9,6 +9,8 @@ from chatfs_layout import (
     DATA_DIR_NAME,
     chat_dir_for,
     data_dir_for,
+    data_dir_of,
+    link_data_dir,
     resolve_chat_dir,
     safe_filename,
 )
@@ -19,6 +21,8 @@ __all__ = [
     "DATA_DIR_NAME",
     "chat_dir_for",
     "data_dir_for",
+    "data_dir_of",
+    "link_data_dir",
     "resolve_chat_dir",
     "safe_filename",
     "capture",
@@ -47,7 +51,7 @@ def capture(url: str, chat_dir: Path) -> Path:
 
 
 def place_meta(item: IndexItem, root: Path) -> Path:
-    """Write meta.json into .chat/$UUID/.data/, refresh the view dir-symlink.
+    """Write meta.json into `.data/$UUID/`, refresh the view dir-symlink.
 
     Returns the chat dir.
     """

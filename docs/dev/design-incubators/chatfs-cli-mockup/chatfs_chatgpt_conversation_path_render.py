@@ -4,34 +4,33 @@
 Usage:
     chatfs_chatgpt_conversation_path_render.py <path-to-chat-dir-or-inside>
 
-Prerequisites in the resolved chat dir:
-    .data/meta.json           — placed by index splat or url browse
-    .data/conversation.json   — output of conversation pluck
+Prerequisites in the resolved chat dir's `.data/$UUID/` twin:
+    meta.json           — placed by index splat or url browse
+    conversation.json   — output of conversation pluck
 
 Steps:
-    1. purge non-captured contents (allowlist {".data"})
-    2. splat .data/conversation.json → .data/conversation.splat/
-    3. move .data/conversation.splat/{messages,conversations} up to chat dir;
-       rmdir .data/conversation.splat
-    4. render → chat.md
+    1. reset the chat dir (100% derived; nothing survives a rebuild)
+    2. splat .data/$UUID/conversation.json → .data/$UUID/conversation.splat/
+    3. move .data/$UUID/conversation.splat/{messages,conversations} up to
+       chat dir; rmdir .data/$UUID/conversation.splat
+    4. relink chat dir/.data -> .data/$UUID (inspection symlink)
+    5. render → chat.md
 """
 import shutil
 import subprocess
 import sys
 from pathlib import Path
 
-from chatfs_chatgpt_layout import DATA_DIR_NAME, resolve_chat_dir
+from chatfs_chatgpt_layout import data_dir_of, link_data_dir, resolve_chat_dir
 
 
 def purge_non_captured(chat_dir: Path) -> None:
-    keep = {DATA_DIR_NAME}
-    for child in chat_dir.iterdir():
-        if child.name in keep:
-            continue
-        if child.is_symlink() or not child.is_dir():
-            child.unlink()
-        else:
-            shutil.rmtree(child)
+    """Reset chat_dir to empty. Nothing under it is captured anymore --
+    captured exhaust lives in the parallel `.data/$UUID/` tree -- so
+    there is no allowlist to preserve."""
+    if chat_dir.exists():
+        shutil.rmtree(chat_dir)
+    chat_dir.mkdir(parents=True)
 
 
 def main() -> None:
@@ -40,7 +39,7 @@ def main() -> None:
         sys.exit(2)
 
     chat_dir = resolve_chat_dir(sys.argv[1])
-    data_dir = chat_dir / DATA_DIR_NAME
+    data_dir = data_dir_of(chat_dir)
     meta_path = data_dir / "meta.json"
     assert meta_path.exists(), f"missing meta.json: run index browse first ({meta_path})"
     conversation = data_dir / "conversation.json"
@@ -49,6 +48,7 @@ def main() -> None:
     )
 
     purge_non_captured(chat_dir)
+    link_data_dir(chat_dir, chat_dir.name)
 
     print(f"Splatting {conversation} ...", file=sys.stderr)
     _ = subprocess.run(["chatgpt-splat", str(conversation)], check=True)

@@ -5,7 +5,7 @@ Reads pages on stdin (one `{data: [...], has_more}` object per line; the
 output of `chatfs_claude_index_pluck.jq`). For each item, calls
 place_meta which:
 
-    - writes $root/.chat/$UUID/meta.json
+    - writes $root/.data/$UUID/meta.json
     - purges existing view symlinks for $UUID
     - creates a view dir-symlink under $root/YYYY/MM/DD/HH:MM:SS±HH:MM/
 

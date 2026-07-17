@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import NamedTuple
 
 import chatfs_json
-from chatfs_chatgpt_layout import DATA_DIR_NAME, resolve_chat_dir
+from chatfs_chatgpt_layout import data_dir_of, resolve_chat_dir
 from chatfs_chatgpt_types import Conversation, is_conversation
 from chatfs_render import ConversationTree, Turn, normalize_turnless, render_tree
 
@@ -125,7 +125,7 @@ def main() -> None:
 
     chat_dir = resolve_chat_dir(sys.argv[1])
     parsed = chatfs_json.loads(
-        (chat_dir / DATA_DIR_NAME / "conversation.json").read_text()
+        (data_dir_of(chat_dir) / "conversation.json").read_text()
     )
     assert is_conversation(parsed), parsed
     conversation: Conversation = parsed

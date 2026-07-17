@@ -18,7 +18,7 @@ from datetime import datetime
 from pathlib import Path
 
 import chatfs_json
-from chatfs_claude_layout import DATA_DIR_NAME, resolve_chat_dir
+from chatfs_claude_layout import data_dir_of, resolve_chat_dir
 from chatfs_claude_types import ChatMessage, Several, is_conversation
 from chatfs_render import ConversationTree, Turn, render_tree
 
@@ -127,7 +127,7 @@ def main() -> None:
 
     chat_dir = resolve_chat_dir(sys.argv[1])
     conversation = chatfs_json.loads(
-        (chat_dir / DATA_DIR_NAME / "conversation.json").read_text()
+        (data_dir_of(chat_dir) / "conversation.json").read_text()
     )
     assert is_conversation(conversation), conversation
 
