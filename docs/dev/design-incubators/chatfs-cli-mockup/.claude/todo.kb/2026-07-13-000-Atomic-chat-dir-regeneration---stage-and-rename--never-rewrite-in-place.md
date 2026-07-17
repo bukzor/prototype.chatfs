@@ -88,11 +88,14 @@ The design lives in its normative homes, not here:
 
 ## Implementation Steps
 
-- [ ] `chatfs_atomic.py`: unit tests against the sketch -- crash matrix
+- [x] `chatfs_atomic.py`: unit tests against the sketch -- crash matrix
       (kill during populate / between `_swap_via_old` renames / before
       `.old` cleanup / stale `.tmp` on entry), file<->dir type change
       across versions, `.fail` lifecycle (latest-wins, cleared on
-      success), `_exchange` fallback path
+      success), `_exchange` fallback path -- done 2026-07-16:
+      `chatfs_atomic_test.py`, 18 tests (incl. locking semantics);
+      pytest 18/18, basedpyright 0/0/0 (closes the skipped-re-run
+      loose end from devlog 2026-07-15-000)
 - [ ] Layout migration to `.data/$UUID`: `chatfs_layout.py`
       (`data_dir_for`, `place_meta`, `capture`, `resolve_chat_dir`) and
       the three provider layouts; `.data` symlink inside the chat dir
