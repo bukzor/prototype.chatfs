@@ -56,5 +56,7 @@ than an in-process generator: AI Studio's massage stage.
 > these as subprocesses (`subprocess.run([render_script, chat_dir],
 > stdout=out_file)`) rather than importing and calling the function
 > in-process. Converting that boundary too is a further move, tracked
-> under the shared-code-among-providers boundary-refinement question,
-> not required to close this decision.
+> in the module-shape-refactor todo (repo-root
+> `.claude/todo.kb/2026-07-13-000-graduation-and-integration.kb/2026-07-13-000-module-shape-refactor.md`;
+> its former tracker, the shared-code-among-providers question, closed
+> 2026-07-12 without landing it), not required to close this decision.
