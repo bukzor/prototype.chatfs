@@ -3,14 +3,12 @@ kernel: recovery at each interruption point, file<->directory type changes,
 .fail latest-wins/cleared-on-success, and the _exchange fallback path when
 RENAME_EXCHANGE is unsupported."""
 
-import fcntl
-import os
 from pathlib import Path
 
 import pytest
 
 import chatfs_atomic
-from chatfs_atomic import read_locked, recover, staged, write_locked
+from chatfs_atomic import recover, staged
 
 
 def sibling(dst: Path, kind: str) -> Path:
@@ -194,37 +192,3 @@ class DescribeExchangeFallback:
             _ = chatfs_atomic._exchange(  # pyright: ignore[reportPrivateUsage]
                 missing_a, missing_b
             )
-
-
-class DescribeLocking:
-    def it_takes_an_exclusive_lock_that_blocks_even_a_second_reader(
-        self, tmp_path: Path
-    ):
-        # LOCK_SH (not LOCK_EX) as the probe: a second LOCK_EX attempt would
-        # conflict with either lock type and couldn't tell them apart.
-        with write_locked(tmp_path):
-            fd = os.open(tmp_path, os.O_RDONLY | os.O_DIRECTORY)
-            try:
-                with pytest.raises(BlockingIOError):
-                    fcntl.flock(fd, fcntl.LOCK_SH | fcntl.LOCK_NB)
-            finally:
-                os.close(fd)
-
-    def it_allows_a_second_reader_under_a_shared_lock(self, tmp_path: Path):
-        with read_locked(tmp_path):
-            fd = os.open(tmp_path, os.O_RDONLY | os.O_DIRECTORY)
-            try:
-                fcntl.flock(fd, fcntl.LOCK_SH | fcntl.LOCK_NB)
-                fcntl.flock(fd, fcntl.LOCK_UN)
-            finally:
-                os.close(fd)
-
-    def it_releases_the_lock_on_exit(self, tmp_path: Path):
-        with write_locked(tmp_path):
-            pass
-        fd = os.open(tmp_path, os.O_RDONLY | os.O_DIRECTORY)
-        try:
-            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            fcntl.flock(fd, fcntl.LOCK_UN)
-        finally:
-            os.close(fd)

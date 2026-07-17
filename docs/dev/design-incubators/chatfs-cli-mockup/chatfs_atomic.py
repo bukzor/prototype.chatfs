@@ -44,7 +44,6 @@ verification is process-kill) and cross-filesystem staging.
 
 import ctypes
 import errno
-import fcntl
 import os
 import shutil
 import stat
@@ -55,27 +54,6 @@ from typing import cast
 
 _AT_FDCWD = -100  # linux/fcntl.h
 _RENAME_EXCHANGE = 2  # linux/fs.h
-
-
-@contextmanager
-def read_locked(anchor: Path) -> Generator[None]:
-    """Hold a shared lock on the anchor dir: a consistent read view."""
-    yield from _locked(anchor, fcntl.LOCK_SH)
-
-
-@contextmanager
-def write_locked(anchor: Path) -> Generator[None]:
-    """Hold an exclusive lock on the anchor dir: sole writer."""
-    yield from _locked(anchor, fcntl.LOCK_EX)
-
-
-def _locked(anchor: Path, op: int) -> Generator[None]:
-    fd = os.open(anchor, os.O_RDONLY | os.O_DIRECTORY)
-    try:
-        fcntl.flock(fd, op)
-        yield
-    finally:
-        os.close(fd)  # releases the flock
 
 
 @contextmanager
