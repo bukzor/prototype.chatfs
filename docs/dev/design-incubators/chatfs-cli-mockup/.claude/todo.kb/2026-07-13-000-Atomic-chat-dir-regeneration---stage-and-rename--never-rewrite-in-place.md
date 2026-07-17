@@ -99,8 +99,18 @@ The design lives in its normative homes, not here:
 - [ ] Layout migration to `.data/$UUID`: `chatfs_layout.py`
       (`data_dir_for`, `place_meta`, `capture`, `resolve_chat_dir`) and
       the three provider layouts; `.data` symlink inside the chat dir
-- [ ] Splat scripts gain an output-dir argument (today they derive
-      `<src>.splat` themselves)
+- [x] Splat scripts gain an output-dir argument (today they derive
+      `<src>.splat` themselves) -- done 2026-07-17: optional 2nd argv on
+      all three (`chatfs_claude_conversation_splat.py`,
+      `chatfs_aistudio_conversation_splat.py`,
+      `bukzor.chatgpt_export.splat`); default (`<src>.splat`) unchanged
+      for bare single-arg invocation. Cleanup scoped to the owned
+      subdirs (`messages/`, `conversations/`) rather than the whole
+      output-dir, so an explicit output-dir's sibling content (e.g. a
+      caller-placed `.data` symlink) survives -- needed for step 4's
+      one-staged-scratch shape. Smoke-tested by hand (all three,
+      default + explicit-dir + sibling-preservation); pytest 50/50,
+      basedpyright 0/0/0 both packages.
 - [ ] Rewrite the three `chatfs_*_conversation_path_render.py` to the
       one-staged-call shape (see `chatfs_atomic.py` module docstring);
       delete `purge_non_captured` and the move-up loop

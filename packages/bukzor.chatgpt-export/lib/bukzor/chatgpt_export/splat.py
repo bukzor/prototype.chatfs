@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Splat a ChatGPT export JSON into messages/ and conversations/ directories."""
+"""Splat a ChatGPT export JSON into messages/ and conversations/ directories.
+
+Output defaults to `<src>.splat/{messages,conversations}/`; an optional
+second argv gives an explicit output-dir instead. Only the two owned
+subdirs are cleared/recreated -- sibling content in an explicit
+output-dir (e.g. a caller-placed `.data` symlink) is left alone."""
 
 import os
 import shutil
@@ -435,8 +440,8 @@ def prepare_message(raw: JsonObj) -> JsonObj:
 
 
 def main() -> None:
-    if len(sys.argv) != 2:
-        print(f"Usage: {sys.argv[0]} <chatgpt-export.json>", file=sys.stderr)
+    if len(sys.argv) not in (2, 3):
+        print(f"Usage: {sys.argv[0]} <chatgpt-export.json> [output-dir]", file=sys.stderr)
         sys.exit(1)
 
     src = Path(sys.argv[1])
@@ -449,13 +454,16 @@ def main() -> None:
     assert len(root) == 1, f"Expected 1 root, got {len(root)}: {root}"
     root = root[0]
 
-    base_dir = src.with_suffix(".splat")
+    base_dir = Path(sys.argv[2]) if len(sys.argv) == 3 else src.with_suffix(".splat")
     messages_dir = base_dir / "messages"
     conversations_dir = base_dir / "conversations"
 
-    # Clean up previous run (script owns .splat directory entirely)
-    if base_dir.exists():
-        shutil.rmtree(base_dir)
+    # Clean up previous run's outputs (script owns these two subdirs, not
+    # base_dir itself)
+    if messages_dir.exists():
+        shutil.rmtree(messages_dir)
+    if conversations_dir.exists():
+        shutil.rmtree(conversations_dir)
 
     min_ts = compute_min_timestamp(mapping)
     messages = parse_messages(mapping, min_ts)

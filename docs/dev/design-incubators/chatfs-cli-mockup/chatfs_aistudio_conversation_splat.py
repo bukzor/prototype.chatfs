@@ -5,8 +5,11 @@ Input: path to conversation.json — chatfs_aistudio_conversation_massage_json's
 named projection of the plucked ResolveDriveResource body.
 
 Output: `<src>.splat/messages/<basename>.{json,md}` per turn, one per
-`prompt.chunkedPrompt.chunks[]` entry. The .json carries the raw turn
-object; the .md carries the rendered content. Mirrors
+`prompt.chunkedPrompt.chunks[]` entry, or `<output-dir>/messages/...`
+when an output-dir argument is given (only `messages/` is
+cleared/recreated -- sibling content in an explicit output-dir, e.g. a
+caller-placed `.data` symlink, is left alone). The .json carries the
+raw turn object; the .md carries the rendered content. Mirrors
 chatfs_claude_conversation_splat's directory shape so the two providers
 read side-by-side.
 
@@ -113,8 +116,8 @@ def basename_for(index: int, kind: str) -> str:
 
 
 def main() -> None:
-    if len(sys.argv) != 2:
-        print(f"Usage: {sys.argv[0]} <conversation.json>", file=sys.stderr)
+    if len(sys.argv) not in (2, 3):
+        print(f"Usage: {sys.argv[0]} <conversation.json> [output-dir]", file=sys.stderr)
         sys.exit(1)
 
     src = Path(sys.argv[1])
@@ -122,10 +125,10 @@ def main() -> None:
     assert is_conversation(parsed), parsed
     turns = turns_of(parsed)
 
-    base_dir = src.with_suffix(".splat")
+    base_dir = Path(sys.argv[2]) if len(sys.argv) == 3 else src.with_suffix(".splat")
     messages_dir = base_dir / "messages"
-    if base_dir.exists():
-        shutil.rmtree(base_dir)
+    if messages_dir.exists():
+        shutil.rmtree(messages_dir)
     messages_dir.mkdir(parents=True)
 
     rendered_count = 0
