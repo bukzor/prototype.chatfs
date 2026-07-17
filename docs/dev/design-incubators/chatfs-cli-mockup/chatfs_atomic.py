@@ -19,17 +19,24 @@ attempt). Dot-prefixed so in-flight artifacts stay out of default `ls`
 on the served surface.
 
 Locking contract: `staged` and `promote` require the caller to hold the
-write lock; they cannot take it themselves (flock is per
-open-file-description, so a nested acquisition would self-deadlock).
-The lock anchor is any agreed-per-destination directory that itself
-never gets renamed -- chatfs uses `.data/$UUID/`, letting one lock span
-a whole chat's regeneration. Cooperating readers wrap reads in
-`read_locked` to observe a multi-step update as a single transition;
-non-cooperating readers (a human mid-`ls`) still see each destination
-only old-complete or new-complete, never partial. Crash safety needs no
-lock cleanup: the kernel releases flocks with the process.
+write lock; they don't take it themselves. It's no longer a
+self-deadlock hazard -- `chatfs_locks` is process-tree-reentrant -- but
+`staged` still must not lock on its own behalf, because the lock's job
+is to *span* multiple staged promotions (capture()'s two files,
+place_meta's promote-plus-symlink-sweep) as one transition; a lock
+scoped to a single `staged` call would forfeit that guarantee. The lock
+anchor is any agreed-per-destination directory that itself never gets
+renamed -- chatfs uses `.data/$UUID/`, letting one lock span a whole
+chat's regeneration. Cooperating readers wrap reads in
+`chatfs_locks.read_locked` to observe a multi-step update as a single
+transition; non-cooperating readers (a human mid-`ls`) still see each
+destination only old-complete or new-complete, never partial. Crash
+safety needs no lock cleanup: the kernel releases flocks with the
+process.
 
 Intended shape of chatfs regeneration:
+
+    from chatfs_locks import write_locked
 
     with write_locked(data_dir):                 # .data/$UUID/
         with staged(chat_dir) as tmp:            # scratch: .chat/.$UUID.tmp/
