@@ -6,6 +6,22 @@ Each section is keyed by script; for the noun-verb-locator framing of
 those scripts (which noun/verb/locator each implements, why each name
 was chosen), see `../cli-command-shape.md` + `../cli-command-shape.kb/`.
 
+> [!TODO]
+> Under the `.data/$UUID` extraction (`../chat-as-directory.md` !TODO)
+> and staged promotion (`../deterministic-regeneration.md` !TODO), the
+> per-script consequences below change shape:
+>
+> - `place_meta` writes `meta.json` into `.data/$UUID/` via a staged
+>   write; the view symlink is placed first, then stale ones purged by
+>   identity excluding it -- a chat never vanishes from views.
+> - Both browse verbs write into `.data/$UUID/`; capture stages its
+>   outputs, so a failed browse leaves the prior capture intact.
+> - `conversation_path_render` builds the entire derived surface in one
+>   staged scratch (splat with an output-dir argument, render into the
+>   same scratch) and promotes it as a single atomic swap of
+>   `.chat/$UUID/`. The pre-clean allowlist and the move-up step
+>   disappear.
+
 ## `place_meta(item, root)`
 
 1. Ensures `$root/.chat/$UUID/.data/` exists, writes

@@ -53,6 +53,11 @@ render/path_render, and the four-provider unification) closed 2026-07-11 —
       — first priority (user call, 2026-07-13 planning session): requirement
       `030-requirements.kb/atomic-cache-updates.md` is violated by in-place
       purge-and-rebuild; precondition for fuser-vfs integration.
+  - [ ] [chatfs_locks: fill test stubs, migrate chatfs_atomic lock helpers, wire call sites](todo.kb/2026-07-17-000-chatfs-locks--fill-test-stubs--migrate-chatfs-atomic-lock-helpers--wire-call-sites.md)
+        — the locking half: process-tree-reentrant lock table
+        (`__CHATFS_LOCKS`) landed 2026-07-17 with 14/16 tests; remaining
+        stubs + migration (migration blocked on coordinating with the
+        active integration session).
 - [ ] [AI Studio provider — parity ladder](todo.kb/2026-06-20-000-aistudio-provider-parity-ladder.md)
       — third provider, first JSPB source. Pluck + splat landed 2026-06-20;
       layout/types 2026-06-22; massage_json + url_browse 2026-07-03 (writes

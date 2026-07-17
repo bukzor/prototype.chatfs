@@ -5,8 +5,11 @@ Input: path to conversation.json (the plucked
 `/chat_conversations/{id}?…` response body).
 
 Output: `<src>.splat/messages/<basename>.{json,md}` per message in
-`chat_messages`. The .json carries the raw message object; the .md
-carries the rendered content.
+`chat_messages`, or `<output-dir>/messages/...` when an output-dir
+argument is given (only `messages/` is cleared/recreated -- sibling
+content in an explicit output-dir, e.g. a caller-placed `.data`
+symlink, is left alone). The .json carries the raw message object; the
+.md carries the rendered content.
 
 Scope: `text` blocks pass through; `thinking` and each
 `tool_use`+`tool_result` pair render as collapsible
@@ -187,8 +190,8 @@ def basename_for(msg: ChatMessage) -> str:
 
 
 def main() -> None:
-    if len(sys.argv) != 2:
-        print(f"Usage: {sys.argv[0]} <conversation.json>", file=sys.stderr)
+    if len(sys.argv) not in (2, 3):
+        print(f"Usage: {sys.argv[0]} <conversation.json> [output-dir]", file=sys.stderr)
         sys.exit(1)
 
     src = Path(sys.argv[1])
@@ -196,10 +199,10 @@ def main() -> None:
     assert is_conversation(doc), doc
     chat_messages = doc["chat_messages"]
 
-    base_dir = src.with_suffix(".splat")
+    base_dir = Path(sys.argv[2]) if len(sys.argv) == 3 else src.with_suffix(".splat")
     messages_dir = base_dir / "messages"
-    if base_dir.exists():
-        shutil.rmtree(base_dir)
+    if messages_dir.exists():
+        shutil.rmtree(messages_dir)
     messages_dir.mkdir(parents=True)
 
     rendered_count = 0

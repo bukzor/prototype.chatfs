@@ -1,5 +1,5 @@
 ---
-last-updated: "2026-05-08"
+last-updated: "2026-07-15"
 why:
   - opaque-extractor-boundary
   - canonical-conversation-graph
@@ -28,6 +28,36 @@ chatfs.demo/chatgpt/
     Created=YYYY/MM/DD/HH:MM:SS±HH:MM/
         Quantum Gravity and UV Catastrophe -> ../../../../.chat/69dfa575-…
 ```
+
+> [!TODO]
+> Captured exhaust moves out of the chat dir into a parallel UUID-keyed
+> tree, leaving `.chat/$UUID/` 100% derived -- a pure function of
+> `.data/$UUID/`, and the unit of atomic regeneration: built complete in
+> a sibling scratch (`.chat/.$UUID.tmp/`), promoted into place by
+> rename. Owning task:
+> `.claude/todo.kb/2026-07-13-000-Atomic-chat-dir-regeneration-…`.
+>
+> ```
+> .data/
+>     $UUID/                 # captured: meta.json, conversation.json, cdp.jsonl
+> .chat/
+>     $UUID/                 # derived -- THE atomically-swapped unit
+>         chat.md
+>         messages/
+>         conversations/
+>         .data -> ../../.data/$UUID   # inspection path; the same relative
+>                                      # target is valid from the scratch dir
+> Created=YYYY/…/$TITLE -> ../../../../.chat/$UUID
+> ```
+>
+> Readers see the previous complete chat dir or the new one -- never
+> partial, never mixed (requirement: `atomic-cache-updates`), with no
+> reader cooperation required. The `.data` symlink keeps captured
+> artifacts addressable through view paths
+> (`view/$TITLE/.data/meta.json`) while taking exhaust out of recursive
+> grep. `.data/$UUID/` never moves and doubles as the per-chat flock
+> anchor. `.chat/$UUID/` does not exist before first render; the view
+> symlink dangles until then -- the honest "not yet synced" signal.
 
 ## Multiple labeled date-trees
 

@@ -39,6 +39,13 @@ yet exist. Reading `view/$TITLE/chat.md` returns ENOENT until the
 render completes. The view path itself (the dir-symlink) resolves; the
 file inside it doesn't yet.
 
+> [!TODO]
+> With `.chat/$UUID/` wholly derived (`../chat-as-directory.md` !TODO),
+> the dir-symlink itself dangles until first render -- `.chat/$UUID/`
+> doesn't exist yet, not just `chat.md` inside it. The dangling link is
+> the deliberate "not yet synced" signal; captured artifacts are
+> meanwhile inspectable at `.data/$UUID/`.
+
 ## Ergonomic tradeoff
 
 `cat date/$TITLE.md` becomes `cat date/$TITLE/chat.md` — one extra
