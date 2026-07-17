@@ -47,7 +47,8 @@ the leaves.
 
 1. **Index browse** (`chatfs_chatgpt_index_browse.py`) — drives
    `har-browse` against `https://chatgpt.com`, tees the raw CDP to
-   `chatgpt.index.cdp.jsonl` (debug intermediate), plucks it in-process
+   `chatfs.demo/chatgpt/.data/index.cdp.jsonl` (debug intermediate),
+   plucks it in-process
    (`chatfs_chatgpt_layout.pluck_index_pages`), emits index pages on
    stdout.
 2. **Index splat** (`chatfs_chatgpt_index_splat.py`) — reads index

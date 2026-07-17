@@ -51,7 +51,7 @@ the captured stream to a debug file first, then pluck from that same
 file as a second pass:
 
 ```python
-browse(url, cdp_path)               # chatgpt.index.cdp.jsonl
+browse(url, cdp_path)               # chatfs.demo/chatgpt/.data/index.cdp.jsonl
 pluck(pluck_index_pages, cdp_path, dst)
 ```
 
@@ -64,7 +64,10 @@ intermediate is unchanged.)
 The debug file is not consumed by any later stage — it exists so a
 half-broken run is inspectable. When something looks wrong downstream,
 the user can re-run pluck against the captured CDP without re-driving
-Chromium.
+Chromium. (Since the 2026-07-15 jq→Python port that re-run is a library
+affordance — `chatfs_layout.pluck` from Python — not a shell one; the
+provider pluck modules planned in the module-shape-refactor todo restore
+the stdin→stdout surface.)
 
 This is currently default-on. A future flag will gate it default-off
 once the pipeline stabilizes; keeping it on during incubation pays for

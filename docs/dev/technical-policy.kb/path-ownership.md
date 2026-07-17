@@ -65,6 +65,12 @@ pre-normalization pluck lives at `conversation.json.d/raw.json`;
 chatgpt/claude's incidental-capture cross-check dump lives at
 `cdp.jsonl.d/index-pages.jsonl`.
 
+The same `.data/` idiom recurs one level up, at the provider root:
+`$root/.data/index.cdp.jsonl` is index browse's debug CDP tee
+(2026-07-17; previously a loose file next to the scripts). Same
+ownership shape as `.data/cdp.jsonl` — capture writes it, no later stage
+reads it — and `index.cdp.jsonl.d/` is reserved per the rule above.
+
 ### Derived members (`messages/`, `conversations/`, `chat.md`)
 
 | Subpath | Owner (writes) | Others | Notes |

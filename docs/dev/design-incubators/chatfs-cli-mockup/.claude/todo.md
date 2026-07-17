@@ -104,7 +104,8 @@ render/path_render, and the four-provider unification) closed 2026-07-11 —
 - [ ] Gate debug intermediates (e.g. `cdp.jsonl` tees) behind a flag, default
       off. Leaf scripts read stdin / write data to stdout / send progress to
       stderr; higher-level orchestrators take URL or ts-dir args and tee debug
-      intermediates (e.g. `chatgpt.index.cdp.jsonl`, `<ts-dir>/cdp.jsonl`)
+      intermediates (e.g. `chatfs.demo/chatgpt/.data/index.cdp.jsonl`,
+      `<ts-dir>/cdp.jsonl`)
       unconditionally today.
 - [ ] `design.kb/040-design.kb/cli-command-shape.md`'s unquoted
       `last-updated: 2026-05-11` fails `llm.kb-validate` (schema wants a string;
