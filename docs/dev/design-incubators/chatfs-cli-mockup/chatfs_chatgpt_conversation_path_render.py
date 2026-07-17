@@ -8,29 +8,22 @@ Prerequisites in the resolved chat dir's `.data/$UUID/` twin:
     meta.json           — placed by index splat or url browse
     conversation.json   — output of conversation pluck
 
-Steps:
-    1. reset the chat dir (100% derived; nothing survives a rebuild)
-    2. splat .data/$UUID/conversation.json → .data/$UUID/conversation.splat/
-    3. move .data/$UUID/conversation.splat/{messages,conversations} up to
-       chat dir; rmdir .data/$UUID/conversation.splat
-    4. relink chat dir/.data -> .data/$UUID (inspection symlink)
-    5. render → chat.md
+Builds the entire derived surface (messages/, conversations/, chat.md,
+the .data inspection symlink) in a staged scratch sibling and
+atomically promotes it over chat_dir in one swap -- readers see the
+old complete chat dir or the new one, never partial or mixed. See
+chatfs_atomic.py's module docstring for the mechanism; write_locked
+comes from chatfs_locks (not chatfs_atomic) so this script's own lock
+acquisition is safe to re-enter from an ancestor process that already
+holds it.
 """
-import shutil
 import subprocess
 import sys
 from pathlib import Path
 
+from chatfs_atomic import staged
 from chatfs_chatgpt_layout import data_dir_of, link_data_dir, resolve_chat_dir
-
-
-def purge_non_captured(chat_dir: Path) -> None:
-    """Reset chat_dir to empty. Nothing under it is captured anymore --
-    captured exhaust lives in the parallel `.data/$UUID/` tree -- so
-    there is no allowlist to preserve."""
-    if chat_dir.exists():
-        shutil.rmtree(chat_dir)
-    chat_dir.mkdir(parents=True)
+from chatfs_locks import write_locked
 
 
 def main() -> None:
@@ -39,6 +32,7 @@ def main() -> None:
         sys.exit(2)
 
     chat_dir = resolve_chat_dir(sys.argv[1])
+    uuid = chat_dir.name
     data_dir = data_dir_of(chat_dir)
     meta_path = data_dir / "meta.json"
     assert meta_path.exists(), f"missing meta.json: run index browse first ({meta_path})"
@@ -47,21 +41,20 @@ def main() -> None:
         f"missing conversation.json: run conversation browse first ({conversation})"
     )
 
-    purge_non_captured(chat_dir)
-    link_data_dir(chat_dir, chat_dir.name)
-
-    print(f"Splatting {conversation} ...", file=sys.stderr)
-    _ = subprocess.run(["chatgpt-splat", str(conversation)], check=True)
-    splat = data_dir / "conversation.splat"
-    for entry in splat.iterdir():
-        _ = shutil.move(str(entry), str(chat_dir / entry.name))
-    splat.rmdir()
-
     render = Path(__file__).parent / "chatfs_chatgpt_conversation_render.py"
-    out = chat_dir / "chat.md"
-    print(f"Rendering {chat_dir} → chat.md ...", file=sys.stderr)
-    with out.open("wb") as f:
-        _ = subprocess.run([str(render), str(chat_dir)], stdout=f, check=True)
+
+    with write_locked(data_dir):
+        with staged(chat_dir) as tmp:
+            tmp.mkdir(parents=True)
+            link_data_dir(tmp, uuid)
+
+            print(f"Splatting {conversation} ...", file=sys.stderr)
+            _ = subprocess.run(["chatgpt-splat", str(conversation), str(tmp)], check=True)
+
+            out = tmp / "chat.md"
+            print(f"Rendering {tmp} → chat.md ...", file=sys.stderr)
+            with out.open("wb") as f:
+                _ = subprocess.run([str(render), str(tmp)], stdout=f, check=True)
 
 
 if __name__ == "__main__":

@@ -9,6 +9,13 @@ all-zero root sentinel, and pruning of bodiless canceled retries.
 Usage:
     chatfs_claude_conversation_render.py <path-to-chat-dir-or-inside>
 
+Reads `conversation.json` via `chat_dir/.data` (the inspection symlink
+to `.data/$UUID/`), not by computing that path directly -- path_render
+invokes this leaf against a staged scratch sibling whose own name
+isn't the bare uuid, so the symlink (already placed by path_render
+before this runs, with the correct uuid) is the only path shape valid
+in both that context and the final, promoted chat_dir.
+
 stdout: rendered markdown.
 """
 
@@ -18,7 +25,7 @@ from datetime import datetime
 from pathlib import Path
 
 import chatfs_json
-from chatfs_claude_layout import data_dir_of, resolve_chat_dir
+from chatfs_claude_layout import DATA_DIR_NAME, resolve_chat_dir
 from chatfs_claude_types import ChatMessage, Several, is_conversation
 from chatfs_render import ConversationTree, Turn, render_tree
 
@@ -127,7 +134,7 @@ def main() -> None:
 
     chat_dir = resolve_chat_dir(sys.argv[1])
     conversation = chatfs_json.loads(
-        (data_dir_of(chat_dir) / "conversation.json").read_text()
+        (chat_dir / DATA_DIR_NAME / "conversation.json").read_text()
     )
     assert is_conversation(conversation), conversation
 

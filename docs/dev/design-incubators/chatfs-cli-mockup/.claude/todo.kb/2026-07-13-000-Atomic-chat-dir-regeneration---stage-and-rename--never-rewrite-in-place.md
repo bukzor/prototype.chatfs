@@ -168,9 +168,40 @@ below:
       one-staged-scratch shape. Smoke-tested by hand (all three,
       default + explicit-dir + sibling-preservation); pytest 50/50,
       basedpyright 0/0/0 both packages.
-- [ ] Rewrite the three `chatfs_*_conversation_path_render.py` to the
+- [x] Rewrite the three `chatfs_*_conversation_path_render.py` to the
       one-staged-call shape (see `chatfs_atomic.py` module docstring);
-      delete `purge_non_captured` and the move-up loop
+      delete `purge_non_captured` and the move-up loop -- done
+      2026-07-17: each now wraps `write_locked(data_dir): with
+      staged(chat_dir) as tmp: ...` around `tmp.mkdir(parents=True)` +
+      `link_data_dir(tmp, uuid)` + splat (writing straight into `tmp`
+      via its new output-dir arg, no `.splat`/move-up/rmdir) + render
+      (stdout piped to `tmp/chat.md`); `purge_non_captured` and the
+      move-up loop deleted entirely. `write_locked` imported from
+      `chatfs_locks` (not `chatfs_atomic`) per the parallel locks
+      session's coordination note above, so this script's own lock
+      acquisition is reentrant-safe once a future ancestor (step 5)
+      holds the same anchor across a subprocess boundary. Found and
+      fixed a real bug surfaced by the rewrite: the claude/chatgpt bare
+      `render.py` leaves had been switched to `data_dir_of(chat_dir)`
+      in step 2, which breaks when path_render invokes them against
+      the staged scratch (`.chat/.$UUID.tmp/`, whose `.name` isn't the
+      bare uuid) -- reverted those two back to reading via
+      `chat_dir/.data` (the inspection symlink, already correctly
+      targeted by `link_data_dir`'s explicit-uuid parameter regardless
+      of the containing dir's name); aistudio's render.py leaf was
+      unaffected (never reads `.data` at all). Hand-verified end to
+      end for all three providers (first render through a dangling
+      view path, idempotent re-render, self-heal from a hand-crafted
+      abandoned scratch, and a genuine forced failure -- reader-visible
+      `chat.md` unchanged, failed attempt preserved as `.fail`,
+      `.fail` cleared on the next success). No new automated test file
+      added for the orchestration scripts themselves, matching this
+      repo's existing convention (no CLI orchestrator here has direct
+      unit tests, only its constituent pure functions) -- the
+      mechanism is already covered by `chatfs_atomic_test.py`'s 18
+      tests, and a real process-kill harness is explicitly the
+      separate "Kill-mid-flight test" item below, not this one. pytest
+      62/62, basedpyright 0/0/0 (chatfs_locks* excluded, out of scope).
 - [ ] Ride-alongs: `capture()` outputs and `meta.json` through `staged`;
       view-symlink place-then-purge inversion
 - [ ] Docs: unwrap the !TODO blocks in `chat-as-directory.md`,
