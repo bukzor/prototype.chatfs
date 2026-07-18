@@ -49,10 +49,20 @@ render/path_render, and the four-provider unification) closed 2026-07-11 —
 
 ## Next
 
-- [ ] [Atomic chat-dir regeneration — stage and rename, never rewrite in place](todo.kb/2026-07-13-000-Atomic-chat-dir-regeneration---stage-and-rename--never-rewrite-in-place.md)
+- [x] [Atomic chat-dir regeneration — stage and rename, never rewrite in place](todo.kb/2026-07-13-000-Atomic-chat-dir-regeneration---stage-and-rename--never-rewrite-in-place.md)
       — first priority (user call, 2026-07-13 planning session): requirement
       `030-requirements.kb/atomic-cache-updates.md` is violated by in-place
-      purge-and-rebuild; precondition for fuser-vfs integration.
+      purge-and-rebuild; precondition for fuser-vfs integration. Fully
+      closed 2026-07-18: all Implementation Steps and Success Criteria
+      now `[x]` in the task file (kept in place, not `todo clear`-deleted,
+      per its own Notes — it re-homes with the code at graduation). Last
+      two items closed this session: the five `[!TODO]` design docs
+      unwrapped against verified ground truth, and a real-`SIGKILL`
+      kill-mid-flight test suite (`DescribeKillMidFlight`, 4 tests) added
+      against `chatfs_atomic.py`'s shared staged-promotion kernel. pytest
+      95/95, basedpyright 0/0/0. Commits `e49ab0f` (docs) and `5e67b60`
+      (kill-tests). Devlog:
+      `devlog/2026-07-18-002-design-doc-unwrap-and-kill-mid-flight-tests-close-the-atomic-regen-task.md`.
   - [x] chatfs_locks: fill test stubs, migrate chatfs_atomic lock
         helpers, wire call sites — the locking half, closed 2026-07-17:
         process-tree-reentrant lock table, stub tests filled,

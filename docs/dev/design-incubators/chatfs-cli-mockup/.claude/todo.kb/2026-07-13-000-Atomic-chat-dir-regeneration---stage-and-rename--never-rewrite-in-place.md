@@ -256,19 +256,55 @@ below:
       nowhere yet" (false since `chatfs_layout.py` imports it). pytest
       91/91, basedpyright 0/0/0 (no functional code changed, docstring
       + docs only).
-- [ ] Kill-mid-flight test per the requirement's verification, killing
-      at each stage boundary and inside the promote
+- [x] Kill-mid-flight test per the requirement's verification, killing
+      at each stage boundary and inside the promote -- done 2026-07-18:
+      `DescribeKillMidFlight` in `chatfs_atomic_test.py`, 4 tests, real
+      `SIGKILL` against a real child process (not the existing
+      `DescribeCrashRecovery`/`DescribeRecover` classes' hand-crafted
+      on-disk states) -- since all five call sites (capture, place_meta,
+      path_render x3) share the one `chatfs_atomic.staged()` kernel,
+      testing the kernel directly under a real kill covers the
+      guarantee everywhere it's used. Covers the three fingerprints
+      `recover()`'s own docstring names (scratch present mid-populate;
+      dst absent + `.old` present, killed between the two
+      `_swap_via_old` renames; dst + `.old` both present, killed before
+      `.old` cleanup) plus a fourth exercising the real
+      `RENAME_EXCHANGE` path specifically (not the forced fallback):
+      killed mid-`shutil.rmtree` cleanup that follows a successful
+      exchange, proving dst is already fully-new before the crash
+      regardless of what happens to the displaced old copy afterward.
+      Synchronization is a child self-`SIGSTOP` after printing "ready"
+      at the instrumented point (spying on `os.rename`/`os.unlink` from
+      the child script, `chatfs_atomic.py` itself untouched) -- the
+      parent's blocking `readline()` is the sync primitive, no sleep,
+      no timing race; `SIGKILL` still terminates a stopped process
+      immediately per POSIX. Each boundary's precision was hand
+      mutation-tested (shifted which call triggers the pause; forced
+      the fallback path in the exchange-cleanup test) and confirmed to
+      fail correctly, then reverted. One real bug caught and fixed
+      along the way, in the test helper itself, not the code under
+      test: an unconditional `proc.stderr.read()` before sending
+      `SIGKILL` deadlocked, since a merely-`SIGSTOP`ped (not exited)
+      child's stderr pipe never hits EOF -- moved the drain to only the
+      already-exited failure path. pytest 95/95, basedpyright 0/0/0.
 
 ## Success Criteria
 
-- [ ] Requirement verification passes for ALL readers -- no lock needed
-      to observe only old-complete or new-complete chat dirs
-- [ ] No verb destroys data before its replacement is secured --
+- [x] Requirement verification passes for ALL readers -- no lock needed
+      to observe only old-complete or new-complete chat dirs -- verified
+      by the kill-mid-flight tests above at the shared kernel level.
+- [x] No verb destroys data before its replacement is secured --
       including `capture()` (a failed browse leaves the prior capture
-      intact)
-- [ ] A crashed run's partial output is preserved on disk for
-      inspection; the next run self-heals with no manual cleanup
-- [ ] Full test suite + basedpyright clean
+      intact) -- `chatfs_layout_test.py`'s `DescribeCapture`/
+      `DescribePlaceMeta` tests (2026-07-18 ride-alongs) plus this
+      session's kernel-level kill tests.
+- [x] A crashed run's partial output is preserved on disk for
+      inspection; the next run self-heals with no manual cleanup --
+      each kill-mid-flight test asserts both halves directly: the
+      `.fail` sibling holding the killed attempt's bytes, and a
+      subsequent `staged()`/`recover()` call healing without help.
+- [x] Full test suite + basedpyright clean -- pytest 95/95, basedpyright
+      0/0/0.
 
 ## Notes
 
