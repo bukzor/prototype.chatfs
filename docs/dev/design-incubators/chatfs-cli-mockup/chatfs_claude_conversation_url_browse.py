@@ -34,13 +34,13 @@ to run `chatfs_claude_index_browse.sh | chatfs_claude_index_splat.py`
 `chatfs_claude_conversation_path_render.py` on the chat dir (reuses
 the already-captured cdp.jsonl + conversation.json).
 """
-import subprocess
 import sys
 from pathlib import Path
 from typing import cast
 from urllib.parse import urlparse
 
 import chatfs_json
+import chatfs_sh
 from chatfs_claude_layout import capture, chat_dir_for, place_meta
 from chatfs_claude_types import IndexItem, is_index_page
 from chatfs_json import JsonObject
@@ -114,7 +114,7 @@ def main() -> None:
 
     _ = place_meta(item, ROOT)
 
-    _ = subprocess.run([str(PATH_RENDER), str(chat_dir)], check=True)
+    _ = chatfs_sh.run([str(PATH_RENDER), str(chat_dir)])
 
 
 if __name__ == "__main__":

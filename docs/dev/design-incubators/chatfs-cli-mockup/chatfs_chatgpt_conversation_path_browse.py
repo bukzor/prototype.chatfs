@@ -14,11 +14,11 @@ Steps:
     2. pluck cdp.jsonl → .data/$UUID/conversation.json
     3. delegate to chatfs_chatgpt_conversation_path_render.py
 """
-import subprocess
 import sys
 from pathlib import Path
 
 import chatfs_json
+import chatfs_sh
 from chatfs_chatgpt_layout import capture, data_dir_of, resolve_chat_dir
 from chatfs_chatgpt_types import is_index_item
 
@@ -38,7 +38,7 @@ def main() -> None:
 
     _ = capture(url, chat_dir)
 
-    _ = subprocess.run([str(PATH_RENDER), str(chat_dir)], check=True)
+    _ = chatfs_sh.run([str(PATH_RENDER), str(chat_dir)])
 
 
 if __name__ == "__main__":

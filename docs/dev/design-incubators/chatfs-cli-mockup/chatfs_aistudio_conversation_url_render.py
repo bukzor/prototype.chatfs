@@ -7,11 +7,11 @@ Usage:
 Resolves the conversation id from the URL and delegates to
 chatfs_aistudio_conversation_path_render.py against `.chat/$id/`.
 """
-import subprocess
 import sys
 from pathlib import Path
 from urllib.parse import urlparse
 
+import chatfs_sh
 from chatfs_aistudio_layout import chat_dir_for, data_dir_for
 
 ROOT = Path(__file__).parent / "chatfs.demo" / "aistudio"
@@ -35,7 +35,7 @@ def main() -> None:
     )
 
     path_render = Path(__file__).parent / "chatfs_aistudio_conversation_path_render.py"
-    _ = subprocess.run([str(path_render), str(chat_dir)], check=True)
+    _ = chatfs_sh.run([str(path_render), str(chat_dir)])
 
 
 if __name__ == "__main__":

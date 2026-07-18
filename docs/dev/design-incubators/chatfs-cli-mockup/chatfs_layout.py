@@ -30,14 +30,16 @@ chatgpt/claude/aistudio.
 """
 import json
 import os
-import subprocess
 import sys
 from collections.abc import Mapping
 from datetime import datetime
 from pathlib import Path
 
+import chatfs_sh
+
 
 DATA_DIR_NAME = ".data"
+
 
 
 def safe_filename(name: str) -> str:
@@ -150,7 +152,7 @@ def run_pluck(script: Path, src: Path, dst: Path) -> None:
     construction rather than by remembering to tee at each call site.
     """
     with src.open("rb") as fin, dst.open("wb") as fout:
-        _ = subprocess.run([str(script)], stdin=fin, stdout=fout, check=True)
+        _ = chatfs_sh.run([str(script)], stdin=fin, stdout=fout)
 
 
 def capture(
@@ -190,7 +192,7 @@ def capture(
 
     print(f"Capturing {url} → {cdp} ...", file=sys.stderr)
     with cdp.open("wb") as f:
-        _ = subprocess.run(["har-browse", url], stdout=f, check=True)
+        _ = chatfs_sh.run(["har-browse", url], stdout=f)
 
     print(f"Plucking conversation → {conversation} ...", file=sys.stderr)
     run_pluck(pluck_script, cdp, conversation)

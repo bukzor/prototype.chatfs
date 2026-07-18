@@ -16,10 +16,10 @@ docstring for the mechanism; `staged` takes data_dir's write lock
 itself (from chatfs_locks, reentrant), so no separate lock acquisition
 is needed here.
 """
-import subprocess
 import sys
 from pathlib import Path
 
+import chatfs_sh
 from chatfs_atomic import staged
 from chatfs_aistudio_layout import data_dir_of, link_data_dir, resolve_chat_dir
 
@@ -50,12 +50,12 @@ def main() -> None:
         link_data_dir(tmp, uuid)
 
         print(f"Splatting {conversation} ...", file=sys.stderr)
-        _ = subprocess.run([str(splat_script), str(conversation), str(tmp)], check=True)
+        _ = chatfs_sh.run([str(splat_script), str(conversation), str(tmp)])
 
         out = tmp / "chat.md"
         print(f"Rendering {tmp} → chat.md ...", file=sys.stderr)
         with out.open("wb") as f:
-            _ = subprocess.run([str(render), str(tmp)], stdout=f, check=True)
+            _ = chatfs_sh.run([str(render), str(tmp)], stdout=f)
 
 
 if __name__ == "__main__":

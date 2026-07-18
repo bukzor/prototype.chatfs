@@ -20,12 +20,12 @@ Steps:
     4. place_meta from the raw doc (writes meta.json, view dir-symlink)
     5. delegate to path_render
 """
-import subprocess
 import sys
 from pathlib import Path
 from urllib.parse import urlparse
 
 import chatfs_json
+import chatfs_sh
 from chatfs_aistudio_layout import capture, chat_dir_for, index_item, place_meta
 from chatfs_aistudio_types import is_conversation
 from chatfs_layout import run_pluck
@@ -64,7 +64,7 @@ def main() -> None:
     assert item["id"] == id_, (item["id"], id_)
     chat_dir = place_meta(item, ROOT)
 
-    _ = subprocess.run([str(PATH_RENDER), str(chat_dir)], check=True)
+    _ = chatfs_sh.run([str(PATH_RENDER), str(chat_dir)])
 
 
 if __name__ == "__main__":
