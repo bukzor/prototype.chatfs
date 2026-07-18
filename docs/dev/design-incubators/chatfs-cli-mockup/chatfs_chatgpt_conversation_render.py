@@ -13,6 +13,13 @@ fork facts always have an anchor.
 Usage:
     chatfs_chatgpt_conversation_render.py <path-to-chat-dir-or-inside>
 
+Reads `conversation.json` via `chat_dir/.data` (the inspection symlink
+to `.data/$UUID/`), not by computing that path directly -- path_render
+invokes this leaf against a staged scratch sibling whose own name
+isn't the bare uuid, so the symlink (already placed by path_render
+before this runs, with the correct uuid) is the only path shape valid
+in both that context and the final, promoted chat_dir.
+
 stdout: rendered markdown.
 """
 

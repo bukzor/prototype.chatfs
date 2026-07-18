@@ -14,9 +14,9 @@ to do here (contrast chatgpt/claude's find_index_item): place_meta
 derives straight from the same capture that becomes conversation.json.
 
 Steps:
-    1. browse $url -> .chat/$id/.data/cdp.jsonl
-    2. conversation pluck -> .data/conversation.json.d/raw.json (raw JSPB array)
-    3. massage -> .data/conversation.json (named, matches chatgpt/claude shape)
+    1. browse $url -> .data/$id/cdp.jsonl
+    2. conversation pluck -> .data/$id/conversation.json.d/raw.json (raw JSPB array)
+    3. massage -> .data/$id/conversation.json (named, matches chatgpt/claude shape)
     4. place_meta from the raw doc (writes meta.json, view dir-symlink)
     5. delegate to path_render
 """

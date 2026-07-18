@@ -149,27 +149,16 @@ class DescribeSeeding:
         os.close(fd)
 
 
-CHILD_REENTER_W = """
-import sys
-from pathlib import Path
-from chatfs_locks import write_locked
-with write_locked(Path(sys.argv[1])):
-    print("ok")
-"""
-
-CHILD_READ = """
-import sys
-from pathlib import Path
-from chatfs_locks import read_locked
-with read_locked(Path(sys.argv[1])):
-    print("ok")
-"""
+CHILDREN = HERE / "chatfs_locks_test"
+CHILD_REENTER_W = CHILDREN / "child_reenter_w.py"
+CHILD_READ = CHILDREN / "child_read.py"
+CHILD_SPAWNS_GRANDCHILD = CHILDREN / "child_spawns_grandchild.py"
 
 
 def child(
-    script: str, anchor: Path, *, via_run: bool = True, timeout: float = 10
+    script: Path, anchor: Path, *, via_run: bool = True, timeout: float = 10
 ) -> subprocess.CompletedProcess[bytes]:
-    argv = [sys.executable, "-c", script, str(anchor)]
+    argv = [sys.executable, str(script), str(anchor)]
     env = {**os.environ, "PYTHONPATH": str(HERE)}
     if via_run:
         return run(argv, capture_output=True, timeout=timeout, env=env)
@@ -198,14 +187,27 @@ class DescribeSubprocessReentry:
         assert result.stdout == b"ok\n"
         assert b"not open" in result.stderr
 
-    def it_blocks_a_second_writer_from_an_unrelated_process_tree(self):
-        # Needs orchestration of a genuinely-blocked child (start, observe
-        # blocked-not-crashed, release, observe completion) without racing
-        # the assertion. More thought than remaining tokens.
-        pass
+    def it_blocks_a_second_writer_from_an_unrelated_process_tree(self, tmp_path: Path):
+        with write_locked(tmp_path):
+            env = {**os.environ, "PYTHONPATH": str(HERE)}
+            proc = subprocess.Popen(
+                [sys.executable, str(CHILD_REENTER_W), str(tmp_path)],
+                env=env,  # unrelated tree: no pass_fds, so the inherited
+                # __CHATFS_LOCKS entry (if any survives env-copy) names a
+                # dead fd -- the child must genuinely re-flock and block
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+            with pytest.raises(subprocess.TimeoutExpired):
+                _ = proc.wait(timeout=0.5)  # blocked on the kernel lock, not crashed
+        # write lock released above; the child's flock can now proceed
+        stdout, stderr = proc.communicate(timeout=10)
+        assert proc.returncode == 0, stderr
+        assert stdout == b"ok\n"
+        assert b"not open" in stderr  # dead fd from the copied-but-unshared env entry
 
-    def it_survives_a_grandchild_two_execs_deep(self):
-        # child uses chatfs_locks.run() to spawn its own child re-entering
-        # the same anchor: proves the table re-serializes correctly from a
-        # seeded (borrowed) state, not just from owned locks.
-        pass
+    def it_survives_a_grandchild_two_execs_deep(self, tmp_path: Path):
+        with write_locked(tmp_path):
+            result = child(CHILD_SPAWNS_GRANDCHILD, tmp_path)
+        assert result.returncode == 0, result.stderr
+        assert result.stdout == b"ok\n"

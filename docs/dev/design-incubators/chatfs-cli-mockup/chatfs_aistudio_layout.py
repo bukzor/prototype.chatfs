@@ -14,7 +14,7 @@ from pathlib import Path
 
 from chatfs_aistudio_types import Conversation, IndexItem
 from chatfs_json import JsonValue, is_json_array
-from chatfs_layout import DATA_DIR_NAME, chat_dir_for, data_dir_for
+from chatfs_layout import DATA_DIR_NAME, chat_dir_for, data_dir_for, data_dir_of, link_data_dir
 from chatfs_layout import capture as _capture
 from chatfs_layout import iter_responses_matching, place_meta as _place_meta
 from chatfs_layout import resolve_chat_dir, safe_filename
@@ -23,6 +23,8 @@ __all__ = [
     "DATA_DIR_NAME",
     "chat_dir_for",
     "data_dir_for",
+    "data_dir_of",
+    "link_data_dir",
     "resolve_chat_dir",
     "safe_filename",
     "capture",
@@ -146,7 +148,7 @@ def _created(unix_seconds: int) -> datetime:
 
 
 def place_meta(item: IndexItem, root: Path) -> Path:
-    """Write meta.json into .chat/$UUID/.data/, refresh the view dir-symlink.
+    """Write meta.json into `.data/$UUID/`, refresh the view dir-symlink.
 
     View-tree placement prefers true creation time when `index_item`
     found one (`Created=`-labeled year segment, time_dir_for's

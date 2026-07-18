@@ -2,13 +2,15 @@
 managed-by: Skill(llm-subtask)
 cost-benefit-sweh:
   timebox:
-    "@value": 2.0
+    "@value": 1.0
     rationale: >
-      Module and 14 of 16 tests landed 2026-07-17 (design session); what
-      remains is two deliberately-stubbed subprocess tests (~1h -- the
-      orchestration is the thought, not the code), a mechanical
-      lock-helper migration out of chatfs_atomic (~0.5h, blocked on
-      coordination), and threading chatfs_locks.run through
+      Module and 14 of 16 tests landed 2026-07-17 (design session); the
+      two deliberately-stubbed subprocess tests landed same day in a
+      follow-on session (genuine kernel-block orchestration via
+      subprocess.Popen + a two-exec-deep grandchild re-entry). Remaining:
+      a mechanical lock-helper migration out of chatfs_atomic (~0.5h, no
+      longer coordination-blocked -- the parent task's step 4 already
+      targets chatfs_locks) and threading chatfs_locks.run through
       chatfs_layout's subprocess call sites (~0.5h, grows run()'s
       deliberately narrow signature).
     confidence: confident
@@ -47,20 +49,31 @@ call sites to the old helpers.
 
 ## Implementation Steps
 
-- [ ] Fill `it_survives_a_grandchild_two_execs_deep` (highest value:
+- [x] Fill `it_survives_a_grandchild_two_execs_deep` (highest value:
       the only test that exercises re-serializing the table from a
-      *borrowed* seeded state rather than owned locks — child uses
+      *borrowed* seeded state rather than owned locks -- child uses
       `chatfs_locks.run` to spawn a grandchild re-entering the same
-      anchor)
-- [ ] Fill `it_blocks_a_second_writer_from_an_unrelated_process_tree`
+      anchor) -- done 2026-07-17: extracted the child/grandchild
+      scripts to `chatfs_locks_test/child_reenter_w.py` and
+      `child_spawns_grandchild.py` (file-per-script instead of
+      inline `python -c` strings -- the grandchild-spawning script
+      references its sibling file directly rather than embedding a
+      second script's source via `repr()`)
+- [x] Fill `it_blocks_a_second_writer_from_an_unrelated_process_tree`
       (needs start / observe-blocked-not-crashed / release / observe-
-      completion orchestration without racing the assertion)
+      completion orchestration without racing the assertion) -- done
+      2026-07-17: a plain (non-`run()`) `subprocess.Popen` under an
+      unrelated tree carries no shared fd, so its `_seed()` warns on
+      a dead inherited fd and falls through to a real blocking
+      `flock()` against the parent's write lock; `proc.wait(timeout=...)`
+      raising `TimeoutExpired` proves genuinely-blocked, not crashed,
+      before the parent releases and the child completes
 - [ ] Migrate: delete `read_locked`/`write_locked`/`_locked` from
       `chatfs_atomic.py`, import from `chatfs_locks`; move the 3
-      `DescribeLocking` tests to `chatfs_locks_test.py`
-      — **blocked on coordination** with the parallel integration
-      session (its call sites may import the old names; agree the swap
-      or land after it)
+      `DescribeLocking` tests to `chatfs_locks_test.py` -- no longer
+      coordination-blocked: the parent task's step 4 (landed
+      2026-07-17) already imports `write_locked` from `chatfs_locks`,
+      not `chatfs_atomic`
 - [ ] Rewrite `chatfs_atomic.py`'s locking-contract docstring
       paragraph: the "cannot take it themselves (self-deadlock)"
       rationale is cured by reentrancy; the surviving reason `staged`
@@ -79,9 +92,14 @@ call sites to the old helpers.
 
 ## Open Questions
 
-- Sequencing with the parallel integration session: who lands the
+- ~~Sequencing with the parallel integration session: who lands the
   migration, and does their step-4 wiring target `chatfs_locks` from
-  the start? (One-line heads-up owed to them either way.)
+  the start?~~ Resolved 2026-07-17: the parent task's step 4 already
+  imports `write_locked` from `chatfs_locks`, confirmed live in
+  `chatfs_atomic.py`'s absence of any such import and the three
+  `path_render.py` scripts' `from chatfs_locks import write_locked`.
+  Migration is unblocked; whichever session picks up the remaining
+  steps here can proceed without further coordination.
 
 ## Success Criteria
 
@@ -99,3 +117,11 @@ file. The stale-`__pycache__` incident from that session (a `.pyc`
 compiled seconds before an `EX`→`SH` edit of equal byte length —
 mtime+size freshness can never invalidate it) is worth remembering when
 a test contradicts the source you're reading.
+
+Follow-on session, same day: both stub tests filled (16/16, 0 stubs);
+in passing, the file's three
+inline `python -c` scripts (`CHILD_REENTER_W`, `CHILD_READ`, and the
+new grandchild-spawner) were extracted to a `chatfs_locks_test/`
+sibling directory as real `.py` files, referenced by path -- a repo-
+wide grep confirmed no other embedded `python -c` scripts exist to
+match. Full suite 78/78, basedpyright 0/0/0.

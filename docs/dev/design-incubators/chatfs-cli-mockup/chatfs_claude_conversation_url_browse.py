@@ -18,22 +18,23 @@ the two endpoints (null-tolerant) — catches schema drift if either side
 ever changes shape.
 
 Steps:
-    1. browse $url → .chat/$UUID/.data/cdp.jsonl
-    2. conversation pluck → .chat/$UUID/.data/conversation.json
-    3. index pluck → .chat/$UUID/.data/cdp.jsonl.d/index-pages.jsonl;
-       filter to .uuid == $UUID → meta (fail loudly if absent)
+    1. browse $url → .data/$UUID/cdp.jsonl
+    2. conversation pluck → .data/$UUID/conversation.json
+    3. index pluck → .data/$UUID/cdp.jsonl.d/index-pages.jsonl; filter to
+       .uuid == $UUID → meta (fail loudly if absent)
     4. cross-check conversation doc vs index item, null-tolerant
     5. place_meta (writes meta.json, purges + places view dir-symlink)
     6. delegate to path_render
 
-Captures are written directly into `.chat/$UUID/.data/` — no temp
-staging. If a later step fails, the captures remain there for
-inspection. Recovery from the long-tail "sidebar didn't include this
-uuid" case is to run `chatfs_claude_index_browse.py |
-chatfs_claude_index_splat.py` (deposits meta.json into the same
-`.data/`) and then `chatfs_claude_conversation_path_render.py` on the
-chat dir (reuses the already-captured cdp.jsonl + conversation.json).
+Captures are written directly into `.data/$UUID/` — no temp staging.
+If a later step fails, the captures remain there for inspection.
+Recovery from the long-tail "sidebar didn't include this uuid" case is
+to run `chatfs_claude_index_browse.py | chatfs_claude_index_splat.py`
+(deposits meta.json into the same `.data/$UUID/`) and then
+`chatfs_claude_conversation_path_render.py` on the chat dir (reuses
+the already-captured cdp.jsonl + conversation.json).
 """
+
 import subprocess
 import sys
 from pathlib import Path
@@ -81,9 +82,9 @@ def find_index_item(data_dir: Path, uuid: str) -> IndexItem:
         f"run `chatfs_claude_index_browse.py | chatfs_claude_index_splat.py`, "
         f"then use `chatfs_claude_conversation_path_browse.py`"
     )
-    assert all(m == matches[0] for m in matches), (
-        f"index endpoint returned divergent items for {uuid}: {matches}"
-    )
+    assert all(
+        m == matches[0] for m in matches
+    ), f"index endpoint returned divergent items for {uuid}: {matches}"
     return matches[0]
 
 

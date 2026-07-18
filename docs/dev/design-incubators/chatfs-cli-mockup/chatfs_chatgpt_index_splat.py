@@ -4,7 +4,7 @@
 Reads chatgpt.index.jsonl on stdin (one page per line, each
 `{items: [...], total, ...}`). For each item, calls place_meta which:
 
-    - writes $root/.chat/$UUID/meta.json
+    - writes $root/.data/$UUID/meta.json
     - purges existing view symlinks for $UUID
     - creates view symlinks under $root/YYYY/MM/DD/HH:MM:SS±HH:MM/
 """
