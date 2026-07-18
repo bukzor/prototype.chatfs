@@ -18,32 +18,28 @@ Sibling naming for a destination `name`: `.name.tmp` (scratch),
 attempt). Dot-prefixed so in-flight artifacts stay out of default `ls`
 on the served surface.
 
-Locking contract: `staged` and `promote` require the caller to hold the
-write lock; they don't take it themselves. It's no longer a
-self-deadlock hazard -- `chatfs_locks` is process-tree-reentrant -- but
-`staged` still must not lock on its own behalf, because the lock's job
-is to *span* multiple staged promotions (capture()'s two files,
-place_meta's promote-plus-symlink-sweep) as one transition; a lock
-scoped to a single `staged` call would forfeit that guarantee. The lock
-anchor is any agreed-per-destination directory that itself never gets
-renamed -- chatfs uses `.data/$UUID/`, letting one lock span a whole
-chat's regeneration. Cooperating readers wrap reads in
-`chatfs_locks.read_locked` to observe a multi-step update as a single
-transition; non-cooperating readers (a human mid-`ls`) still see each
-destination only old-complete or new-complete, never partial. Crash
-safety needs no lock cleanup: the kernel releases flocks with the
-process.
+Locking contract: `staged` takes the write lock itself, over `anchor` --
+any agreed-per-destination directory that itself never gets renamed;
+chatfs uses `.data/$UUID/`. `chatfs_locks` is process-tree-reentrant, so
+this is safe to nest: a caller that must *span* multiple staged
+promotions as one transition (capture()'s two files, place_meta's
+promote-plus-symlink-sweep) wraps them in its own outer
+`chatfs_locks.write_locked(anchor)` -- each inner `staged` call then
+borrows that lock instead of re-acquiring it, so it stays held for the
+whole span. A single `staged` call needs no such wrapping. Cooperating
+readers wrap reads in `chatfs_locks.read_locked` to observe a
+multi-step update as a single transition; non-cooperating readers (a
+human mid-`ls`) still see each destination only old-complete or
+new-complete, never partial. Crash safety needs no lock cleanup: the
+kernel releases flocks with the process.
 
 Intended shape of chatfs regeneration:
 
-    from chatfs_locks import write_locked
-
-    with write_locked(data_dir):                 # .data/$UUID/
-        with staged(chat_dir) as tmp:            # scratch: .chat/.$UUID.tmp/
-            tmp.mkdir()
-            (tmp / ".data").symlink_to(f"../../.data/{uuid}")
-            splat(conversation, out=tmp)         # tmp/messages, tmp/conversations
-            render(tmp, out=tmp / "chat.md")
+    with staged(chat_dir, anchor=data_dir) as tmp:  # .data/$UUID/
+        tmp.mkdir()
+        (tmp / ".data").symlink_to(f"../../.data/{uuid}")
+        splat(conversation, out=tmp)         # tmp/messages, tmp/conversations
+        render(tmp, out=tmp / "chat.md")
 
 Out of scope by decision: fsync/power-loss durability (the requirement's
 verification is process-kill) and cross-filesystem staging.
@@ -59,14 +55,20 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import cast
 
+import chatfs_locks
+
 _AT_FDCWD = -100  # linux/fcntl.h
 _RENAME_EXCHANGE = 2  # linux/fs.h
 
 
 @contextmanager
-def staged(dst: Path) -> Generator[Path]:
+def staged(dst: Path, *, anchor: Path) -> Generator[Path]:
     """Yield a scratch path; what the caller builds there is atomically
     promoted to `dst` on success.
+
+    Takes `anchor`'s write lock for the duration (see module docstring:
+    "Locking contract"); reentrant, so nesting inside a caller-held lock
+    on the same anchor just borrows it.
 
     The scratch is reserved, not created: materialize it as a file,
     directory, or symlink -- or rename an already-built tree onto it.
@@ -74,17 +76,18 @@ def staged(dst: Path) -> Generator[Path]:
     on success a stale `.fail` is cleared (superseded evidence). Entry
     heals whatever a previously-killed run left behind.
     """
-    recover(dst)
-    tmp = _sibling(dst, "tmp")
-    try:
-        yield tmp
-    except BaseException:
-        if os.path.lexists(tmp):
-            _rotate_to_fail(tmp, dst)
-        raise
-    assert os.path.lexists(tmp), tmp
-    _promote(tmp, dst)
-    _remove(_sibling(dst, "fail"))
+    with chatfs_locks.write_locked(anchor):
+        recover(dst)
+        tmp = _sibling(dst, "tmp")
+        try:
+            yield tmp
+        except BaseException:
+            if os.path.lexists(tmp):
+                _rotate_to_fail(tmp, dst)
+            raise
+        assert os.path.lexists(tmp), tmp
+        _promote(tmp, dst)
+        _remove(_sibling(dst, "fail"))
 
 
 def recover(dst: Path) -> None:
@@ -115,8 +118,8 @@ def _promote(src: Path, dst: Path) -> None:
     """Atomically install `src` at `dst`; `src` ceases to exist.
 
     Any observer sees the old complete `dst` or the new one -- never
-    absence, never a mixture. Internal to `staged`; caller holds the
-    write lock.
+    absence, never a mixture. Internal to `staged`, which holds the
+    write lock for the call.
     """
     if not os.path.lexists(dst):
         os.rename(src, dst)

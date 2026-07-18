@@ -23,14 +23,14 @@ def _unsupported_exchange(_a: Path, _b: Path) -> bool:
 class DescribeStaged:
     def it_promotes_a_new_file(self, tmp_path: Path):
         dst = tmp_path / "thing"
-        with staged(dst) as scratch:
+        with staged(dst, anchor=tmp_path) as scratch:
             _ = scratch.write_text("v1")
         assert dst.read_text() == "v1"
         assert not sibling(dst, "tmp").exists()
 
     def it_promotes_a_new_directory(self, tmp_path: Path):
         dst = tmp_path / "thing"
-        with staged(dst) as scratch:
+        with staged(dst, anchor=tmp_path) as scratch:
             scratch.mkdir()
             _ = (scratch / "file").write_text("v1")
         assert (dst / "file").read_text() == "v1"
@@ -38,7 +38,7 @@ class DescribeStaged:
     def it_replaces_an_existing_file(self, tmp_path: Path):
         dst = tmp_path / "thing"
         _ = dst.write_text("old")
-        with staged(dst) as scratch:
+        with staged(dst, anchor=tmp_path) as scratch:
             _ = scratch.write_text("new")
         assert dst.read_text() == "new"
 
@@ -46,7 +46,7 @@ class DescribeStaged:
         dst = tmp_path / "thing"
         dst.mkdir()
         _ = (dst / "old_file").write_text("old")
-        with staged(dst) as scratch:
+        with staged(dst, anchor=tmp_path) as scratch:
             scratch.mkdir()
             _ = (scratch / "new_file").write_text("new")
         assert (dst / "new_file").read_text() == "new"
@@ -55,7 +55,7 @@ class DescribeStaged:
     def it_replaces_a_file_destination_with_a_directory(self, tmp_path: Path):
         dst = tmp_path / "thing"
         _ = dst.write_text("old")
-        with staged(dst) as scratch:
+        with staged(dst, anchor=tmp_path) as scratch:
             scratch.mkdir()
             _ = (scratch / "file").write_text("new")
         assert dst.is_dir()
@@ -65,7 +65,7 @@ class DescribeStaged:
         dst = tmp_path / "thing"
         dst.mkdir()
         _ = (dst / "old_file").write_text("old")
-        with staged(dst) as scratch:
+        with staged(dst, anchor=tmp_path) as scratch:
             _ = scratch.write_text("new")
         assert dst.is_file()
         assert dst.read_text() == "new"
@@ -74,7 +74,7 @@ class DescribeStaged:
 class DescribeCrashRecovery:
     def it_preserves_a_crashed_populate_as_fail(self, tmp_path: Path):
         dst = tmp_path / "thing"
-        with pytest.raises(RuntimeError), staged(dst) as scratch:
+        with pytest.raises(RuntimeError), staged(dst, anchor=tmp_path) as scratch:
             _ = scratch.write_text("half-written")
             raise RuntimeError("boom")
 
@@ -83,7 +83,7 @@ class DescribeCrashRecovery:
         assert not sibling(dst, "tmp").exists()
 
         # a killed attempt doesn't block the next one
-        with staged(dst) as scratch:
+        with staged(dst, anchor=tmp_path) as scratch:
             _ = scratch.write_text("v1")
         assert dst.read_text() == "v1"
 
@@ -93,7 +93,7 @@ class DescribeCrashRecovery:
         # simulates a process killed outright (no exception ever ran)
         _ = sibling(dst, "tmp").write_text("orphaned")
 
-        with staged(dst) as scratch:
+        with staged(dst, anchor=tmp_path) as scratch:
             # recover() already relabeled the orphan by the time we're yielded
             assert sibling(dst, "fail").read_text() == "orphaned"
             _ = scratch.write_text("v2")
@@ -145,7 +145,7 @@ class DescribeFailLifecycle:
         # rename(2)'s own semantics, masking a missing explicit removal
         dst = tmp_path / "thing"
         for content in ("first-failure", "second-failure"):
-            with pytest.raises(RuntimeError), staged(dst) as scratch:
+            with pytest.raises(RuntimeError), staged(dst, anchor=tmp_path) as scratch:
                 scratch.mkdir()
                 _ = (scratch / "content").write_text(content)
                 raise RuntimeError("boom")
@@ -154,12 +154,12 @@ class DescribeFailLifecycle:
 
     def it_clears_a_stale_fail_on_success(self, tmp_path: Path):
         dst = tmp_path / "thing"
-        with pytest.raises(RuntimeError), staged(dst) as scratch:
+        with pytest.raises(RuntimeError), staged(dst, anchor=tmp_path) as scratch:
             _ = scratch.write_text("failure")
             raise RuntimeError("boom")
         assert sibling(dst, "fail").exists()
 
-        with staged(dst) as scratch:
+        with staged(dst, anchor=tmp_path) as scratch:
             _ = scratch.write_text("success")
 
         assert dst.read_text() == "success"
@@ -175,7 +175,7 @@ class DescribeExchangeFallback:
         dst.mkdir()
         _ = (dst / "old_file").write_text("old")
 
-        with staged(dst) as scratch:
+        with staged(dst, anchor=tmp_path) as scratch:
             scratch.mkdir()
             _ = (scratch / "new_file").write_text("new")
 
