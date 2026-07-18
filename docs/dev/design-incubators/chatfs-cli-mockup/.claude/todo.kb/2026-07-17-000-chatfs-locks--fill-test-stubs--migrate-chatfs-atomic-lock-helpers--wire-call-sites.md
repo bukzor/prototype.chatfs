@@ -68,22 +68,38 @@ call sites to the old helpers.
       `flock()` against the parent's write lock; `proc.wait(timeout=...)`
       raising `TimeoutExpired` proves genuinely-blocked, not crashed,
       before the parent releases and the child completes
-- [ ] Migrate: delete `read_locked`/`write_locked`/`_locked` from
-      `chatfs_atomic.py`, import from `chatfs_locks`; move the 3
-      `DescribeLocking` tests to `chatfs_locks_test.py` -- no longer
-      coordination-blocked: the parent task's step 4 (landed
-      2026-07-17) already imports `write_locked` from `chatfs_locks`,
-      not `chatfs_atomic`
-- [ ] Rewrite `chatfs_atomic.py`'s locking-contract docstring
+- [x] Migrate: delete `read_locked`/`write_locked`/`_locked` from
+      `chatfs_atomic.py`, import from `chatfs_locks` -- done 2026-07-17
+      (commit `2ab4096`): the 3 `DescribeLocking` tests were deleted
+      rather than moved, since `chatfs_locks_test.py::DescribeAcquisition`
+      already covers the same (and in one case strictly more) ground;
+      75/75 tests, basedpyright 0/0/0
+- [x] Rewrite `chatfs_atomic.py`'s locking-contract docstring
       paragraph: the "cannot take it themselves (self-deadlock)"
       rationale is cured by reentrancy; the surviving reason `staged`
       must not self-lock is *span* (one lock covers multiple staged
       promotions — capture()'s two files, place_meta's
       promote-plus-symlink-sweep — or the single-transition guarantee
-      is forfeit)
-- [ ] Optional misuse guard (import-direction call deferred from the
+      is forfeit) -- done 2026-07-17 (commit `9d2539b`); also fixed the
+      "Intended shape" example's missing `chatfs_locks` import and
+      pointed `read_locked` references at their new home
+- [x] Optional misuse guard (import-direction call deferred from the
       design session): `staged` asserts some `w` entry in
-      `chatfs_locks.registry`
+      `chatfs_locks.registry` -- done 2026-07-17 (commit `4ec15ad`),
+      but superseded on the spot: an assert only checks the misuse
+      after the fact, and re-deriving the old "caller must hold the
+      lock" contract showed it was stale (a holdover from
+      pre-reentrant flock's self-deadlock hazard, which
+      `chatfs_locks`'s borrow semantics already solve). Landed instead
+      as `staged(dst, anchor=...)` self-locking `anchor` for its own
+      duration -- no assert needed, misuse is structurally impossible.
+      Multi-call span (capture()'s two files, place_meta's
+      promote-plus-symlink-sweep) still works: an outer
+      `write_locked(anchor)` around several `staged()` calls is
+      borrowed by each inner call rather than re-acquired. The three
+      `path_render.py` call sites lost their manual
+      `write_locked(data_dir)` wrap as a result (`staged(chat_dir,
+      anchor=data_dir)` covers it); 75/75 tests, basedpyright 0/0/0
 - [ ] Route subprocess call sites through `chatfs_locks.run` so lock
       fds survive exec: `run_pluck`, `capture()`'s har-browse, the
       path_render splat/render invocations (as they're rewritten by the
@@ -103,9 +119,9 @@ call sites to the old helpers.
 
 ## Success Criteria
 
-- [ ] `chatfs_atomic.py` has no flock code; one lock API, in
+- [x] `chatfs_atomic.py` has no flock code; one lock API, in
       `chatfs_locks`
-- [ ] Zero stub tests; suite green; basedpyright 0/0/0
+- [x] Zero stub tests; suite green; basedpyright 0/0/0
 - [ ] Every subprocess spawn between chatfs verbs carries the lock
       table (audit: no bare `subprocess.run` between them)
 
