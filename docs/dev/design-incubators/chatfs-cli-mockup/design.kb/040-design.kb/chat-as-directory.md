@@ -1,5 +1,5 @@
 ---
-last-updated: "2026-07-15"
+last-updated: "2026-07-18"
 why:
   - opaque-extractor-boundary
   - canonical-conversation-graph
@@ -16,48 +16,35 @@ derived from that store.
 
 ```
 chatfs.demo/chatgpt/
+    .data/
+        69dfa575-c0e0-832c-99c2-4e1919ab50de/
+            meta.json          # captured (index endpoint item)
+            conversation.json  # captured (conversation endpoint mapping doc)
+            cdp.jsonl          # captured (raw CDP)
     .chat/
         69dfa575-c0e0-832c-99c2-4e1919ab50de/
-            chat.md                # derived (rendered current_node walk)
-            messages/              # derived (chatgpt-splat output)
-            conversations/         # derived (chatgpt-splat output)
-            .data/                 # captured exhaust (hidden from default ls)
-                meta.json          # captured (index endpoint item)
-                conversation.json  # captured (conversation endpoint mapping doc)
-                cdp.jsonl          # captured (raw CDP)
+            chat.md            # derived (rendered current_node walk)
+            messages/          # derived (chatgpt-splat output)
+            conversations/     # derived (chatgpt-splat output)
+            .data -> ../../.data/69dfa575-…   # inspection symlink
     Created=YYYY/MM/DD/HH:MM:SS±HH:MM/
         Quantum Gravity and UV Catastrophe -> ../../../../.chat/69dfa575-…
 ```
 
-> [!TODO]
-> Captured exhaust moves out of the chat dir into a parallel UUID-keyed
-> tree, leaving `.chat/$UUID/` 100% derived -- a pure function of
-> `.data/$UUID/`, and the unit of atomic regeneration: built complete in
-> a sibling scratch (`.chat/.$UUID.tmp/`), promoted into place by
-> rename. Owning task:
-> `.claude/todo.kb/2026-07-13-000-Atomic-chat-dir-regeneration-…`.
->
-> ```
-> .data/
->     $UUID/                 # captured: meta.json, conversation.json, cdp.jsonl
-> .chat/
->     $UUID/                 # derived -- THE atomically-swapped unit
->         chat.md
->         messages/
->         conversations/
->         .data -> ../../.data/$UUID   # inspection path; the same relative
->                                      # target is valid from the scratch dir
-> Created=YYYY/…/$TITLE -> ../../../../.chat/$UUID
-> ```
->
-> Readers see the previous complete chat dir or the new one -- never
-> partial, never mixed (requirement: `atomic-cache-updates`), with no
-> reader cooperation required. The `.data` symlink keeps captured
-> artifacts addressable through view paths
-> (`view/$TITLE/.data/meta.json`) while taking exhaust out of recursive
-> grep. `.data/$UUID/` never moves and doubles as the per-chat flock
-> anchor. `.chat/$UUID/` does not exist before first render; the view
-> symlink dangles until then -- the honest "not yet synced" signal.
+Captured exhaust lives in a parallel UUID-keyed tree, `.data/$UUID/`,
+leaving `.chat/$UUID/` 100% derived -- a pure function of `.data/$UUID/`,
+and the unit of atomic regeneration: built complete in a sibling scratch
+(`.chat/.$UUID.tmp/`), promoted into place by rename (mechanism:
+`chatfs_atomic.py`).
+
+Readers see the previous complete chat dir or the new one -- never
+partial, never mixed (requirement: `atomic-cache-updates`), with no
+reader cooperation required. The `.data` symlink keeps captured
+artifacts addressable through view paths
+(`view/$TITLE/.data/meta.json`) while taking exhaust out of recursive
+grep. `.data/$UUID/` never moves and doubles as the per-chat flock
+anchor. `.chat/$UUID/` does not exist before first render; the view
+symlink dangles until then -- the honest "not yet synced" signal.
 
 ## Multiple labeled date-trees
 
@@ -92,9 +79,11 @@ renderers (web rendering, mkdocs, Obsidian publish).
 
 The two halves of the tree have different jobs:
 
-- **`.chat/$UUID/` is canonical storage.** Flat, UUID-keyed, written
-  once and only once per chat. Source of truth for everything about
-  that chat — captured artifacts and derived outputs alike.
+- **`.data/$UUID/` and `.chat/$UUID/` are canonical storage.** Flat,
+  UUID-keyed, and never relocate. `.data/` holds captured artifacts
+  (source of truth, not locally re-derivable); `.chat/` holds derived
+  outputs, wholly a pure function of `.data/` (see
+  `chat-as-directory.kb/captured-vs-derived.md`).
 - **`YYYY/MM/…/` is a view.** A tree of symlinks pointing into
   `.chat/`. Wholly derivable from the storage layer — `rm -rf YYYY/`
   loses no data.
@@ -111,14 +100,14 @@ Decoupling storage from view means:
 
 ## Identity is primary; storage is canonical
 
-The UUID is the chat's identity. The storage path
-(`.chat/$UUID/`) is a pure function of identity and never moves.
+The UUID is the chat's identity. The storage paths (`.data/$UUID/` and
+`.chat/$UUID/`) are a pure function of identity and never move.
 Everything else is derived from `meta.json` content (`create_time`,
 `title`): the view path, the title-named symlink, the offset suffix.
 
 If derivation logic changes (new TZ rendering, new view shape), storage
 doesn't move; the view rebuilds. There's no migration story for
-`.chat/`.
+`.chat/` or `.data/`.
 
 The cleanup rule that supports this — every verb removes prior
 artifacts it is about to replace, identified by what they supersede

@@ -11,40 +11,37 @@ from scratch. There are no freshness caches in the user-facing scripts.
 
 ## Rule
 
-Before a verb writes its outputs, it removes any prior artifact those
-outputs supersede. After the verb runs, the outputs are a pure function
-of the inputs and the verb's code — never a mixture of old and new.
+Before a verb's outputs become visible, any prior artifact they
+supersede is removed. After the verb runs, the outputs are a pure
+function of the inputs and the verb's code — never a mixture of old
+and new.
 
-> [!TODO]
-> The removal half of this rule is superseded by staged promotion
-> (owning task: `.claude/todo.kb/2026-07-13-000-…`): a verb builds its
-> complete output in a destination-adjacent scratch (`.tmp` sibling)
-> and atomically promotes it over the prior artifact -- supersession
-> happens at the rename, with no advance purge and no window where
-> outputs are absent, partial, or mixed. The purity guarantee above is
-> unchanged. Failed attempts are preserved as `.fail` siblings
-> (latest-wins, cleared by the next success), so a crash leaves the
-> in-progress bytes on disk for inspection. Identity-scoped symlink
-> cleanup inverts to place-then-purge: the new view symlink is placed
-> first, then stale ones for the same identity are swept, excluding the
-> fresh one.
+A verb builds its complete output in a destination-adjacent scratch
+(`.tmp` sibling) and atomically promotes it over the prior artifact
+(mechanism: `chatfs_atomic.py`) -- supersession happens at the rename,
+with no advance purge and no window where outputs are absent, partial,
+or mixed. Failed attempts are preserved as `.fail` siblings
+(latest-wins, cleared by the next success), so a crash leaves the
+in-progress bytes on disk for inspection. Identity-scoped symlink
+cleanup is place-then-purge: the new view symlink is placed first, then
+stale ones for the same identity are swept, excluding the fresh one.
 
 This applies to:
 
 - `index browse` — re-runs har-browse every time; no mtime check on
   the tee'd CDP debug file.
-- `conversation url browse` — derives `$UUID` from the URL; writes
-  captured artifacts directly into `.chat/$UUID/`; runs identity-scoped
-  view-symlink cleanup before placing the date-view symlinks.
-- `conversation path browse` — addresses by `.chat/$UUID/`; removes
-  prior `cdp.jsonl` and `conversation.json` before re-capturing.
-- `index splat` — calls `place_meta` per item; `meta.json` overwritten
-  in `.chat/$UUID/.data/`; view dir-symlinks identity-purged then
-  placed.
-- `conversation path render` — operates on `.chat/$UUID/`; purges
-  non-captured contents (allowlist `{".data"}`; see
-  `chat-as-directory.kb/captured-vs-derived.md`), runs `chatgpt-splat`,
-  writes `chat.md`.
+- `conversation url browse` and `conversation path browse` —
+  `capture()` stages `cdp.jsonl` and `conversation.json` into
+  `.data/$UUID/` under one outer write lock; a failed browse leaves the
+  prior `cdp.jsonl` untouched, a failed pluck leaves the prior
+  `conversation.json` untouched.
+- `index splat` — calls `place_meta` per item; `meta.json` staged into
+  `.data/$UUID/`; the view symlink is placed, then stale symlinks for
+  the same identity are purged (place-then-purge).
+- `conversation path render` — builds the entire derived surface
+  (`chat.md`, `messages/`, the `.data` inspection symlink) in one
+  staged scratch and atomically promotes it as a single swap of
+  `.chat/$UUID/` (see `chat-as-directory.kb/pipeline-implications.md`).
 
 ## Identity-scoped cleanup
 
@@ -61,18 +58,26 @@ The general form: **before a verb writes its outputs, it removes any
 prior artifact those outputs supersede, regardless of where the prior
 artifact lived.**
 
-For view symlinks targeting `.chat/$UUID/…`, the cleanup is a sweep:
+For view symlinks targeting `.chat/$UUID/…`, the cleanup is a sweep,
+run *after* the fresh symlink is placed (`keep` excludes it so the
+sweep doesn't immediately undo the placement it's meant to follow):
 
 ```python
-def _purge_view_symlinks(uuid: str, root: Path) -> None:
+def _purge_view_symlinks(uuid: str, root: Path, *, keep: Path | None = None) -> None:
     for path in root.rglob("*"):
+        rel_parts = path.relative_to(root).parts
+        if ".chat" in rel_parts or ".data" in rel_parts:
+            continue  # storage-internal symlinks, not views
+        if path == keep:
+            continue
         if path.is_symlink() and uuid in os.readlink(path):
             path.unlink()
 ```
 
 This keeps the storage layer (`.chat/$UUID/`) authoritative — the only
-place a UUID's data ever lives — while letting derived views
-(`YYYY/MM/…`) heal automatically when their derivation logic changes.
+place a UUID's view symlinks ever resolve to — while letting derived
+views (`YYYY/MM/…`) heal automatically when their derivation logic
+changes.
 
 A future improvement could move the sweep to a background thread; for
 now an inline scan is fine.

@@ -232,9 +232,30 @@ below:
       (`DescribeCapture` + one in `DescribePlaceMeta`), each
       hand-mutation-tested (reverted the fix, confirmed the new test
       fails, restored). pytest 91/91, basedpyright 0/0/0.
-- [ ] Docs: unwrap the !TODO blocks in `chat-as-directory.md`,
+- [x] Docs: unwrap the !TODO blocks in `chat-as-directory.md`,
       `captured-vs-derived.md`, `pipeline-implications.md`,
-      `view-symlink.md`, `deterministic-regeneration.md`
+      `view-symlink.md`, `deterministic-regeneration.md` -- done
+      2026-07-18: verified each block's claims against ground truth
+      first (read `chatfs_atomic.py`, `chatfs_layout.py`,
+      `place_meta`/`capture`/`_purge_view_symlinks`, and a
+      `path_render.py` leaf directly -- every claim held), then
+      removed the `[!TODO]` markup and folded the normative prose into
+      descriptive prose per `Skill(llm-design-kb)`'s convention.
+      Beyond pure markup removal: `chat-as-directory.md`'s layout
+      diagram redrawn (`.data/$UUID` now a sibling of `.chat/$UUID`,
+      not nested inside it) and its "Storage vs view" +
+      "Identity is primary" sections updated (storage is now two
+      never-moving trees, not one); `captured-vs-derived.md`'s
+      allowlist section rewritten as staged-promotion (the mechanism
+      it described no longer exists); `pipeline-implications.md`
+      rewritten per-script against the actual landed code (capture,
+      place_meta, path_render, the render leaf); the `[!TODO]` block's
+      own stale sibling-doc-still-!TODO cross-references removed with
+      it. Also fixed a stale line found along the way:
+      `chatfs_atomic.py`'s module docstring still said "imported
+      nowhere yet" (false since `chatfs_layout.py` imports it). pytest
+      91/91, basedpyright 0/0/0 (no functional code changed, docstring
+      + docs only).
 - [ ] Kill-mid-flight test per the requirement's verification, killing
       at each stage boundary and inside the promote
 

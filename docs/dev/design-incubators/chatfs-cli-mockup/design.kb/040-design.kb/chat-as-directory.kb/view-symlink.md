@@ -34,17 +34,12 @@ view IS the chat dir. There's no longer a need for a separate
 
 ## Pre-render dangling
 
-Pre-render, content inside the dir-symlink is sparse: `chat.md` may not
-yet exist. Reading `view/$TITLE/chat.md` returns ENOENT until the
-render completes. The view path itself (the dir-symlink) resolves; the
-file inside it doesn't yet.
-
-> [!TODO]
-> With `.chat/$UUID/` wholly derived (`../chat-as-directory.md` !TODO),
-> the dir-symlink itself dangles until first render -- `.chat/$UUID/`
-> doesn't exist yet, not just `chat.md` inside it. The dangling link is
-> the deliberate "not yet synced" signal; captured artifacts are
-> meanwhile inspectable at `.data/$UUID/`.
+Pre-render, `.chat/$UUID/` doesn't exist yet, so the view dir-symlink
+itself dangles — not just `chat.md` inside it. Reading
+`view/$TITLE/chat.md` returns ENOENT until the render completes and
+promotes the chat dir into place. The dangling link is the deliberate
+"not yet synced" signal; captured artifacts are meanwhile inspectable
+at `.data/$UUID/`.
 
 ## Ergonomic tradeoff
 

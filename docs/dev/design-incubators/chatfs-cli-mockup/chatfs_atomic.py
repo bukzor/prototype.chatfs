@@ -1,9 +1,7 @@
 """Stage-and-promote filesystem updates: readers never see partial state.
 
-Design sketch -- imported nowhere yet; landing tracked by
-`.claude/todo.kb/2026-07-13-000-Atomic-chat-dir-regeneration-...`.
 Normative design: `design.kb/040-design.kb/chat-as-directory.md` and
-`deterministic-regeneration.md` (their [!TODO] blocks).
+`deterministic-regeneration.md`.
 
 A destination (file, directory, or symlink) is updated by building its
 complete replacement at a hidden sibling scratch path, then renaming it
