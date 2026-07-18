@@ -11,6 +11,7 @@ from pathlib import Path
 import pytest
 
 import chatfs_locks
+import chatfs_sh
 from chatfs_locks import Lock, read_locked, registry, run, write_locked
 
 HERE = Path(__file__).parent
@@ -210,4 +211,20 @@ class DescribeSubprocessReentry:
         with write_locked(tmp_path):
             result = child(CHILD_SPAWNS_GRANDCHILD, tmp_path)
         assert result.returncode == 0, result.stderr
+        assert result.stdout == b"ok\n"
+
+    def it_reenters_the_parents_write_lock_via_chatfs_sh_run(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ):
+        # Production spawns through chatfs_sh.run (close_fds=False, whole
+        # fd table crosses exec), not chatfs_locks.run's curated pass_fds
+        # -- this exercises that actual path instead of the child() helper.
+        monkeypatch.setenv("PYTHONPATH", str(HERE))
+        with write_locked(tmp_path):
+            result = chatfs_sh.run(
+                [sys.executable, str(CHILD_REENTER_W), str(tmp_path)],
+                stdout=subprocess.PIPE,
+                timeout=10,
+            )
+        assert result.returncode == 0
         assert result.stdout == b"ok\n"

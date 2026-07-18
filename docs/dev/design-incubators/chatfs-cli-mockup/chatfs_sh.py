@@ -40,12 +40,16 @@ def run(
     *,
     stdin: IO[bytes] | int | None = None,
     stdout: IO[bytes] | int | None = None,
+    timeout: float | None = None,
 ) -> subprocess.CompletedProcess[bytes]:
     """Run a command to completion, tracing it first. Raises on non-zero exit.
 
     close_fds=False: the child inherits the whole fd table, matching plain
     Unix exec semantics -- Python's close_fds=True default silently drops
     any fd not explicitly listed in pass_fds.
+
+    timeout unused by any production call site (2026-07-18); it exists so
+    tests can bound a would-be deadlock instead of hanging the suite.
     """
     xtrace(cmd)
     return subprocess.run(
@@ -54,6 +58,7 @@ def run(
         stdout=stdout,
         close_fds=False,
         check=True,
+        timeout=timeout,
     )
 
 

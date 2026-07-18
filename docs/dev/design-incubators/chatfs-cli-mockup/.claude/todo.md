@@ -60,13 +60,17 @@ render/path_render, and the four-provider unification) closed 2026-07-11 —
         verbs now carries the lock table via the new `chatfs_sh.run`
         (close_fds=False, Unix-style fd inheritance) rather than
         `chatfs_locks.run`'s curated `pass_fds`.
-  - [ ] Coverage gap: no automated test exercises `chatfs_sh.run`'s
-        fd-inheritance path specifically (verified only by hand,
-        2026-07-17 — a child spawned via `chatfs_sh.run` alone, no
-        `pass_fds`, borrowed the parent's lock). Add a variant of
-        `chatfs_locks_test.py`'s `it_reenters_the_parents_write_lock_without_deadlock`
-        that spawns through `chatfs_sh.run` instead of the test's own
-        `child()` helper (~15-20 min).
+  - [x] Coverage gap: no automated test exercised `chatfs_sh.run`'s
+        fd-inheritance path specifically — closed 2026-07-18:
+        `it_reenters_the_parents_write_lock_via_chatfs_sh_run` in
+        `chatfs_locks_test.py`, spawning through `chatfs_sh.run` instead
+        of the test's own `child()` helper. `chatfs_sh.run` gained an
+        optional `timeout` param (unused by all 13 production call
+        sites) so the test fails fast instead of hanging on a
+        regression. Mutation-tested by hand (flipped `close_fds` to
+        `True`, confirmed the new test fails with `TimeoutExpired`,
+        reverted). 87/87 tests, basedpyright 0/0/0. Devlog
+        `devlog/2026-07-18-000-chatfs-sh-run-fd-inheritance-coverage-gap-closed.md`.
 - [ ] [AI Studio provider — parity ladder](todo.kb/2026-06-20-000-aistudio-provider-parity-ladder.md)
       — third provider, first JSPB source. Pluck + splat landed 2026-06-20;
       layout/types 2026-06-22; massage_json + url_browse 2026-07-03 (writes
