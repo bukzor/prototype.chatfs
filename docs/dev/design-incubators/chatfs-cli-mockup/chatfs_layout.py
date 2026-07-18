@@ -5,8 +5,10 @@ trees:
 
     $root/.data/$UUID/       # captured exhaust -- input, never purged
         meta.json
-        conversation.json (or conversation.raw.json + conversation.json)
+        conversation.json
+        conversation.json.d/raw.json  # AI Studio only: pre-massage pluck
         cdp.jsonl
+        cdp.jsonl.d/index-pages.jsonl # chatgpt/claude only: cross-check dump
     $root/.chat/$UUID/       # 100% derived -- THE staged/promoted unit
         chat.md
         messages/            # derived (splat output)
@@ -28,15 +30,19 @@ naming a provider's own conversation pluck script) stays in each
 wrappers; everything below is byte-for-byte identical across
 chatgpt/claude/aistudio.
 """
+
 import json
 import os
+import re
 import sys
-from collections.abc import Mapping
+from collections.abc import Callable, Iterable, Iterator, Mapping
 from datetime import datetime
 from pathlib import Path
+from typing import TextIO
 
+import chatfs_json
 import chatfs_sh
-
+from chatfs_json import JsonValue
 
 DATA_DIR_NAME = ".data"
 
@@ -142,23 +148,90 @@ def resolve_chat_dir(arg: str | os.PathLike[str]) -> Path:
 
 
 def run_pluck(script: Path, src: Path, dst: Path) -> None:
-    """Run a `*-pluck.jq`-shaped filter: read src, write its stdout to dst.
+    """Run an external filter script: read src, write its stdout to dst.
 
-    Shared low-level primitive behind every "tee the filtered stream to
-    disk" step in an orchestrator — `capture()`'s conversation pluck,
-    each provider's incidental-index pluck, AI Studio's massage stage.
-    Centralizing it means every pluck output lands on disk in the same
-    way, satisfying the persist-every-pluck-output requirement by
-    construction rather than by remembering to tee at each call site.
+    Shared low-level primitive behind every remaining "tee the filtered
+    stream to disk" step that still shells out to a separate script —
+    today, only AI Studio's massage stage (`conversation.json.d/raw.json`
+    -> `conversation.json`), since every provider's conversation/index pluck
+    is now an in-process generator run through `pluck()` instead. Kept
+    generic (any script, not just massage) in case a future stage needs
+    the same "external filter, teed to disk" shape.
     """
     with src.open("rb") as fin, dst.open("wb") as fout:
         _ = chatfs_sh.run([str(script)], stdin=fin, stdout=fout)
 
 
+def iter_responses_matching(
+    cdp_lines: Iterable[str], url_pattern: re.Pattern[str]
+) -> Iterator[JsonValue]:
+    """Filter CDP capture lines to matching `Network.responseReceived` bodies.
+
+    The skeleton shared by every provider's conversation/index pluck:
+    select events whose response URL matches `url_pattern`, then
+    string-guard the body before parsing it as JSON — a 204 or
+    interrupted response carries a non-string (`null`) body, so it's
+    silently skipped here, same as the old `*.jq` filters' `| strings |`
+    stage skipped it.
+
+    Yields one parsed body per matching event; a provider's own pluck
+    wrapper handles any further per-provider reshaping (AI Studio's
+    envelope flatten/guard; see `chatfs_aistudio_layout.py`).
+    """
+    for line in cdp_lines:
+        if not line.strip():
+            continue
+        event = chatfs_json.loads(line)
+        assert isinstance(event, dict), event
+        if event.get("method") != "Network.responseReceived":
+            continue
+        params = event["params"]
+        assert isinstance(params, dict), params
+        response = params["response"]
+        assert isinstance(response, dict), response
+        url = response["url"]
+        assert isinstance(url, str), url
+        if not url_pattern.search(url):
+            continue
+        body = response.get("body")
+        if not isinstance(body, str):
+            continue
+        yield chatfs_json.loads(body)
+
+
+def browse(url: str, dst: Path) -> None:
+    """Run har-browse against url, writing its CDP capture (jsonl) to dst."""
+    print(f"Capturing {url} → {dst} ...", file=sys.stderr)
+    with dst.open("wb") as f:
+        _ = chatfs_sh.run(["har-browse", url], stdout=f)
+
+
+def dump_jsonl(values: Iterable[JsonValue], out: TextIO) -> None:
+    for value in values:
+        _ = out.write(json.dumps(value) + "\n")
+
+
+def pluck(
+    fn: Callable[[Iterable[str]], Iterator[JsonValue]], src: Path, dst: Path
+) -> None:
+    """Run a plucking generator over src's lines; write its yields as JSONL to dst.
+
+    Pure-Python counterpart to `run_pluck`: `fn` is `iter_responses_matching`
+    (or a provider's thin wrapper around it) in place of an external
+    filter script/subprocess. Creates `dst`'s parent so callers can freely
+    target a not-yet-existing `X.d/` scratch dir (`path-ownership.md`)
+    without a separate mkdir at each call site.
+    """
+    print(f"Plucking → {dst} ...", file=sys.stderr)
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    with src.open() as fin, dst.open("w") as fout:
+        dump_jsonl(fn(fin), fout)
+
+
 def capture(
     url: str,
     chat_dir: Path,
-    pluck_script: Path,
+    pluck_fn: Callable[[Iterable[str]], Iterator[JsonValue]],
     *,
     conversation_filename: str = "conversation.json",
 ) -> Path:
@@ -166,16 +239,19 @@ def capture(
 
     Ensures the data dir exists, clears any prior cdp.jsonl /
     `conversation_filename` from a previous run, then runs har-browse
-    followed by `pluck_script`. Returns the data dir for callers that
+    followed by `pluck_fn`. Returns the data dir for callers that
     need to deposit meta.json or similar siblings. Does not touch
     `chat_dir` itself -- `.chat/$UUID/` may not exist yet (see module
     docstring); only its `data_dir_of` twin is written here.
 
-    `pluck_script` and `conversation_filename` are the provider-shaped
+    `pluck_fn` and `conversation_filename` are the provider-shaped
     half: each provider's `capture()` wrapper supplies its own
-    conversation pluck (and, for AI Studio, `conversation.raw.json`
+    conversation pluck (and, for AI Studio, `conversation.json.d/raw.json`
     instead of the default `conversation.json`, since that provider's
-    pluck output still needs a massage pass before it's named).
+    pluck output still needs a massage pass before it's named — the `.d/`
+    scratch convention is `path-ownership.md`'s: a top-level contract
+    name `X` reserves the sibling `X.d/` for scratch involved in
+    producing or checking it).
 
     The intermediate-data policy is the load-bearing piece: captures
     land directly in `.data/$UUID/`, never a tempdir. Failures leave
@@ -190,12 +266,8 @@ def capture(
     cdp.unlink(missing_ok=True)
     conversation.unlink(missing_ok=True)
 
-    print(f"Capturing {url} → {cdp} ...", file=sys.stderr)
-    with cdp.open("wb") as f:
-        _ = chatfs_sh.run(["har-browse", url], stdout=f)
-
-    print(f"Plucking conversation → {conversation} ...", file=sys.stderr)
-    run_pluck(pluck_script, cdp, conversation)
+    browse(url, cdp)
+    pluck(pluck_fn, cdp, conversation)
 
     return data_dir
 

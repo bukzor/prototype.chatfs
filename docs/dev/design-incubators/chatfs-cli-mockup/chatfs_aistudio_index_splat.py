@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Splat AI Studio ListPrompts index entries into per-chat storage.
 
-Reads one index entry per line on stdin — chatfs_aistudio_index_pluck.jq's
-output. Pluck already flattens each response's entry list (`.[0][]`), so
-this script never sees a page/envelope shape and doesn't need to know or
-care how many ListPrompts responses were captured — one page or many
-(pagination), each entry just arrives as its own line.
+Reads one index entry per line on stdin —
+chatfs_aistudio_layout.pluck_index_pages's output. Pluck already flattens
+each response's entry list, so this script never sees a page/envelope
+shape and doesn't need to know or care how many ListPrompts responses
+were captured — one page or many (pagination), each entry just arrives
+as its own line.
 
 Each entry is massaged through the same PROMPT schema ResolveDriveResource
 uses (verified: entries decode with it unchanged, just with an empty

@@ -2,7 +2,7 @@
 """Splat claude index pages into per-chat storage.
 
 Reads pages on stdin (one `{data: [...], has_more}` object per line; the
-output of `chatfs_claude_index_pluck.jq`). For each item, calls
+output of `chatfs_claude_layout.pluck_index_pages`). For each item, calls
 place_meta which:
 
     - writes $root/.data/$UUID/meta.json

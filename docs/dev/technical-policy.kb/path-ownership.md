@@ -56,17 +56,20 @@ single-browse-trip optimization, anything internal to producing or
 cross-checking one contract file. No other stage may depend on a
 scratch file's name or presence.
 
-> [!TODO] Today those land as ad hoc extra files at the top level of
-> `.data/`, distinguished from the contract files only by *not* being
-> one of the three names above — not by any structural marker. The
-> simplified standard going forward: every top-level contract name `X`
-> reserves the sibling `X.d/` for scratch related to producing or
-> checking it (`conversation.json.d/` for a pre-normalization pluck,
-> `cdp.jsonl.d/` for a cross-check dump derived from it) — `ls`-legible
-> by position, and the reservation costs nothing for contract files
-> that never need scratch. Same pattern as `/etc/apt/sources.list.d/`;
-> applies wherever a top-level contract name exists, not just here.
-> Not yet implemented.
+Every top-level contract name `X` reserves the sibling `X.d/` for scratch
+related to producing or checking it — `ls`-legible by position, and the
+reservation costs nothing for contract files that never need scratch.
+Same pattern as `/etc/apt/sources.list.d/`; applies wherever a top-level
+contract name exists, not just here. Implemented 2026-07-15: AI Studio's
+pre-normalization pluck lives at `conversation.json.d/raw.json`;
+chatgpt/claude's incidental-capture cross-check dump lives at
+`cdp.jsonl.d/index-pages.jsonl`.
+
+The same `.data/` idiom recurs one level up, at the provider root:
+`$root/.data/index.cdp.jsonl` is index browse's debug CDP tee
+(2026-07-17; previously a loose file next to the scripts). Same
+ownership shape as `.data/cdp.jsonl` — capture writes it, no later stage
+reads it — and `index.cdp.jsonl.d/` is reserved per the rule above.
 
 ### Derived members (`messages/`, `conversations/`, `chat.md`)
 

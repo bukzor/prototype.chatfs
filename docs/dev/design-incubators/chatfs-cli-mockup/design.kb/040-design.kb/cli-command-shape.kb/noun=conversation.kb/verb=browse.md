@@ -4,7 +4,7 @@ Browse fetches a conversation's current state from chatgpt.com via a real
 browser. `har-browse` opens a Chromium window pointed at
 `https://chatgpt.com/c/$UUID`; the CDP stream is captured to
 `.data/cdp.jsonl`, then reduced through
-`chatfs_chatgpt_conversation_pluck.jq` to `.data/conversation.json`.
+`chatfs_chatgpt_layout.pluck_conversation` to `.data/conversation.json`.
 
 Both locator variants (`url`, `path`) follow the same capture-and-pluck
 shape and delegate to `path render` for final materialization (splat →
@@ -34,10 +34,11 @@ capture-and-pluck shape, but two things differ from chatgpt/claude:
 
 - **An extra file and stage.** AI Studio's wire format is JSPB (positional
   arrays), not native keyed JSON, so pluck's output isn't yet "good" —
-  it's written verbatim to `conversation.raw.json` (audit copy), then
-  `chatfs_aistudio_conversation_massage_json.py` names it into
-  `conversation.json`. chatgpt/claude have no `.raw.json`: their pluck
-  output is already the final shape.
+  it's written verbatim to `conversation.json.d/raw.json` (audit copy,
+  scratch under the eventual contract file's `.d/` sibling — see
+  `path-ownership.md`), then `chatfs_aistudio_conversation_massage_json.py`
+  names it into `conversation.json`. chatgpt/claude have no `.raw.json`:
+  their pluck output is already the final shape.
 - **No incidental-index capture.** There's no reverse-engineered AI Studio
   index endpoint yet (see the parity-ladder todo.kb), so there's nothing to
   cross-check against. Identity (`metadata.displayName`/`lastModified`)

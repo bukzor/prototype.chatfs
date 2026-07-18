@@ -6,8 +6,8 @@ so their `conversation.json` is the raw API response, verbatim. AI Studio's
 is JSPB (positional arrays) — a stage has to assign names before the result
 is "good" json, i.e. the same shape of thing chatgpt/claude get for free.
 
-Input (stdin): conversation.raw.json — one plucked prompt message (a JSPB
-array; chatfs_aistudio_conversation_pluck.jq already unwraps the
+Input (stdin): conversation.json.d/raw.json — one plucked prompt message (a
+JSPB array; chatfs_aistudio_layout.pluck_conversation already unwraps the
 ResolveDriveResource envelope). Plucking (picking this body out of the CDP
 capture) is a separate, earlier step; this script does not re-narrow the
 result to any subset (e.g. just turns) — it emits the whole named document,

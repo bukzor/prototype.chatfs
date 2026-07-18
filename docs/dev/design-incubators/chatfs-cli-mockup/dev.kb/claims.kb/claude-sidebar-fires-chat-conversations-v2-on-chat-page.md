@@ -20,7 +20,7 @@ existing index pluck filter.
 trip captures both the conversation document and the sidebar index
 page mentioning the target UUID. If the sidebar doesn't fire `_v2`,
 url_browse fails loud via `find_index_item`, and the user falls back
-to the two-step recovery (`index_browse.sh | index_splat.py` →
+to the two-step recovery (`index_browse.py | index_splat.py` →
 `conversation_path_browse.py`).
 
 ## Evidence so far

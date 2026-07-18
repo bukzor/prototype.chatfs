@@ -54,14 +54,16 @@ about `place_meta` varies.
 `../../devlog/2026-07-11-002-unification-shared-capture-and-drift-fixes.md`
 — the driving todo.kb file's "Solve by unification" is deleted now that
 it's fully executed) turned out to be the same adapter shape, one
-level simpler — a 2-value tuple (`pluck_script`,
+level simpler — a 2-value tuple (`pluck_fn`,
 `conversation_filename`) instead of a 3-value tuple plus parser, since
 browse+pluck orchestration itself has no provider-shaped logic at all,
-only provider-shaped *inputs*:
+only provider-shaped *inputs*. (`pluck_fn` was a `.jq` script path until
+the 2026-07-14 jq/sh port; now it's an in-process generator function —
+see `driver-model.md`.)
 
 ```python
 def capture(url, chat_dir) -> Path:
-    return _capture(url, chat_dir, CONVERSATION_PLUCK)  # + conversation_filename= for aistudio
+    return _capture(url, chat_dir, pluck_conversation)  # + conversation_filename= for aistudio
 ```
 
 **Genuinely provider-only** (stays out of the shared lib entirely):

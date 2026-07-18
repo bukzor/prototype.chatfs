@@ -41,4 +41,4 @@ reportMissingTypeStubs = false
 exclude = [".venv", "__pycache__", "typesafety"]
 
 [tool.uv.sources]
-basedpyright-as-pyright = { path = "../../../basedpyright-as-pyright", editable = true }
+basedpyright-as-pyright = { git = "https://github.com/bukzor/basedpyright-as-pyright" }

@@ -23,7 +23,7 @@ incidental index capture).
 - Code uses one browse trip; calls `find_index_item` on the captured
   CDP.
 - Assertion in `find_index_item` raises with a recovery message
-  ("run `index_browse.sh | index_splat.py` then use `path_browse`")
+  ("run `index_browse.py | index_splat.py` then use `path_browse`")
   if no index page mentioned the target UUID.
 - A second null-tolerant cross-check asserts conversation-doc and
   index-item agree on overlapping fields — catches schema drift

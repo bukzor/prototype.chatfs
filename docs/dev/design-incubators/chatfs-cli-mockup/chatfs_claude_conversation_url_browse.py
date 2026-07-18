@@ -10,7 +10,7 @@ captures both the conversation document and an index page that mentions
 this UUID.
 
 If that assumption is ever violated, `find_index_item` fails loudly and
-the recovery path is two-step: `chatfs_claude_index_browse.sh` →
+the recovery path is two-step: `chatfs_claude_index_browse.py` →
 `chatfs_claude_index_splat.py` → `chatfs_claude_conversation_path_browse.py`.
 
 A second cross-check asserts that the meta-shaped fields agree across
@@ -20,7 +20,7 @@ ever changes shape.
 Steps:
     1. browse $url → .data/$UUID/cdp.jsonl
     2. conversation pluck → .data/$UUID/conversation.json
-    3. index pluck → .data/$UUID/index-pages.jsonl; filter to
+    3. index pluck → .data/$UUID/cdp.jsonl.d/index-pages.jsonl; filter to
        .uuid == $UUID → meta (fail loudly if absent)
     4. cross-check conversation doc vs index item, null-tolerant
     5. place_meta (writes meta.json, purges + places view dir-symlink)
@@ -29,7 +29,7 @@ Steps:
 Captures are written directly into `.data/$UUID/` — no temp staging.
 If a later step fails, the captures remain there for inspection.
 Recovery from the long-tail "sidebar didn't include this uuid" case is
-to run `chatfs_claude_index_browse.sh | chatfs_claude_index_splat.py`
+to run `chatfs_claude_index_browse.py | chatfs_claude_index_splat.py`
 (deposits meta.json into the same `.data/$UUID/`) and then
 `chatfs_claude_conversation_path_render.py` on the chat dir (reuses
 the already-captured cdp.jsonl + conversation.json).
@@ -41,14 +41,13 @@ from urllib.parse import urlparse
 
 import chatfs_json
 import chatfs_sh
-from chatfs_claude_layout import capture, chat_dir_for, place_meta
+from chatfs_claude_layout import capture, chat_dir_for, place_meta, pluck_index_pages
 from chatfs_claude_types import IndexItem, is_index_page
 from chatfs_json import JsonObject
-from chatfs_layout import run_pluck
+from chatfs_layout import pluck
 from chatfs_url_browse import null_tolerant_mismatches
 
 HERE = Path(__file__).parent
-INDEX_PLUCK = HERE / "chatfs_claude_index_pluck.jq"
 PATH_RENDER = HERE / "chatfs_claude_conversation_path_render.py"
 ROOT = HERE / "chatfs.demo" / "claude"
 
@@ -60,15 +59,16 @@ def uuid_from_url(url: str) -> str:
 
 
 def find_index_item(data_dir: Path, uuid: str) -> IndexItem:
-    """Pluck index pages from CDP into index-pages.jsonl; return the item
-    matching uuid.
+    """Pluck index pages from CDP into cdp.jsonl.d/index-pages.jsonl;
+    return the item matching uuid.
 
-    Fails loudly if no incidentally-captured index page mentioned this
-    uuid — recovery is the two-step (index_browse → index_splat →
-    path_browse).
+    A cross-check dump, not a contract file — scratch reserved under
+    `cdp.jsonl`'s `.d/` sibling per `path-ownership.md`. Fails loudly if
+    no incidentally-captured index page mentioned this uuid — recovery is
+    the two-step (index_browse → index_splat → path_browse).
     """
-    index_pages = data_dir / "index-pages.jsonl"
-    run_pluck(INDEX_PLUCK, data_dir / "cdp.jsonl", index_pages)
+    index_pages = data_dir / "cdp.jsonl.d" / "index-pages.jsonl"
+    pluck(pluck_index_pages, data_dir / "cdp.jsonl", index_pages)
     matches: list[IndexItem] = []
     for line in index_pages.read_text().splitlines():
         if not line.strip():
@@ -78,12 +78,12 @@ def find_index_item(data_dir: Path, uuid: str) -> IndexItem:
         matches.extend(item for item in page["data"] if item["uuid"] == uuid)
     assert matches, (
         f"no sidebar index page included {uuid}; "
-        f"run `chatfs_claude_index_browse.sh | chatfs_claude_index_splat.py`, "
+        f"run `chatfs_claude_index_browse.py | chatfs_claude_index_splat.py`, "
         f"then use `chatfs_claude_conversation_path_browse.py`"
     )
-    assert all(m == matches[0] for m in matches), (
-        f"index endpoint returned divergent items for {uuid}: {matches}"
-    )
+    assert all(
+        m == matches[0] for m in matches
+    ), f"index endpoint returned divergent items for {uuid}: {matches}"
     return matches[0]
 
 

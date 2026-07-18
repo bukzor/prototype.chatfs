@@ -35,10 +35,10 @@ clarity.
 
 Subcommand paths map to scripts on `$PATH` with `-` separators
 (`chatgpt conversation url browse` →
-`chatfs-chatgpt-conversation-url-browse`). Internal helpers (e.g.
-`*-pluck.jq` files) carry the same prefix so `ls chatfs-chatgpt-*`
-enumerates the family. Python module names use `_` for the same path:
-`chatfs_chatgpt_layout` for shared primitives.
+`chatfs-chatgpt-conversation-url-browse`). Python module names use `_`
+for the same path: `chatfs_chatgpt_layout` for shared primitives,
+including provider-internal helpers with no `$PATH` command of their
+own (e.g. `pluck_conversation`, `pluck_index_pages`).
 
 ---
 

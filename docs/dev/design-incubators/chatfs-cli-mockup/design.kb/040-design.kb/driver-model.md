@@ -6,7 +6,7 @@ why:
 
 # Driver Model — Pipe and Delegation as Thin Drivers Over One Library
 
-Index flow is user-composed by pipe (`chatfs_chatgpt_index_browse.sh |
+Index flow is user-composed by pipe (`chatfs_chatgpt_index_browse.py |
 chatfs_chatgpt_index_splat.py`); conversation flow is nested delegation
 (`url_browse` calls `path_render`, which calls splat and render as
 subprocesses). The two surfaces look like competing philosophies, but
@@ -35,15 +35,17 @@ should still be shared.
 
 ## What's landed
 
-`chatfs_layout.py::capture()` and `chatfs_layout.py::run_pluck()` are
-the first instance of this: every provider's `url_browse`/`path_browse`
-delegation orchestrator, and every incidental-index pluck call, now
-calls these two shared functions rather than each reimplementing
-`subprocess.run(["har-browse", url], stdout=...)` /
-`subprocess.run([pluck_script], stdin=..., stdout=...)` inline. A
-provider's own `capture()` wrapper (`chatfs_claude_layout.capture`,
-etc.) is a thin partial application — it supplies the provider's pluck
-script and output filename, nothing else.
+`chatfs_layout.py::capture()`, built on its `browse()`/`pluck()`
+primitives, is the first instance of this: every provider's
+`url_browse`/`path_browse` delegation orchestrator, and every
+incidental-index pluck call, now calls these shared functions rather
+than each reimplementing `subprocess.run(["har-browse", url],
+stdout=...)` inline or shelling out to a `.jq` filter. A provider's own
+`capture()` wrapper (`chatfs_claude_layout.capture`, etc.) is a thin
+partial application — it supplies the provider's pluck function and
+output filename, nothing else. `run_pluck()` (subprocess-to-a-script)
+still exists for the one case that's a genuine external script rather
+than an in-process generator: AI Studio's massage stage.
 
 > [!TODO]
 > Splat and render stages are not yet unified the same way. Each is
@@ -54,5 +56,7 @@ script and output filename, nothing else.
 > these as subprocesses (`subprocess.run([render_script, chat_dir],
 > stdout=out_file)`) rather than importing and calling the function
 > in-process. Converting that boundary too is a further move, tracked
-> under the shared-code-among-providers boundary-refinement question,
-> not required to close this decision.
+> in the module-shape-refactor todo (repo-root
+> `.claude/todo.kb/2026-07-13-000-graduation-and-integration.kb/2026-07-13-000-module-shape-refactor.md`;
+> its former tracker, the shared-code-among-providers question, closed
+> 2026-07-12 without landing it), not required to close this decision.

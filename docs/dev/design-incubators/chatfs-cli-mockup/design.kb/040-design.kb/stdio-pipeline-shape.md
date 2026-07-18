@@ -22,10 +22,12 @@ A script with one logical input and one logical output uses stdin/stdout
 for those — no file arguments, no hardcoded output paths. Progress and
 status go to stderr; data goes to stdout. This applies to:
 
-- `*-pluck.jq` filters — stdin: CDP, stdout: plucked records
 - `chatfs_chatgpt_index_splat.py` — stdin: index pages jsonl
 - `chatfs_chatgpt_conversation_render.py` — stdout: markdown
-- `chatfs_chatgpt_index_browse.sh` — stdout: index pages jsonl
+- `chatfs_chatgpt_index_browse.py` — stdout: index pages jsonl (pluck
+  itself — `chatfs_layout.iter_responses_matching` plus a provider's thin
+  wrapper — is an in-process generator, not a standalone stdio leaf; see
+  `driver-model.md`)
 
 Multi-input or multi-output stages need parameterization other than
 stdio — there is no single stream to plumb. Two patterns:
@@ -44,17 +46,28 @@ Either way, never file paths to individual inputs.
 
 ## Tee debug intermediates in orchestrators
 
-Orchestrators that compose a capture step with downstream filters tee
-the captured stream to a debug file before piping into the filter:
+Orchestrators that compose a capture step with downstream plucking write
+the captured stream to a debug file first, then pluck from that same
+file as a second pass:
 
-```
-har-browse <url> | tee chatgpt.index.cdp.jsonl | chatfs_chatgpt_index_pluck.jq
+```python
+browse(url, cdp_path)               # chatfs.demo/chatgpt/.data/index.cdp.jsonl
+pluck(pluck_index_pages, cdp_path, dst)
 ```
 
-The tee'd file is not consumed by any later stage — it exists so a
+(Pre-port, this was a shell `tee`: `har-browse <url> | tee
+chatgpt.index.cdp.jsonl | chatfs_chatgpt_index_pluck.jq`. `browse()` then
+`pluck()` write-then-read the same file sequentially rather than forking
+the stream concurrently — the file's role as an inspectable debug
+intermediate is unchanged.)
+
+The debug file is not consumed by any later stage — it exists so a
 half-broken run is inspectable. When something looks wrong downstream,
 the user can re-run pluck against the captured CDP without re-driving
-Chromium.
+Chromium. (Since the 2026-07-15 jq→Python port that re-run is a library
+affordance — `chatfs_layout.pluck` from Python — not a shell one; the
+provider pluck modules planned in the module-shape-refactor todo restore
+the stdin→stdout surface.)
 
 This is currently default-on. A future flag will gate it default-off
 once the pipeline stabilizes; keeping it on during incubation pays for

@@ -11,7 +11,7 @@ browse).
 
 Steps:
     1. browse $url → .data/$id/cdp.jsonl
-    2. pluck cdp.jsonl → .data/$id/conversation.raw.json
+    2. pluck cdp.jsonl → .data/$id/conversation.json.d/raw.json
     3. massage → .data/$id/conversation.json
     4. delegate to chatfs_aistudio_conversation_path_render.py
 """
@@ -40,7 +40,8 @@ def main() -> None:
     url = f"https://aistudio.google.com/prompts/{meta['id']}"
 
     data_dir = capture(url, chat_dir)
-    run_pluck(MASSAGE_JSON, data_dir / "conversation.raw.json", data_dir / "conversation.json")
+    raw = data_dir / "conversation.json.d" / "raw.json"
+    run_pluck(MASSAGE_JSON, raw, data_dir / "conversation.json")
 
     _ = chatfs_sh.run([str(PATH_RENDER), str(chat_dir)])
 

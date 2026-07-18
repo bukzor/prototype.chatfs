@@ -1,14 +1,18 @@
 """Provider adapter for the chatgpt mockup — see chatfs_layout for the
 shared storage/view-tree helpers this wraps.
 """
+import re
+from collections.abc import Iterable, Iterator
 from datetime import datetime, timezone
 from pathlib import Path
 
 from chatfs_chatgpt_types import IndexItem
+from chatfs_json import JsonValue
 from chatfs_layout import (
     DATA_DIR_NAME,
     chat_dir_for,
     data_dir_for,
+    iter_responses_matching,
     data_dir_of,
     link_data_dir,
     resolve_chat_dir,
@@ -28,10 +32,23 @@ __all__ = [
     "capture",
     "created_at",
     "place_meta",
+    "pluck_conversation",
+    "pluck_index_pages",
 ]
 
-HERE = Path(__file__).parent
-CONVERSATION_PLUCK = HERE / "chatfs_chatgpt_conversation_pluck.jq"
+# Excludes sub-paths like /stream_status, /textdocs, /init.
+CONVERSATION_URL = re.compile(r"/backend-api/conversation/[0-9a-f-]+$")
+INDEX_URL = re.compile(r"/backend-api/conversations\?")
+
+
+def pluck_conversation(cdp_lines: Iterable[str]) -> Iterator[JsonValue]:
+    """Pluck the /backend-api/conversation/{id} response body."""
+    return iter_responses_matching(cdp_lines, CONVERSATION_URL)
+
+
+def pluck_index_pages(cdp_lines: Iterable[str]) -> Iterator[JsonValue]:
+    """Pluck each /backend-api/conversations?... response body."""
+    return iter_responses_matching(cdp_lines, INDEX_URL)
 
 
 def created_at(create_time: str | float) -> datetime:
@@ -47,7 +64,7 @@ def created_at(create_time: str | float) -> datetime:
 
 
 def capture(url: str, chat_dir: Path) -> Path:
-    return _capture(url, chat_dir, CONVERSATION_PLUCK)
+    return _capture(url, chat_dir, pluck_conversation)
 
 
 def place_meta(item: IndexItem, root: Path) -> Path:

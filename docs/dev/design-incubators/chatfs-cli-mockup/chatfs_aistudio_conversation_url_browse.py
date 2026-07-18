@@ -15,7 +15,7 @@ derives straight from the same capture that becomes conversation.json.
 
 Steps:
     1. browse $url -> .data/$id/cdp.jsonl
-    2. conversation pluck -> .data/$id/conversation.raw.json (raw JSPB array)
+    2. conversation pluck -> .data/$id/conversation.json.d/raw.json (raw JSPB array)
     3. massage -> .data/$id/conversation.json (named, matches chatgpt/claude shape)
     4. place_meta from the raw doc (writes meta.json, view dir-symlink)
     5. delegate to path_render
@@ -52,7 +52,7 @@ def main() -> None:
 
     chat_dir = chat_dir_for(id_, ROOT)
     data_dir = capture(url, chat_dir)
-    raw = data_dir / "conversation.raw.json"
+    raw = data_dir / "conversation.json.d" / "raw.json"
     conversation = data_dir / "conversation.json"
 
     print(f"Massaging {raw} → {conversation} ...", file=sys.stderr)

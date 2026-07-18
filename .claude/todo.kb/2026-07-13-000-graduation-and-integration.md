@@ -77,11 +77,10 @@ prototyped against the incubator's `chatfs.demo/` tree at any time.
 - **Atomic chat-dir regeneration** — first-priority incubator todo
   (`docs/dev/design-incubators/chatfs-cli-mockup/.claude/todo.kb/2026-07-13-000-Atomic-chat-dir-regeneration---stage-and-rename--never-rewrite-in-place.md`);
   lands before or with 000/001, consumed by 004.
-- **`.data/` scratch dot-d migration** — incubator todo
-  (`docs/dev/design-incubators/chatfs-cli-mockup/.claude/todo.kb/2026-07-14-000-Migrate-data-scratch-files-into-dot-d-sibling-directories.md`);
-  implements 002's `.data/` scratch convention. Orthogonal — no
-  `blocked-by` edge to anything in this umbrella; cheapest to land
-  alongside 000's file-touching pass but not required to.
+- **`.data/` scratch dot-d migration** — implements 002's `.data/`
+  scratch convention; landed 2026-07-15, see incubator devlog
+  `docs/dev/design-incubators/chatfs-cli-mockup/devlog/2026-07-15-001-migrate-data-scratch-files-into-dot-d-sibling-directories.md`
+  (incubator todo now closed and deleted).
 - **Cross-kb cooperation conventions** — upstream in llm-kb
   (`~/.claude/skills/llm-kb/.claude/todo.kb/2026-07-13-000-cross-kb-cooperation-conventions.md`);
   005 uses interim conventions rather than waiting.

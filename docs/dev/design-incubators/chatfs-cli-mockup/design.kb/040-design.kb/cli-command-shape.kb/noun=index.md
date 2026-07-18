@@ -8,8 +8,8 @@ pages of `{id, title, create_time, update_time}` records served by
 
 - `chatgpt index browse` drives `har-browse` against
   `https://chatgpt.com`, captures the sidebar CDP traffic, plucks the
-  conversations pages with `chatfs_chatgpt_index_pluck.jq`, and emits one
-  page per line on stdout (jsonl).
+  conversations pages with `chatfs_chatgpt_layout.pluck_index_pages`, and
+  emits one page per line on stdout (jsonl).
 - `chatgpt index splat` reads that jsonl on stdin and, for each item,
   calls `place_meta` — writing `.chat/$UUID/meta.json` and creating the
   view dir-symlink `YYYY/MM/DD/HH-MM-SS-$TITLE → .chat/$UUID/`. Placement
