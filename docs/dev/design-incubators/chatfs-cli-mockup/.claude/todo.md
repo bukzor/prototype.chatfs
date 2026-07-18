@@ -53,13 +53,18 @@ render/path_render, and the four-provider unification) closed 2026-07-11 —
       — first priority (user call, 2026-07-13 planning session): requirement
       `030-requirements.kb/atomic-cache-updates.md` is violated by in-place
       purge-and-rebuild; precondition for fuser-vfs integration.
-  - [x] [chatfs_locks: fill test stubs, migrate chatfs_atomic lock helpers, wire call sites](todo.kb/2026-07-17-000-chatfs-locks--fill-test-stubs--migrate-chatfs-atomic-lock-helpers--wire-call-sites.md)
-        — the locking half, closed 2026-07-17: process-tree-reentrant
-        lock table, stub tests filled, `chatfs_atomic`'s superseded
-        helpers migrated, and every subprocess call site between chatfs
-        verbs now carries the lock table via the new `chatfs_sh.run`
-        (close_fds=False, Unix-style fd inheritance) rather than
-        `chatfs_locks.run`'s curated `pass_fds`.
+  - [x] chatfs_locks: fill test stubs, migrate chatfs_atomic lock
+        helpers, wire call sites — the locking half, closed 2026-07-17:
+        process-tree-reentrant lock table, stub tests filled,
+        `chatfs_atomic`'s superseded helpers migrated, and every
+        subprocess call site between chatfs verbs now carries the lock
+        table via the new `chatfs_sh.run` (close_fds=False, Unix-style
+        fd inheritance) rather than `chatfs_locks.run`'s curated
+        `pass_fds`. (Its own `todo.kb/2026-07-17-000-chatfs-locks-...md`
+        deleted 2026-07-18 — fully closed, all steps/criteria `[x]`,
+        cross-referenced by
+        `devlog/2026-07-17-000-chatfs-locks-stub-tests-and-child-script-extraction.md`
+        and `devlog/2026-07-17-001-chatfs-sh-close-fds-false-replaces-pass-fds-wiring.md`.)
   - [x] Coverage gap: no automated test exercised `chatfs_sh.run`'s
         fd-inheritance path specifically — closed 2026-07-18:
         `it_reenters_the_parents_write_lock_via_chatfs_sh_run` in
@@ -71,6 +76,13 @@ render/path_render, and the four-provider unification) closed 2026-07-11 —
         `True`, confirmed the new test fails with `TimeoutExpired`,
         reverted). 87/87 tests, basedpyright 0/0/0. Devlog
         `devlog/2026-07-18-000-chatfs-sh-run-fd-inheritance-coverage-gap-closed.md`.
+  - [x] Ride-alongs: `capture()` outputs and `meta.json` through
+        `staged`; view-symlink place-then-purge inversion — closed
+        2026-07-18, see
+        `todo.kb/2026-07-13-000-Atomic-chat-dir-regeneration-...md`'s
+        own write-up for detail. 5 new tests, each hand
+        mutation-tested. pytest 91/91, basedpyright 0/0/0. Commit
+        `6132c4d`.
 - [ ] [AI Studio provider — parity ladder](todo.kb/2026-06-20-000-aistudio-provider-parity-ladder.md)
       — third provider, first JSPB source. Pluck + splat landed 2026-06-20;
       layout/types 2026-06-22; massage_json + url_browse 2026-07-03 (writes
