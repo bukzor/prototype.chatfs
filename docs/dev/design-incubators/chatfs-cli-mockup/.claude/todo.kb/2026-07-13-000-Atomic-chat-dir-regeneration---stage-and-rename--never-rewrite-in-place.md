@@ -210,8 +210,28 @@ below:
       tests, and a real process-kill harness is explicitly the
       separate "Kill-mid-flight test" item below, not this one. pytest
       62/62, basedpyright 0/0/0 (chatfs_locks* excluded, out of scope).
-- [ ] Ride-alongs: `capture()` outputs and `meta.json` through `staged`;
-      view-symlink place-then-purge inversion
+- [x] Ride-alongs: `capture()` outputs and `meta.json` through `staged`;
+      view-symlink place-then-purge inversion -- done 2026-07-18:
+      `capture()` now wraps its two outputs (`cdp.jsonl`,
+      `conversation_filename`) in one outer `chatfs_locks.write_locked
+      (data_dir)` spanning two inner `chatfs_atomic.staged()` calls, per
+      the module docstring's own worked example ("capture()'s two
+      files"); a failed browse (the most failure-prone stage, and the
+      one artifact class that isn't locally re-derivable) now leaves
+      the prior `cdp.jsonl` untouched instead of destroying it, and a
+      failed pluck leaves the prior `conversation.json` untouched even
+      though the new `cdp.jsonl` is kept. `place_meta` gained the same
+      shape: `meta.json` and the view symlink each go through `staged`,
+      and `_purge_view_symlinks` gained a `keep` param so the fresh
+      symlink can be placed *before* the stale one(s) are swept
+      (place-then-purge, per `deterministic-regeneration.md`'s
+      `[!TODO]` block) without the purge immediately undoing the
+      placement it's supposed to follow -- a crash between the two
+      leaves the chat briefly visible under two paths, never invisible
+      from every view. 5 new tests in `chatfs_layout_test.py`
+      (`DescribeCapture` + one in `DescribePlaceMeta`), each
+      hand-mutation-tested (reverted the fix, confirmed the new test
+      fails, restored). pytest 91/91, basedpyright 0/0/0.
 - [ ] Docs: unwrap the !TODO blocks in `chat-as-directory.md`,
       `captured-vs-derived.md`, `pipeline-implications.md`,
       `view-symlink.md`, `deterministic-regeneration.md`
