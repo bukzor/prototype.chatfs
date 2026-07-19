@@ -35,64 +35,12 @@ cost-benefit-sweh:
 # Tactical Tasks — chatfs-cli-mockup
 
 Scope: this incubator only. Project-wide tactical work lives in
-`../../../../.claude/todo.md`.
-
-Completed work through 2026-07-05 (claude MVP + entry points + content-type
-rendering, the shared `chatfs_layout.py` refactor, the URL-driven-capture +
-noun-verb rename, the pyright-clean sweep) is recorded in `../../devlog/` —
-see 2026-04-29-000, 2026-05-11-001, 2026-05-12-000, 2026-07-05-000, and
-2026-07-05-001. The Immediate plan agreed 2026-07-10 (rename to
-`chatfs-cli-mockup`, AI Studio index rung, AI Studio conversation
-render/path_render, and the four-provider unification) closed 2026-07-11 —
-`../../devlog/2026-07-10-000-...` and this incubator's own
-`devlog/2026-07-11-000-...`, `-001-...`, `-002-...`.
+`../../../../.claude/todo.md`. Completed work is recorded in
+`../../devlog/` (project-wide) and this incubator's own `devlog/` —
+directory listing is the index, not restated here.
 
 ## Next
 
-- [x] [Atomic chat-dir regeneration — stage and rename, never rewrite in place](todo.kb/2026-07-13-000-Atomic-chat-dir-regeneration---stage-and-rename--never-rewrite-in-place.md)
-      — first priority (user call, 2026-07-13 planning session): requirement
-      `030-requirements.kb/atomic-cache-updates.md` is violated by in-place
-      purge-and-rebuild; precondition for fuser-vfs integration. Fully
-      closed 2026-07-18: all Implementation Steps and Success Criteria
-      now `[x]` in the task file (kept in place, not `todo clear`-deleted,
-      per its own Notes — it re-homes with the code at graduation). Last
-      two items closed this session: the five `[!TODO]` design docs
-      unwrapped against verified ground truth, and a real-`SIGKILL`
-      kill-mid-flight test suite (`DescribeKillMidFlight`, 4 tests) added
-      against `chatfs_atomic.py`'s shared staged-promotion kernel. pytest
-      95/95, basedpyright 0/0/0. Commits `e49ab0f` (docs) and `5e67b60`
-      (kill-tests). Devlog:
-      `devlog/2026-07-18-002-design-doc-unwrap-and-kill-mid-flight-tests-close-the-atomic-regen-task.md`.
-  - [x] chatfs_locks: fill test stubs, migrate chatfs_atomic lock
-        helpers, wire call sites — the locking half, closed 2026-07-17:
-        process-tree-reentrant lock table, stub tests filled,
-        `chatfs_atomic`'s superseded helpers migrated, and every
-        subprocess call site between chatfs verbs now carries the lock
-        table via the new `chatfs_sh.run` (close_fds=False, Unix-style
-        fd inheritance) rather than `chatfs_locks.run`'s curated
-        `pass_fds`. (Its own `todo.kb/2026-07-17-000-chatfs-locks-...md`
-        deleted 2026-07-18 — fully closed, all steps/criteria `[x]`,
-        cross-referenced by
-        `devlog/2026-07-17-000-chatfs-locks-stub-tests-and-child-script-extraction.md`
-        and `devlog/2026-07-17-001-chatfs-sh-close-fds-false-replaces-pass-fds-wiring.md`.)
-  - [x] Coverage gap: no automated test exercised `chatfs_sh.run`'s
-        fd-inheritance path specifically — closed 2026-07-18:
-        `it_reenters_the_parents_write_lock_via_chatfs_sh_run` in
-        `chatfs_locks_test.py`, spawning through `chatfs_sh.run` instead
-        of the test's own `child()` helper. `chatfs_sh.run` gained an
-        optional `timeout` param (unused by all 13 production call
-        sites) so the test fails fast instead of hanging on a
-        regression. Mutation-tested by hand (flipped `close_fds` to
-        `True`, confirmed the new test fails with `TimeoutExpired`,
-        reverted). 87/87 tests, basedpyright 0/0/0. Devlog
-        `devlog/2026-07-18-000-chatfs-sh-run-fd-inheritance-coverage-gap-closed.md`.
-  - [x] Ride-alongs: `capture()` outputs and `meta.json` through
-        `staged`; view-symlink place-then-purge inversion — closed
-        2026-07-18, see
-        `todo.kb/2026-07-13-000-Atomic-chat-dir-regeneration-...md`'s
-        own write-up for detail. 5 new tests, each hand
-        mutation-tested. pytest 91/91, basedpyright 0/0/0. Commit
-        `6132c4d`.
 - [ ] [AI Studio provider — parity ladder](todo.kb/2026-06-20-000-aistudio-provider-parity-ladder.md)
       — third provider, first JSPB source. Pluck + splat landed 2026-06-20;
       layout/types 2026-06-22; massage_json + url_browse 2026-07-03 (writes
