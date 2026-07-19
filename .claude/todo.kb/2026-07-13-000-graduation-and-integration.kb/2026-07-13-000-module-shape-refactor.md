@@ -156,12 +156,20 @@ surfaces) is the guide.
       docstring enforcement, AST gate deferred to ideas.kb. Tree and
       rationale above amended in place — the Proposed Solution is no
       longer a checkpoint.
-- [ ] Write the purity-invariant docstrings in `chatfs/__init__.py` and
+- [x] Write the purity-invariant docstrings in `chatfs/__init__.py` and
       `chatfs/shell/__init__.py` as part of the package skeleton — this
       is the agreed enforcement mechanism, a deliverable, not an
-      afterthought.
+      afterthought. Landed 2026-07-19.
 - [ ] Move one provider family end-to-end (suggest claude — has the most
-      tests), tests green, as the template. While moving each family:
+      tests), tests green, as the template. 2026-07-19: `git mv` pass
+      landed for all three providers + shared core (not just claude —
+      the shared core is imported by all three, so a claude-only move
+      would break chatgpt/aistudio's sibling-imports just the same;
+      moving everything in one mechanical commit was cheaper than two).
+      Zero content edits in that commit — all sibling-imports
+      (`chatfs_layout`, `chatfs_json`, etc.) are broken repo-wide until
+      the edit pass(es) land, starting with claude per the template
+      plan. While moving each family:
       convert orchestrators' subprocess calls to sibling splat/render
       stages into in-process imports of the stage functions
       (driver-model.md's open [!TODO] — its named tracker, the
