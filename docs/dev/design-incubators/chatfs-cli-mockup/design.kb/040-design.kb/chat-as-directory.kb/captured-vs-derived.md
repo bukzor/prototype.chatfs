@@ -1,60 +1,44 @@
 # Captured vs Derived
 
-Inside `.chat/$UUID/`, contents split by lifecycle:
+Split by lifecycle, split by tree:
 
 - **Captured.** `meta.json`, `conversation.json`, `cdp.jsonl`. Written
   by browse stages directly from provider data. Expensive to regenerate
-  (requires Chromium). Quarantined under `.chat/$UUID/.data/`.
+  (requires Chromium). Lives in the parallel tree `.data/$UUID/`.
 - **Derived.** `chat.md`, `messages/`, `conversations/`. Written by
-  render stages from captured state. Cheap to regenerate. Live at
-  chat-dir root — they're the user surface.
+  render stages from captured state. Cheap to regenerate. Lives in
+  `.chat/$UUID/` — the user surface.
 
 ```
+.data/$UUID/
+    meta.json
+    conversation.json
+    cdp.jsonl
 .chat/$UUID/
-    chat.md          # derived
-    messages/        # derived
-    conversations/   # derived
-    .data/           # captured (hidden from default ls)
-        meta.json
-        conversation.json
-        cdp.jsonl
+    chat.md            # derived
+    messages/          # derived
+    conversations/     # derived
+    .data -> ../../.data/$UUID   # inspection symlink
 ```
 
-> [!TODO]
-> The quarantine moves up a level: captured artifacts live in the
-> parallel tree `.data/$UUID/`, and `.chat/$UUID/` is wholly derived,
-> with a `.data` symlink for inspection (layout:
-> `../chat-as-directory.md` !TODO). The purge-allowlist below goes away
-> with it: nothing is cleared in advance -- a regenerated chat dir is
-> staged as a sibling and atomically promoted over the old one,
-> superseding all derived outputs at once
-> (`../deterministic-regeneration.md` !TODO).
+## Staged promotion, not an allowlist
 
-## Allowlist `.data/`, purge the rest
+Captured and derived artifacts no longer share a directory, so
+path-render needs no advance purge at all: `conversation_path_render`
+builds the entire derived surface (`chat.md`, `messages/`, the `.data`
+inspection symlink) in a staged scratch sibling and atomically promotes
+it over `.chat/$UUID/` in one swap (see
+`../deterministic-regeneration.md`). New derived outputs need no
+path-render change — whatever the splat tool emits into the scratch is
+what gets promoted.
 
-Path-render's pre-cleanup keeps the captured *directory* and purges
-everything else at the chat-dir root:
-
-```python
-KEEP = {".data"}
-for child in chat_dir.iterdir():
-    if child.name not in KEEP:
-        rm child
-```
-
-The allowlist is one entry, not three. New derived outputs (if
-`chatgpt-splat` ever adds an `indices/` dir) require no path-render
-change — they get cleaned implicitly.
-
-The dot-prefix has two jobs:
+The `.data` symlink (inside `.chat/$UUID/`, pointing at `.data/$UUID/`)
+has two jobs:
 
 1. **Hidden from default `ls`.** The user-visible chat surface is
    `chat.md`, `messages/`, `conversations/` — what they came for.
-   `ls -a` reveals `.data/` for inspection.
+   `ls -a` reveals `.data` for inspection.
 2. **Reachable through the view symlink.** `view/$TITLE/.data/meta.json`
-   resolves to `.chat/$UUID/.data/meta.json`. Captured artifacts stay
-   addressable for debugging, just out of the way for normal browsing.
-
-Coupling the cleanup logic to the captured set is correct because that
-set is small and stable; the derived set is whatever the splat tool
-happens to emit this build.
+   resolves through `.chat/$UUID/.data -> .data/$UUID/` to
+   `.data/$UUID/meta.json`. Captured artifacts stay addressable for
+   debugging, just out of the way for normal browsing.

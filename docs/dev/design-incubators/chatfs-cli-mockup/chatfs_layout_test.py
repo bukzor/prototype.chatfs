@@ -8,13 +8,17 @@ import json
 import re
 import os
 import time
+from collections.abc import Iterable, Iterator
 from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
 
 import chatfs_json
+import chatfs_layout
+from chatfs_json import JsonValue
 from chatfs_layout import (
+    capture,
     chat_dir_for,
     data_dir_for,
     data_dir_of,
@@ -106,6 +110,87 @@ class DescribeIterResponsesMatching:
             {"conversation_id": "bbbbbbbb"},
         ]
 
+
+class DescribeCapture:
+    """capture()'s outputs now go through staged() -- see
+    .claude/todo.kb/2026-07-13-000-Atomic-chat-dir-regeneration-...md's
+    "ride-alongs" step. These tests cover the invariant that step exists
+    for: a failed browse (or pluck) must not destroy a prior capture --
+    the one artifact class that isn't locally re-derivable."""
+
+    def it_writes_cdp_and_conversation_into_the_data_dir(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ):
+        chat_dir = chat_dir_for("abc123", tmp_path)
+
+        def fake_browse(_url: str, dst: Path) -> None:
+            _ = dst.write_text('{"line": 1}\n')
+
+        monkeypatch.setattr(chatfs_layout, "browse", fake_browse)
+
+        def pluck_fn(_lines: Iterable[str]) -> Iterator[JsonValue]:
+            yield {"ok": True}
+
+        data_dir = capture("https://example/abc123", chat_dir, pluck_fn)
+
+        assert data_dir == data_dir_for("abc123", tmp_path)
+        assert (data_dir / "cdp.jsonl").read_text() == '{"line": 1}\n'
+        assert chatfs_json.loads((data_dir / "conversation.json").read_text()) == {"ok": True}
+
+    def it_preserves_the_prior_cdp_jsonl_when_browse_fails(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ):
+        chat_dir = chat_dir_for("abc123", tmp_path)
+        data_dir = data_dir_for("abc123", tmp_path)
+        data_dir.mkdir(parents=True)
+        _ = (data_dir / "cdp.jsonl").write_text("prior capture")
+        _ = (data_dir / "conversation.json").write_text('{"prior": true}')
+
+        def failing_browse(_url: str, dst: Path) -> None:
+            _ = dst.write_text("half-written")
+            raise RuntimeError("browser crashed")
+
+        monkeypatch.setattr(chatfs_layout, "browse", failing_browse)
+
+        def pluck_fn(_lines: Iterable[str]) -> Iterator[JsonValue]:
+            yield {"unreached": True}
+
+        with pytest.raises(RuntimeError):
+            _ = capture("https://example/abc123", chat_dir, pluck_fn)
+
+        assert (data_dir / "cdp.jsonl").read_text() == "prior capture"
+        assert (data_dir / "conversation.json").read_text() == '{"prior": true}'
+        assert (data_dir / ".cdp.jsonl.fail").read_text() == "half-written"
+
+    def it_preserves_the_prior_conversation_when_pluck_fails(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ):
+        chat_dir = chat_dir_for("abc123", tmp_path)
+        data_dir = data_dir_for("abc123", tmp_path)
+        data_dir.mkdir(parents=True)
+        _ = (data_dir / "cdp.jsonl").write_text("prior capture")
+        _ = (data_dir / "conversation.json").write_text('{"prior": true}')
+
+        def fake_browse(_url: str, dst: Path) -> None:
+            _ = dst.write_text("new capture")
+
+        monkeypatch.setattr(chatfs_layout, "browse", fake_browse)
+
+        def failing_pluck_fn(_lines: Iterable[str]) -> Iterator[JsonValue]:
+            # raises before yielding anything -- dst.open("w") has already
+            # truncated the staged tmp file by the time this runs, so this
+            # exercises the "partial output preserved as .fail" path too.
+            raise RuntimeError("massage failed")
+
+        with pytest.raises(RuntimeError):
+            _ = capture("https://example/abc123", chat_dir, failing_pluck_fn)
+
+        # browse succeeded, so the new cdp.jsonl is kept ...
+        assert (data_dir / "cdp.jsonl").read_text() == "new capture"
+        # ... but the conversation, which pluck never finished, is untouched
+        assert (data_dir / "conversation.json").read_text() == '{"prior": true}'
+
+
 # Epoch matches the AI Studio demo capture fixture used elsewhere in this
 # incubator; under America/Chicago (CDT, UTC-5) it's 2026-06-20T12:42:40.
 DEMO_EPOCH = 1781977360
@@ -188,6 +273,40 @@ class DescribePlaceMeta:
         data_link = chat_dir / ".data"
         assert data_link.is_symlink()
         assert data_link.resolve() == data_dir_for("abc123", tmp_path).resolve()
+
+    def it_places_the_fresh_symlink_before_purging_the_stale_one(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ):
+        # place-then-purge (deterministic-regeneration.md): if a crash
+        # lands between placing the fresh view symlink and purging stale
+        # ones for the same uuid, the chat is briefly visible under two
+        # paths -- never invisible from every view, which purge-then-place
+        # risked.
+        use_chicago_tz(monkeypatch)
+        dt = datetime.fromtimestamp(DEMO_EPOCH, tz=timezone.utc)
+        _ = place_meta(
+            "abc123", "Hello", dt, {"stub": True}, tmp_path, label="LastModified"
+        )
+        stale_link = tmp_path / "LastModified=2026/06/20/12:42:40-05:00" / "Hello"
+        assert stale_link.is_symlink()
+        fresh_link = tmp_path / "Created=2026/06/20/12:42:40-05:00" / "Hello"
+
+        def failing_purge(uuid: str, root: Path, *, keep: Path | None = None) -> None:
+            # by the time purge would run, the fresh link must already exist
+            assert uuid == "abc123"
+            assert root == tmp_path
+            assert keep == fresh_link
+            assert fresh_link.is_symlink()
+            raise RuntimeError("simulated crash before purge")
+
+        monkeypatch.setattr(chatfs_layout, "_purge_view_symlinks", failing_purge)
+
+        with pytest.raises(RuntimeError):
+            _ = place_meta("abc123", "Hello", dt, {"real": True}, tmp_path)
+
+        # both survive the interrupted purge -- never neither
+        assert stale_link.is_symlink()
+        assert fresh_link.is_symlink()
 
 
 class DescribeDataDirOf:

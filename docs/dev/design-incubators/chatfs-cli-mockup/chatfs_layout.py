@@ -40,7 +40,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import TextIO
 
+import chatfs_atomic
 import chatfs_json
+import chatfs_locks
 import chatfs_sh
 from chatfs_json import JsonValue
 
@@ -236,12 +238,20 @@ def capture(
 ) -> Path:
     """Browse $url and pluck the conversation into `.data/$UUID/`.
 
-    Ensures the data dir exists, clears any prior cdp.jsonl /
-    `conversation_filename` from a previous run, then runs har-browse
-    followed by `pluck_fn`. Returns the data dir for callers that
-    need to deposit meta.json or similar siblings. Does not touch
-    `chat_dir` itself -- `.chat/$UUID/` may not exist yet (see module
-    docstring); only its `data_dir_of` twin is written here.
+    Ensures the data dir exists, then stages each output (`cdp.jsonl`,
+    `conversation_filename`) at a hidden scratch sibling and atomically
+    promotes it -- the prior artifact is only replaced once its
+    successor is fully written. A failed browse (the one stage most
+    likely to fail, and the one artifact class that isn't locally
+    re-derivable) leaves the prior `cdp.jsonl` untouched instead of
+    destroying it; the partial attempt is preserved as a `.fail`
+    sibling. Both promotions share one outer write lock on the data
+    dir, so a cooperating reader (`chatfs_locks.read_locked`) never
+    observes cdp.jsonl and the conversation as a mismatched pair from
+    two different runs. Returns the data dir for callers that need to
+    deposit meta.json or similar siblings. Does not touch `chat_dir`
+    itself -- `.chat/$UUID/` may not exist yet (see module docstring);
+    only its `data_dir_of` twin is written here.
 
     `pluck_fn` and `conversation_filename` are the provider-shaped
     half: each provider's `capture()` wrapper supplies its own
@@ -262,18 +272,18 @@ def capture(
     cdp = data_dir / "cdp.jsonl"
     conversation = data_dir / conversation_filename
 
-    cdp.unlink(missing_ok=True)
-    conversation.unlink(missing_ok=True)
-
-    browse(url, cdp)
-    pluck(pluck_fn, cdp, conversation)
+    with chatfs_locks.write_locked(data_dir):
+        with chatfs_atomic.staged(cdp, anchor=data_dir) as tmp:
+            browse(url, tmp)
+        with chatfs_atomic.staged(conversation, anchor=data_dir) as tmp:
+            pluck(pluck_fn, cdp, tmp)
 
     return data_dir
 
 
-def _purge_view_symlinks(uuid: str, root: Path) -> None:
+def _purge_view_symlinks(uuid: str, root: Path, *, keep: Path | None = None) -> None:
     """Remove every view-tree symlink under `root` whose target mentions
-    `uuid`.
+    `uuid`, except `keep`.
 
     Identity-scoped cleanup: derived view paths can move when
     derivation logic changes (TZ format, view shape); we sweep by
@@ -281,10 +291,17 @@ def _purge_view_symlinks(uuid: str, root: Path) -> None:
     storage-internal symlinks (e.g. `.chat/$UUID/.data`'s inspection
     link back to `.data/$UUID/`), not views, and their targets
     legitimately contain the uuid too.
+
+    `keep` is the symlink `place_meta` just placed (place-then-purge:
+    see `deterministic-regeneration.md`) -- its target also contains
+    `uuid`, so without this exclusion the sweep would immediately
+    undo the placement it's meant to follow.
     """
     for path in root.rglob("*"):
         rel_parts = path.relative_to(root).parts
         if ".chat" in rel_parts or ".data" in rel_parts:
+            continue
+        if path == keep:
             continue
         if path.is_symlink() and uuid in os.readlink(path):
             path.unlink()
@@ -315,6 +332,14 @@ def place_meta(
     still finds and replaces this call's symlink by uuid, moving the
     chat from the labeled tree to the true date tree.
 
+    Both meta.json and the view symlink are staged-and-promoted, and
+    the stale-symlink purge runs only after the fresh one is placed
+    (place-then-purge, not purge-then-place: see
+    `deterministic-regeneration.md`) -- a crash never makes the chat
+    vanish from every view. All three updates share one outer write
+    lock on the data dir, so a cooperating reader sees them as a single
+    transition.
+
     Does not touch `.chat/$UUID/` -- it may not exist yet (see module
     docstring); that's render's job. Returns the (possibly
     not-yet-existing) chat dir, for callers that pass it on to render.
@@ -322,16 +347,19 @@ def place_meta(
     chat_dir = chat_dir_for(id, root)
     data_dir = data_dir_for(id, root)
     data_dir.mkdir(parents=True, exist_ok=True)
-    _ = (data_dir / "meta.json").write_text(json.dumps(item, indent=2) + "\n")
-
-    _purge_view_symlinks(id, root)
+    meta_path = data_dir / "meta.json"
 
     view_dir = root / time_dir_for(created, label=label)
     view_dir.mkdir(parents=True, exist_ok=True)
-
     title_link = view_dir / safe_filename(title or id)
-    if title_link.is_symlink() or title_link.exists():
-        title_link.unlink()
-    title_link.symlink_to(os.path.relpath(chat_dir, start=view_dir))
+
+    with chatfs_locks.write_locked(data_dir):
+        with chatfs_atomic.staged(meta_path, anchor=data_dir) as tmp:
+            _ = tmp.write_text(json.dumps(item, indent=2) + "\n")
+
+        with chatfs_atomic.staged(title_link, anchor=data_dir) as tmp:
+            tmp.symlink_to(os.path.relpath(chat_dir, start=view_dir))
+
+        _purge_view_symlinks(id, root, keep=title_link)
 
     return chat_dir

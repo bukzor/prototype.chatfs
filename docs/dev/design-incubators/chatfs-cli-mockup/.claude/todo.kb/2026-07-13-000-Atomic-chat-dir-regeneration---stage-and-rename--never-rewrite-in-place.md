@@ -210,24 +210,101 @@ below:
       tests, and a real process-kill harness is explicitly the
       separate "Kill-mid-flight test" item below, not this one. pytest
       62/62, basedpyright 0/0/0 (chatfs_locks* excluded, out of scope).
-- [ ] Ride-alongs: `capture()` outputs and `meta.json` through `staged`;
-      view-symlink place-then-purge inversion
-- [ ] Docs: unwrap the !TODO blocks in `chat-as-directory.md`,
+- [x] Ride-alongs: `capture()` outputs and `meta.json` through `staged`;
+      view-symlink place-then-purge inversion -- done 2026-07-18:
+      `capture()` now wraps its two outputs (`cdp.jsonl`,
+      `conversation_filename`) in one outer `chatfs_locks.write_locked
+      (data_dir)` spanning two inner `chatfs_atomic.staged()` calls, per
+      the module docstring's own worked example ("capture()'s two
+      files"); a failed browse (the most failure-prone stage, and the
+      one artifact class that isn't locally re-derivable) now leaves
+      the prior `cdp.jsonl` untouched instead of destroying it, and a
+      failed pluck leaves the prior `conversation.json` untouched even
+      though the new `cdp.jsonl` is kept. `place_meta` gained the same
+      shape: `meta.json` and the view symlink each go through `staged`,
+      and `_purge_view_symlinks` gained a `keep` param so the fresh
+      symlink can be placed *before* the stale one(s) are swept
+      (place-then-purge, per `deterministic-regeneration.md`'s
+      `[!TODO]` block) without the purge immediately undoing the
+      placement it's supposed to follow -- a crash between the two
+      leaves the chat briefly visible under two paths, never invisible
+      from every view. 5 new tests in `chatfs_layout_test.py`
+      (`DescribeCapture` + one in `DescribePlaceMeta`), each
+      hand-mutation-tested (reverted the fix, confirmed the new test
+      fails, restored). pytest 91/91, basedpyright 0/0/0.
+- [x] Docs: unwrap the !TODO blocks in `chat-as-directory.md`,
       `captured-vs-derived.md`, `pipeline-implications.md`,
-      `view-symlink.md`, `deterministic-regeneration.md`
-- [ ] Kill-mid-flight test per the requirement's verification, killing
-      at each stage boundary and inside the promote
+      `view-symlink.md`, `deterministic-regeneration.md` -- done
+      2026-07-18: verified each block's claims against ground truth
+      first (read `chatfs_atomic.py`, `chatfs_layout.py`,
+      `place_meta`/`capture`/`_purge_view_symlinks`, and a
+      `path_render.py` leaf directly -- every claim held), then
+      removed the `[!TODO]` markup and folded the normative prose into
+      descriptive prose per `Skill(llm-design-kb)`'s convention.
+      Beyond pure markup removal: `chat-as-directory.md`'s layout
+      diagram redrawn (`.data/$UUID` now a sibling of `.chat/$UUID`,
+      not nested inside it) and its "Storage vs view" +
+      "Identity is primary" sections updated (storage is now two
+      never-moving trees, not one); `captured-vs-derived.md`'s
+      allowlist section rewritten as staged-promotion (the mechanism
+      it described no longer exists); `pipeline-implications.md`
+      rewritten per-script against the actual landed code (capture,
+      place_meta, path_render, the render leaf); the `[!TODO]` block's
+      own stale sibling-doc-still-!TODO cross-references removed with
+      it. Also fixed a stale line found along the way:
+      `chatfs_atomic.py`'s module docstring still said "imported
+      nowhere yet" (false since `chatfs_layout.py` imports it). pytest
+      91/91, basedpyright 0/0/0 (no functional code changed, docstring
+      + docs only).
+- [x] Kill-mid-flight test per the requirement's verification, killing
+      at each stage boundary and inside the promote -- done 2026-07-18:
+      `DescribeKillMidFlight` in `chatfs_atomic_test.py`, 4 tests, real
+      `SIGKILL` against a real child process (not the existing
+      `DescribeCrashRecovery`/`DescribeRecover` classes' hand-crafted
+      on-disk states) -- since all five call sites (capture, place_meta,
+      path_render x3) share the one `chatfs_atomic.staged()` kernel,
+      testing the kernel directly under a real kill covers the
+      guarantee everywhere it's used. Covers the three fingerprints
+      `recover()`'s own docstring names (scratch present mid-populate;
+      dst absent + `.old` present, killed between the two
+      `_swap_via_old` renames; dst + `.old` both present, killed before
+      `.old` cleanup) plus a fourth exercising the real
+      `RENAME_EXCHANGE` path specifically (not the forced fallback):
+      killed mid-`shutil.rmtree` cleanup that follows a successful
+      exchange, proving dst is already fully-new before the crash
+      regardless of what happens to the displaced old copy afterward.
+      Synchronization is a child self-`SIGSTOP` after printing "ready"
+      at the instrumented point (spying on `os.rename`/`os.unlink` from
+      the child script, `chatfs_atomic.py` itself untouched) -- the
+      parent's blocking `readline()` is the sync primitive, no sleep,
+      no timing race; `SIGKILL` still terminates a stopped process
+      immediately per POSIX. Each boundary's precision was hand
+      mutation-tested (shifted which call triggers the pause; forced
+      the fallback path in the exchange-cleanup test) and confirmed to
+      fail correctly, then reverted. One real bug caught and fixed
+      along the way, in the test helper itself, not the code under
+      test: an unconditional `proc.stderr.read()` before sending
+      `SIGKILL` deadlocked, since a merely-`SIGSTOP`ped (not exited)
+      child's stderr pipe never hits EOF -- moved the drain to only the
+      already-exited failure path. pytest 95/95, basedpyright 0/0/0.
 
 ## Success Criteria
 
-- [ ] Requirement verification passes for ALL readers -- no lock needed
-      to observe only old-complete or new-complete chat dirs
-- [ ] No verb destroys data before its replacement is secured --
+- [x] Requirement verification passes for ALL readers -- no lock needed
+      to observe only old-complete or new-complete chat dirs -- verified
+      by the kill-mid-flight tests above at the shared kernel level.
+- [x] No verb destroys data before its replacement is secured --
       including `capture()` (a failed browse leaves the prior capture
-      intact)
-- [ ] A crashed run's partial output is preserved on disk for
-      inspection; the next run self-heals with no manual cleanup
-- [ ] Full test suite + basedpyright clean
+      intact) -- `chatfs_layout_test.py`'s `DescribeCapture`/
+      `DescribePlaceMeta` tests (2026-07-18 ride-alongs) plus this
+      session's kernel-level kill tests.
+- [x] A crashed run's partial output is preserved on disk for
+      inspection; the next run self-heals with no manual cleanup --
+      each kill-mid-flight test asserts both halves directly: the
+      `.fail` sibling holding the killed attempt's bytes, and a
+      subsequent `staged()`/`recover()` call healing without help.
+- [x] Full test suite + basedpyright clean -- pytest 95/95, basedpyright
+      0/0/0.
 
 ## Notes
 

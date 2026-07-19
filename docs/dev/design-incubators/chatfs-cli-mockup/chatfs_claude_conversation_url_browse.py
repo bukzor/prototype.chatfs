@@ -34,7 +34,6 @@ to run `chatfs_claude_index_browse.py | chatfs_claude_index_splat.py`
 `chatfs_claude_conversation_path_render.py` on the chat dir (reuses
 the already-captured cdp.jsonl + conversation.json).
 """
-
 import sys
 from pathlib import Path
 from typing import cast

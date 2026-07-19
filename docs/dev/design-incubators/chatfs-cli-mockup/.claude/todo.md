@@ -35,54 +35,12 @@ cost-benefit-sweh:
 # Tactical Tasks — chatfs-cli-mockup
 
 Scope: this incubator only. Project-wide tactical work lives in
-`../../../../.claude/todo.md`.
-
-Completed work through 2026-07-05 (claude MVP + entry points + content-type
-rendering, the shared `chatfs_layout.py` refactor, the URL-driven-capture +
-noun-verb rename, the pyright-clean sweep) is recorded in `../../devlog/` —
-see 2026-04-29-000, 2026-05-11-001, 2026-05-12-000, 2026-07-05-000, and
-2026-07-05-001. The Immediate plan agreed 2026-07-10 (rename to
-`chatfs-cli-mockup`, AI Studio index rung, AI Studio conversation
-render/path_render, and the four-provider unification) closed 2026-07-11 —
-`../../devlog/2026-07-10-000-...` and this incubator's own
-`devlog/2026-07-11-000-...`, `-001-...`, `-002-...`.
+`../../../../.claude/todo.md`. Completed work is recorded in
+`../../devlog/` (project-wide) and this incubator's own `devlog/` —
+directory listing is the index, not restated here.
 
 ## Next
 
-- [ ] Pull `worktree/atomic-chat-dir-regen` into `main` (pattern: `git pull
-      worktree/atomic-chat-dir-regen/ --ff`, as done for `6d98f99`/
-      `d2effd0`/`0856b3f`). Found 2026-07-18: main's copy of this merge
-      only completed through `ff1879f` (a stale, previously-interrupted
-      `git pull --ff` finished this session — see sessions.kb
-      `chatfs-cli-mockup-open-todo-sweep.md`'s 2026-07-18 addendum). The
-      worktree branch has since advanced 6 more commits, already pushed
-      to `origin/atomic-chat-dir-regen` (tip `76f98c1`): the
-      `chatfs_sh.run` fd-inheritance coverage-gap test, `capture()`/
-      `place_meta` ride-alongs through `staged()`, the five
-      `[!TODO]` design-doc unwraps, real-`SIGKILL` kill-mid-flight
-      tests, and a `todo clear` pass that deletes
-      `todo.kb/2026-07-17-000-chatfs-locks-...md` (still present below,
-      pending that merge) — full detail in sessions.kb
-      `chatfs-atomic-regen-locks-wiring.md`. This closes the parent
-      atomic-chat-dir-regen task entirely once merged.
-- [ ] [Atomic chat-dir regeneration — stage and rename, never rewrite in place](todo.kb/2026-07-13-000-Atomic-chat-dir-regeneration---stage-and-rename--never-rewrite-in-place.md)
-      — first priority (user call, 2026-07-13 planning session): requirement
-      `030-requirements.kb/atomic-cache-updates.md` is violated by in-place
-      purge-and-rebuild; precondition for fuser-vfs integration.
-  - [x] [chatfs_locks: fill test stubs, migrate chatfs_atomic lock helpers, wire call sites](todo.kb/2026-07-17-000-chatfs-locks--fill-test-stubs--migrate-chatfs-atomic-lock-helpers--wire-call-sites.md)
-        — the locking half, closed 2026-07-17: process-tree-reentrant
-        lock table, stub tests filled, `chatfs_atomic`'s superseded
-        helpers migrated, and every subprocess call site between chatfs
-        verbs now carries the lock table via the new `chatfs_sh.run`
-        (close_fds=False, Unix-style fd inheritance) rather than
-        `chatfs_locks.run`'s curated `pass_fds`.
-  - [ ] Coverage gap: no automated test exercises `chatfs_sh.run`'s
-        fd-inheritance path specifically (verified only by hand,
-        2026-07-17 — a child spawned via `chatfs_sh.run` alone, no
-        `pass_fds`, borrowed the parent's lock). Add a variant of
-        `chatfs_locks_test.py`'s `it_reenters_the_parents_write_lock_without_deadlock`
-        that spawns through `chatfs_sh.run` instead of the test's own
-        `child()` helper (~15-20 min).
 - [ ] [AI Studio provider — parity ladder](todo.kb/2026-06-20-000-aistudio-provider-parity-ladder.md)
       — third provider, first JSPB source. Pluck + splat landed 2026-06-20;
       layout/types 2026-06-22; massage_json + url_browse 2026-07-03 (writes

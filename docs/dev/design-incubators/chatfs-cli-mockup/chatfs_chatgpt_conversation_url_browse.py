@@ -41,6 +41,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 import chatfs_json
+import chatfs_sh
 from chatfs_chatgpt_layout import (
     capture,
     chat_dir_for,
@@ -48,7 +49,6 @@ from chatfs_chatgpt_layout import (
     place_meta,
     pluck_index_pages,
 )
-import chatfs_sh
 from chatfs_chatgpt_types import IndexItem, is_index_page
 from chatfs_json import JsonObject
 from chatfs_layout import pluck
