@@ -36,7 +36,6 @@ Captures are written directly into `.data/$UUID/` — no temp staging
 (matches claude's `capture()` policy). If a later step fails, the
 captures remain there for inspection.
 """
-import subprocess
 import sys
 from pathlib import Path
 from urllib.parse import urlparse
@@ -49,6 +48,7 @@ from chatfs_chatgpt_layout import (
     place_meta,
     pluck_index_pages,
 )
+import chatfs_sh
 from chatfs_chatgpt_types import IndexItem, is_index_page
 from chatfs_json import JsonObject
 from chatfs_layout import pluck
@@ -142,7 +142,7 @@ def main() -> None:
 
     _ = place_meta(item, ROOT)
 
-    _ = subprocess.run([str(PATH_RENDER), str(chat_dir)], check=True)
+    _ = chatfs_sh.run([str(PATH_RENDER), str(chat_dir)])
 
 
 if __name__ == "__main__":

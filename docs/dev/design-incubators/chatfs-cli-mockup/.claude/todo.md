@@ -53,11 +53,20 @@ render/path_render, and the four-provider unification) closed 2026-07-11 —
       — first priority (user call, 2026-07-13 planning session): requirement
       `030-requirements.kb/atomic-cache-updates.md` is violated by in-place
       purge-and-rebuild; precondition for fuser-vfs integration.
-  - [ ] [chatfs_locks: fill test stubs, migrate chatfs_atomic lock helpers, wire call sites](todo.kb/2026-07-17-000-chatfs-locks--fill-test-stubs--migrate-chatfs-atomic-lock-helpers--wire-call-sites.md)
-        — the locking half: process-tree-reentrant lock table
-        (`__CHATFS_LOCKS`) landed 2026-07-17 with 14/16 tests; remaining
-        stubs + migration (migration blocked on coordinating with the
-        active integration session).
+  - [x] [chatfs_locks: fill test stubs, migrate chatfs_atomic lock helpers, wire call sites](todo.kb/2026-07-17-000-chatfs-locks--fill-test-stubs--migrate-chatfs-atomic-lock-helpers--wire-call-sites.md)
+        — the locking half, closed 2026-07-17: process-tree-reentrant
+        lock table, stub tests filled, `chatfs_atomic`'s superseded
+        helpers migrated, and every subprocess call site between chatfs
+        verbs now carries the lock table via the new `chatfs_sh.run`
+        (close_fds=False, Unix-style fd inheritance) rather than
+        `chatfs_locks.run`'s curated `pass_fds`.
+  - [ ] Coverage gap: no automated test exercises `chatfs_sh.run`'s
+        fd-inheritance path specifically (verified only by hand,
+        2026-07-17 — a child spawned via `chatfs_sh.run` alone, no
+        `pass_fds`, borrowed the parent's lock). Add a variant of
+        `chatfs_locks_test.py`'s `it_reenters_the_parents_write_lock_without_deadlock`
+        that spawns through `chatfs_sh.run` instead of the test's own
+        `child()` helper (~15-20 min).
 - [ ] [AI Studio provider — parity ladder](todo.kb/2026-06-20-000-aistudio-provider-parity-ladder.md)
       — third provider, first JSPB source. Pluck + splat landed 2026-06-20;
       layout/types 2026-06-22; massage_json + url_browse 2026-07-03 (writes

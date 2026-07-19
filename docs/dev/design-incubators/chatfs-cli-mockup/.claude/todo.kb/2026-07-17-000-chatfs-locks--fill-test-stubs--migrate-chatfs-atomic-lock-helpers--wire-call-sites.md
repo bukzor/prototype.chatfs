@@ -100,11 +100,33 @@ call sites to the old helpers.
       `path_render.py` call sites lost their manual
       `write_locked(data_dir)` wrap as a result (`staged(chat_dir,
       anchor=data_dir)` covers it); 75/75 tests, basedpyright 0/0/0
-- [ ] Route subprocess call sites through `chatfs_locks.run` so lock
-      fds survive exec: `run_pluck`, `capture()`'s har-browse, the
-      path_render splat/render invocations (as they're rewritten by the
-      parent task); grow `run()`'s narrow signature per call site
-      (stdin/stdout handles first)
+- [x] Route subprocess call sites through `chatfs_sh.run` (not
+      `chatfs_locks.run`) so lock fds survive exec -- done 2026-07-17,
+      redirected mid-task (user call): `chatfs_sh.py` is a new
+      shell-tracing `subprocess.run` wrapper (adapted from the user's
+      personal library), narrow-signature (stdin/stdout only), always
+      `check=True`. Two changes made it the vehicle for lock-fd
+      survival generically rather than per-call-site plumbing: (1)
+      `chatfs_sh.run` passes `close_fds=False`, so a child inherits the
+      whole fd table -- plain Unix exec semantics, not Python's
+      PEP-446 opt-out-by-default fd hiding; (2) `chatfs_locks._locked`
+      now calls `os.set_inheritable(fd, True)` right after `os.open`,
+      since Python fds are O_CLOEXEC by default regardless of the
+      subprocess-side `close_fds` setting -- without this, close_fds=False
+      alone wouldn't have carried the fd. `chatfs_locks.run` (the
+      `pass_fds`-based wrapper) is kept, scope-narrowed to test/
+      orchestration use in its docstring, since its callers there need
+      `capture_output`/`timeout`/`env` that `chatfs_sh.run` deliberately
+      doesn't carry. Wired: `run_pluck`, `capture()`'s har-browse
+      (`chatfs_layout.py`), and all three providers' path_render
+      splat/render invocations, path_browse/url_render/url_browse's
+      delegate-to-path_render calls -- 13 files, every bare
+      `subprocess.run` between chatfs verbs replaced. Hand-verified live
+      (not just by the test suite, which doesn't exercise this path):
+      a child spawned via `chatfs_sh.run` re-entered the parent's
+      write lock and printed "borrowed-ok" with no `pass_fds` involved,
+      proving the fd crossed exec through inheritability + close_fds=False
+      alone. 75/75 tests, basedpyright 0/0/0.
 
 ## Open Questions
 
@@ -122,8 +144,11 @@ call sites to the old helpers.
 - [x] `chatfs_atomic.py` has no flock code; one lock API, in
       `chatfs_locks`
 - [x] Zero stub tests; suite green; basedpyright 0/0/0
-- [ ] Every subprocess spawn between chatfs verbs carries the lock
-      table (audit: no bare `subprocess.run` between them)
+- [x] Every subprocess spawn between chatfs verbs carries the lock
+      table (audit: no bare `subprocess.run` between them) -- done
+      2026-07-17: all 13 production call sites route through
+      `chatfs_sh.run`; only `chatfs_locks.py` and test files still
+      reference `subprocess.run`/`Popen` directly
 
 ## Notes
 

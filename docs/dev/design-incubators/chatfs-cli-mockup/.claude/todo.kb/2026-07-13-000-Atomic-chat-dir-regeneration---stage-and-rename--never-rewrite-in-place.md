@@ -101,11 +101,19 @@ below:
   inherited fd instead (dev/ino probe, no syscall).
 - **Spawn lock-holding children via `chatfs_locks.run()`** — bare
   `subprocess.run` drops the fds (PEP 446 non-inheritable default).
+  Superseded 2026-07-17 (user call): production call sites now use
+  `chatfs_sh.run` instead (`close_fds=False`, plus lock fds opened
+  inheritable in `chatfs_locks._locked`), so the whole fd table
+  crosses exec, not just a curated `pass_fds` list; `chatfs_locks.run`
+  remains for test/orchestration use. All 13 real call sites
+  (`run_pluck`, `capture()`'s har-browse, every provider's
+  path_render/path_browse/url_render/url_browse) wired -- see
+  `2026-07-17-000-chatfs-locks--...md`, now closed.
 - `chatfs_atomic`'s lock helpers + its 3 `DescribeLocking` tests are
   slated to migrate into `chatfs_locks`; deliberately deferred so this
   session's in-flight work doesn't break. Tracked in
   `2026-07-17-000-chatfs-locks--...md` — take it if convenient,
-  otherwise it lands after you do.
+  otherwise it lands after you do. Done 2026-07-17.
 - Environment landmine, already defused: a stale `__pycache__` pyc had
   `read_locked` compiled as `LOCK_EX` (same-second, same-length edit —
   mtime+size validation can never catch it). If phantom lock-test

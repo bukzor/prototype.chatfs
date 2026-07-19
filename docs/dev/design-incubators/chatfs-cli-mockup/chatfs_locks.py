@@ -3,8 +3,10 @@
 The lock table lives in two synchronized forms: `registry` (in-process
 truth) and the `__CHATFS_LOCKS` environment variable (`"11:r 22:w"` --
 its serialization, rewritten eagerly on every acquire/release so no
-spawn path, wrapped or not, ever inherits a stale table). fds survive
-fork and -- via `run()`'s pass_fds -- exec; a child re-entering a held
+spawn path, wrapped or not, ever inherits a stale table). Lock fds are
+opened inheritable (no O_CLOEXEC), so they survive fork and exec through
+any close_fds=False spawn -- chatfs_sh.run in production, this module's
+own `run()` (explicit pass_fds) in tests; a child re-entering a held
 anchor finds the inherited fd by identity probe (st_dev, st_ino) and
 borrows it instead of self-deadlocking on a fresh open-file-description.
 
@@ -77,10 +79,12 @@ def run(
     env: Mapping[str, str] | None = None,
     check: bool = False,
 ) -> subprocess.CompletedProcess[bytes]:
-    """subprocess.run carrying the lock table's fds to the child.
+    """subprocess.run carrying the lock table's fds to the child via pass_fds.
 
-    Deliberately narrow signature (bytes-only); grow parameters as call
-    sites need them.
+    Test/orchestration use -- production call sites spawn through
+    chatfs_sh.run instead, which inherits the whole fd table (lock fds
+    included) rather than naming a curated list. Deliberately narrow
+    signature (bytes-only); grow parameters as call sites need them.
     """
     _seed()
     return subprocess.run(
@@ -106,6 +110,7 @@ def _locked(anchor: Path, mode: Mode) -> Generator[None]:
         yield  # borrow: no flock call (it would convert the held lock)
         return
     fd = os.open(anchor, os.O_RDONLY | os.O_DIRECTORY)
+    os.set_inheritable(fd, True)  # survive exec via chatfs_sh.run's close_fds=False
     try:
         fcntl.flock(fd, _FLOCK_OP[mode])
         registry[key] = Lock(fd, mode, owned=True)

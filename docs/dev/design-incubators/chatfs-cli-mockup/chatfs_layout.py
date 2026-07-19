@@ -34,7 +34,6 @@ chatgpt/claude/aistudio.
 import json
 import os
 import re
-import subprocess
 import sys
 from collections.abc import Callable, Iterable, Iterator, Mapping
 from datetime import datetime
@@ -42,6 +41,7 @@ from pathlib import Path
 from typing import TextIO
 
 import chatfs_json
+import chatfs_sh
 from chatfs_json import JsonValue
 
 DATA_DIR_NAME = ".data"
@@ -158,7 +158,7 @@ def run_pluck(script: Path, src: Path, dst: Path) -> None:
     the same "external filter, teed to disk" shape.
     """
     with src.open("rb") as fin, dst.open("wb") as fout:
-        _ = subprocess.run([str(script)], stdin=fin, stdout=fout, check=True)
+        _ = chatfs_sh.run([str(script)], stdin=fin, stdout=fout)
 
 
 def iter_responses_matching(
@@ -202,7 +202,7 @@ def browse(url: str, dst: Path) -> None:
     """Run har-browse against url, writing its CDP capture (jsonl) to dst."""
     print(f"Capturing {url} → {dst} ...", file=sys.stderr)
     with dst.open("wb") as f:
-        _ = subprocess.run(["har-browse", url], stdout=f, check=True)
+        _ = chatfs_sh.run(["har-browse", url], stdout=f)
 
 
 def dump_jsonl(values: Iterable[JsonValue], out: TextIO) -> None:

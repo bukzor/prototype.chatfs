@@ -15,11 +15,11 @@ Steps:
     3. massage → .data/$id/conversation.json
     4. delegate to chatfs_aistudio_conversation_path_render.py
 """
-import subprocess
 import sys
 from pathlib import Path
 
 import chatfs_json
+import chatfs_sh
 from chatfs_aistudio_layout import capture, data_dir_of, resolve_chat_dir
 from chatfs_aistudio_types import is_index_item
 from chatfs_layout import run_pluck
@@ -43,7 +43,7 @@ def main() -> None:
     raw = data_dir / "conversation.json.d" / "raw.json"
     run_pluck(MASSAGE_JSON, raw, data_dir / "conversation.json")
 
-    _ = subprocess.run([str(PATH_RENDER), str(chat_dir)], check=True)
+    _ = chatfs_sh.run([str(PATH_RENDER), str(chat_dir)])
 
 
 if __name__ == "__main__":
