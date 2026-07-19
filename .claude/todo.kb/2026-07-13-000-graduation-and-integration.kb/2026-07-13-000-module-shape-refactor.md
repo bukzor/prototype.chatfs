@@ -39,7 +39,8 @@ package *in place* (the move to `packages/` is the next child).
 ## Proposed Solution
 
 Settled 2026-07-14; amended 2026-07-17 (pluck/capture factored out of
-layout — see note below the tree). Shared cross-provider primitives stay
+layout) and 2026-07-19 (purity partition: `shell/` subpackage — see the
+dated rationale notes below the tree). Shared cross-provider primitives stay
 at the package root; providers nest one level under a `provider/`
 subpackage (ready for the future `chatfs.providers` entry-point split,
 and the natural future home for a formal base-adapter module); nouns are
@@ -50,21 +51,32 @@ directory; only 2 verbs per locator today, an extra level buys nothing.
 
     chatfs/
       json.py                  # typed JSON + jsonl serialization (dump_jsonl moves here)
-      pluck.py                 # CDP filtering: iter_responses_matching, pluck, run_pluck
-      capture.py               # sources: browse (har-browse wrapper) + capture()
-                               # (composes browse+pluck, lands exhaust per layout)
-      layout.py                # path vocabulary + placement only: DATA_DIR_NAME,
-                               # safe_filename, time_dir_for, chat_dir_for,
-                               # resolve_chat_dir, place_meta
+      pluck.py                 # pure CDP filtering: iter_responses_matching
+                               # (the file-teeing pluck/run_pluck drivers → shell/capture.py)
+      layout.py                # pure path vocabulary: DATA_DIR_NAME, safe_filename,
+                               # time_dir_for, chat_dir_for, data_dir_for
+                               # (the placement/fs half → shell/place.py)
       render.py
       url_browse.py            # provider-agnostic url-browse helpers (was chatfs_url_browse.py)
+      shell/                   # the imperative shell (bourne pun intended): the only
+                               # modules whose top level may import os/sys/subprocess/…
+        sh.py                  # was chatfs_sh.py
+        atomic.py              # was chatfs_atomic.py
+        locks.py               # was chatfs_locks.py
+        capture.py             # browse() (har-browse wrapper), pluck/run_pluck tee
+                               # drivers, capture() (composes browse+pluck, lands
+                               # exhaust per layout)
+        place.py               # place_meta, link_data_dir, resolve_chat_dir,
+                               # purge_view_symlinks — the fs half of old chatfs_layout
       provider/
         claude/
-          layout.py            # provider adapter minus wire knowledge: _created,
-                               # capture/place_meta wrappers, url_for/uuid_from_url
-                               # (consolidating the copies in url_browse/url_render;
-                               # kills url_trash's script-importing-script)
-          pluck.py             # wire knowledge: URL regexes, pluck_conversation,
+          layout.py            # pure provider adapter: _created, url_for/uuid_from_url,
+                               # label conventions (consolidating the copies in
+                               # url_browse/url_render; kills url_trash's
+                               # script-importing-script). capture/place_meta wrappers
+                               # dissolve — leaf main()s call shell.capture/place with
+                               # pure provider config directly
+          pluck.py             # wire knowledge, pure data→data: URL regexes, pluck_conversation,
                                # pluck_index_pages; stdin→stdout main with a
                                # {conversation,index} selector restores the
                                # re-pluck-without-Chromium seam that the jq→Python
@@ -99,6 +111,33 @@ sits above both pluck and layout so layout stays subprocess-free and
 pluck stays layout-free (render sits at capture's level: it consumes
 layout names as data, never touches the filesystem).
 
+Amendment rationale (2026-07-19, discussed with user — closes the
+gating discussion step below): the concern split is now also a purity
+split. Everything outside `shell/` is pure; side effects — fs reads
+included — are limited to `main()` functions there, and impure imports
+(`os`, `sys`, `subprocess`, `shutil`, …) appear only inline inside
+`main()`, never at module top level. We mark the impure minority, not
+the pure majority: a `pure/` subtree was considered and rejected —
+most pure code lives in provider leaves whose module path must match
+the CLI command path, so a `pure/` tree either mirrors the whole
+provider tree or fails to contain most of the pure code. `shell/`
+(named for both senses: imperative shell, bourne shell — `sh.py` lives
+there) collects the intrinsically impure trio (sh/atomic/locks) plus
+the impure halves of pluck (tee drivers → `capture.py`) and layout
+(placement → `place.py`); the 2026-07-17 tree's provider
+capture/place_meta wrappers dissolve into leaf `main()`s calling shell
+functions with pure provider config. Layering supersedes 2026-07-17's:
+pure core `json → types → pluck → layout → render`, strictly downward;
+`shell/` above the core; leaf `main()`s on top. Enforcement is
+documentary, not mechanical: the `chatfs/__init__.py` and
+`chatfs/shell/__init__.py` docstrings state the invariant (the agreed
+~90% solution); an AST-scanning purity gate was deliberately deferred
+— recorded in
+`.claude/ideas.kb/2026-07-19-000-Purity-gate--AST-scan-for-shell-only-imports.md`.
+A shape this enables, adopted per family as it moves (not mandated up
+front): splat/writer stage functions yield `(relpath, content)` pairs
+and `main()` does the writes, dropping tmp-dir test fixtures.
+
 Bare-verb leaves remain invocable (thin executable shims or `python -m`)
 so the pipe surface and delegation orchestrators keep working throughout
 — the driver-model decision (one importable stage function, two thin
@@ -111,13 +150,16 @@ surfaces) is the guide.
       `docs/dev/design-incubators/chatfs-cli-mockup/devlog/2026-07-15-000-port-jq-sh-pluck-pipeline-to-python.md`
       (extracted 2026-07-14 as its own tracked task, now closed and
       deleted). No `*.jq`/`.sh` remain in the incubator.
-- [ ] Discuss with user (their request, 2026-07-17) before any moves:
-      better separation of pure vs side-effected code in the module
-      organization. The amended tree separates *concerns* but not
-      *purity* — e.g. `pluck.py` would hold the pure generator
-      (`iter_responses_matching`) alongside the file-teeing drivers
-      (`pluck`/`run_pluck`). The discussion may re-partition the tree;
-      treat the Proposed Solution as a checkpoint until it happens.
+- [x] Discuss with user (their request, 2026-07-17) before any moves:
+      pure vs side-effected separation. Resolved 2026-07-19: `shell/`
+      subpackage + main()-only side effects + inline impure imports;
+      docstring enforcement, AST gate deferred to ideas.kb. Tree and
+      rationale above amended in place — the Proposed Solution is no
+      longer a checkpoint.
+- [ ] Write the purity-invariant docstrings in `chatfs/__init__.py` and
+      `chatfs/shell/__init__.py` as part of the package skeleton — this
+      is the agreed enforcement mechanism, a deliverable, not an
+      afterthought.
 - [ ] Move one provider family end-to-end (suggest claude — has the most
       tests), tests green, as the template. While moving each family:
       convert orchestrators' subprocess calls to sibling splat/render
