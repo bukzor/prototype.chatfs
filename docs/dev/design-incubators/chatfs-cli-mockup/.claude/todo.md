@@ -49,6 +49,22 @@ render/path_render, and the four-provider unification) closed 2026-07-11 —
 
 ## Next
 
+- [ ] Pull `worktree/atomic-chat-dir-regen` into `main` (pattern: `git pull
+      worktree/atomic-chat-dir-regen/ --ff`, as done for `6d98f99`/
+      `d2effd0`/`0856b3f`). Found 2026-07-18: main's copy of this merge
+      only completed through `ff1879f` (a stale, previously-interrupted
+      `git pull --ff` finished this session — see sessions.kb
+      `chatfs-cli-mockup-open-todo-sweep.md`'s 2026-07-18 addendum). The
+      worktree branch has since advanced 6 more commits, already pushed
+      to `origin/atomic-chat-dir-regen` (tip `76f98c1`): the
+      `chatfs_sh.run` fd-inheritance coverage-gap test, `capture()`/
+      `place_meta` ride-alongs through `staged()`, the five
+      `[!TODO]` design-doc unwraps, real-`SIGKILL` kill-mid-flight
+      tests, and a `todo clear` pass that deletes
+      `todo.kb/2026-07-17-000-chatfs-locks-...md` (still present below,
+      pending that merge) — full detail in sessions.kb
+      `chatfs-atomic-regen-locks-wiring.md`. This closes the parent
+      atomic-chat-dir-regen task entirely once merged.
 - [ ] [Atomic chat-dir regeneration — stage and rename, never rewrite in place](todo.kb/2026-07-13-000-Atomic-chat-dir-regeneration---stage-and-rename--never-rewrite-in-place.md)
       — first priority (user call, 2026-07-13 planning session): requirement
       `030-requirements.kb/atomic-cache-updates.md` is violated by in-place
