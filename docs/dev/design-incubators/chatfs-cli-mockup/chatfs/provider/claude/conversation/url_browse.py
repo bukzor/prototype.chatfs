@@ -2,7 +2,7 @@
 """Capture a claude.ai conversation by URL.
 
 Usage:
-    chatfs_claude_conversation_url_browse.py <claude-url>
+    python -m chatfs.provider.claude.conversation.url_browse <claude-url>
 
 Assumes (per browse-incidental-capture.md) that visiting `/chat/$UUID`
 also fires `/chat_conversations_v2` for the sidebar, so one browse trip
@@ -10,8 +10,7 @@ captures both the conversation document and an index page that mentions
 this UUID.
 
 If that assumption is ever violated, `find_index_item` fails loudly and
-the recovery path is two-step: `chatfs_claude_index_browse.py` →
-`chatfs_claude_index_splat.py` → `chatfs_claude_conversation_path_browse.py`.
+the recovery path is two-step: index browse → index splat → path_browse.
 
 A second cross-check asserts that the meta-shaped fields agree across
 the two endpoints (null-tolerant) — catches schema drift if either side
@@ -29,33 +28,26 @@ Steps:
 Captures are written directly into `.data/$UUID/` — no temp staging.
 If a later step fails, the captures remain there for inspection.
 Recovery from the long-tail "sidebar didn't include this uuid" case is
-to run `chatfs_claude_index_browse.py | chatfs_claude_index_splat.py`
-(deposits meta.json into the same `.data/$UUID/`) and then
-`chatfs_claude_conversation_path_render.py` on the chat dir (reuses
-the already-captured cdp.jsonl + conversation.json).
+to run index browse | index splat (deposits meta.json into the same
+`.data/$UUID/`) and then path_render on the chat dir (reuses the
+already-captured cdp.jsonl + conversation.json).
 """
-import sys
 from pathlib import Path
 from typing import cast
-from urllib.parse import urlparse
 
-import chatfs_json
-import chatfs_sh
-from chatfs_claude_layout import capture, chat_dir_for, place_meta, pluck_index_pages
-from chatfs_claude_types import IndexItem, is_index_page
-from chatfs_json import JsonObject
-from chatfs_layout import pluck
-from chatfs_url_browse import null_tolerant_mismatches
+from chatfs import json as chatfs_json
+from chatfs.json import JsonObject
+from chatfs.layout import chat_dir_for
+from chatfs.paths import INCUBATOR_ROOT, demo_root
+from chatfs.provider.claude import layout as claude_layout
+from chatfs.provider.claude.pluck import pluck_conversation, pluck_index_pages
+from chatfs.provider.claude.types import IndexItem, is_index_page
+from chatfs.shell import sh as chatfs_sh
+from chatfs.shell.capture import capture, pluck
+from chatfs.shell.place import place_meta
+from chatfs.url_browse import null_tolerant_mismatches
 
-HERE = Path(__file__).parent
-PATH_RENDER = HERE / "chatfs_claude_conversation_path_render.py"
-ROOT = HERE / "chatfs.demo" / "claude"
-
-
-def uuid_from_url(url: str) -> str:
-    parts = urlparse(url).path.strip("/").split("/")
-    assert len(parts) == 2 and parts[0] == "chat", url
-    return parts[1]
+ROOT = demo_root("claude")
 
 
 def find_index_item(data_dir: Path, uuid: str) -> IndexItem:
@@ -78,8 +70,7 @@ def find_index_item(data_dir: Path, uuid: str) -> IndexItem:
         matches.extend(item for item in page["data"] if item["uuid"] == uuid)
     assert matches, (
         f"no sidebar index page included {uuid}; "
-        f"run `chatfs_claude_index_browse.py | chatfs_claude_index_splat.py`, "
-        f"then use `chatfs_claude_conversation_path_browse.py`"
+        f"run index browse | index splat, then use path_browse"
     )
     assert all(
         m == matches[0] for m in matches
@@ -88,15 +79,17 @@ def find_index_item(data_dir: Path, uuid: str) -> IndexItem:
 
 
 def main() -> None:
+    import sys
+
     if len(sys.argv) != 2:
         print(f"usage: {sys.argv[0]} <claude-url>", file=sys.stderr)
         sys.exit(2)
 
     url = sys.argv[1]
-    uuid = uuid_from_url(url)
+    uuid = claude_layout.uuid_from_url(url)
 
     chat_dir = chat_dir_for(uuid, ROOT)
-    data_dir = capture(url, chat_dir)
+    data_dir = capture(url, chat_dir, pluck_conversation)
     conversation = data_dir / "conversation.json"
 
     item = find_index_item(data_dir, uuid)
@@ -112,9 +105,19 @@ def main() -> None:
         f"for {uuid}: {mismatches}"
     )
 
-    _ = place_meta(item, ROOT)
+    _ = place_meta(
+        item["uuid"], item["name"], claude_layout.created_at(item["created_at"]), item, ROOT
+    )
 
-    _ = chatfs_sh.run([str(PATH_RENDER), str(chat_dir)])
+    _ = chatfs_sh.run(
+        [
+            sys.executable,
+            "-m",
+            "chatfs.provider.claude.conversation.path_render",
+            str(chat_dir),
+        ],
+        cwd=INCUBATOR_ROOT,
+    )
 
 
 if __name__ == "__main__":

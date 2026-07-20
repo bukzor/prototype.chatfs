@@ -19,14 +19,13 @@ greppable). Unknown block types raise. The raw block stays in the
 rung).
 """
 import json
-import shutil
-import sys
 from datetime import datetime
 from pathlib import Path
 
-import chatfs_json
-from chatfs_claude_layout import safe_filename
-from chatfs_claude_types import (
+from chatfs import json as chatfs_json
+from chatfs.json import JsonValue
+from chatfs.layout import safe_filename
+from chatfs.provider.claude.types import (
     ChatMessage,
     ContentBlock,
     Several,
@@ -35,7 +34,6 @@ from chatfs_claude_types import (
     ToolUseBlock,
     is_conversation,
 )
-from chatfs_json import JsonValue
 
 
 def format_timestamp(created_at: str) -> str:
@@ -189,17 +187,16 @@ def basename_for(msg: ChatMessage) -> str:
     )
 
 
-def main() -> None:
-    if len(sys.argv) not in (2, 3):
-        print(f"Usage: {sys.argv[0]} <conversation.json> [output-dir]", file=sys.stderr)
-        sys.exit(1)
+def splat(src: Path, base_dir: Path) -> tuple[int, int]:
+    """Splat src's conversation into base_dir/messages/.
 
-    src = Path(sys.argv[1])
+    Returns (message count, rendered-with-body count)."""
+    import shutil
+
     doc = chatfs_json.loads(src.read_text())
     assert is_conversation(doc), doc
     chat_messages = doc["chat_messages"]
 
-    base_dir = Path(sys.argv[2]) if len(sys.argv) == 3 else src.with_suffix(".splat")
     messages_dir = base_dir / "messages"
     if messages_dir.exists():
         shutil.rmtree(messages_dir)
@@ -216,8 +213,22 @@ def main() -> None:
             _ = (messages_dir / f"{basename}.md").write_text(text + "\n")
             rendered_count += 1
 
+    return len(chat_messages), rendered_count
+
+
+def main() -> None:
+    import sys
+
+    if len(sys.argv) not in (2, 3):
+        print(f"Usage: {sys.argv[0]} <conversation.json> [output-dir]", file=sys.stderr)
+        sys.exit(1)
+
+    src = Path(sys.argv[1])
+    base_dir = Path(sys.argv[2]) if len(sys.argv) == 3 else src.with_suffix(".splat")
+    total, rendered_count = splat(src, base_dir)
+
     print(
-        f"wrote {len(chat_messages)} message(s), {rendered_count} with rendered "
+        f"wrote {total} message(s), {rendered_count} with rendered "
         + f"content, to {base_dir}",
         file=sys.stderr,
     )

@@ -1,7 +1,7 @@
 """Tests for the shared turn-less tree repair; the render pipeline itself is
 pinned end-to-end by the claude renderer's golden test."""
 
-from chatfs_render import ConversationTree, Turn, normalize_turnless
+from chatfs.render import ConversationTree, Turn, normalize_turnless
 
 
 def turn(nid: str) -> Turn:

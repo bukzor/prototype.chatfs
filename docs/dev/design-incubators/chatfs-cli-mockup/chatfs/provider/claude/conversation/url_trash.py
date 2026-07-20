@@ -1,25 +1,23 @@
 #!/usr/bin/env python3
-"""Move the products of `chatfs_claude_conversation_url_browse.py <url>`
+"""Move the products of `python -m chatfs.provider.claude.conversation.url_browse <url>`
 into a date-labelled subdir of repo-root `trash/`.
 
 Usage:
-    chatfs_claude_conversation_url_trash.py <claude-url>
+    python -m chatfs.provider.claude.conversation.url_trash <claude-url>
 
 Moves the chat dir itself plus any view symlinks that point into it. After
 moving each symlink, prunes the view-tree path upward, removing any
 parents left empty; stops at the first non-empty ancestor (same behavior
 as `rmdir -p`, which has no direct stdlib equivalent).
 """
-import shutil
-import subprocess
-import sys
 from datetime import datetime
 from pathlib import Path
 
-from chatfs_claude_conversation_url_browse import uuid_from_url
+from chatfs.paths import demo_root
+from chatfs.provider.claude.layout import uuid_from_url
 
 HERE = Path(__file__).parent
-ROOT = HERE / "chatfs.demo" / "claude"
+ROOT = demo_root("claude")
 
 
 def rmdir_p(dir: Path) -> None:
@@ -33,6 +31,10 @@ def rmdir_p(dir: Path) -> None:
 
 
 def main() -> None:
+    import shutil
+    import subprocess
+    import sys
+
     if len(sys.argv) != 2:
         print(f"usage: {sys.argv[0]} <claude-url>", file=sys.stderr)
         sys.exit(2)

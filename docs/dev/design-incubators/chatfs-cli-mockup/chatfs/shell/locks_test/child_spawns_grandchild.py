@@ -1,7 +1,7 @@
 import sys
 from pathlib import Path
 
-from chatfs_locks import run, write_locked
+from chatfs.shell.locks import run, write_locked
 
 anchor = Path(sys.argv[1])
 grandchild = Path(__file__).parent / "child_reenter_w.py"

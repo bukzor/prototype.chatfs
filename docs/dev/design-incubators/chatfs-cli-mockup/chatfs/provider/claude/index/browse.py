@@ -2,7 +2,7 @@
 """Capture claude.ai's conversation index.
 
 Usage:
-    chatfs_claude_index_browse.py
+    python -m chatfs.provider.claude.index.browse
 
 stdout: one index entry page per line (jsonl) — pluck flattens every
 `/chat_conversations_v2` response the browse session sees, so this catches
@@ -11,19 +11,20 @@ chats fit one page in practice; a scroll-triggered second page is
 unverified here (same har-browse "wait until has_more=false" gap tracked
 for claude in todo.md).
 """
-import sys
-from pathlib import Path
+from chatfs.layout import DATA_DIR_NAME
+from chatfs.paths import demo_root
+from chatfs.provider.claude.pluck import pluck_index_pages
+from chatfs.shell.capture import browse, dump_jsonl
 
-from chatfs_claude_layout import pluck_index_pages
-from chatfs_layout import DATA_DIR_NAME, browse, dump_jsonl
-
-ROOT = Path(__file__).parent / "chatfs.demo" / "claude"
+ROOT = demo_root("claude")
 CDP = ROOT / DATA_DIR_NAME / "index.cdp.jsonl"  # debug intermediate
 
 URL = "https://claude.ai/recents"
 
 
 def main() -> None:
+    import sys
+
     CDP.parent.mkdir(parents=True, exist_ok=True)
     browse(URL, CDP)
     with CDP.open() as f:

@@ -8,7 +8,7 @@ import signal
 import sys
 from pathlib import Path
 
-import chatfs_atomic
+from chatfs.shell import atomic as chatfs_atomic
 
 dst = Path(sys.argv[1])
 anchor = Path(sys.argv[2])

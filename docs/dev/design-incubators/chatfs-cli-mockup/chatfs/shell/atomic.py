@@ -18,17 +18,17 @@ on the served surface.
 
 Locking contract: `staged` takes the write lock itself, over `anchor` --
 any agreed-per-destination directory that itself never gets renamed;
-chatfs uses `.data/$UUID/`. `chatfs_locks` is process-tree-reentrant, so
-this is safe to nest: a caller that must *span* multiple staged
+chatfs uses `.data/$UUID/`. `chatfs.shell.locks` is process-tree-reentrant,
+so this is safe to nest: a caller that must *span* multiple staged
 promotions as one transition (capture()'s two files, place_meta's
 promote-plus-symlink-sweep) wraps them in its own outer
-`chatfs_locks.write_locked(anchor)` -- each inner `staged` call then
-borrows that lock instead of re-acquiring it, so it stays held for the
-whole span. A single `staged` call needs no such wrapping. Cooperating
-readers wrap reads in `chatfs_locks.read_locked` to observe a
-multi-step update as a single transition; non-cooperating readers (a
-human mid-`ls`) still see each destination only old-complete or
-new-complete, never partial. Crash safety needs no lock cleanup: the
+`chatfs.shell.locks.write_locked(anchor)` -- each inner `staged` call
+then borrows that lock instead of re-acquiring it, so it stays held for
+the whole span. A single `staged` call needs no such wrapping.
+Cooperating readers wrap reads in `chatfs.shell.locks.read_locked` to
+observe a multi-step update as a single transition; non-cooperating
+readers (a human mid-`ls`) still see each destination only old-complete
+or new-complete, never partial. Crash safety needs no lock cleanup: the
 kernel releases flocks with the process.
 
 Intended shape of chatfs regeneration:
@@ -53,7 +53,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import cast
 
-import chatfs_locks
+from chatfs.shell import locks as chatfs_locks
 
 _AT_FDCWD = -100  # linux/fcntl.h
 _RENAME_EXCHANGE = 2  # linux/fs.h

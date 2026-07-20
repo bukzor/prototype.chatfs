@@ -5,9 +5,9 @@ truth) and the `__CHATFS_LOCKS` environment variable (`"11:r 22:w"` --
 its serialization, rewritten eagerly on every acquire/release so no
 spawn path, wrapped or not, ever inherits a stale table). Lock fds are
 opened inheritable (no O_CLOEXEC), so they survive fork and exec through
-any close_fds=False spawn -- chatfs_sh.run in production, this module's
-own `run()` (explicit pass_fds) in tests; a child re-entering a held
-anchor finds the inherited fd by identity probe (st_dev, st_ino) and
+any close_fds=False spawn -- chatfs.shell.sh.run in production, this
+module's own `run()` (explicit pass_fds) in tests; a child re-entering a
+held anchor finds the inherited fd by identity probe (st_dev, st_ino) and
 borrows it instead of self-deadlocking on a fresh open-file-description.
 
 Borrowed vs owned is the load-bearing bit: a no-op acquisition is a
@@ -30,7 +30,7 @@ warns (EBADF at seed), acquires fresh, and at worst blocks visibly
 against its own ancestor -- never silently.
 
 Anchors are directories that never get renamed; chatfs uses
-`.data/$UUID/`. See chatfs_atomic.py for the staged-promotion side.
+`.data/$UUID/`. See chatfs.shell.atomic for the staged-promotion side.
 """
 
 import fcntl
@@ -82,8 +82,8 @@ def run(
     """subprocess.run carrying the lock table's fds to the child via pass_fds.
 
     Test/orchestration use -- production call sites spawn through
-    chatfs_sh.run instead, which inherits the whole fd table (lock fds
-    included) rather than naming a curated list. Deliberately narrow
+    chatfs.shell.sh.run instead, which inherits the whole fd table (lock
+    fds included) rather than naming a curated list. Deliberately narrow
     signature (bytes-only); grow parameters as call sites need them.
     """
     _seed()
@@ -110,7 +110,7 @@ def _locked(anchor: Path, mode: Mode) -> Generator[None]:
         yield  # borrow: no flock call (it would convert the held lock)
         return
     fd = os.open(anchor, os.O_RDONLY | os.O_DIRECTORY)
-    os.set_inheritable(fd, True)  # survive exec via chatfs_sh.run's close_fds=False
+    os.set_inheritable(fd, True)  # survive exec via chatfs.shell.sh.run's close_fds=False
     try:
         fcntl.flock(fd, _FLOCK_OP[mode])
         registry[key] = Lock(fd, mode, owned=True)
@@ -159,13 +159,13 @@ def _seed() -> None:
             st = os.fstat(fd)
         except OSError:
             print(
-                f"chatfs_locks: {_ENV} lists fd {fd}:{mode} but it is not open; spawned without lock-fd inheritance?",
+                f"chatfs.shell.locks:{_ENV} lists fd {fd}:{mode} but it is not open; spawned without lock-fd inheritance?",
                 file=sys.stderr,
             )
             continue
         if not stat.S_ISDIR(st.st_mode):
             print(
-                f"chatfs_locks: {_ENV} fd {fd}:{mode} is not a directory; ignoring",
+                f"chatfs.shell.locks:{_ENV} fd {fd}:{mode} is not a directory; ignoring",
                 file=sys.stderr,
             )
             continue

@@ -10,11 +10,12 @@ from pathlib import Path
 
 import pytest
 
-import chatfs_locks
-import chatfs_sh
-from chatfs_locks import Lock, read_locked, registry, run, write_locked
+from chatfs.shell import locks as chatfs_locks
+from chatfs.shell import sh as chatfs_sh
+from chatfs.shell.locks import Lock, read_locked, registry, run, write_locked
 
 HERE = Path(__file__).parent
+INCUBATOR_ROOT = HERE.parent.parent
 ENV = chatfs_locks._ENV  # pyright: ignore[reportPrivateUsage]
 seed = chatfs_locks._seed  # pyright: ignore[reportPrivateUsage]
 
@@ -150,7 +151,7 @@ class DescribeSeeding:
         os.close(fd)
 
 
-CHILDREN = HERE / "chatfs_locks_test"
+CHILDREN = HERE / "locks_test"
 CHILD_REENTER_W = CHILDREN / "child_reenter_w.py"
 CHILD_READ = CHILDREN / "child_read.py"
 CHILD_SPAWNS_GRANDCHILD = CHILDREN / "child_spawns_grandchild.py"
@@ -160,7 +161,7 @@ def child(
     script: Path, anchor: Path, *, via_run: bool = True, timeout: float = 10
 ) -> subprocess.CompletedProcess[bytes]:
     argv = [sys.executable, str(script), str(anchor)]
-    env = {**os.environ, "PYTHONPATH": str(HERE)}
+    env = {**os.environ, "PYTHONPATH": str(INCUBATOR_ROOT)}
     if via_run:
         return run(argv, capture_output=True, timeout=timeout, env=env)
     return subprocess.run(argv, capture_output=True, timeout=timeout, env=env)
@@ -190,7 +191,7 @@ class DescribeSubprocessReentry:
 
     def it_blocks_a_second_writer_from_an_unrelated_process_tree(self, tmp_path: Path):
         with write_locked(tmp_path):
-            env = {**os.environ, "PYTHONPATH": str(HERE)}
+            env = {**os.environ, "PYTHONPATH": str(INCUBATOR_ROOT)}
             proc = subprocess.Popen(
                 [sys.executable, str(CHILD_REENTER_W), str(tmp_path)],
                 env=env,  # unrelated tree: no pass_fds, so the inherited
@@ -219,7 +220,7 @@ class DescribeSubprocessReentry:
         # Production spawns through chatfs_sh.run (close_fds=False, whole
         # fd table crosses exec), not chatfs_locks.run's curated pass_fds
         # -- this exercises that actual path instead of the child() helper.
-        monkeypatch.setenv("PYTHONPATH", str(HERE))
+        monkeypatch.setenv("PYTHONPATH", str(INCUBATOR_ROOT))
         with write_locked(tmp_path):
             result = chatfs_sh.run(
                 [sys.executable, str(CHILD_REENTER_W), str(tmp_path)],

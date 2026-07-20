@@ -6,14 +6,14 @@ from textwrap import dedent
 
 import pytest
 
-from chatfs_claude_conversation_render import (
+from chatfs.provider.claude.conversation.render import (
     build_tree,
     load_turns,
     prune_bodiless_leaves,
     render_conversation,
 )
-from chatfs_claude_types import ChatMessage, ContentBlock, Several
-from chatfs_render import Turn, live_ancestors, primary_child
+from chatfs.provider.claude.types import ChatMessage, ContentBlock, Several
+from chatfs.render import Turn, live_ancestors, primary_child
 
 
 def msg(

@@ -10,7 +10,7 @@ it has nothing to cross-check.
 """
 from collections.abc import Mapping
 
-from chatfs_json import JsonValue
+from chatfs.json import JsonValue
 
 
 def null_tolerant_mismatches(

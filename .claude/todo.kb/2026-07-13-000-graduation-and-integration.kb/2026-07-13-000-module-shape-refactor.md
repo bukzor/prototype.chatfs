@@ -160,7 +160,7 @@ surfaces) is the guide.
       `chatfs/shell/__init__.py` as part of the package skeleton — this
       is the agreed enforcement mechanism, a deliverable, not an
       afterthought. Landed 2026-07-19.
-- [ ] Move one provider family end-to-end (suggest claude — has the most
+- [x] Move one provider family end-to-end (suggest claude — has the most
       tests), tests green, as the template. 2026-07-19: `git mv` pass
       landed for all three providers + shared core (not just claude —
       the shared core is imported by all three, so a claude-only move
@@ -175,8 +175,57 @@ surfaces) is the guide.
       (driver-model.md's open [!TODO] — its named tracker, the
       shared-code-among-providers question, closed 2026-07-12 without
       landing it; this todo is now the tracker).
-- [ ] Sweep remaining families + shared modules; delete flat scripts as
-      each family lands.
+
+      **Edit pass landed 2026-07-20** (devlog
+      `docs/dev/design-incubators/chatfs-cli-mockup/devlog/2026-07-20-000-claude-family-edit-pass-package-imports-and-shell-split.md`):
+      claude family + the shared core it depends on are both done.
+      Realized the Proposed Solution tree the `git mv` commit couldn't
+      (a mechanical move can't split file *contents*) — `chatfs/layout.py`
+      split into `layout.py` (pure vocab) + `pluck.py` (CDP filter
+      skeleton) + `shell/capture.py` + `shell/place.py` (the impure
+      halves); `provider/claude/layout.py` split the same way into
+      `layout.py` (pure: `created_at`, `url_for`, `uuid_from_url` —
+      the latter two newly consolidated out of duplicated copies in
+      `url_browse.py`/`url_render.py`) + `provider/claude/pluck.py`
+      (wire knowledge). All sibling imports (`chatfs_*`) converted to
+      real `chatfs.` package imports. New `chatfs/paths.py`
+      (`INCUBATOR_ROOT`, `demo_root(provider)`) centralizes the
+      incubator-root anchor every leaf entry point's demo-tree path
+      needs, since file-relative computation stopped working once
+      scripts nested under `provider/<name>/...`. Orchestrator
+      delegation (`path_browse`/`url_browse`/`url_render` →
+      `path_render` → `splat`/`render`) stays subprocess-based
+      (`python -m chatfs.provider.….X`) by design — see
+      `driver-model.md`'s decision record: the CLI-shaped calling
+      convention stays exercised, subsystem coupling capped to
+      argv/stdio; `splat`/`render`/`path_render` each still gained an
+      importable driver function separate from `main()`
+      (`splat()`/`render_chat_dir()`/`path_render()`), independently
+      useful even though the delegation chain calls the CLI form.
+      `chatfs.shell.sh.run` gained a `cwd` param (`python -m` resolves
+      against the interpreter's cwd, not the caller's directory).
+      Impure stdlib imports (`sys`, `shutil`, `subprocess`) are inline
+      per function throughout, per the purity docstring's actual scope
+      (any function outside `shell/` doing real I/O, not just `main()`).
+      Verified: pytest 79/79 (claude family + shared core only —
+      chatgpt/aistudio untouched, still red as expected), basedpyright
+      0 errors/0 warnings on that same scope. Test files split to
+      mirror the production split (`layout_test.py`/`pluck_test.py`/
+      `shell/capture_test.py`/`shell/place_test.py`/`paths_test.py`);
+      `atomic_test.py`/`locks_test.py` and their subprocess-spawned
+      `child_*.py` helpers updated to the post-move directory names and
+      an incubator-root `PYTHONPATH`. Live end-to-end run not attempted
+      this session — deliberately held for an explicit, asked-first
+      pass; `index/browse.py` in particular takes no arguments and
+      performs a real live capture immediately on invocation, with no
+      argument-gated usage path to fall back on.
+- [ ] Sweep remaining families + shared modules — chatgpt/aistudio still
+      have broken sibling-imports; claude + shared core above are now
+      the template to repeat against them. Delete flat scripts as
+      each family lands (none remain for claude/shared; verified via
+      `find . -maxdepth 1 -name 'chatfs_*.py'` — the flat scripts at
+      incubator root were already gone before this session, presumably
+      removed as part of the 2026-07-19 `git mv` itself).
   - [ ] Decide chatgpt splat's home during the sweep: today it's the one
         stage living outside the incubator (`chatgpt-splat` from
         `packages/bukzor.chatgpt-export`, invoked as a subprocess) while

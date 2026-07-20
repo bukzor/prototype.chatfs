@@ -2,12 +2,12 @@
 """Render a claude conversation to readable markdown on stdout.
 
 The fork-fact notation -- what the output guarantees a reader, including
-excerpt readers -- is specified and implemented in `chatfs_render`; this
+excerpt readers -- is specified and implemented in `chatfs.render`; this
 module contributes only the claude-shaped parts: message-file stems, the
 all-zero root sentinel, and pruning of bodiless canceled retries.
 
 Usage:
-    chatfs_claude_conversation_render.py <path-to-chat-dir-or-inside>
+    python -m chatfs.provider.claude.conversation.render <path-to-chat-dir-or-inside>
 
 Reads `conversation.json` via `chat_dir/.data` (the inspection symlink
 to `.data/$UUID/`), not by computing that path directly -- path_render
@@ -19,15 +19,15 @@ in both that context and the final, promoted chat_dir.
 stdout: rendered markdown.
 """
 
-import sys
 from collections.abc import Container, Mapping
 from datetime import datetime
 from pathlib import Path
 
-import chatfs_json
-from chatfs_claude_layout import DATA_DIR_NAME, resolve_chat_dir
-from chatfs_claude_types import ChatMessage, Several, is_conversation
-from chatfs_render import ConversationTree, Turn, render_tree
+from chatfs import json as chatfs_json
+from chatfs.layout import DATA_DIR_NAME
+from chatfs.provider.claude.types import ChatMessage, Several, is_conversation
+from chatfs.render import ConversationTree, Turn, render_tree
+from chatfs.shell.place import resolve_chat_dir
 
 
 def find_root(chat_messages: Several[ChatMessage]) -> str:
@@ -127,23 +127,31 @@ def render_conversation(
     return render_tree(build_tree(chat_messages, current), turns)
 
 
-def main() -> None:
-    if len(sys.argv) != 2:
-        print(f"usage: {sys.argv[0]} <path-to-chat-dir-or-inside>", file=sys.stderr)
-        sys.exit(2)
-
-    chat_dir = resolve_chat_dir(sys.argv[1])
+def render_chat_dir(chat_dir: Path) -> tuple[str, int]:
+    """Load conversation.json + messages/ under an already-splatted
+    chat_dir and render markdown. Returns (markdown, turn count)."""
     conversation = chatfs_json.loads(
         (chat_dir / DATA_DIR_NAME / "conversation.json").read_text()
     )
     assert is_conversation(conversation), conversation
 
     turns = load_turns(chat_dir / "messages")
-    markdown, count = render_conversation(
+    return render_conversation(
         tuple(conversation["chat_messages"]),
         conversation["current_leaf_message_uuid"],
         turns,
     )
+
+
+def main() -> None:
+    import sys
+
+    if len(sys.argv) != 2:
+        print(f"usage: {sys.argv[0]} <path-to-chat-dir-or-inside>", file=sys.stderr)
+        sys.exit(2)
+
+    chat_dir = resolve_chat_dir(sys.argv[1])
+    markdown, count = render_chat_dir(chat_dir)
     _ = sys.stdout.write(markdown)
 
     print(f"Rendered {count} turn(s).", file=sys.stderr)

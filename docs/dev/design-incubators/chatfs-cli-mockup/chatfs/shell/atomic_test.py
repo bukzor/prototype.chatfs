@@ -1,4 +1,4 @@
-"""Crash-matrix and lifecycle tests for chatfs_atomic's stage-and-promote
+"""Crash-matrix and lifecycle tests for chatfs.shell.atomic's stage-and-promote
 kernel: recovery at each interruption point, file<->directory type changes,
 .fail latest-wins/cleared-on-success, and the _exchange fallback path when
 RENAME_EXCHANGE is unsupported."""
@@ -11,8 +11,10 @@ from pathlib import Path
 
 import pytest
 
-import chatfs_atomic
-from chatfs_atomic import recover, staged
+from chatfs.shell import atomic as chatfs_atomic
+from chatfs.shell.atomic import recover, staged
+
+INCUBATOR_ROOT = Path(__file__).parent.parent.parent
 
 
 def sibling(dst: Path, kind: str) -> Path:
@@ -198,7 +200,7 @@ class DescribeExchangeFallback:
             )
 
 
-CHILDREN = Path(__file__).parent / "chatfs_atomic_test"
+CHILDREN = Path(__file__).parent / "atomic_test"
 CHILD_KILL_DURING_POPULATE = CHILDREN / "child_kill_during_populate.py"
 CHILD_KILL_BETWEEN_RENAMES = CHILDREN / "child_kill_between_renames.py"
 CHILD_KILL_BEFORE_OLD_CLEANUP = CHILDREN / "child_kill_before_old_cleanup.py"
@@ -216,7 +218,7 @@ def kill_at_ready(script: Path, dst: Path, anchor: Path) -> None:
     """
     proc = subprocess.Popen(
         [sys.executable, str(script), str(dst), str(anchor)],
-        env={**os.environ, "PYTHONPATH": str(Path(__file__).parent)},
+        env={**os.environ, "PYTHONPATH": str(INCUBATOR_ROOT)},
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,

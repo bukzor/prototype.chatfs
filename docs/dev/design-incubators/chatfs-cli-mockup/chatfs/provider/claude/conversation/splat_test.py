@@ -2,8 +2,8 @@
 
 import pytest
 
-from chatfs_claude_conversation_splat import extract_text
-from chatfs_claude_types import ToolUseBlock
+from chatfs.provider.claude.conversation.splat import extract_text
+from chatfs.provider.claude.types import ToolUseBlock
 
 
 class DescribeExtractText:

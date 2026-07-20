@@ -32,7 +32,7 @@ legitimately turn-less and how to repair that) happens before `render_tree`.
 from collections.abc import Callable, Container, Mapping
 from dataclasses import dataclass
 
-from chatfs_layout import DATA_DIR_NAME
+from chatfs.layout import DATA_DIR_NAME
 
 
 @dataclass(frozen=True)

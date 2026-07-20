@@ -47,16 +47,34 @@ output filename, nothing else. `run_pluck()` (subprocess-to-a-script)
 still exists for the one case that's a genuine external script rather
 than an in-process generator: AI Studio's massage stage.
 
-> [!TODO]
-> Splat and render stages are not yet unified the same way. Each is
-> already factored into an importable, testable pure function (e.g.
-> `chatfs_claude_conversation_render.py`'s `render_conversation`,
-> extracted from `main()` specifically so tests could exercise it
-> directly) — but orchestrators like `path_render.py` still invoke
-> these as subprocesses (`subprocess.run([render_script, chat_dir],
-> stdout=out_file)`) rather than importing and calling the function
-> in-process. Converting that boundary too is a further move, tracked
-> in the module-shape-refactor todo (repo-root
-> `.claude/todo.kb/2026-07-13-000-graduation-and-integration.kb/2026-07-13-000-module-shape-refactor.md`;
-> its former tracker, the shared-code-among-providers question, closed
-> 2026-07-12 without landing it), not required to close this decision.
+## Decided against: converting splat/render delegation to in-process calls
+
+Splat and render are each factored into an importable, testable pure
+function (`chatfs.provider.claude.conversation.splat.splat`,
+`...render.render_chat_dir`; `path_render.path_render` the same, one
+level up) — but the orchestrators that chain them
+(`path_browse`/`url_browse`/`url_render` → `path_render` → `splat`/
+`render`) call them as subprocesses (`python -m chatfs.provider.….X`),
+not in-process imports, and stay that way deliberately (settled
+2026-07-20, discussed with user, after a same-session attempt at the
+in-process conversion was reverted).
+
+This is narrower than `capture()`'s case above: `capture()` composes
+`browse()`/`pluck()`, primitives that were never separate CLI leaf
+scripts to begin with, so calling them in-process was never a choice
+between two working alternatives. Splat/render/path_render *are*
+separate CLI leaf scripts, each independently invocable, and that's
+exactly the property worth protecting: forcing every leaf-to-leaf
+handoff through argv/stdio (never a direct Python call across a script
+boundary) means the CLI-shaped calling convention stays *exercised* by
+the pipeline's own normal operation, not just theoretically available
+and silently rotting the moment something faster is available in the
+same process. It also caps how wide any two subsystems' coupling can
+grow — a process boundary, not shared Python internals, so a change on
+one side can never accidentally reach across into the other's
+implementation details.
+
+The importable functions still exist and are still the right shape —
+tests call them directly, and a future caller that genuinely needs
+in-process composition has them available. They're just not how the
+leaf scripts talk to *each other*.
