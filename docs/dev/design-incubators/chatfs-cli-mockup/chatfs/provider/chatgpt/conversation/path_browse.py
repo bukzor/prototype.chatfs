@@ -2,31 +2,30 @@
 """Capture a chatgpt.com conversation by chat-dir address.
 
 Usage:
-    chatfs_chatgpt_conversation_path_browse.py <path-to-chat-dir-or-inside>
+    python -m chatfs.provider.chatgpt.conversation.path_browse <path-to-chat-dir-or-inside>
 
 The argument resolves to a `.chat/$UUID/` directory (see
-chatfs_chatgpt_layout.resolve_chat_dir; need not exist yet). Its
+chatfs.shell.place.resolve_chat_dir; need not exist yet). Its
 `.data/$UUID/meta.json` twin must already exist (placed by index splat
 or url browse).
 
 Steps:
     1. browse $url → .data/$UUID/cdp.jsonl
     2. pluck cdp.jsonl → .data/$UUID/conversation.json
-    3. delegate to chatfs_chatgpt_conversation_path_render.py
+    3. delegate to path_render
 """
-import sys
-from pathlib import Path
-
-import chatfs_json
-import chatfs_sh
-from chatfs_chatgpt_layout import capture, data_dir_of, resolve_chat_dir
-from chatfs_chatgpt_types import is_index_item
-
-HERE = Path(__file__).parent
-PATH_RENDER = HERE / "chatfs_chatgpt_conversation_path_render.py"
+from chatfs import json as chatfs_json
+from chatfs.layout import data_dir_of
+from chatfs.paths import INCUBATOR_ROOT
+from chatfs.provider.chatgpt import layout as chatgpt_layout
+from chatfs.provider.chatgpt.types import is_index_item
+from chatfs.shell import sh as chatfs_sh
+from chatfs.shell.place import resolve_chat_dir
 
 
 def main() -> None:
+    import sys
+
     if len(sys.argv) != 2:
         print(f"usage: {sys.argv[0]} <path-to-chat-dir-or-inside>", file=sys.stderr)
         sys.exit(2)
@@ -34,11 +33,19 @@ def main() -> None:
     chat_dir = resolve_chat_dir(sys.argv[1])
     meta = chatfs_json.loads((data_dir_of(chat_dir) / "meta.json").read_text())
     assert is_index_item(meta), meta
-    url = f"https://chatgpt.com/c/{meta['id']}"
+    url = chatgpt_layout.url_for(meta["id"])
 
-    _ = capture(url, chat_dir)
+    _ = chatgpt_layout.capture(url, chat_dir)
 
-    _ = chatfs_sh.run([str(PATH_RENDER), str(chat_dir)])
+    _ = chatfs_sh.run(
+        [
+            sys.executable,
+            "-m",
+            "chatfs.provider.chatgpt.conversation.path_render",
+            str(chat_dir),
+        ],
+        cwd=INCUBATOR_ROOT,
+    )
 
 
 if __name__ == "__main__":

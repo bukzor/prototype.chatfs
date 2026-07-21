@@ -8,17 +8,17 @@ Reads chatgpt.index.jsonl on stdin (one page per line, each
     - purges existing view symlinks for $UUID
     - creates view symlinks under $root/YYYY/MM/DD/HH:MM:SS±HH:MM/
 """
-import sys
-from pathlib import Path
+from chatfs import json as chatfs_json
+from chatfs.paths import demo_root
+from chatfs.provider.chatgpt.layout import place_meta
+from chatfs.provider.chatgpt.types import is_index_page
 
-import chatfs_json
-from chatfs_chatgpt_layout import place_meta
-from chatfs_chatgpt_types import is_index_page
-
-OUT_DIR = Path(__file__).parent / "chatfs.demo" / "chatgpt"
+OUT_DIR = demo_root("chatgpt")
 
 
 def main() -> None:
+    import sys
+
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     seen: set[str] = set()
     for line in sys.stdin:

@@ -219,19 +219,37 @@ surfaces) is the guide.
       pass; `index/browse.py` in particular takes no arguments and
       performs a real live capture immediately on invocation, with no
       argument-gated usage path to fall back on.
-- [ ] Sweep remaining families + shared modules — chatgpt/aistudio still
-      have broken sibling-imports; claude + shared core above are now
-      the template to repeat against them. Delete flat scripts as
-      each family lands (none remain for claude/shared; verified via
-      `find . -maxdepth 1 -name 'chatfs_*.py'` — the flat scripts at
-      incubator root were already gone before this session, presumably
-      removed as part of the 2026-07-19 `git mv` itself).
-  - [ ] Decide chatgpt splat's home during the sweep: today it's the one
-        stage living outside the incubator (`chatgpt-splat` from
-        `packages/bukzor.chatgpt-export`, invoked as a subprocess) while
-        claude/aistudio splats are local scripts — fold it in as
-        `provider/chatgpt/conversation/splat.py`, or record why it stays
-        external.
+- [ ] Sweep remaining families + shared modules — aistudio still has
+      broken sibling-imports; claude + chatgpt are now both done and
+      form the template to repeat against it. Delete flat scripts as
+      each family lands (none remain for claude/chatgpt/shared; verified
+      via `find . -maxdepth 1 -name 'chatfs_*.py'` — the flat scripts at
+      incubator root were already gone before the claude session,
+      presumably removed as part of the 2026-07-19 `git mv` itself).
+
+      **chatgpt edit pass landed 2026-07-21** (devlog
+      `docs/dev/design-incubators/chatfs-cli-mockup/devlog/2026-07-21-000-chatgpt-family-edit-pass-package-imports.md`):
+      `provider/chatgpt/layout.py` split into pure layout + new
+      `provider/chatgpt/pluck.py` (wire knowledge), matching claude's
+      shape; `uuid_from_url`/`url_for` consolidated the same way. All
+      five `conversation/*.py` leaves + `index/{browse,splat}.py`
+      converted to real package imports; subprocess delegation to
+      `python -m chatfs.provider.chatgpt.conversation.X` with
+      `cwd=INCUBATOR_ROOT`. Verified: pytest 83/83
+      (`--ignore=chatfs/provider/aistudio`), basedpyright 0/0 scoped to
+      `chatfs/provider/chatgpt chatfs/provider/claude chatfs/*.py
+      chatfs/shell` (aistudio still red as expected: 41 errors/274
+      warnings, all confined to its own tree).
+  - [x] Decide chatgpt splat's home: **stays external**
+        (`packages/bukzor.chatgpt-export`, invoked as the `chatgpt-splat`
+        subprocess command from `path_render.py`, unchanged). It's a
+        real standalone package — own `pyproject.toml`, own test suite
+        (`lib/bukzor/chatgpt_export/{splat,har2jsonl}_test.py`), own
+        typesafety tests (`typesafety/test_float_rejection.py`) —
+        folding it into the incubator would discard that package
+        boundary and test infra for no benefit. Claude/aistudio's
+        splats are local only because they never had independent
+        package identity to begin with.
 - [ ] Update the incubator README's "Run it" section to the new
       invocations.
 

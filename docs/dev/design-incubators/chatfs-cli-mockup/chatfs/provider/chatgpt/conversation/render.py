@@ -2,7 +2,7 @@
 """Render a chatgpt conversation to readable markdown on stdout.
 
 The fork-fact notation -- what the output guarantees a reader, including
-excerpt readers -- is specified and implemented in `chatfs_render`; this
+excerpt readers -- is specified and implemented in `chatfs.render`; this
 module contributes only the chatgpt-shaped parts: message-file stems
 (4-part, with content_type), the `mapping`/`current_node` tree encoding,
 and the repair of chatgpt's legitimately turn-less nodes (system
@@ -11,7 +11,7 @@ turn-less fork gets a synthetic heading linking its `.json` record, so
 fork facts always have an anchor.
 
 Usage:
-    chatfs_chatgpt_conversation_render.py <path-to-chat-dir-or-inside>
+    python -m chatfs.provider.chatgpt.conversation.render <path-to-chat-dir-or-inside>
 
 Reads `conversation.json` via `chat_dir/.data` (the inspection symlink
 to `.data/$UUID/`), not by computing that path directly -- path_render
@@ -23,15 +23,15 @@ in both that context and the final, promoted chat_dir.
 stdout: rendered markdown.
 """
 
-import sys
 from collections.abc import Mapping
 from pathlib import Path
 from typing import NamedTuple
 
-import chatfs_json
-from chatfs_chatgpt_layout import DATA_DIR_NAME, resolve_chat_dir
-from chatfs_chatgpt_types import Conversation, is_conversation
-from chatfs_render import ConversationTree, Turn, normalize_turnless, render_tree
+from chatfs import json as chatfs_json
+from chatfs.layout import DATA_DIR_NAME
+from chatfs.provider.chatgpt.types import Conversation, is_conversation
+from chatfs.render import ConversationTree, Turn, normalize_turnless, render_tree
+from chatfs.shell.place import resolve_chat_dir
 
 VIRTUAL_ROOT = ""
 """Stands in for chatgpt's `parent: null`: the virtual root must be an id
@@ -126,6 +126,8 @@ def render_conversation(
 
 
 def main() -> None:
+    import sys
+
     if len(sys.argv) != 2:
         print(f"usage: {sys.argv[0]} <path-to-chat-dir-or-inside>", file=sys.stderr)
         sys.exit(2)

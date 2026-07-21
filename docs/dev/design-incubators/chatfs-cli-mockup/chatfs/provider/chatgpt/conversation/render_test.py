@@ -1,16 +1,16 @@
 """Regression tests exercising chatgpt's real `mapping` shape -- the generic
-tree algorithms are pinned abstractly in `chatfs_render_test.py`; these tests
+tree algorithms are pinned abstractly in `chatfs/render_test.py`; these tests
 pin chatgpt's own integration: `build_tree`'s float `create_time` extraction,
 and `make_turn`'s stem-based synthetic anchor."""
 
-from chatfs_chatgpt_conversation_render import (
+from chatfs.provider.chatgpt.conversation.render import (
     Stem,
     build_tree,
     make_turn,
     render_conversation,
 )
-from chatfs_chatgpt_types import Conversation, Node
-from chatfs_render import Turn, primary_child
+from chatfs.provider.chatgpt.types import Conversation, Node
+from chatfs.render import Turn, primary_child
 
 
 def node(parent: str | None, children: list[str], create_time: float | None) -> Node:
@@ -46,7 +46,7 @@ class DescribeBuildTree:
 class DescribeRenderConversation:
     def it_materializes_a_turn_at_a_turnless_fork(self):
         # a system placeholder (no message) with two replying children: the
-        # generic algorithm is pinned in chatfs_render_test.py; this pins that
+        # generic algorithm is pinned in chatfs/render_test.py; this pins that
         # chatgpt's own `make_turn` produces a correctly shaped anchor -- role
         # and note read from the parsed stem, body empty, link to the .json
         conversation: Conversation = {

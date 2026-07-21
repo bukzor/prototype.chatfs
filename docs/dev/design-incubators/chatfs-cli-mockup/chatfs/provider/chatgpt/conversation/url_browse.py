@@ -2,7 +2,7 @@
 """Capture a chatgpt.com conversation by URL.
 
 Usage:
-    chatfs_chatgpt_conversation_url_browse.py <chatgpt-url>
+    python -m chatfs.provider.chatgpt.conversation.url_browse <chatgpt-url>
 
 Assumes (per browse-incidental-capture.md) that visiting `/c/$UUID` also
 fires `/backend-api/conversations` for the sidebar, so one browse trip
@@ -10,8 +10,7 @@ captures both the conversation document and an index page that mentions
 this UUID.
 
 If that assumption is ever violated, `find_index_item` fails loudly and
-the recovery path is two-step: `chatfs_chatgpt_index_browse.py` →
-`chatfs_chatgpt_index_splat.py` → `chatfs_chatgpt_conversation_path_browse.py`.
+the recovery path is two-step: index browse → index splat → path_browse.
 
 A second cross-check asserts that the identity fields agree across the
 two endpoints (null-tolerant) — catches schema drift if either side
@@ -36,33 +35,20 @@ Captures are written directly into `.data/$UUID/` — no temp staging
 (matches claude's `capture()` policy). If a later step fails, the
 captures remain there for inspection.
 """
-import sys
 from pathlib import Path
-from urllib.parse import urlparse
 
-import chatfs_json
-import chatfs_sh
-from chatfs_chatgpt_layout import (
-    capture,
-    chat_dir_for,
-    created_at,
-    place_meta,
-    pluck_index_pages,
-)
-from chatfs_chatgpt_types import IndexItem, is_index_page
-from chatfs_json import JsonObject
-from chatfs_layout import pluck
-from chatfs_url_browse import null_tolerant_mismatches
+from chatfs import json as chatfs_json
+from chatfs.json import JsonObject
+from chatfs.layout import chat_dir_for
+from chatfs.paths import INCUBATOR_ROOT, demo_root
+from chatfs.provider.chatgpt import layout as chatgpt_layout
+from chatfs.provider.chatgpt.pluck import pluck_index_pages
+from chatfs.provider.chatgpt.types import IndexItem, is_index_page
+from chatfs.shell import sh as chatfs_sh
+from chatfs.shell.capture import pluck
+from chatfs.url_browse import null_tolerant_mismatches
 
-HERE = Path(__file__).parent
-PATH_RENDER = HERE / "chatfs_chatgpt_conversation_path_render.py"
-ROOT = HERE / "chatfs.demo" / "chatgpt"
-
-
-def uuid_from_url(url: str) -> str:
-    parts = urlparse(url).path.strip("/").split("/")
-    assert len(parts) == 2 and parts[0] == "c", url
-    return parts[1]
+ROOT = demo_root("chatgpt")
 
 
 def find_index_item(data_dir: Path, uuid: str) -> IndexItem:
@@ -88,7 +74,7 @@ def find_index_item(data_dir: Path, uuid: str) -> IndexItem:
                 matches.append(item)
     assert matches, (
         f"no sidebar index page included {uuid}; "
-        f"run `chatfs_chatgpt_index_browse.py` and use `conversation_path_browse.py`"
+        f"run index browse | index splat, then use path_browse"
     )
     assert all(m == matches[0] for m in matches), (
         f"index endpoint returned divergent items for {uuid}: {matches}"
@@ -108,20 +94,22 @@ def _index_shaped(conv_doc: JsonObject) -> JsonObject:
     return {
         "id": conv_doc["conversation_id"],
         "title": conv_doc["title"],
-        "create_time": created_at(create_time).isoformat(),
+        "create_time": chatgpt_layout.created_at(create_time).isoformat(),
     }
 
 
 def main() -> None:
+    import sys
+
     if len(sys.argv) != 2:
         print(f"usage: {sys.argv[0]} <chatgpt-url>", file=sys.stderr)
         sys.exit(2)
 
     url = sys.argv[1]
-    uuid = uuid_from_url(url)
+    uuid = chatgpt_layout.uuid_from_url(url)
 
     chat_dir = chat_dir_for(uuid, ROOT)
-    data_dir = capture(url, chat_dir)
+    data_dir = chatgpt_layout.capture(url, chat_dir)
     conversation = data_dir / "conversation.json"
 
     item = find_index_item(data_dir, uuid)
@@ -132,7 +120,7 @@ def main() -> None:
     item_normalized: JsonObject = {
         "id": item["id"],
         "title": item["title"],
-        "create_time": created_at(item["create_time"]).isoformat(),
+        "create_time": chatgpt_layout.created_at(item["create_time"]).isoformat(),
     }
     mismatches = null_tolerant_mismatches(projected, item_normalized)
     assert not mismatches, (
@@ -140,9 +128,17 @@ def main() -> None:
         f"for {uuid}: {mismatches}"
     )
 
-    _ = place_meta(item, ROOT)
+    _ = chatgpt_layout.place_meta(item, ROOT)
 
-    _ = chatfs_sh.run([str(PATH_RENDER), str(chat_dir)])
+    _ = chatfs_sh.run(
+        [
+            sys.executable,
+            "-m",
+            "chatfs.provider.chatgpt.conversation.path_render",
+            str(chat_dir),
+        ],
+        cwd=INCUBATOR_ROOT,
+    )
 
 
 if __name__ == "__main__":

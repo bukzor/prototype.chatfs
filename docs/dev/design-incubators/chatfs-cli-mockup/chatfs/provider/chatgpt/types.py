@@ -1,7 +1,7 @@
 """Shared types for the chatgpt mockup."""
 from typing import NotRequired, TypedDict, TypeGuard
 
-from chatfs_json import JsonValue
+from chatfs.json import JsonValue
 
 
 class IndexItem(TypedDict):
