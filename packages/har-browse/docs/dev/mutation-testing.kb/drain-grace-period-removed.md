@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 ---
 
 # `capture.mjs`: grace-period timeout removed from the final drain
@@ -8,7 +8,7 @@ status: todo
 
 Prospective — targets the fix in `packages/har-browse/.claude/todo.kb/
 2026-07-22-000-Done-Capturing-race-drops-in-flight-requests-with-no-
-drain.md`, not yet implemented. This is the safety net for the other
+drain.md`, landed 2026-07-22 in `capture.mjs`. This is the safety net for the other
 half of that fix (extended `inFlight` tracking, see
 `pending-request-not-tracked.md`): once tracking starts at
 `requestWillBeSent`, a request that never reaches a terminal CDP event
@@ -53,7 +53,9 @@ burn-down.)
      ]);
 ```
 
-## Anticipated Test Coverage
+## Test Coverage
+
+Confirmed 2026-07-22: `tests/inflight_drain.spec.mjs` "hung request does not block capture end past the grace period" -- injected, observed red, reverted, observed green.
 
 Needs a fixture request that never resolves (server accepts the
 connection and never responds) plus a test-level guard timeout strictly

@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 ---
 
 # `capture.mjs`: `settlePending` not called from `onLoadingFailed`
@@ -8,7 +8,7 @@ status: todo
 
 Prospective — targets the fix in `packages/har-browse/.claude/todo.kb/
 2026-07-22-000-Done-Capturing-race-drops-in-flight-requests-with-no-
-drain.md`, not yet implemented. Same defect as
+drain.md`, landed 2026-07-22 in `capture.mjs`. Same defect as
 `pending-request-not-resolved-on-finished.md`, on the failure path: if
 `onLoadingFailed` enqueues `Network.loadingFailed` as today but never
 calls `settlePending(lfail.requestId)`, a failed request's tracker never
@@ -27,7 +27,9 @@ data loss, since the existing enqueue logic is unaffected.
  }
 ```
 
-## Anticipated Test Coverage
+## Test Coverage
+
+Confirmed 2026-07-22: `tests/inflight_drain.spec.mjs` "capture ends promptly once in-flight requests settle, not after the full grace period" -- injected, observed red, reverted, observed green.
 
 Same shape as `pending-request-not-resolved-on-finished.md` but needs a
 fixture request that *fails* (aborted/refused) rather than one that

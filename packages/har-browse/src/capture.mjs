@@ -8,6 +8,12 @@ import { injectOverlay } from "./inject.mjs";
 /** @typedef {import("playwright").Page} Page */
 /** @typedef {import("playwright").BrowserContext} BrowserContext */
 
+// Bounds the final drain (see `attachCapture`'s `done`): a request that
+// never reaches a terminal CDP event (hung, or the CDP session dies
+// mid-flight) would otherwise block shutdown forever, since the caller
+// only closes the context after the events stream ends.
+const DRAIN_GRACE_MS = 2000;
+
 /**
  * Stream CDP events from an open page as `{method, params}` JSONL —
  * chrome-har's wire format. Response bodies attach at
@@ -16,13 +22,13 @@ import { injectOverlay } from "./inject.mjs";
  * "Done" click or context close. Caller owns the browser lifecycle.
  *
  * @param {Page} page
- * @param {{ howto?: string }} [opts]
+ * @param {{ howto?: string, drainGraceMs?: number }} [opts]
  * @returns {Promise<{
  *   events: AsyncIterable<CDPEvent>,
  *   done: Promise<void>,
  * }>}
  */
-export async function attachCapture(page, { howto } = {}) {
+export async function attachCapture(page, { howto, drainGraceMs = DRAIN_GRACE_MS } = {}) {
   const context = page.context();
 
   const emitter = new EventEmitter();
@@ -32,13 +38,42 @@ export async function attachCapture(page, { howto } = {}) {
   /** @param {CDPEvent} msg */
   const enqueue = (msg) => emitter.emit("event", msg);
 
+  // BARRIER's deferred-emit (see `onBindingCalled` below) snapshots
+  // `inFlight` to wait out active body-fetches so consumed RRs land
+  // before the BARRIER that names them — a narrow, fast-resolving set
+  // by design. `pendingInFlight` is deliberately kept separate: it
+  // tracks every request from the moment it's sent (see `pendingRequests`
+  // below), which for a page mid-load can be hundreds of entries still
+  // outstanding. Folding those into `inFlight` would make BARRIER wait
+  // on unrelated, unfinished requests it never claimed to consume,
+  // routinely blowing past `drainGraceMs` and dropping the BARRIER
+  // event itself. The final drain waits on the union of both.
   /** @type {Set<Promise<unknown>>} */
   const inFlight = new Set();
-  /** @template T @param {Promise<T>} pr @returns {Promise<T>} */
-  const track = (pr) => {
-    inFlight.add(pr);
-    pr.finally(() => inFlight.delete(pr));
+  /** @type {Set<Promise<unknown>>} */
+  const pendingInFlight = new Set();
+  /** @template T @param {Promise<T>} pr @param {Set<Promise<unknown>>} [set] @returns {Promise<T>} */
+  const track = (pr, set = inFlight) => {
+    set.add(pr);
+    pr.finally(() => set.delete(pr));
     return pr;
+  };
+
+  // A request is pending from the moment it's sent until it reaches a
+  // terminal event (loadingFinished/loadingFailed) — a strictly earlier
+  // and wider window than `awaitingBody` below, which only starts once
+  // headers arrive. Tracking here (not just post-loadingFinished) is
+  // what lets the final drain wait out a request that's still in flight
+  // at "Done Capturing" time instead of dropping it with zero trace.
+  /** @type {Map<string, () => void>} */
+  const pendingRequests = new Map();
+  /** @param {string} requestId */
+  const settlePending = (requestId) => {
+    const resolve = pendingRequests.get(requestId);
+    if (resolve) {
+      pendingRequests.delete(requestId);
+      resolve();
+    }
   };
 
   /** @param {Page} subject */
@@ -67,6 +102,7 @@ export async function attachCapture(page, { howto } = {}) {
         enqueue({ method: "Network.responseReceived", params: rr });
       }
       enqueue({ method: "Network.loadingFinished", params: lf });
+      settlePending(lf.requestId);
     }
 
     /** @param {any} lfail */
@@ -75,6 +111,7 @@ export async function attachCapture(page, { howto } = {}) {
       awaitingBody.delete(lfail.requestId);
       if (rr) enqueue({ method: "Network.responseReceived", params: rr });
       enqueue({ method: "Network.loadingFailed", params: lfail });
+      settlePending(lfail.requestId);
     }
 
     /** @param {any} params */
@@ -96,8 +133,27 @@ export async function attachCapture(page, { howto } = {}) {
       }
     }
 
+    /** @param {any} p */
+    function onRequestWillBeSent(p) {
+      // CDP re-fires this for each redirect hop with the SAME requestId
+      // -- guard so a single logical request gets exactly one tracked
+      // promise, resolved once at its eventual terminal event.
+      if (!pendingRequests.has(p.requestId)) {
+        /** @type {() => void} */
+        let resolve = () => {};
+        /** @type {Promise<void>} */
+        const pr = new Promise((res) => {
+          resolve = res;
+        });
+        pendingRequests.set(p.requestId, resolve);
+        track(pr, pendingInFlight);
+      }
+      enqueue({ method: "Network.requestWillBeSent", params: p });
+    }
+
     /** @type {Record<string, (params: any) => void>} */
     const cdpHandlers = {
+      "Network.requestWillBeSent": onRequestWillBeSent,
       "Network.responseReceived": (p) => awaitingBody.set(p.requestId, p),
       "Network.loadingFinished": (p) => track(onLoadingFinished(p)),
       "Network.loadingFailed": onLoadingFailed,
@@ -141,7 +197,10 @@ export async function attachCapture(page, { howto } = {}) {
   ])
     .catch(() => {})
     .finally(async () => {
-      await Promise.allSettled([...inFlight]);
+      await Promise.race([
+        Promise.allSettled([...inFlight, ...pendingInFlight]),
+        new Promise((resolve) => setTimeout(resolve, drainGraceMs)),
+      ]);
       emitter.emit("end");
     })
     .then(() => {});
@@ -162,6 +221,7 @@ export async function attachCapture(page, { howto } = {}) {
  *   profileDir: string,
  *   howto?: string,
  *   headless?: boolean,
+ *   drainGraceMs?: number,
  * }} opts
  * @returns {Promise<{
  *   page: Page,
@@ -171,7 +231,13 @@ export async function attachCapture(page, { howto } = {}) {
  *   close: () => Promise<void>,
  * }>}
  */
-export async function startCapture({ url, profileDir, howto, headless = false }) {
+export async function startCapture({
+  url,
+  profileDir,
+  howto,
+  headless = false,
+  drainGraceMs,
+}) {
   mkdirSync(profileDir, { recursive: true });
 
   const context = await chromium.launchPersistentContext(profileDir, {
@@ -181,7 +247,7 @@ export async function startCapture({ url, profileDir, howto, headless = false })
   context.setDefaultTimeout(0);
 
   const page = context.pages()[0] ?? (await context.newPage());
-  const { events, done } = await attachCapture(page, { howto });
+  const { events, done } = await attachCapture(page, { howto, drainGraceMs });
   await page.goto(url, { waitUntil: "commit" });
 
   const close = async () => {

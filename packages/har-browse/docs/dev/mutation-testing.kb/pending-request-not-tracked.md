@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 ---
 
 # `capture.mjs`: new `requestWillBeSent` tracker not added to `inFlight`
@@ -8,7 +8,7 @@ status: todo
 
 Prospective — targets the fix sketched in `packages/har-browse/.claude/
 todo.kb/2026-07-22-000-Done-Capturing-race-drops-in-flight-requests-with-
-no-drain.md`, not yet implemented. This is the core mechanism of that
+no-drain.md`, landed 2026-07-22 in `capture.mjs`. This is the core mechanism of that
 fix; if this mutation ships silently, the original bug (a request still
 pending at "Done Capturing" time is dropped with zero trace) regresses
 completely — the new tracking exists in name only.
@@ -37,7 +37,9 @@ handler:
    },
 ```
 
-## Anticipated Test Coverage
+## Test Coverage
+
+Confirmed 2026-07-22: `tests/inflight_drain.spec.mjs` "in-flight request completing within the grace period is captured" -- injected, observed red, reverted, observed green.
 
 A fixture request delayed past the point the overlay's "Done Capturing"
 is clicked (analogous to `tests/popup_race.spec.mjs`'s delayed-CDP-attach

@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 ---
 
 # `capture.mjs`: `DRAIN_GRACE_MS` zeroed (timeout always wins the race)
@@ -8,7 +8,7 @@ status: todo
 
 Prospective — targets the fix in `packages/har-browse/.claude/todo.kb/
 2026-07-22-000-Done-Capturing-race-drops-in-flight-requests-with-no-
-drain.md`, not yet implemented. Opposite-direction twin of
+drain.md`, landed 2026-07-22 in `capture.mjs`. Opposite-direction twin of
 `drain-grace-period-removed.md`: instead of the timeout vanishing (hang),
 the timeout fires immediately (constant zeroed, or a units fat-finger
 like `2000` → `2`). The bounded drain then waits for nothing, and a
@@ -25,7 +25,9 @@ present.
 +const DRAIN_GRACE_MS = 0;
 ```
 
-## Anticipated Test Coverage
+## Test Coverage
+
+Confirmed 2026-07-22: `tests/inflight_drain.spec.mjs` "in-flight request completing within the DEFAULT grace period is captured" -- injected, observed red, reverted, observed green.
 
 The same assertion that gates `pending-request-not-tracked.md`: a
 fixture response that completes after the Done click but within the

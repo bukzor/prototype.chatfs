@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 ---
 
 # `capture.mjs`: new `requestWillBeSent` handler drops the raw passthrough enqueue
@@ -8,7 +8,7 @@ status: todo
 
 Prospective — targets the fix in `packages/har-browse/.claude/todo.kb/
 2026-07-22-000-Done-Capturing-race-drops-in-flight-requests-with-no-
-drain.md`, not yet implemented.
+drain.md`, landed 2026-07-22 in `capture.mjs`.
 
 `Network.requestWillBeSent` isn't special-cased in `cdpHandlers` today —
 it flows through the generic passthrough branch (`(p) => enqueue({
@@ -35,7 +35,9 @@ lose an entire event type unconditionally, every capture, every request.
    },
 ```
 
-## Anticipated Test Coverage
+## Test Coverage
+
+Confirmed 2026-07-22: `tests/inflight_drain.spec.mjs` "in-flight request completing within the grace period is captured" -- injected, observed red, reverted, observed green.
 
 Straightforward equality-style check, no timing involved: capture any
 page load and assert at least one `Network.requestWillBeSent` event

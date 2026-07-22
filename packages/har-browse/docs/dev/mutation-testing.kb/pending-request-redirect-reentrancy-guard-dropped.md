@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 ---
 
 # `capture.mjs`: redirect re-entrancy guard dropped from `requestWillBeSent` tracking
@@ -8,7 +8,7 @@ status: todo
 
 Prospective — targets the fix in `packages/har-browse/.claude/todo.kb/
 2026-07-22-000-Done-Capturing-race-drops-in-flight-requests-with-no-
-drain.md`, not yet implemented.
+drain.md`, landed 2026-07-22 in `capture.mjs`.
 
 CDP re-fires `Network.requestWillBeSent` with the *same* `requestId` for
 each redirect hop. The planned handler guards against this
@@ -37,7 +37,9 @@ the grace-period timeout), not data loss.
    },
 ```
 
-## Anticipated Test Coverage
+## Test Coverage
+
+Confirmed 2026-07-22: `tests/inflight_drain.spec.mjs` "capture ends promptly once in-flight requests settle, not after the full grace period" -- injected, observed red, reverted, observed green.
 
 Needs a fixture that issues at least one redirect (e.g. a toy-server
 route returning `302` before the final response) combined with the same

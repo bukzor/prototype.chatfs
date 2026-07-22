@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 ---
 
 # `capture.mjs`: `settlePending` not called from `onLoadingFinished`
@@ -8,7 +8,7 @@ status: todo
 
 Prospective — targets the fix in `packages/har-browse/.claude/todo.kb/
 2026-07-22-000-Done-Capturing-race-drops-in-flight-requests-with-no-
-drain.md`, not yet implemented.
+drain.md`, landed 2026-07-22 in `capture.mjs`.
 
 If `onLoadingFinished` enqueues the response as today but never calls
 `settlePending(lf.requestId)`, the per-request promise added at
@@ -33,7 +33,9 @@ actually finished promptly.
  }
 ```
 
-## Anticipated Test Coverage
+## Test Coverage
+
+Confirmed 2026-07-22: `tests/inflight_drain.spec.mjs` "capture ends promptly once in-flight requests settle, not after the full grace period" -- injected, observed red, reverted, observed green.
 
 Needs a timing-sensitive assertion: a capture where all requests finish
 quickly should end shortly after "Done Capturing" is clicked, not after
