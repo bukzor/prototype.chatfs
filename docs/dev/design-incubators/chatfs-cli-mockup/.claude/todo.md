@@ -58,10 +58,13 @@ directory listing is the index, not restated here.
 
 - [ ] Solve har-browse "wait until `has_more=false`". Observation: pressing
       "Done Capturing" shortly after the sidebar becomes interactable yields a
-      CDP stream missing later index pages — cause underdetermined. Plan: a
-      stop-when filter downstream of pluck breaks on `has_more=false`;
-      har-browse receives EPIPE and shuts down cleanly (per
-      `packages/har-browse/.claude/todo.md` 2026-04-24-003).
+      CDP stream missing later index pages. **Likely root-caused 2026-07-22**:
+      `capture.mjs`'s in-flight drain only tracks requests that already
+      reached `loadingFinished` by click time — a request still pending
+      (headers or body not yet arrived) has no tracker and is silently
+      dropped, no error. Fix sketched, not yet implemented, at
+      `packages/har-browse/.claude/todo.kb/2026-07-22-000-Done-Capturing-race-drops-in-flight-requests-with-no-drain.md`.
+      Close this bullet once that fix lands and this symptom is retested.
 - [ ] Branch enumeration in splat — emit `conversations/<branch>.md` symlinks
       per leaf
 
