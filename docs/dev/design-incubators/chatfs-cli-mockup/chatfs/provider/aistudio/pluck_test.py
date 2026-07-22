@@ -1,7 +1,6 @@
-"""Tests for chatfs_aistudio_layout's pluck_conversation/pluck_index_pages —
-the two provider plucks with real logic beyond iter_responses_matching's
-shared skeleton (guard + flatten), ported 2026-07-14 from
-chatfs_aistudio_conversation_pluck.jq / chatfs_aistudio_index_pluck.jq.
+"""Tests for chatfs.provider.aistudio.pluck's pluck_conversation/
+pluck_index_pages — the two provider plucks with real logic beyond
+iter_responses_matching's shared skeleton (guard + flatten).
 
 Envelope shapes are trimmed synthetic versions of what a real
 ResolveDriveResource/ListPrompts capture holds (verified during the port
@@ -10,7 +9,7 @@ object."""
 
 import json
 
-from chatfs_aistudio_layout import pluck_conversation, pluck_index_pages
+from chatfs.provider.aistudio.pluck import pluck_conversation, pluck_index_pages
 
 CONVERSATION_URL = (
     "https://alkalimakersuite-pa.clients6.google.com/$rpc/google.internal"

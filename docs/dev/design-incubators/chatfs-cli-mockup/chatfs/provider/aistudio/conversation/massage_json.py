@@ -6,9 +6,12 @@ so their `conversation.json` is the raw API response, verbatim. AI Studio's
 is JSPB (positional arrays) — a stage has to assign names before the result
 is "good" json, i.e. the same shape of thing chatgpt/claude get for free.
 
+Usage:
+    python -m chatfs.provider.aistudio.conversation.massage_json
+
 Input (stdin): conversation.json.d/raw.json — one plucked prompt message (a
-JSPB array; chatfs_aistudio_layout.pluck_conversation already unwraps the
-ResolveDriveResource envelope). Plucking (picking this body out of the CDP
+JSPB array; chatfs.provider.aistudio.pluck.pluck_conversation already unwraps
+the ResolveDriveResource envelope). Plucking (picking this body out of the CDP
 capture) is a separate, earlier step; this script does not re-narrow the
 result to any subset (e.g. just turns) — it emits the whole named document,
 mirroring what chatgpt/claude already have whole.
@@ -22,8 +25,9 @@ SCHEMA is ported from ../aistudio-schema/rosetta/convert.py (not imported —
 that package is exploratory/disposable), where it's cross-checked against a
 live `?alt=json` response for the same prompt (see that package's
 verify.py). Field numbers additionally cross-checked against
-dev.kb/claims.kb/aistudio-jspb-prompt-shape.md and chatfs_aistudio_layout.py /
-chatfs_aistudio_conversation_splat.py, which index this same payload by hand.
+dev.kb/claims.kb/aistudio-jspb-prompt-shape.md and
+chatfs/provider/aistudio/layout.py / conversation/splat.py, which index
+this same payload by hand.
 
 A field spec is one of:
     "name"            scalar (or scalar list): emit the value unchanged
@@ -32,12 +36,11 @@ A field spec is one of:
     ("name", "map")   repeated [key, value] pairs: fold into an object
 """
 import json
-import sys
 from collections.abc import Mapping, Sequence
 from typing import Literal, TypeAlias
 
-import chatfs_json
-from chatfs_json import JsonObject, JsonValue, is_json_array
+from chatfs import json as chatfs_json
+from chatfs.json import JsonObject, JsonValue, is_json_array
 
 Schema: TypeAlias = Mapping[int, "Field"]
 Field: TypeAlias = (
@@ -173,6 +176,8 @@ def massage(doc: JsonValue) -> JsonObject:
 
 
 def main() -> None:
+    import sys
+
     doc = chatfs_json.loads(sys.stdin.read())
     conversation = massage(doc)
     json.dump(conversation, sys.stdout, ensure_ascii=False, indent=2)

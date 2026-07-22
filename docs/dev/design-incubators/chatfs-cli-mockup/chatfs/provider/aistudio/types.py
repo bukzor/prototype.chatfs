@@ -4,7 +4,7 @@ Unlike chatgpt and claude, AI Studio's source is JSPB (positional
 arrays, not keyed objects), so there is no native conversation-item
 dict to pass through. `IndexItem` is therefore *synthesized* from
 positional fields — the keys are ours, not the service's (see
-`chatfs_aistudio_layout.index_item`).
+`chatfs.provider.aistudio.layout.index_item`).
 
 The synthesized shape echoes the chatgpt one (id/title/create_time) —
 the outlier is claude (uuid/name/created_at, ISO string). But the echo
@@ -16,7 +16,7 @@ the shared-layout boundary.
 
 from typing import NotRequired, TypedDict, TypeGuard
 
-from chatfs_json import JsonValue
+from chatfs.json import JsonValue
 
 
 class IndexItem(TypedDict):
@@ -33,9 +33,9 @@ class IndexItem(TypedDict):
     entry does carry) is NOT a substitute for it here: per
     design.kb/040-design.kb/no-partial-synthesis.md, we don't write an
     approximate value into a field named for something more precise.
-    See chatfs_aistudio_layout.index_item/place_meta for how the two
-    provenances are told apart and how the view tree reflects the
-    difference.
+    See chatfs.provider.aistudio.layout.index_item/place_meta for how
+    the two provenances are told apart and how the view tree reflects
+    the difference.
     """
 
     id: str  # Drive prompt id, `prompts/` prefix stripped
@@ -88,7 +88,7 @@ class Prompt(TypedDict):
 
 
 class Conversation(TypedDict):
-    """The massaged conversation.json payload — chatfs_aistudio_conversation_massage_json's output."""
+    """The massaged conversation.json payload — chatfs.provider.aistudio.conversation.massage_json's output."""
 
     prompt: Prompt
 

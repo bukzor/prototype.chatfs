@@ -45,41 +45,48 @@ stderr). Higher-level orchestrators take an addressable target (URL or
 ts-dir), tee intermediate streams to disk for debuggability, and drive
 the leaves.
 
-1. **Index browse** (`chatfs_chatgpt_index_browse.py`) — drives
-   `har-browse` against `https://chatgpt.com`, tees the raw CDP to
-   `chatfs.demo/chatgpt/.data/index.cdp.jsonl` (debug intermediate),
+1. **Index browse** (`python -m chatfs.provider.chatgpt.index.browse`) —
+   drives `har-browse` against `https://chatgpt.com`, tees the raw CDP
+   to `chatfs.demo/chatgpt/.data/index.cdp.jsonl` (debug intermediate),
    plucks it in-process
-   (`chatfs_chatgpt_layout.pluck_index_pages`), emits index pages on
-   stdout.
-2. **Index splat** (`chatfs_chatgpt_index_splat.py`) — reads index
-   pages on stdin; per item, writes `.chat/$UUID/.data/meta.json`,
-   purges any prior view symlinks for that UUID, and places a fresh
-   `$TITLE` directory-symlink under the date tree.
+   (`chatfs.provider.chatgpt.pluck.pluck_index_pages`), emits index
+   pages on stdout.
+2. **Index splat** (`python -m chatfs.provider.chatgpt.index.splat`) —
+   reads index pages on stdin; per item, writes
+   `.chat/$UUID/.data/meta.json`, purges any prior view symlinks for
+   that UUID, and places a fresh `$TITLE` directory-symlink under the
+   date tree.
 3. **Conversation URL browse**
-   (`chatfs_chatgpt_conversation_url_browse.py <url>`) — captures one
-   chat by URL: browses to a staging dir, runs both pluck filters,
-   filters the index pluck to the matching item for `meta.json`,
-   moves captures into `.chat/$UUID/.data/`, calls `place_meta`, and
-   delegates to path render. Fails loudly if the sidebar didn't
-   include the target.
+   (`python -m chatfs.provider.chatgpt.conversation.url_browse <url>`) —
+   captures one chat by URL: browses to a staging dir, runs both pluck
+   filters, filters the index pluck to the matching item for
+   `meta.json`, moves captures into `.chat/$UUID/.data/`, calls
+   `place_meta`, and delegates to path render. Fails loudly if the
+   sidebar didn't include the target.
 4. **Conversation path browse**
-   (`chatfs_chatgpt_conversation_path_browse.py <chat-dir>`) — writes
-   `cdp.jsonl` and `conversation.json` directly into
+   (`python -m chatfs.provider.chatgpt.conversation.path_browse <chat-dir>`) —
+   writes `cdp.jsonl` and `conversation.json` directly into
    `.chat/$UUID/.data/` (which already has `meta.json` from index
    splat), then delegates to path render.
-5. **Path render** (`chatfs_chatgpt_conversation_path_render.py <chat-dir>`) —
+5. **Path render** (`python -m chatfs.provider.chatgpt.conversation.path_render <chat-dir>`) —
    purges non-captured contents (allowlist `{".data"}`), splats
    `.data/conversation.json`, moves `messages/` and `conversations/`
    from `.data/conversation.splat/` up two levels into the chat-dir
    root, and runs the conversation render, redirecting its stdout
    into `chat.md`.
 6. **Conversation render**
-   (`chatfs_chatgpt_conversation_render.py <chat-dir>`) — walks the
-   full mapping tree from `current_node` back to root, streams H1 turn
-   headings `(seq · role · time, variant suffix)` linking to atomic
-   `.md` files under `messages/`. Dead branches render as nested
-   blockquoted asides at their fork point; depth = nesting in `> `
-   prefixes. Markdown goes to stdout.
+   (`python -m chatfs.provider.chatgpt.conversation.render <chat-dir>`) —
+   walks the full mapping tree from `current_node` back to root,
+   streams H1 turn headings `(seq · role · time, variant suffix)`
+   linking to atomic `.md` files under `messages/`. Dead branches
+   render as nested blockquoted asides at their fork point; depth =
+   nesting in `> ` prefixes. Markdown goes to stdout.
+
+Every leaf and orchestrator above is a `chatfs.provider.<name>.<noun>.<verb>`
+module, runnable via `python -m` from the incubator root (or in-process,
+for the pure driver functions each stage also exposes). `<name>` is
+`chatgpt`, `claude`, or `aistudio` — the three providers share this same
+shape; see `chatfs/provider/*/` for each one's actual modules.
 
 Every stage rebuilds its outputs from scratch (no freshness caches);
 see `design.kb/040-design.kb/deterministic-regeneration.md`.
@@ -90,14 +97,18 @@ see `design.kb/040-design.kb/deterministic-regeneration.md`.
 cd docs/dev/design-incubators/chatfs-cli-mockup
 
 # single conversation by URL — common case
-./chatfs_chatgpt_conversation_url_browse.py https://chatgpt.com/c/<uuid>
+python -m chatfs.provider.chatgpt.conversation.url_browse https://chatgpt.com/c/<uuid>
 
 # bulk: index first, then iterate chat dirs
-./chatfs_chatgpt_index_browse.py | ./chatfs_chatgpt_index_splat.py
-./chatfs_chatgpt_conversation_path_browse.py chatfs.demo/chatgpt/.chat/<uuid>/
+python -m chatfs.provider.chatgpt.index.browse | python -m chatfs.provider.chatgpt.index.splat
+python -m chatfs.provider.chatgpt.conversation.path_browse chatfs.demo/chatgpt/.chat/<uuid>/
 
 tree chatfs.demo/chatgpt/ | head -20
 ```
+
+Swap `chatgpt` for `claude` or `aistudio` to run the same pipeline
+against those providers — the module path is the only thing that
+changes.
 
 ## Why this incubator
 

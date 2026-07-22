@@ -1,80 +1,33 @@
-"""Provider adapter for the AI Studio mockup — see chatfs_layout for the
-shared storage/view-tree helpers this wraps.
+"""Provider adapter for the AI Studio mockup — pure AI-Studio-shaped
+knowledge: URL <-> id conversion, identity synthesis, and timestamp
+parsing. See chatfs.layout for the shared storage/view-tree vocabulary
+and chatfs.shell.{capture,place} for the side-effecting operations
+built on it.
 
 AI Studio's twist: the source is JSPB (positional arrays), so the
 identity fields are *synthesized* into an `IndexItem` (`index_item`)
-from chatfs_aistudio_conversation_massage_json's named projection,
-rather than passed through from a native dict.
+from `chatfs.provider.aistudio.conversation.massage_json`'s named
+projection, rather than passed through from a native dict.
 """
 
-import re
-from collections.abc import Iterable, Iterator
 from datetime import datetime, timezone
 from pathlib import Path
+from urllib.parse import urlparse
 
-from chatfs_aistudio_types import Conversation, IndexItem
-from chatfs_json import JsonValue, is_json_array
-from chatfs_layout import DATA_DIR_NAME, chat_dir_for, data_dir_for, data_dir_of, link_data_dir
-from chatfs_layout import capture as _capture
-from chatfs_layout import iter_responses_matching, place_meta as _place_meta
-from chatfs_layout import resolve_chat_dir, safe_filename
-
-__all__ = [
-    "DATA_DIR_NAME",
-    "chat_dir_for",
-    "data_dir_for",
-    "data_dir_of",
-    "link_data_dir",
-    "resolve_chat_dir",
-    "safe_filename",
-    "capture",
-    "index_item",
-    "place_meta",
-    "pluck_conversation",
-    "pluck_index_pages",
-]
-
-# ResolveDriveResource resolves any Drive resource, not just prompts, so URL
-# alone doesn't guarantee a prompt body — pluck_conversation guards on shape
-# too.
-CONVERSATION_URL = re.compile(r"[./]MakerSuiteService/ResolveDriveResource$")
-INDEX_URL = re.compile(r"[./]MakerSuiteService/ListPrompts$")
+from chatfs.provider.aistudio.pluck import pluck_conversation
+from chatfs.provider.aistudio.types import Conversation, IndexItem
+from chatfs.shell.capture import capture as _capture
+from chatfs.shell.place import place_meta as _place_meta
 
 
-def pluck_conversation(cdp_lines: Iterable[str]) -> Iterator[JsonValue]:
-    """Pluck each prompt message out of a ResolveDriveResource response body.
-
-    AI Studio prompts are Drive-backed; the whole conversation arrives in
-    this RPC as application/json+protobuf (JSPB — positional arrays, not
-    keyed objects). Guards on shape, not just URL: the first message's
-    `[0]` is `"prompts/<id>"`; yielding each envelope element flattens to
-    one message per line (mirrors the old `.jq`'s `.[]`).
-    """
-    for envelope in iter_responses_matching(cdp_lines, CONVERSATION_URL):
-        assert is_json_array(envelope), envelope
-        first = envelope[0] if envelope else None
-        first_id = first[0] if is_json_array(first) and first else ""
-        if not (isinstance(first_id, str) and first_id.startswith("prompts/")):
-            continue
-        yield from envelope
+def url_for(id_: str) -> str:
+    return f"https://aistudio.google.com/prompts/{id_}"
 
 
-def pluck_index_pages(cdp_lines: Iterable[str]) -> Iterator[JsonValue]:
-    """Pluck each ListPrompts index entry, one per line.
-
-    A response body is the JSPB envelope `[[<entry>, ...]]`; flattening
-    `envelope[0]` yields individual entries so downstream doesn't need to
-    know how many response bodies were captured (i.e. doesn't need to
-    care about pagination — see chatfs_aistudio_index_splat.py). Entries
-    share ResolveDriveResource's PROMPT/METADATA schema (see
-    chatfs_aistudio_conversation_massage_json) with an empty
-    chunkedPrompt (index entries carry no turn content).
-    """
-    for envelope in iter_responses_matching(cdp_lines, INDEX_URL):
-        assert is_json_array(envelope) and envelope, envelope
-        entries = envelope[0]
-        assert is_json_array(entries), entries
-        yield from entries
+def uuid_from_url(url: str) -> str:
+    parts = urlparse(url).path.strip("/").split("/")
+    assert len(parts) == 2 and parts[0] == "prompts", url
+    return parts[1]
 
 
 def capture(url: str, chat_dir: Path) -> Path:
@@ -84,7 +37,7 @@ def capture(url: str, chat_dir: Path) -> Path:
     chatgpt/claude, AI Studio's pluck output isn't yet named, so it's
     scratch reserved under the eventual contract file's `.d/` sibling
     (`path-ownership.md`) rather than a second contract name — see
-    `chatfs_aistudio_conversation_massage_json.py`.
+    `chatfs.provider.aistudio.conversation.massage_json`.
     """
     return _capture(
         url, chat_dir, pluck_conversation, conversation_filename="conversation.json.d/raw.json"
@@ -96,9 +49,9 @@ def index_item(doc: Conversation) -> IndexItem:
 
     The provider-shaped half of the layout boundary: where chatgpt and
     claude read keyed fields off a native dict, AI Studio's wire format
-    is positional (see chatfs_aistudio_conversation_massage_json, the
-    only place those positions are named), so identity is synthesized
-    here from its named output instead. `prompt.name` is
+    is positional (see chatfs.provider.aistudio.conversation.massage_json,
+    the only place those positions are named), so identity is
+    synthesized here from its named output instead. `prompt.name` is
     `"prompts/<id>"`; the `prompts/` prefix is dropped so the id matches
     the URL/Drive id.
 

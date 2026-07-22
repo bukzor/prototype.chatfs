@@ -17,19 +17,20 @@ from chatfs.shell import locks as chatfs_locks
 from chatfs.shell import sh as chatfs_sh
 
 
-def run_pluck(script: Path, src: Path, dst: Path) -> None:
-    """Run an external filter script: read src, write its stdout to dst.
+def run_module(module: str, src: Path, dst: Path, *, cwd: Path) -> None:
+    """Run `python -m module` as an external filter: read src, write its stdout to dst.
 
-    Shared low-level primitive behind every remaining "tee the filtered
-    stream to disk" step that still shells out to a separate script —
-    today, only AI Studio's massage stage (`conversation.json.d/raw.json`
-    -> `conversation.json`), since every provider's conversation/index pluck
-    is now an in-process generator run through `pluck()` instead. Kept
-    generic (any script, not just massage) in case a future stage needs
-    the same "external filter, teed to disk" shape.
+    Shared low-level primitive behind pipeline stages that still shell
+    out to a separate process rather than run in-process — today, only
+    AI Studio's massage stage (`conversation.json.d/raw.json` ->
+    `conversation.json`). `-m`, not a direct script path, so the callee
+    resolves `chatfs.*` imports the same way every other subprocess
+    delegation in this codebase does (see `chatfs.shell.sh.run`'s `cwd`
+    docstring). Kept generic (any module, not just massage) in case a
+    future stage needs the same "external filter, teed to disk" shape.
     """
     with src.open("rb") as fin, dst.open("wb") as fout:
-        _ = chatfs_sh.run([str(script)], stdin=fin, stdout=fout)
+        _ = chatfs_sh.run([sys.executable, "-m", module], stdin=fin, stdout=fout, cwd=cwd)
 
 
 def browse(url: str, dst: Path) -> None:
@@ -49,9 +50,8 @@ def pluck(
 ) -> None:
     """Run a plucking generator over src's lines; write its yields as JSONL to dst.
 
-    Pure-Python counterpart to `run_pluck`: `fn` is `chatfs.pluck.iter_responses_matching`
-    (or a provider's thin wrapper around it) in place of an external
-    filter script/subprocess. Creates `dst`'s parent so callers can freely
+    `fn` is `chatfs.pluck.iter_responses_matching` (or a provider's thin
+    wrapper around it). Creates `dst`'s parent so callers can freely
     target a not-yet-existing `X.d/` scratch dir (`path-ownership.md`)
     without a separate mkdir at each call site.
     """

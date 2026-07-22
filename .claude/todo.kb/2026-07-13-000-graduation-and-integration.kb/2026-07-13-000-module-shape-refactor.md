@@ -219,7 +219,7 @@ surfaces) is the guide.
       pass; `index/browse.py` in particular takes no arguments and
       performs a real live capture immediately on invocation, with no
       argument-gated usage path to fall back on.
-- [ ] Sweep remaining families + shared modules — aistudio still has
+- [x] Sweep remaining families + shared modules — aistudio still has
       broken sibling-imports; claude + chatgpt are now both done and
       form the template to repeat against it. Delete flat scripts as
       each family lands (none remain for claude/chatgpt/shared; verified
@@ -250,15 +250,50 @@ surfaces) is the guide.
         boundary and test infra for no benefit. Claude/aistudio's
         splats are local only because they never had independent
         package identity to begin with.
-- [ ] Update the incubator README's "Run it" section to the new
-      invocations.
+
+      **aistudio edit pass landed 2026-07-21** (devlog
+      `docs/dev/design-incubators/chatfs-cli-mockup/devlog/2026-07-21-001-aistudio-family-edit-pass-package-imports.md`):
+      last of the three families, closing this step. `provider/aistudio/layout.py`
+      split into pure layout (`url_for`/`uuid_from_url` newly added,
+      `index_item`/`_created`/`place_meta`/`capture` kept) + new
+      `provider/aistudio/pluck.py` (the envelope-unwrapping
+      `pluck_conversation`/`pluck_index_pages`, real logic beyond the
+      other two providers' trivial wrappers) — `layout_test.py` moved to
+      `pluck_test.py` with it. All five `conversation/*.py` leaves +
+      `index/{browse,splat}.py` converted to real package imports;
+      subprocess delegation to `python -m chatfs.provider.aistudio.conversation.X`
+      with `cwd=INCUBATOR_ROOT`, same as claude/chatgpt. The massage
+      stage (`conversation.json.d/raw.json` → `conversation.json`, AI
+      Studio's own extra stage) needed more than an import fix: its old
+      `chatfs_layout.run_pluck(script_path, ...)` invocation can't work
+      against the package tree (a directly-executed script's sys.path
+      never includes the incubator root, only its own containing dir —
+      confirmed by testing both ways: `python -m
+      chatfs.provider.aistudio.conversation.massage_json` succeeds with
+      `cwd=INCUBATOR_ROOT`, fails with `ModuleNotFoundError` from `/tmp`).
+      Fixed by generalizing `chatfs.shell.capture.run_pluck` into
+      `run_module(module, src, dst, *, cwd)`, invoking `python -m
+      <module>` instead of a script path — its only caller either way,
+      just now correct for the package world. Verified: pytest 97/97
+      (full suite, no `--ignore`), basedpyright 0 errors/0 warnings on
+      the full `chatfs/` tree (all three providers). Live end-to-end run
+      not attempted — deliberately held for an explicit, asked-first
+      pass (see Success Criteria below).
+- [x] Update the incubator README's "Run it" section to the new
+      invocations. Landed with the aistudio edit pass (same commit): the
+      "Stages" list and "Run it" bash block both referenced the old flat
+      `chatfs_chatgpt_*.py` filenames — replaced with the corresponding
+      `python -m chatfs.provider.chatgpt.…` invocations, plus a one-line
+      note that `claude`/`aistudio` swap in for the same pipeline shape.
 
 ## Success Criteria
 
-- [ ] No `chatfs_*`-prefixed flat scripts remain; every stage importable
+- [x] No `chatfs_*`-prefixed flat scripts remain; every stage importable
       as `chatfs.…` and runnable from any cwd.
-- [ ] Full test suite + basedpyright clean; live end-to-end run of one
-      provider's url-browse against the demo tree.
+- [x] Full test suite + basedpyright clean (97/97, 0 errors/0 warnings).
+- [ ] Live end-to-end run of one provider's url-browse against the demo
+      tree — needs an explicit ask-first browser/network action; not
+      done by any of the three family edit-pass sessions.
 
 ## Notes
 

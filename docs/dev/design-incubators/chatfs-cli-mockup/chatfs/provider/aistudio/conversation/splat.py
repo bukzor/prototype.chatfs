@@ -1,17 +1,20 @@
 #!/usr/bin/env python3
 """Splat an AI Studio conversation JSON into a `messages/` directory.
 
-Input: path to conversation.json — chatfs_aistudio_conversation_massage_json's
-named projection of the plucked ResolveDriveResource body.
+Usage:
+    python -m chatfs.provider.aistudio.conversation.splat <conversation.json> [output-dir]
+
+Input: path to conversation.json —
+chatfs.provider.aistudio.conversation.massage_json's named projection of
+the plucked ResolveDriveResource body.
 
 Output: `<src>.splat/messages/<basename>.{json,md}` per turn, one per
 `prompt.chunkedPrompt.chunks[]` entry, or `<output-dir>/messages/...`
 when an output-dir argument is given (only `messages/` is
 cleared/recreated -- sibling content in an explicit output-dir, e.g. a
 caller-placed `.data` symlink, is left alone). The .json carries the
-raw turn object; the .md carries the rendered content. Mirrors
-chatfs_claude_conversation_splat's directory shape so the two providers
-read side-by-side.
+raw turn object; the .md carries the rendered content. Mirrors the
+claude splat's directory shape so the two providers read side-by-side.
 
 Scope: user prompts and model answers pass their text through; model
 `thought` turns render as a collapsible `<details type="thinking">`
@@ -25,12 +28,10 @@ document order) rather than claude's `{ts}.{uuid}`.
 
 import json
 import re
-import shutil
-import sys
 from pathlib import Path
 
-import chatfs_json
-from chatfs_aistudio_types import Conversation, Turn, is_conversation
+from chatfs import json as chatfs_json
+from chatfs.provider.aistudio.types import Conversation, Turn, is_conversation
 
 
 def turns_of(doc: Conversation) -> list[Turn]:
@@ -116,6 +117,9 @@ def basename_for(index: int, kind: str) -> str:
 
 
 def main() -> None:
+    import shutil
+    import sys
+
     if len(sys.argv) not in (2, 3):
         print(f"Usage: {sys.argv[0]} <conversation.json> [output-dir]", file=sys.stderr)
         sys.exit(1)

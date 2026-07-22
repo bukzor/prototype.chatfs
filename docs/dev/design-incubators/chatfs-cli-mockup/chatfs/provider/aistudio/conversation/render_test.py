@@ -10,13 +10,13 @@ from textwrap import dedent
 
 import pytest
 
-from chatfs_aistudio_conversation_render import (
+from chatfs.provider.aistudio.conversation.render import (
     build_tree,
     load_turns,
     parse_stem,
     render_conversation,
 )
-from chatfs_render import Turn
+from chatfs.render import Turn
 
 
 class DescribeParseStem:
@@ -88,7 +88,7 @@ class DescribeBuildTree:
 
 class DescribeRenderConversation:
     def it_renders_a_plain_sequence_with_no_fork_facts(self):
-        # every node has exactly one child -- chatfs_render's fork machinery
+        # every node has exactly one child -- chatfs.render's fork machinery
         # (replies/superseded-by/backlinks) must degenerate to nothing.
         turns = {
             "000.user": Turn("user", "T", "L0", "hi"),

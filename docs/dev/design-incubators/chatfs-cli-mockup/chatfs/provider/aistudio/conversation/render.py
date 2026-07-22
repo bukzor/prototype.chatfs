@@ -2,7 +2,7 @@
 """Render an AI Studio conversation to readable markdown on stdout.
 
 The fork-fact notation -- what the output guarantees a reader -- is
-specified and implemented in `chatfs_render`; this module contributes
+specified and implemented in `chatfs.render`; this module contributes
 only the aistudio-shaped parts: message-file stems (index-led, no
 native id) and the tree AI Studio's wire shape actually has, which is
 none -- `chunkedPrompt.chunks` is a flat, chronologically-ordered list
@@ -12,21 +12,20 @@ dev.kb/claims.kb/aistudio-jspb-prompt-shape.md, "Turn order is linear").
 real fork; `current` is always the chain's last turn.
 
 Usage:
-    chatfs_aistudio_conversation_render.py <path-to-chat-dir-or-inside>
+    python -m chatfs.provider.aistudio.conversation.render <path-to-chat-dir-or-inside>
 
 stdout: rendered markdown.
 """
 
-import sys
 from collections.abc import Mapping
 from datetime import datetime, timezone
 from pathlib import Path
 
-import chatfs_json
-from chatfs_aistudio_layout import resolve_chat_dir
-from chatfs_aistudio_types import Turn as RawTurn
-from chatfs_aistudio_types import is_turn
-from chatfs_render import ConversationTree, Turn, render_tree
+from chatfs import json as chatfs_json
+from chatfs.provider.aistudio.types import Turn as RawTurn
+from chatfs.provider.aistudio.types import is_turn
+from chatfs.render import ConversationTree, Turn, render_tree
+from chatfs.shell.place import resolve_chat_dir
 
 VIRTUAL_ROOT = ""
 """Stands in for "before the first turn": the virtual root must be an id
@@ -53,7 +52,7 @@ def _time(raw: RawTurn) -> str:
 def load_turns(messages_dir: Path) -> tuple[dict[str, Turn], dict[str, float]]:
     """stem -> its Turn, and stem -> its epoch seconds, for every splatted
     turn that rendered a body. `created` is carried through even though a
-    fork-less chain never consults it (see `chatfs_render.primary_child`)
+    fork-less chain never consults it (see `chatfs.render.primary_child`)
     -- it's the real value, not a fabricated one, so a genuine future fork
     would tie-break correctly rather than silently by insertion order."""
     turns: dict[str, Turn] = {}
@@ -94,6 +93,8 @@ def render_conversation(
 
 
 def main() -> None:
+    import sys
+
     if len(sys.argv) != 2:
         print(f"usage: {sys.argv[0]} <path-to-chat-dir-or-inside>", file=sys.stderr)
         sys.exit(2)
