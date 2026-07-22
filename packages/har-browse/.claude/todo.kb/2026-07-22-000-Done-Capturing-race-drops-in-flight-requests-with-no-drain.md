@@ -28,7 +28,7 @@ cost-benefit-sweh:
       click). NOTE 2026-07-22 later analysis: the originally-motivating
       symptom (zero conversation events) is NOT this bug — see Current
       Situation; benefit revised down accordingly.
-    confidence: verified (bug + in-capture instances); original symptom re-attributed
+    confidence: confident
   cost-of-delay-2w:
     "@value": 0.3
     rationale: |
@@ -63,7 +63,7 @@ The `has_more=false` linkage is therefore also suspect: persisted-cache hydratio
 
 ## Proposed Solution
 
-Three changes, must land together:
+Three changes. Fixes 1–2 must land together (fix 1 without fix 2 deadlocks on never-terminating requests); fix 3 is separable but cheap to include:
 
 1. **Extend in-flight tracking to the full request lifecycle.** Currently tracking starts at `loadingFinished`. Add a new `pendingRequests: Map<requestId, resolve>` populated at `Network.requestWillBeSent` (earliest CDP signal), with a `track()`ed promise per request; resolve-and-delete it from both `onLoadingFinished` and `onLoadingFailed`. Guard against redirects re-firing `requestWillBeSent` with the same `requestId` (only create a tracker if one doesn't already exist for that id) so a single logical request isn't double-tracked/orphaned across redirect hops. `requestWillBeSent` isn't currently a special-cased handler (it flows through the generic passthrough branch) — the new handler must keep re-enqueueing it raw, same as today.
 
@@ -75,19 +75,22 @@ Full code-level sketch (diffs against current `capture.mjs`) was worked out in t
 
 ## Implementation Steps
 
-- [ ] Implement fix 1 (`pendingRequests` map + `requestWillBeSent` handler + resolve calls in `onLoadingFinished`/`onLoadingFailed`)
-- [ ] Implement fix 2 (bounded-timeout drain, `DRAIN_GRACE_MS` constant)
-- [ ] Regression test: a fixture endpoint that delays its response past the point the overlay's "Done Capturing" is clicked, confirming (a) a response that finishes within the grace period is now captured, and (b) one that doesn't still lets shutdown proceed (bounded, not hung). Closest existing analog: `tests/popup_race.spec.mjs`'s delayed-CDP-attach pattern.
-- [ ] Burn down the 12 `status: todo` mutation-testing.kb entries filed 2026-07-22 for this fix (inject each, harden a test, flip to `done`/`gap` per the usual `docs/dev/mutation-testing.kb/` convention). Fixes 1–2: `pending-request-not-tracked.md`, `pending-request-not-resolved-on-finished.md`, `pending-request-not-resolved-on-failed.md`, `pending-request-redirect-reentrancy-guard-dropped.md`, `request-will-be-sent-passthrough-dropped.md`, `drain-grace-period-removed.md`, `drain-grace-period-race-changed-to-all.md`, `drain-grace-period-zeroed.md`. Fix 3: `drain-expiry-flush-removed.md`, `drain-expiry-flush-marker-dropped.md`, `truncation-marker-set-unconditionally.md`, `drain-expiry-flush-after-end.md`.
+- [ ] **First, before any fix:** run the Current Situation discriminator against existing `has_more=false` captures (rWBS-without-RR → drain race; no-rWBS → cache hydration) and re-attribute the incubator's bullet in `docs/dev/design-incubators/chatfs-cli-mockup/.claude/todo.md` to this todo or to `2026-07-22-001-*` accordingly. Needs no fix to land first; the answer also prices this todo's priority relative to `2026-07-22-001-*`.
+- [ ] Implement fixes 1+2 together (`pendingRequests` map + `requestWillBeSent` handler + resolve calls in `onLoadingFinished`/`onLoadingFailed`; bounded-timeout drain with `DRAIN_GRACE_MS` as an injectable `startCapture` option — see Open Questions)
 - [ ] Implement fix 3 (flush stashed RRs with truncation marker at grace expiry)
+- [ ] Regression tests + burn-down of the `status: todo` mutation-testing.kb entries filed 2026-07-22 for this fix (directory listing there is the count, not restated here; inject each, harden, flip to `done`/`gap` per the usual `docs/dev/mutation-testing.kb/` convention). The entries collapse to four test constructions plus one free assertion — write the tests alongside the fixes (TDD), then run injections as verification rather than deriving tests per-entry:
+  - slow-response-completes-after-click-but-within-grace, with `DRAIN_GRACE_MS` pinned/injected (analog: `tests/popup_race.spec.mjs`'s delayed-CDP-attach pattern, delaying the response instead) — kills `pending-request-not-tracked.md`, `drain-grace-period-zeroed.md`
+  - prompt-end-under-huge-grace, one page firing finished + failed + redirected requests — kills `pending-request-not-resolved-on-finished.md`, `pending-request-not-resolved-on-failed.md`, `pending-request-redirect-reentrancy-guard-dropped.md`
+  - bounded-end-with-hung-request (never-responding fixture; proves shutdown terminates) — kills `drain-grace-period-removed.md`, both injection variants
+  - hung-body-truncation-flush (headers sent, body held open; assert `harBrowseTruncated === true` in the *drained output*, plus the inverse assertion on a completed response) — kills `drain-expiry-flush-removed.md`, `drain-expiry-flush-marker-dropped.md`, `drain-expiry-flush-after-end.md`, `truncation-marker-set-unconditionally.md`
+  - plain rWBS-presence assertion (same class as existing `har.spec.mjs` checks) — kills `request-will-be-sent-passthrough-dropped.md`
 - [ ] Validate the fix by its own signature, not the original symptom: a post-fix live capture should contain responses (or truncation-marked RRs) for requests like the 2 `api/directory/servers` drops in the a59dc891 capture. The original zero-conversation-events symptom will NOT be resolved by this fix — that's `2026-07-22-001-*` (IndexedDB cache hydration).
-- [ ] Run the Current Situation discriminator against existing `has_more=false` captures (rWBS-without-RR vs no-rWBS) and re-attribute the incubator's bullet in `docs/dev/design-incubators/chatfs-cli-mockup/.claude/todo.md` to this todo or to `2026-07-22-001-*` accordingly.
 
 ## Open Questions
 
-- `DRAIN_GRACE_MS` value — 2000ms was a guess. Should it be configurable (CLI flag / `startCapture` option) rather than a constant? Note the floor is paid on *every* capture once fix 1 lands (open EventSource/long-poll connections never finish).
+- `DRAIN_GRACE_MS` *default* value — 2000ms was a guess. Note the floor is paid on *every* capture once fix 1 lands (open EventSource/long-poll connections never finish). Configurability itself is decided, not open: it must be an injectable `startCapture` option, because the mutation entries' de-flake technique (set it huge in tests, assert prompt end) requires setting it per-test.
 - Skip the grace period entirely on the window-close (cancel) path, or shorten it? The context is dying; no terminal events will arrive.
-- Which of drain-race vs cache-hydration (`2026-07-22-001-*`) actually owns the `has_more=false` symptom? Decidable now from existing captures via the discriminator in Current Situation — doesn't need the fix to land first.
+- Fix 3's flush only covers requests already in `awaitingBody` (`responseReceived` arrived, `loadingFinished` never came). A request tracked in `pendingRequests` that never reaches `responseReceived` at all (attached-session request whose server sends nothing back before grace expires — distinct from `capture-requests-on-targets-we-never-attach.md`'s never-attached-target case, and from the streaming-body idea's progressive-data case) has no `rr` to attach a marker to, so it stays silently unflushed. Rare — most requests that get this far at least receive headers promptly — but not yet decided whether v1 needs a synthetic no-response marker (`{requestId, harBrowseTruncated: true}`) for it or whether it's an accepted residual gap.
 
 ## Success Criteria
 

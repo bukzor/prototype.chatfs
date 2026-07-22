@@ -58,13 +58,17 @@ directory listing is the index, not restated here.
 
 - [ ] Solve har-browse "wait until `has_more=false`". Observation: pressing
       "Done Capturing" shortly after the sidebar becomes interactable yields a
-      CDP stream missing later index pages. **Likely root-caused 2026-07-22**:
-      `capture.mjs`'s in-flight drain only tracks requests that already
-      reached `loadingFinished` by click time — a request still pending
-      (headers or body not yet arrived) has no tracker and is silently
-      dropped, no error. Fix sketched, not yet implemented, at
-      `packages/har-browse/.claude/todo.kb/2026-07-22-000-Done-Capturing-race-drops-in-flight-requests-with-no-drain.md`.
-      Close this bullet once that fix lands and this symptom is retested.
+      CDP stream missing later index pages. **Two candidate root causes**
+      identified 2026-07-22, both real bugs with fixes sketched (not yet
+      implemented): the Done-click drain race
+      (`packages/har-browse/.claude/todo.kb/2026-07-22-000-Done-Capturing-race-drops-in-flight-requests-with-no-drain.md`)
+      and persisted-cache hydration
+      (`packages/har-browse/.claude/todo.kb/2026-07-22-001-claude-ai-revisits-render-from-persisted-React-Query-IndexedDB-cache--so-capture-sees-no-conversation-traffic.md`).
+      Which one owns *this* symptom is decidable now from existing captures:
+      index-page URL with `requestWillBeSent` but no `responseReceived` →
+      drain race; no `requestWillBeSent` at all → hydration (the
+      discriminator step, first step, in the 000 todo). Close this bullet
+      once the owning fix lands and this symptom is retested.
 - [ ] Branch enumeration in splat — emit `conversations/<branch>.md` symlinks
       per leaf
 

@@ -33,6 +33,26 @@ drop, but at least the process exits).
    })
 ```
 
+## Variant Injection
+
+`race` → `all` fat-finger — a standard mutation operator, so a tool
+would generate it independently — is observably identical, not the
+milder always-waits-full-grace bug it first appears to be:
+`Promise.all([A, B])` resolves only once *every* argument resolves, so
+if `A` (`allSettled([...inFlight])`) never resolves, the timeout `B`
+firing is irrelevant and the identical indefinite hang results.
+(Folded from the former `drain-grace-period-race-changed-to-all.md`,
+2026-07-22 — one test kills both; inject each variant in turn at
+burn-down.)
+
+```diff
+-    await Promise.race([
++    await Promise.all([
+       Promise.allSettled([...inFlight]),
+       new Promise((resolve) => setTimeout(resolve, DRAIN_GRACE_MS)),
+     ]);
+```
+
 ## Anticipated Test Coverage
 
 Needs a fixture request that never resolves (server accepts the
@@ -40,7 +60,6 @@ connection and never responds) plus a test-level guard timeout strictly
 larger than `DRAIN_GRACE_MS` to prove the capture still ends — i.e., the
 test itself must terminate in bounded time to prove the *absence* of a
 hang, which is a slightly awkward shape (proving termination rather than
-a value) but standard for liveness properties. Medium confidence: same
-test construction, if it works, also kills
-`drain-grace-period-race-changed-to-all.md` — see that entry for why
-those two mutations are behaviorally identical.
+a value) but standard for liveness properties. Medium confidence in the
+construction; whichever test lands must be verified against both
+injection variants above.

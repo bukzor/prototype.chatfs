@@ -23,7 +23,7 @@ cost-benefit-sweh:
       the 2026-07-22 a59dc891 zero-events run. Likely also affects
       index pagination (`has_more=false` symptom) and possibly other
       providers with persisted client caches.
-    confidence: verified for the a59dc891 run; extrapolation tentative
+    confidence: confident
   cost-of-delay-2w:
     "@value": 0.5
     rationale: |
@@ -89,14 +89,11 @@ shape, force the traffic instead.
 - [ ] Add `clearOriginStorage` to `startCapture` (CDP
       `Storage.clearDataForOrigin`, indexeddb only, pre-goto)
 - [ ] Expose via `har_browse.mjs` CLI flag
-- [ ] Live verification: revisit capture of a claude.ai conversation
-      now contains `chat_conversation*` rWBS + RR with body
-- [ ] Check chatgpt + aistudio providers for equivalent persisted-cache
-      hydration (same forensic: revisit capture, grep for payload rWBS)
-- [ ] Re-check the incubator's `has_more=false` symptom
-      (`docs/dev/design-incubators/chatfs-cli-mockup/.claude/todo.md`)
-      under storage-clearing — it plausibly shares this root cause
-- [ ] Burn down the 4 `status: todo` mutation-testing.kb entries pre-filed 2026-07-22 for this feature: `clear-origin-storage-call-removed.md`, `clear-origin-storage-after-goto.md`, `clear-origin-storage-types-include-cookies.md`, `clear-origin-storage-wrong-origin.md`. The first two need the hydrating fixture (toy-server page: fetch-and-store-to-IndexedDB on first load, render-from-IndexedDB-without-fetching on revisit) — that fixture is also this todo's regression test.
+- [ ] Live verification per provider: a claude.ai revisit capture now
+      contains `chat_conversation*` rWBS + RR with body; same forensic
+      grep on chatgpt + aistudio revisit captures checks them for
+      equivalent persisted-cache hydration
+- [ ] Burn down the 4 `status: todo` mutation-testing.kb entries pre-filed 2026-07-22 for this feature. Two test constructions cover all four: the hydrating fixture (toy-server page: fetch-and-store-to-IndexedDB on first load via *inline parse-time script*, render-from-IndexedDB-without-fetching on revisit; assert the second capture under `clearOriginStorage: true` contains the payload rWBS + RR) kills `clear-origin-storage-call-removed.md`, `clear-origin-storage-after-goto.md`, `clear-origin-storage-wrong-origin.md`; a cookie-survival assertion kills `clear-origin-storage-types-include-cookies.md`. The hydrating fixture doubles as this todo's regression test. (Whether this todo also owns the incubator's `has_more=false` symptom is decided by the discriminator step — first step — of `2026-07-22-000-*`.)
 
 ## Open Questions
 

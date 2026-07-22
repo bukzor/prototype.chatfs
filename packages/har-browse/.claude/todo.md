@@ -37,22 +37,23 @@ cost-benefit-sweh:
 - [ ] Tighten `tsconfig.json` once the codebase is ready. Currently `strict: false` and `checkJs: true` (project-wide). Open items: declare a stub for `playwright-core/lib/server/registry/index` to silence TS7016; consider enabling `noImplicitAny` once fixture-callback params are typed.
 - [ ] Rename `.mjs` → `.ts` for native TS syntax. Node 22 strips types from `.ts` by default, so `#!/usr/bin/env node` shebangs work unchanged — just avoid `enum`/`namespace`/parameter-properties (the runtime-emitting TS constructs) or accept switching to `tsx`. Playwright loads `.ts` natively, so tests need no runner change. Consider installing `devtools-protocol` for typed CDP event shapes (would let us drop `any` on `params` throughout `capture.mjs`).
 
-## Mutation testing (terminus 2026-05-21)
+## Mutation testing
 
-Kb at `docs/dev/mutation-testing.kb/` (81 entries). Status:
-**57 done, 16 todo, 8 gap.** The 16 todo entries are prospective,
-filed 2026-07-22 against the drain-race fixes and `clearOriginStorage`
-(burn-down steps live in the two 2026-07-22 todo.kb entries above).
-Session record: `~/.claude/sessions.kb/har-browse-mutation-testing.md`.
+Kb at `docs/dev/mutation-testing.kb/` — directory listing (and each
+file's `status:` frontmatter) is the index, not restated here. Original
+terminus session: `~/.claude/sessions.kb/har-browse-mutation-testing.md`.
 
-All 8 gaps are analyzed-unreachable / dead-defense (`## Test Result`
-in each file explains why hardening is impractical):
+The terminus-era gaps are all analyzed-unreachable / dead-defense
+(`## Test Result` in each file explains why hardening is impractical):
 `awaiting-body-not-deleted`, `awaiting-body-shared-across-sessions`,
 `barrier-payload-no-optional-chaining`, `barrier-promise-not-tracked`,
 `barrier-snapshot-not-frozen`, `body-attached-after-loading-finished`,
 `context-close-no-stream-end`, `inject-overlay-not-awaited`.
 
-No followups unless new src/ surface is added.
+Entries filed 2026-07-22 are prospective, targeting the not-yet-landed
+drain-race and `clearOriginStorage` fixes — burn down alongside
+`todo.kb/2026-07-22-000-*` and `todo.kb/2026-07-22-001-*`, not as
+standalone mutation-testing work.
 
 ## Done
 
