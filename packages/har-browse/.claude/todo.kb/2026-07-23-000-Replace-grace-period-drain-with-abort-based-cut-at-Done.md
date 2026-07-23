@@ -109,6 +109,13 @@ question), its firing is a logged defect, never a normal path.
 - [ ] Implement the cut (per-session network disable at Done-detection
       and at context-close), ledger settle, delivery barrier, and
       detach-settles-ledger. Delete the grace machinery.
+- [ ] Make post-`emit("end")` enqueues loud: anything the passthrough
+      tries to enqueue after `end` fires today lands in a closed queue
+      and vanishes with no signal (same silent-loss shape this whole
+      todo exists to close, just at the pipe's exit rather than the
+      cut). Log to stderr at minimum; consider making it throw in tests.
+      Independent of the abort-cut mechanism — worth doing even if a
+      spike kills the rest of this todo.
 - [ ] Rewrite `tests/inflight_drain.spec.mjs`: the two grace-variant
       tests collapse (no constant left to protect); the hung-request
       test's assertion strengthens from "ends within grace + slack" to

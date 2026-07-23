@@ -40,7 +40,7 @@ datum's `requestWillBeSent` (rWBS):
 | **Requested, never seen** | no rWBS | Traffic rode a CDP target we hold no session for: service worker, shared worker, OOPIF, prerender — or fired in a popup's pre-`Network.enable` window | `.claude/todo.kb/2026-07-23-001-*` (`Target.setAutoAttach`) |
 | **Seen, then dropped** | rWBS without RR | Lifecycle: request unfinished at the cut; internal buffers (`awaitingBody` stash) held its events hostage to a post-cut terminal event | `.claude/todo.kb/2026-07-22-000-*` (landed) + `2026-07-23-000-*` (abort-based cut) |
 | **Seen, bytes not in stream** | RR present, body absent/partial | Bodies are only fetchable post-`loadingFinished` (one-shot `getResponseBody`); streamed/held-open responses have no retrievable body; large bodies can be evicted | `.claude/ideas.kb/2026-07-22-000-*` (`Network.streamResourceContent`) |
-| **Delivered, then lost in our pipe** | event observed under debugger, absent from output | Events enqueued after `emit("end")` land in a closed queue; stdout flush/EPIPE handling | post-`end` enqueues should be loud; see todo.md |
+| **Delivered, then lost in our pipe** | event observed under debugger, absent from output | Events enqueued after `emit("end")` land in a closed queue; stdout flush/EPIPE handling | `.claude/todo.kb/2026-07-23-000-*` (make post-`end` enqueues loud) |
 
 The first two classes are forensically identical (no rWBS) in a per-page
 capture — one reason target coverage matters even when no loss is
@@ -48,7 +48,7 @@ proven.
 
 ## The drain: abort-based cut, not grace period
 
-Historical shapes, in order:
+Shapes the drain has taken, in order:
 
 1. **No drain at all** (pre-2026-07-22): only post-`loadingFinished`
    body fetches were awaited; unfinished cohort requests vanished
@@ -61,12 +61,14 @@ Historical shapes, in order:
    held-open connections (EventSource/long-poll) are normal, every
    capture pays the full grace floor. Timer expiry drops the remainder
    silently.
-3. **Abort-based cut** (target design, todo.kb `2026-07-23-000-*`): at
-   cut detection, *force* every in-flight request to a terminal event by
-   disabling networking, then wait — event-driven — for the pending
-   ledger to settle. The browser's own `loadingFailed (canceled)` events
-   are the truncation records, flowing through the existing handler
-   paths. No timer participates in correctness.
+
+> [!TODO] Abort-based cut replaces the grace period
+> At cut detection, *force* every in-flight request to a terminal event
+> by disabling networking, then wait — event-driven — for the pending
+> ledger to settle. The browser's own `loadingFailed (canceled)` events
+> are the truncation records, flowing through the existing handler
+> paths. No timer participates in correctness. Tracked in
+> `.claude/todo.kb/2026-07-23-000-*`; two spikes gate it.
 
 The design rule the progression teaches: **never use a duration as a
 synchronization primitive.** Every wait must complete on an observable
