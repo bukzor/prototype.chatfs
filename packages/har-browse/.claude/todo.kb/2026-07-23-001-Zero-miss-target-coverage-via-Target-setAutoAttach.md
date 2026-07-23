@@ -7,6 +7,8 @@ required-reading:
 suggested-reading:
   - packages/har-browse/tests/popup_race.spec.mjs
   - packages/har-browse/dev.kb/rust-port.md
+  - packages/har-browse/design.kb/040-design.kb/capture-tap.kb/tap-point.md
+  - packages/har-browse/design.kb/070-future-work.kb/capture-implementation-frontier.kb/pure-cdp-spawned.md
 cost-benefit-sweh:
   timebox:
     "@value": 2.5

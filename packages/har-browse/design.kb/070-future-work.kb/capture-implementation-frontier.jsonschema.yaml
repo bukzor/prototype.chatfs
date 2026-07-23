@@ -1,0 +1,28 @@
+# yaml-language-server: $schema=https://json-schema.org/draft/2020-12/schema
+type: object
+properties:
+  why:
+    $ref: "../jsonschema/why.jsonschema.yaml"
+  status:
+    description: Whether this candidate sits on the owned-code/footprint/silent-miss frontier or is beaten outright by another candidate
+    enum: [frontier-optimal, dominated]
+  owned-loc:
+    description: Rough order-of-magnitude estimate of code this project would own and maintain
+    type: string
+  middleware:
+    description: Third-party runtime/library footprint beyond the browser itself, which every candidate takes as a given
+    type: string
+  silent-miss:
+    description: Strength of the "if it was transferred, we have it" guarantee -- the decisive axis; an unverifiable miss fails capture-everything outright
+    type: string
+  crash-durable:
+    description: Whether captured data already reaches durable storage before a mid-session crash, or is lost with it
+    type: string
+  stealth:
+    description: How closely the capture session's network/browser fingerprint matches ordinary uninstrumented browsing
+    type: string
+  bb1-purity:
+    description: Whether the capture stage stays free of site-specific knowledge (pure) or leaks extraction-layer concerns into BB1
+    type: string
+required: [why, status, owned-loc, middleware, silent-miss, crash-durable, stealth, bb1-purity]
+additionalProperties: false

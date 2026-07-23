@@ -13,6 +13,6 @@ into it.
 
 ## What does NOT belong
 
-- Which library implements the decision today (→ `050-components.kb/`)
+- Which library implements the decision today (→ `../../050-components.kb/`)
 - The cut/drain completeness model (→ `../capture-cut-model.md`, a
   sibling design entry, not part of this sub-decision set)

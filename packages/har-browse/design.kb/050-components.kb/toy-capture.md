@@ -14,6 +14,18 @@ why:
 The primary learning target. A one-shot Playwright script that streams a
 Chrome DevTools Protocol event trace.
 
+> [!QUESTION] should Playwright be demoted to a dev/test-only dependency?
+> A green-field survey
+> (`../070-future-work.kb/capture-implementation-frontier.kb/`) found
+> Playwright dominated on both owned-code and total-footprint axes by
+> simpler production taps (`pure-cdp-spawned.md`,
+> `puppeteer-core-node.md`) — its page-automation machinery earns its
+> keep here mainly by being fought into behaving like a protocol tap.
+> Whether to replace the production capture path, keeping Playwright
+> only to drive the test suite's synthetic pages, is unresolved; if
+> resolved toward replacement, the future-work candidates above are the
+> surveyed options to choose from.
+
 ## Interface
 
 ```
