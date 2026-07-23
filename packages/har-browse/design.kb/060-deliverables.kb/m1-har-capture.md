@@ -1,7 +1,7 @@
 ---
 why:
   - toy-capture
-  - har-lifecycle
+  - capture-cut-completeness
 ---
 
 # M1 — HAR Capture

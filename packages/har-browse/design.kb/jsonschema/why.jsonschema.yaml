@@ -1,0 +1,5 @@
+# yaml-language-server: $schema=https://json-schema.org/draft/2020-12/schema
+description: Links to motivating entries in the layer above (or same-layer, when the motivation naturally lives there)
+type: array
+items: {type: string}
+minItems: 1

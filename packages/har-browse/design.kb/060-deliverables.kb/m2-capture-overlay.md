@@ -1,8 +1,8 @@
 ---
 why:
   - toy-capture
-  - har-lifecycle
-  - persistent-overlay
+  - capture-cut-completeness
+  - in-flow-termination
   - howto-overlay
 ---
 

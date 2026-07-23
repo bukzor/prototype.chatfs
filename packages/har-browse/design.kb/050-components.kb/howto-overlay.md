@@ -1,7 +1,7 @@
 ---
 why:
   - site-agnostic-capture
-  - persistent-overlay
+  - in-flow-termination
 ---
 
 # howto-overlay — Site-Specific Instructions for Human Operator

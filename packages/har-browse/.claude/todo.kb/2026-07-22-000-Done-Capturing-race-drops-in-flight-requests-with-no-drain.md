@@ -77,7 +77,7 @@ Full code-level sketch (diffs against current `capture.mjs`) was worked out in t
 
 - [ ] **First, before any fix:** run the Current Situation discriminator against existing `has_more=false` captures (rWBS-without-RR → drain race; no-rWBS → cache hydration) and re-attribute the incubator's bullet in `docs/dev/design-incubators/chatfs-cli-mockup/.claude/todo.md` to this todo or to `2026-07-22-001-*` accordingly. Needs no fix to land first; the answer also prices this todo's priority relative to `2026-07-22-001-*`. **Blocked 2026-07-22:** the only local claude capture (`a59dc891`) is a single-conversation capture with an empty `index-pages.jsonl` — it demonstrates the drain race (2 dropped `api/directory/servers` requests) and confirms cache hydration for its own zero-conversation-events symptom, but contains no index-page data at all, so it can't discriminate the `has_more=false` symptom specifically. That needs a fresh live capture reproducing `has_more=false`, which is an explicit ask-first browser/network action per this project's convention — not run this session.
 - [x] Implement fixes 1+2 together (`pendingRequests` map + `requestWillBeSent` handler + resolve calls in `onLoadingFinished`/`onLoadingFailed`; bounded-timeout drain with `DRAIN_GRACE_MS` as an injectable `startCapture` option — see Open Questions). Landed 2026-07-22 in `capture.mjs`. One correction to the sketch: `pendingRequests`' tracked promises use a *separate* `pendingInFlight` Set, not the shared `inFlight` Set BARRIER's deferred-emit snapshots — folding them together broke `barrier_consumed.spec.mjs`'s adversarial test (BARRIER's emit blocked on hundreds of unrelated still-pending requests, blew past `drainGraceMs`, and was silently dropped when `emit("end")` fired first). The final drain waits on the union of both sets; BARRIER continues to wait on `inFlight` alone.
-- [ ] Implement fix 3 (flush stashed RRs with truncation marker at grace expiry)
+- [x] ~~Implement fix 3 (flush stashed RRs with truncation marker at grace expiry)~~ **Superseded 2026-07-23** by `2026-07-23-000-Replace-grace-period-drain-with-abort-based-cut-at-Done.md`: forcing in-flight requests to real terminal events at the cut makes the browser's own `loadingFailed` the truncation record — no synthetic marker or flush code needed. The four fix-3-scoped prospective mutation entries were deleted; their intents transfer to the new todo. Rationale: `design.kb/030-requirements.kb/capture-cut-completeness.md` (post-cut response data is outside the capture's cohort, so grace-waiting buys nothing the requirement values).
 - [x] Regression tests + burn-down of the fix-1/2-scoped `status: todo` mutation-testing.kb entries filed 2026-07-22 (fix-3-scoped entries below remain open). Landed as `tests/inflight_drain.spec.mjs` (4 tests, not the anticipated 3 — see below) plus two new `payloadServer` fixture routes (`/hang`, `/redirect`) and a socket-tracking fix to the fixture's `close()`, which previously hung forever waiting for `/hang`'s connection to end:
   - slow-response-completes-after-click-but-within-grace (two variants: one with an injected generous `drainGraceMs`, one relying on the real default — the default-relying variant was added after discovering the first alone can't catch `drain-grace-period-zeroed.md`, since an explicitly-injected grace period never consults the default constant) — kills `pending-request-not-tracked.md`, `drain-grace-period-zeroed.md`
   - prompt-end-under-huge-grace, one page firing finished + failed + redirected requests — kills `pending-request-not-resolved-on-finished.md`, `pending-request-not-resolved-on-failed.md`, `pending-request-redirect-reentrancy-guard-dropped.md`
@@ -88,15 +88,30 @@ Full code-level sketch (diffs against current `capture.mjs`) was worked out in t
 
 ## Open Questions
 
-- `DRAIN_GRACE_MS` *default* value — 2000ms was a guess. Note the floor is paid on *every* capture once fix 1 lands (open EventSource/long-poll connections never finish). Configurability itself is decided, not open: it must be an injectable `startCapture` option, because the mutation entries' de-flake technique (set it huge in tests, assert prompt end) requires setting it per-test.
-- Skip the grace period entirely on the window-close (cancel) path, or shorten it? The context is dying; no terminal events will arrive.
-- Fix 3's flush only covers requests already in `awaitingBody` (`responseReceived` arrived, `loadingFinished` never came). A request tracked in `pendingRequests` that never reaches `responseReceived` at all (attached-session request whose server sends nothing back before grace expires — distinct from `capture-requests-on-targets-we-never-attach.md`'s never-attached-target case, and from the streaming-body idea's progressive-data case) has no `rr` to attach a marker to, so it stays silently unflushed. Rare — most requests that get this far at least receive headers promptly — but not yet decided whether v1 needs a synthetic no-response marker (`{requestId, harBrowseTruncated: true}`) for it or whether it's an accepted residual gap.
+All three original questions resolved 2026-07-23 by the abort-based-cut
+redesign (`2026-07-23-000-*`), which removes the grace period entirely:
+
+- ~~`DRAIN_GRACE_MS` default value~~ — no grace period exists to tune;
+  the every-capture floor it imposed (open EventSource/long-poll never
+  finish) was a motivating defect of the redesign.
+- ~~Skip grace on the window-close path?~~ — session detach settles that
+  session's ledger entries; the close path is event-driven, no wait.
+- ~~Synthetic no-response marker for pre-`responseReceived` hangs?~~ —
+  the cut aborts them; the browser's `loadingFailed` is the terminal
+  record, uniformly for with-headers and without-headers cases.
 
 ## Success Criteria
 
-- [ ] A live capture where the human clicks "Done Capturing" shortly after content renders but before a slow request completes still captures that request's data (within the grace period).
-- [ ] A capture with a genuinely hung request still terminates within a bounded time (no indefinite hang) — and the hung request's stashed headers appear in the output with the truncation marker, not silently absent.
-- [ ] `tests/popup_race.spec.mjs` and all existing mutation-testing.kb-gated tests still pass unchanged.
+*(Revised 2026-07-23: drain-behavior criteria are now owned by
+`design.kb/030-requirements.kb/capture-cut-completeness.md` and
+`2026-07-23-000-*`. The first criterion below was written under the
+grace-period design — under cut semantics, a response arriving after the
+click is legitimately truncated with an explicit terminal record;
+"captures the data" applies to what arrived pre-cut.)*
+
+- [x] A capture with a genuinely hung request terminates within a bounded time (no indefinite hang) — landed with fixes 1+2; the explicit-terminal-record half moves to `2026-07-23-000-*`.
+- [x] `tests/popup_race.spec.mjs` and all existing mutation-testing.kb-gated tests still pass unchanged.
+- [ ] This todo's remaining scope: the discriminator step and live-capture validation (both ask-first, blocked on a live capture).
 
 ## Notes
 

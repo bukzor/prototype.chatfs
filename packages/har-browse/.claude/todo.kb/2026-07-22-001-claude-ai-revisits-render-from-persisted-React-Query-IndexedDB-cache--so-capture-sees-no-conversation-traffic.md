@@ -71,10 +71,23 @@ the app is forced to re-materialize its data as network traffic:
 
 - Add a `startCapture` option (e.g. `clearOriginStorage: true`) that,
   after CDP attach but before `page.goto`, issues
-  `Storage.clearDataForOrigin { origin, storageTypes: "indexeddb" }`.
-- Keep cookies (login) untouched. Start with `indexeddb` only; widen to
-  `cache_storage`/`local_storage` only if a provider proves to hydrate
-  from those too.
+  `Storage.clearDataForOrigin { origin, storageTypes: "indexeddb,cache_storage" }`.
+  *(Widened 2026-07-23: Cache Storage is the same never-requested gap
+  class — a service worker's cache-first handler serves payload without
+  network traffic — and clearing it is equally cheap and login-safe.)*
+- Keep cookies (login) untouched. `local_storage` stays opt-in per
+  provider, not default: some providers keep auth tokens there, and
+  clearing would forfeit the login state persistent profiles exist to
+  preserve. Verify login survives before enabling it anywhere.
+- Session-level capture settings (same "force client state through the
+  observable network" motive, applied per CDP session at wire-up rather
+  than per origin): `Network.setCacheDisabled(true)` (standard for HAR
+  tooling — full bodies instead of cache hits with occasionally
+  unfetchable bodies) and `Network.setBypassServiceWorker(true)`
+  (fetches go network-direct, converting most service-worker-mediated
+  traffic into ordinary page-session events without touching the
+  profile — interim mitigation for `2026-07-23-001-*`'s non-page-target
+  gap).
 - Wire the flag through `har_browse.mjs` CLI (`--clear-origin-storage`?)
   and default it ON for the chatfs provider flows.
 
@@ -87,7 +100,11 @@ shape, force the traffic instead.
 ## Implementation Steps
 
 - [ ] Add `clearOriginStorage` to `startCapture` (CDP
-      `Storage.clearDataForOrigin`, indexeddb only, pre-goto)
+      `Storage.clearDataForOrigin`, indexeddb + cache_storage, pre-goto;
+      local_storage opt-in — see Proposed Solution's 2026-07-23 widening)
+- [ ] Apply per-session capture settings in `wireSession`:
+      `Network.setCacheDisabled(true)`,
+      `Network.setBypassServiceWorker(true)`
 - [ ] Expose via `har_browse.mjs` CLI flag
 - [ ] Live verification per provider: a claude.ai revisit capture now
       contains `chat_conversation*` rWBS + RR with body; same forensic

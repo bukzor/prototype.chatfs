@@ -29,4 +29,7 @@ pipeline.
 ## Design Knowledge
 
 - `design.kb/` — Structured KB collections (010-mission through 060-deliverables)
+  - `040-design.kb/capture-cut-model.md` — capture completeness model:
+    lanes, gap taxonomy, drain design. Start here when a capture is
+    missing data the user saw on screen.
 - `data/todo-llmfs.chatgpt.com.splat/extracted/01-toy-playwright-spec.md` — Original design artifact

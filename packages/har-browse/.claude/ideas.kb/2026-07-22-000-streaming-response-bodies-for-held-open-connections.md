@@ -9,15 +9,20 @@ cost-benefit-sweh:
       LF as today or as accumulated prefix at drain-flush. Plus an SSE
       endpoint in toy_server to test against.
   benefit-2w:
-    "@value": 0.5
+    "@value": 0.7
     rationale: |
-      Zero for the current chatfs revisit-capture workflow — the
-      conversation payload arrives as a plain JSON fetch, fully covered
-      by the drain/flush and clearOriginStorage work (todo.kb
-      2026-07-22-000/-001). Value appears only if capturing *live*
-      assistant responses becomes in-scope: claude.ai and ChatGPT
-      deliver those over SSE, and a held-open event stream loses 100%
-      of its data under one-shot getResponseBody.
+      Low for the current chatfs revisit-capture workflow — the
+      conversation payload arrives as a plain JSON fetch that completes
+      before the human clicks Done, fully covered by the drain and
+      clearOriginStorage work (todo.kb 2026-07-22-000/-001). Raised
+      2026-07-23 by the abort-based cut (todo.kb 2026-07-23-000):
+      requests truncated at the cut now yield headers + abort record
+      only, and this is the sole mechanism that preserves their
+      pre-cut delivered bytes (the capture-cut-completeness cohort).
+      Full value still arrives only if capturing *live* assistant
+      responses becomes in-scope: claude.ai and ChatGPT deliver those
+      over SSE, and a held-open event stream loses 100% of its data
+      under one-shot getResponseBody.
 ---
 
 # har-browse: streaming response bodies for held-open connections
@@ -28,15 +33,16 @@ cost-benefit-sweh:
 `Network.loadingFinished`. A connection still open at capture end — an
 SSE/EventSource stream, a long-poll — has no retrievable body at all,
 even though client JS consumed every chunk as it arrived. The
-grace-expiry flush (todo.kb `2026-07-22-000-*`, fix 3) will emit its
-headers with a truncation marker, but the body bytes are unrecoverable
-by that route.
+abort-based cut (todo.kb `2026-07-23-000-*`, superseding the originally
+planned grace-expiry flush) records such a request's headers plus the
+browser's abort event, but the body bytes are unrecoverable by that
+route.
 
 CDP offers `Network.streamResourceContent`: body chunks then arrive
 progressively as base64 in `Network.dataReceived.params.data`.
 Accumulate per requestId; at `loadingFinished` emit the canonical body
-exactly as today; at drain-flush emit the accumulated prefix instead of
-a bare truncated RR.
+exactly as today; for a request truncated at the cut, emit the
+accumulated prefix alongside its abort record.
 
 Identified 2026-07-22 as gap "D2" in the request-lifetime analysis that
 produced the drain-race and IndexedDB-hydration todos; deferred because
@@ -74,11 +80,14 @@ accumulated prefix at flush is the acceptance demo.
 - [ ] SSE endpoint in `toy_server` (chunked, never-closing)
 - [ ] Enable `Network.streamResourceContent`; accumulate
       `dataReceived.params.data` per requestId
-- [ ] Wire accumulated prefix into the grace-expiry flush path
+- [ ] Wire accumulated prefix into the abort-cut truncation path
+      (todo.kb `2026-07-23-000-*`)
 - [ ] Mutation entries + tests per `Skill(mutation-testing)`
 
 ## Lifecycle
 
 **Status:** Exploring — promote when live-response capture (not just
-revisit browsing) enters chatfs scope, or when the rust-port charter
-takes it up.
+revisit browsing) enters chatfs scope, when the rust-port charter takes
+it up, or if truncation-record fidelity proves insufficient once the
+abort-based cut (todo.kb `2026-07-23-000-*`) lands. That todo is this
+idea's natural landing site: it names this as its fidelity companion.

@@ -1,8 +1,11 @@
 ---
 why:
   - three-subsystem-pipeline
-  - har-lifecycle
-  - persistent-overlay
+  - tap-point
+  - record-format
+  - marks
+  - capture-cut-completeness
+  - in-flow-termination
   - site-agnostic-capture
 ---
 

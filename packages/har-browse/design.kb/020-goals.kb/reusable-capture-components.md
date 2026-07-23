@@ -1,11 +1,11 @@
 ---
 why:
-  - har-capture-learning
+  - data-possession
 ---
 
 # Reusable Capture Components
 
-The toy project should produce components that transfer directly to real BB1
-implementations: browser lifecycle management, HAR recording wrappers, network
-idle detection, content encoding handling. "Toy" refers to the target, not the
-quality of the code.
+Work against the toy target should produce components that transfer
+directly to the production BB1 capture: browser lifecycle management,
+traffic recording, capture-cut/drain behavior, content-encoding
+fidelity. "Toy" refers to the target, not the quality of the code.

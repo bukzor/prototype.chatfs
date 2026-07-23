@@ -12,7 +12,7 @@ clear the app's data cache, preserve the session. If `storageTypes`
 becomes `"all"` or grows `"cookies"`, every capture logs the user out of
 the target site — for chatfs providers that means a manual re-login per
 capture, which is exactly the cost the persistent-profile design exists
-to avoid (`design.kb/030-requirements.kb/persistent-overlay.md` /
+to avoid (`design.kb/030-requirements.kb/in-flow-termination.md` /
 profile-per-mount). The capture stream itself looks *fine* (traffic
 re-materializes even harder when logged out), so payload-presence
 assertions can't catch this — it needs its own cookie-survival check.
