@@ -24,6 +24,12 @@ cost-benefit-sweh:
 
 # Tactical Tasks
 
+> This file is for tracking *open work*, not recording how a fix was
+> found or verified — that's devlog content. Put reasoning, root-cause
+> analysis, and rejected alternatives in `docs/dev/devlog/`
+> (`llm-collab-devlog --title "..."`) and leave only a short pointer
+> here.
+
 - [ ] `tests/epipe.test.mjs` ("har-browse | head -n 1 exits cleanly") is flaky under full-suite parallel load: intermittently throws `browserContext.newCDPSession: page: no object with guid page@...` (Playwright internal race), ~1-in-3 to ~1-in-5 in this session's `pnpm test` runs. Passes reliably standalone (confirmed on both the pre- and post-2026-07-22-drain-race-fix tree, so it predates and is unrelated to that fix). Not investigated further this session — root cause likely resource contention (many concurrent Chromium instances) rather than a real bug, but unconfirmed.
 - [ ] [claude.ai revisits render from persisted React Query IndexedDB cache](todo.kb/2026-07-22-001-claude-ai-revisits-render-from-persisted-React-Query-IndexedDB-cache--so-capture-sees-no-conversation-traffic.md) — revisit captures contain zero conversation traffic (app hydrates from IndexedDB; nothing crosses the network). Verified root cause of the 2026-07-22 zero-events run. Fix: clear origin IndexedDB pre-goto.
 - [ ] [Done Capturing race drops in-flight requests with no drain](todo.kb/2026-07-22-000-Done-Capturing-race-drops-in-flight-requests-with-no-drain.md) — silent data loss when a slow request hasn't reached `loadingFinished` at click time (2 confirmed victims in the a59dc891 capture). Originally blamed for the zero-conversation-events symptom; re-attributed to the IndexedDB-cache todo above. Fixes 1+2 (extended in-flight tracking + bounded grace-period drain) landed 2026-07-22, mutation-verified, `pnpm test` green; fix 3 (truncation-marker flush) and the live-capture validation step remain open. The `has_more=false` discriminator is blocked on a fresh live capture (ask-first).
@@ -63,3 +69,4 @@ standalone mutation-testing work.
 - [x] [cdp2har: validate chrome-har consumes our stream](todo.kb/2026-04-24-002-cdp2har-validate-chrome-har-consumes-our-stream.md)
 - [x] [har-browse: handle EPIPE on stdout cleanly](todo.kb/2026-04-24-003-har-browse-handle-epipe-on-stdout-cleanly.md)
 - [x] Wire build-time typecheck — `tsc --noEmit` as a `node:test` (commit 041b31e). Took the project-wide `checkJs: true` path instead of per-file `@ts-check`, which subsumes the planned `@ts-check` sweep.
+- [x] `#capture-done` overlay invisible on aistudio.google.com — Trusted Types CSP blocked `insertAdjacentHTML`. Fixed and user-confirmed live. See devlog `docs/dev/devlog/2026-07-23-000-har-browse-Done-button-invisible-on-aistudio-google-com--Trusted-Types-.md`.

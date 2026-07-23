@@ -20,7 +20,23 @@ export async function injectOverlay(page, { howto } = {}) {
         const style = document.createElement("style");
         style.textContent = css;
         document.head.appendChild(style);
-        document.body.insertAdjacentHTML("beforeend", html);
+        // Sites enforcing `require-trusted-types-for 'script'` (e.g.
+        // aistudio.google.com) reject a raw-string insertAdjacentHTML,
+        // throwing and silently aborting the rest of inject() -- the
+        // style lands (textContent isn't a guarded sink) but the
+        // overlay never does. `html` is fixed, locally-authored markup
+        // (no attacker/page-controlled input), so a pass-through policy
+        // is safe here.
+        // `@types/trusted-types` isn't in the dependency tree and this
+        // is the only Trusted Types touch-point, so cast narrowly here
+        // rather than add ambient global types for one call site.
+        const trustedTypes = /** @type {any} */ (window).trustedTypes;
+        const trustedHtml = trustedTypes
+            ?.createPolicy("har-browse-inject", {
+              createHTML: (/** @type {string} */ s) => s,
+            })
+            .createHTML(html) ?? html;
+        document.body.insertAdjacentHTML("beforeend", trustedHtml);
         const howtoEl = document.getElementById("capture-howto");
         if (howto) {
           document.getElementById("capture-howto-content").textContent = howto;

@@ -11,6 +11,10 @@ import { createServer } from "node:http";
  *   need a request that never reaches a terminal CDP event.
  * - GET /redirect → 302 to /payload?id=redirected. For tests exercising
  *   requestId reuse across CDP's repeated requestWillBeSent per hop.
+ * - GET /trusted-types → minimal HTML served with
+ *   `Content-Security-Policy: require-trusted-types-for 'script'`,
+ *   matching aistudio.google.com's enforcement. For tests exercising
+ *   injectOverlay() under a Trusted Types sink restriction.
  * - Anything else → minimal HTML for page navigation.
  *
  * Every request appends to `requestLog`, the server-side ground truth
@@ -57,6 +61,14 @@ export async function startServer() {
     if (url.pathname === "/redirect") {
       res.writeHead(302, { location: "/payload?id=redirected" });
       res.end();
+      return;
+    }
+    if (url.pathname === "/trusted-types") {
+      res.writeHead(200, {
+        "content-type": "text/html",
+        "content-security-policy": "require-trusted-types-for 'script'",
+      });
+      res.end("<!doctype html><html><body>trusted types</body></html>");
       return;
     }
     if (url.pathname === "/abort-after-headers") {

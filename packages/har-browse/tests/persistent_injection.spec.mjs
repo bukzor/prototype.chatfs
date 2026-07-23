@@ -94,6 +94,27 @@ test("Done click handler is registered { once: true } and removed after first fi
   }
 });
 
+test("overlay injects under a Trusted Types CSP (require-trusted-types-for 'script')", async ({
+  browser,
+  payloadServer,
+}) => {
+  // Regression: aistudio.google.com enforces this CSP, which rejects a
+  // raw-string insertAdjacentHTML and previously aborted inject() right
+  // after the <style> tag landed -- the overlay's HTML never appeared.
+  const context = await browser.newContext();
+  try {
+    const page = await context.newPage();
+    await injectOverlay(page);
+    await page.goto(`${payloadServer.url}/trusted-types`, {
+      waitUntil: "networkidle",
+    });
+    expect(await page.locator("#capture-overlay").count()).toBe(1);
+    expect(await page.locator("#capture-done").count()).toBe(1);
+  } finally {
+    await context.close();
+  }
+});
+
 test("injectOverlay is idempotent: double-register yields one overlay", async ({
   browser,
   toyServer,
