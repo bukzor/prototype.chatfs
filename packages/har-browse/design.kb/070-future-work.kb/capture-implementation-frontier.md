@@ -16,10 +16,17 @@ tap point, not a mission requirement), what implementation minimizes
 complexity while still satisfying `capture-everything`,
 `crash-durability`, and `unblocked-sessions`?
 
-Not currently being pursued — the shipped implementation
-(`../050-components.kb/toy-capture.md` and its production analog)
-works and is where the effort has gone. Recorded here so a future
-rewrite starts from this analysis instead of re-deriving it.
+The 2026-07-23 review ratified two of this survey's candidates rather
+than a single winner — `puppeteer-core-node.md` as the near-term
+production host, `browser-extension-tap.md` as the eventual production
+surface once the capture-semantics layer (ledger/drain/barrier)
+stabilizes — tracked in
+`.claude/todo.kb/2026-07-23-002-Migrate-capture-host-to-puppeteer-core.md`.
+The migration itself hasn't landed yet (see that todo's gating
+preconditions); this survey remains the record a future rewrite starts
+from instead of re-deriving the analysis. See
+`../050-components.kb/toy-capture.md`'s `[!TODO]` for the currently
+shipped implementation's own pointer back here.
 
 ## Two axes, and a third that decides
 

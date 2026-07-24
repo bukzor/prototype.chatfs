@@ -103,9 +103,10 @@ the test suite, where page automation is the actual job.
       separate, independent bullet — not subsumed here; its TS7016
       `playwright-core` stub is still needed post-migration since
       Playwright remains a devDependency for tests.)
-- [ ] Docs closure: resolve `toy-capture.md`'s `[!QUESTION]` (Playwright
-      demoted to dev/test-only) to descriptive prose; refresh
-      `tap-point.md` and package `CLAUDE.md` Key Files.
+- [ ] Docs closure: `toy-capture.md`'s `[!TODO]` (Playwright demoted to
+      dev/test-only, ratified 2026-07-23) unwraps to descriptive prose
+      once this lands; refresh `tap-point.md` and package `CLAUDE.md`
+      Key Files.
 - [ ] Mutation entries per `Skill(mutation-testing)` for the new shell
       (launch config, session routing, UA override); burn down.
 
