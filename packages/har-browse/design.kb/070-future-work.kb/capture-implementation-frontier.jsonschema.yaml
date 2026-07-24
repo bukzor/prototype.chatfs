@@ -11,18 +11,18 @@ properties:
     type: string
   middleware:
     description: Third-party runtime/library footprint beyond the browser itself, which every candidate takes as a given
-    type: string
+    $ref: "../jsonschema/valued.jsonschema.yaml"
   silent-miss:
     description: Strength of the "if it was transferred, we have it" guarantee -- the decisive axis; an unverifiable miss fails capture-everything outright
-    type: string
+    $ref: "../jsonschema/valued.jsonschema.yaml"
   crash-durable:
     description: Whether captured data already reaches durable storage before a mid-session crash, or is lost with it
-    type: string
+    $ref: "../jsonschema/valued.jsonschema.yaml"
   stealth:
     description: How closely the capture session's network/browser fingerprint matches ordinary uninstrumented browsing
-    type: string
+    $ref: "../jsonschema/valued.jsonschema.yaml"
   bb1-purity:
     description: Whether the capture stage stays free of site-specific knowledge (pure) or leaks extraction-layer concerns into BB1
-    type: string
+    $ref: "../jsonschema/valued.jsonschema.yaml"
 required: [why, status, owned-loc, middleware, silent-miss, crash-durable, stealth, bb1-purity]
 additionalProperties: false

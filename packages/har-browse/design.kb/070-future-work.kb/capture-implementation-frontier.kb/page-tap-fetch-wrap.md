@@ -4,10 +4,18 @@ why:
 status: dominated
 owned-loc: "~250"
 middleware: "none"
-silent-miss: "high (workers, WebSockets, SSE, anything unwrapped)"
-crash-durable: "good (streamed)"
-stealth: "perfect (no separate browser instance)"
-bb1-purity: "pure-ish (in-page hooks brush against page internals)"
+silent-miss:
+  "@value": "high"
+  description: "workers, WebSockets, SSE, anything unwrapped"
+crash-durable:
+  "@value": "good"
+  description: "streamed"
+stealth:
+  "@value": "perfect"
+  description: "no separate browser instance"
+bb1-purity:
+  "@value": "pure-ish"
+  description: "in-page hooks brush against page internals"
 ---
 
 # In-Page `fetch`/XHR Wrapping

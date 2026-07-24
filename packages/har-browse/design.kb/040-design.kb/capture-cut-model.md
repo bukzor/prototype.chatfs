@@ -25,7 +25,7 @@ own buffering and latency:
 The Done cut originates in lane 3 (human clicks after lane 2 showed them
 what they wanted) and propagates downward with latency. Because a
 later-detected cut only *enlarges* the cohort, propagation latency is
-benign — see `030-requirements.kb/capture-cut-completeness.md` for the
+benign — see `../030-requirements.kb/capture-cut-completeness.md` for the
 causality argument.
 
 ## Gap taxonomy: how the client can see data the output lacks

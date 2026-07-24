@@ -4,10 +4,16 @@ why:
 status: dominated
 owned-loc: "~50"
 middleware: "none"
-silent-miss: "fatal (fork/tree structure dropped)"
-crash-durable: "n/a (not a live capture)"
+silent-miss:
+  "@value": "fatal"
+  description: "fork/tree structure dropped"
+crash-durable:
+  "@value": "n/a"
+  description: "not a live capture"
 stealth: "n/a"
-bb1-purity: "leaks all (relies entirely on the provider's export logic)"
+bb1-purity:
+  "@value": "leaks all"
+  description: "relies entirely on the provider's export logic"
 ---
 
 # Provider's Official Data Export

@@ -9,6 +9,7 @@ suggested-reading:
   - packages/har-browse/dev.kb/rust-port.md
   - packages/har-browse/design.kb/040-design.kb/capture-tap.kb/tap-point.md
   - packages/har-browse/design.kb/070-future-work.kb/capture-implementation-frontier.kb/pure-cdp-spawned.md
+  - packages/har-browse/.claude/todo.kb/2026-07-23-002-Migrate-capture-host-to-puppeteer-core.md
 cost-benefit-sweh:
   timebox:
     "@value": 2.5
@@ -98,6 +99,15 @@ shrinks this todo's urgency.)
       3. Neither is practical under Node → implement in the rust port
          (chromiumoxide makes auto-attach the natural shape); spec the
          invariant into the rust-port charter now.
+
+      **Ratified trigger (2026-07-23 frontier review):** outcome 1 or a
+      can't-carry verdict escalates `2026-07-23-002-*` (host migration
+      to puppeteer-core) to immediate priority — auto-attach is native
+      there, converting this todo's implementation step to a plain API
+      call instead of a transport fight. Outcome 2 defers the migration
+      but doesn't remove its rationale (see that todo's Context).
+      Outcome 3 (rust port) is decided only on its own forcing function,
+      per `dev.kb/rust-port.md` — not as a fallback from this spike.
 - [ ] Implement per venue verdict: on attach of any target, apply the
       standard session setup (Network.enable + capture settings) before
       release; route all sessions' events into the shared queue;

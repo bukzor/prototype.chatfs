@@ -3,10 +3,16 @@ why:
   - capture-implementation-frontier
 status: frontier-optimal
 owned-loc: "~450"
-middleware: "browser extension platform (MV3)"
+middleware:
+  "@value": "browser extension platform"
+  description: "MV3"
 silent-miss: "low"
-crash-durable: "good (streamed to a local sink)"
-stealth: "perfect (user's own daily browser)"
+crash-durable:
+  "@value": "good"
+  description: "streamed to a local sink"
+stealth:
+  "@value": "perfect"
+  description: "user's own daily browser"
 bb1-purity: "pure"
 ---
 

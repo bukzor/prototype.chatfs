@@ -6,10 +6,13 @@ why:
 
 # M3 — Extraction
 
-Plucker reliably extracts `/api/conversation` response from HAR.
+Plucker reliably extracts the `/api/conversation` response from the
+JSONL event stream.
 
 ## Acceptance
 
-- `toy_pluck.sh < out.har > extracted.json` produces correct conversation graph
-- Handles HAR-level base64 encoding (Playwright handles HTTP-level compression)
-- Handles multiple matching HAR entries (emits all matches)
+- `toy_pluck.sh < events.jsonl > extracted.json` produces the correct
+  conversation graph
+- Handles base64-wrapped bodies (Chromium base64-encodes non-text MIME
+  types; HTTP-level compression is already decompressed by Chromium)
+- Handles multiple matching events (emits all matches)

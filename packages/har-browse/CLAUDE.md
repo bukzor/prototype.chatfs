@@ -28,7 +28,7 @@ pipeline.
 
 ## Design Knowledge
 
-- `design.kb/` — Structured KB collections (010-mission through 060-deliverables)
+- `design.kb/` — Structured KB collections (010-mission through 070-future-work)
   - `040-design.kb/capture-cut-model.md` — capture completeness model:
     lanes, gap taxonomy, drain design. Start here when a capture is
     missing data the user saw on screen.

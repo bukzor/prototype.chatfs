@@ -4,12 +4,16 @@ why:
   - capture-cut-completeness
 ---
 
-# M1 — HAR Capture
+# M1 — HAR-Derivable Capture
 
-Playwright captures a HAR for a single page load.
+har-browse captures a single page load as a JSONL CDP event stream from
+which a valid HAR is derivable downstream.
 
 ## Acceptance
 
-- `har-browse` produces a valid HAR
-- HAR contains entries for `/`, `/index.css`, `/index.js`, `/api/conversation`
+- `har-browse` emits one CDP event per line in the `{method, params}`
+  shape `chrome-har` consumes, response bodies attached
+- The stream covers `/`, `/index.css`, `/index.js`, `/api/conversation`
+- `chrome-har`'s `harFromMessages` derives a valid HAR from the stream
+  (`src/cdp_to_har.mjs`; exercised by `tests/har.spec.mjs`)
 - Script exits 0 on success

@@ -5,8 +5,12 @@ status: frontier-optimal
 owned-loc: "~600"
 middleware: "none"
 silent-miss: "low"
-crash-durable: "good (streamed)"
-stealth: "good (real browser, spawned)"
+crash-durable:
+  "@value": "good"
+  description: "streamed"
+stealth:
+  "@value": "good"
+  description: "real browser, spawned"
 bb1-purity: "pure"
 ---
 
@@ -26,8 +30,8 @@ start paused until resumed), and reading the live browser's UA via
 `Browser.getVersion` + overriding it via `Network.setUserAgentOverride`
 removes the pre-launch UA cache/probe subsystem entirely.
 
-**What it trades away:** the most owned code of the three
-frontier-optimal candidates — everything the frameworks below would
-have supplied is now this project's to build and maintain. Best choice
+**What it trades away:** the most owned code of the four
+frontier-optimal candidates — everything a framework would have
+supplied is now this project's to build and maintain. Best choice
 when maximum control and zero framework/vendor exposure matter more
 than line count.

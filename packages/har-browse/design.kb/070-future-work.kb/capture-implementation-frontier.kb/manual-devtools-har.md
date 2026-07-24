@@ -4,9 +4,15 @@ why:
 status: dominated
 owned-loc: "~0"
 middleware: "none"
-silent-miss: "low (human error: forgotten preserve-log, missed click)"
-crash-durable: "poor (single manual export, no incremental record)"
-stealth: "perfect (user's own browser)"
+silent-miss:
+  "@value": "low"
+  description: "human error: forgotten preserve-log, missed click"
+crash-durable:
+  "@value": "poor"
+  description: "single manual export, no incremental record"
+stealth:
+  "@value": "perfect"
+  description: "user's own browser"
 bb1-purity: "pure"
 ---
 

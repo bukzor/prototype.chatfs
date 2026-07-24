@@ -7,6 +7,7 @@ required-reading:
 suggested-reading:
   - packages/har-browse/.claude/todo.kb/2026-07-22-000-Done-Capturing-race-drops-in-flight-requests-with-no-drain.md
   - packages/har-browse/tests/inflight_drain.spec.mjs
+  - packages/har-browse/.claude/todo.kb/2026-07-23-002-Migrate-capture-host-to-puppeteer-core.md
 cost-benefit-sweh:
   timebox:
     "@value": 2.0
@@ -109,6 +110,14 @@ question), its firing is a logged defect, never a normal path.
 - [ ] Implement the cut (per-session network disable at Done-detection
       and at context-close), ledger settle, delivery barrier, and
       detach-settles-ledger. Delete the grace machinery.
+- [ ] **Extract the host seam** while in this code: isolate "provide CDP
+      sessions + events per target" behind one small interface that the
+      ledger/drain/barrier logic consumes, independent of how sessions
+      are obtained. This costs little on top of the cut rewrite (the
+      cut already touches every session-handling call site) and is the
+      precondition for `2026-07-23-002-*` (host migration to
+      puppeteer-core) — it converts that migration from a rewrite into
+      a shell swap.
 - [ ] Make post-`emit("end")` enqueues loud: anything the passthrough
       tries to enqueue after `end` fires today lands in a closed queue
       and vanishes with no signal (same silent-loss shape this whole
@@ -177,3 +186,7 @@ yields headers + abort record only; with
 `Network.streamResourceContent`, the pre-cut delivered bytes are already
 in the stream. Not required for the current revisit-capture workflow
 (its payload completes before the human clicks Done).
+
+The host seam extracted here is the dependency `2026-07-23-002-*` (host
+migration) waits on; nothing else in that todo requires this one's cut
+mechanism specifically, only the seam.

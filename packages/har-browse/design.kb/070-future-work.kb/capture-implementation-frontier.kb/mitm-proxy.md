@@ -3,10 +3,18 @@ why:
   - capture-implementation-frontier
 status: dominated
 owned-loc: "~250"
-middleware: "MITM proxy (e.g. mitmproxy)"
-silent-miss: "medium (cache-served responses invisible)"
-crash-durable: "good (streamed)"
-stealth: "poor (proxy's TLS fingerprint, not the browser's)"
+middleware:
+  "@value": "MITM proxy"
+  description: "e.g. mitmproxy"
+silent-miss:
+  "@value": "medium"
+  description: "cache-served responses invisible"
+crash-durable:
+  "@value": "good"
+  description: "streamed"
+stealth:
+  "@value": "poor"
+  description: "proxy's TLS fingerprint, not the browser's"
 bb1-purity: "pure"
 ---
 
@@ -14,10 +22,7 @@ bb1-purity: "pure"
 
 Sit in the byte path instead of tapping a protocol: bodies arrive
 inline, so the entire in-flight body-fetch/drain/barrier apparatus
-dissolves structurally rather than shrinking incrementally. Least
-owned code of any candidate considered, including the two
-frontier-optimal designs with less code than this one's category
-average.
+dissolves structurally rather than shrinking incrementally.
 
 **Why it's dominated, not frontier:** vetoed twice over, both against
 requirements no amount of extra code buys back. The proxy's TLS
@@ -27,6 +32,7 @@ And cache-served responses never cross the wire at all — a silent hole
 in `capture-everything` that stays invisible until someone notices a
 response the browser plainly had.
 
-Illustrative because "least code" and "best design" diverge sharply
-here: the axis that kills it (fingerprint + cache-invisibility) isn't
-about code volume at all.
+Illustrative because the win and the vetoes share one root: sitting in
+the byte path is what delivers bodies inline — and equally what swaps
+in the proxy's TLS fingerprint and hides cache-served responses. The
+placement that makes the design cheap is the placement that loses.

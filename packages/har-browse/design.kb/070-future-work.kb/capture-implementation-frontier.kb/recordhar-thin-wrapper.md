@@ -3,10 +3,16 @@ why:
   - capture-implementation-frontier
 status: frontier-optimal
 owned-loc: "~150"
-middleware: "automation framework w/ built-in recorder (e.g. Playwright)"
+middleware:
+  "@value": "automation framework w/ built-in recorder"
+  description: "e.g. Playwright"
 silent-miss: "low"
-crash-durable: "poor (written at context close)"
-stealth: "good (real browser, spawned)"
+crash-durable:
+  "@value": "poor"
+  description: "written at context close"
+stealth:
+  "@value": "good"
+  description: "real browser, spawned"
 bb1-purity: "pure"
 ---
 

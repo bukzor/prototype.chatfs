@@ -1,0 +1,10 @@
+# yaml-language-server: $schema=https://json-schema.org/draft/2020-12/schema
+description: A short categorical value, bare when self-explanatory or paired with the free-text elaboration it would otherwise carry as a parenthetical suffix
+oneOf:
+  - type: string
+  - type: object
+    properties:
+      "@value": {type: string}
+      description: {type: string}
+    required: ["@value"]
+    additionalProperties: false

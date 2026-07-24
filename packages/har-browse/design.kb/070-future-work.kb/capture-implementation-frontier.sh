@@ -1,10 +1,8 @@
 #!/bin/bash
-# Regenerate the candidate comparison table for
-# capture-implementation-frontier.md from the frontmatter in
-# capture-implementation-frontier.kb/*.md -- the frontmatter is the
-# source of truth, this table is a rendering of it. Re-run and paste
-# over the "## Comparison Table" section whenever a candidate file's
-# frontmatter changes or a candidate is added/removed.
+# One YAML document per candidate in capture-implementation-frontier.kb/*.md
+# (skipping CLAUDE.md), each prefixed with a title (from the file's H1) and
+# its relative path, then the file's own frontmatter. The frontmatter is the
+# source of truth; this is a synthesized read-through of it.
 set -euo pipefail
 shopt -s failglob
 export DEBUG="${DEBUG:-0}"
@@ -21,33 +19,21 @@ if (( DEBUG > 0 )); then
 fi
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-kb="$here/capture-implementation-frontier.kb"
-kb_name="$(basename "$kb")"
+kb="capture-implementation-frontier.kb"
 
-for f in "$kb"/*.md; do
-  [[ "$(basename "$f")" == CLAUDE.md ]] && continue
-  title="$(sed -n '/^# /{s/^# //;p;q}' "$f")"
-  md-frontmatter "$f" |
-    jq --arg title "$title" --arg file "$kb_name/$(basename "$f")" \
-      '.["@value"] + {title: $title, file: $file}'
-done |
-  jq -s -r '
-    sort_by(
-      (if .status == "frontier-optimal" then 0 else 1 end),
-      (."owned-loc" | ltrimstr("~") | tonumber? // 999)
-    )
-    | (["Candidate", "Status", "Owned LOC", "Middleware", "Silent-miss", "Crash-durable", "Stealth", "BB1 purity"]) as $hdr
-    | ($hdr | map("---")) as $sep
-    | ([$hdr, $sep] + map([
-        "[\(.title)](\(.file))",
-        .status,
-        ."owned-loc",
-        .middleware,
-        ."silent-miss",
-        ."crash-durable",
-        .stealth,
-        ."bb1-purity"
-      ]))
-    | .[]
-    | "| " + join(" | ") + " |"
-  '
+( cd "$here"
+  first=1
+  for f in "$kb"/*.md; do
+    [[ "$(basename "$f")" == CLAUDE.md ]] && continue
+    if (( first )); then
+      first=0
+    else
+      echo ---
+    fi
+    title="$(sed -n '/^# /{s/^# //;p;q}' "$f")"
+    md-frontmatter "$f" |
+      jq --arg title "$title" --arg file "$kb/$(basename "$f")" \
+        '{title: $title, file: $file} + .["@value"]' |
+      yq -P .
+  done
+)

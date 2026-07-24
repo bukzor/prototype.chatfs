@@ -3,10 +3,16 @@ why:
   - capture-implementation-frontier
 status: frontier-optimal
 owned-loc: "~300"
-middleware: "puppeteer-core (Node)"
+middleware:
+  "@value": "puppeteer-core"
+  description: "Node"
 silent-miss: "low"
-crash-durable: "good (streamed)"
-stealth: "good (real browser, spawned)"
+crash-durable:
+  "@value": "good"
+  description: "streamed"
+stealth:
+  "@value": "good"
+  description: "real browser, spawned"
 bb1-purity: "pure"
 ---
 
