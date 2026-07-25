@@ -39,32 +39,6 @@ For how to create and maintain design knowledge, see `Skill(llm-design-kb)`.
 - `docs/dev/design-incubators/fork-representation/` — Fork representation investigation
 - `docs/dev/devlog/` — Session narrative history
 
-## Working on Documentation
-
-**Documentation editing principles:**
-
-- **80% confidence threshold** — Make edits when reasonably confident. Edit first, discuss if uncertain.
-- **Discussion over speculation** — When uncertain about concepts or design decisions, discuss with user to develop understanding before writing.
-- **Breadth-first validation** — Review higher-level docs before diving into subdocs.
-
-**Documentation workflows:**
-
-General validation workflow:
-1. **Discuss** concepts with user to develop deep understanding
-2. **Read** existing content
-3. **Evaluate** accuracy/completeness
-4. **Correct/Rewrite** with confidence
-
-NOT: Mechanical fill-in-the-blanks. Reach certainty before making changes.
-
-**Handling TODO-marked docs:**
-
-When you encounter docs marked with "Status: TODO":
-1. **Never fill in TODO docs solo** — These require discussion with user first
-2. **Discuss concepts first** — Develop understanding through conversation
-3. **Only write after reaching certainty** — Discussion must establish clear understanding
-4. **May prove unnecessary** — Some breakdown docs might be deleted if main doc suffices
-
 ## Conventions
 
 **JSONL format:**
