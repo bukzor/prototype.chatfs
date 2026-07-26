@@ -1,4 +1,4 @@
-# Components — Playwright HAR Capture
+# Components — Browser-Driven CDP Capture
 
 Individual subsystems, their responsibilities, and interfaces.
 

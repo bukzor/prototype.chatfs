@@ -1,4 +1,4 @@
-# Design — Playwright HAR Capture
+# Design — Browser-Driven CDP Capture
 
 Architecture and major abstractions.
 

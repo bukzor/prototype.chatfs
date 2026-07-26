@@ -169,10 +169,12 @@ this migration's first step rather than inherited from the cut work.
       separate, independent bullet — not subsumed here; its TS7016
       `playwright-core` stub is still needed post-migration since
       Playwright remains a devDependency for tests.)
-- [ ] Docs closure: `toy-capture.md`'s `[!TODO]` (Playwright demoted to
-      dev/test-only, ratified 2026-07-23) unwraps to descriptive prose
-      once this lands; refresh `tap-point.md` and package `CLAUDE.md`
-      Key Files.
+- [x] Docs closure -- landed 2026-07-26: `toy-capture.md` rewritten to
+      the shipped puppeteer-core shape (TODO unwrapped); package
+      `CLAUDE.md` Key Files refreshed; frontier survey preamble updated
+      to "shipped"; `three-subsystem-pipeline.md` + layer CLAUDE.md
+      titles de-Playwrighted. `tap-point.md` needed nothing -- it was
+      already host-agnostic by its kb's own scoping rule.
 - [ ] Mutation entries per `Skill(mutation-testing)` for the new shell
       (launch config, session routing, UA override); burn down.
 

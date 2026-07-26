@@ -13,14 +13,14 @@ connected by Unix pipes/files:
 Subsystem A          Subsystem B
 (toy backend)  →     (capture script)
 serves JSON          streams CDP events (JSONL)
-on localhost         via Playwright
+on localhost         via CDP (puppeteer-core)
 ```
 
 **Subsystem A** is the target — a trivial local web server with known endpoints.
 It exists to give Subsystem B something to capture.
 
-**Subsystem B** is the learning target — Playwright browser automation plus
-a CDP event passthrough. This is BB1. Output is JSONL in chrome-har's wire
+**Subsystem B** is the learning target — a spawned, human-driven
+browser with a CDP event passthrough. This is BB1. Output is JSONL in chrome-har's wire
 shape (`{method, params}`), which downstream tools can consume directly
 (e.g. `chrome-har`'s `harFromMessages` produces a bonafide HAR document on
 demand — no HAR-reconstruction logic lives in this repo).

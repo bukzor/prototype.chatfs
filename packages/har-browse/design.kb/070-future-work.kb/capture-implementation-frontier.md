@@ -22,11 +22,10 @@ production host, `browser-extension-tap.md` as the eventual production
 surface once the capture-semantics layer (ledger/drain/barrier)
 stabilizes — tracked in
 `.claude/todo.kb/2026-07-23-002-Migrate-capture-host-to-puppeteer-core.md`.
-The migration itself hasn't landed yet (see that todo's gating
-preconditions); this survey remains the record a future rewrite starts
-from instead of re-deriving the analysis. See
-`../050-components.kb/toy-capture.md`'s `[!TODO]` for the currently
-shipped implementation's own pointer back here.
+The puppeteer-core host shipped 2026-07-26
+(`src/host_puppeteer.mjs`; the shipped shape is described in
+`../050-components.kb/toy-capture.md`); this survey remains the record
+a future rewrite starts from instead of re-deriving the analysis.
 
 ## Two axes, and a third that decides
 
