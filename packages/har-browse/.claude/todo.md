@@ -2,17 +2,16 @@
 managed-by: Skill(llm-subtask)
 cost-benefit-sweh:
   timebox:
-    "@value": 1.5
+    "@value": 1.0
     rationale: |
       File-level estimate for the remaining rollup: Done-button protocol
-      doc, CLAUDE.md refresh, .mjs→.ts decision (open-ended), tsconfig
-      tightening (small).
+      doc, .mjs→.ts decision (open-ended), tsconfig tightening (small).
+      CLAUDE.md refresh landed 2026-07-26.
   benefit-2w:
     "@value": 1.0
     rationale: |
-      Reduces re-orienting cost when returning to har-browse (CLAUDE.md
-      still stale). Typecheck now wired (041b31e) — that bug class is
-      gated.
+      Reduces re-orienting cost when returning to har-browse. Typecheck
+      now wired (041b31e) — that bug class is gated.
   cost-of-delay-2w:
     "@value": 0.2
     rationale: |
@@ -37,13 +36,7 @@ cost-benefit-sweh:
 - [ ] [Migrate capture host to puppeteer-core](todo.kb/2026-07-23-002-Migrate-capture-host-to-puppeteer-core.md) — ratified 2026-07-23 frontier review: the current Playwright host is off the requirement-weighted frontier (largest middleware footprint of any candidate; ~180 owned lines exist only to fight it — UA probe/cache subsystem, launch workarounds, popup-race wiring). Swap launcher/profile/transport to puppeteer-core behind the host seam above; keep Playwright as a devDependency for the test suite only. Gated on the seam (todo above) and triggered/timed by the auto-attach venue spike (todo above).
 - [ ] [Done Capturing race drops in-flight requests with no drain](todo.kb/2026-07-22-000-Done-Capturing-race-drops-in-flight-requests-with-no-drain.md) — silent data loss when a slow request hasn't reached `loadingFinished` at click time (2 confirmed victims in the a59dc891 capture). Originally blamed for the zero-conversation-events symptom; re-attributed to the IndexedDB-cache todo above. Fixes 1+2 (extended in-flight tracking + bounded grace-period drain) landed 2026-07-22, mutation-verified, `pnpm test` green. Fix 3 superseded 2026-07-23 by the abort-based-cut todo above. Remaining here: the `has_more=false` discriminator and live-capture validation, both blocked on a fresh live capture (ask-first).
 - [ ] Add a header comment to `src/inject.mjs` documenting the Done-button protocol: page injects `#capture-done`, click handler sets `dataset.clicked = "true"`, capture polls via `page.waitForFunction(… dataset.clicked === "true")` in `capture.mjs`. Note the choice (DOM-dataset, not `harBrowseMark("DONE")` or a CDP signal) so 6-month-you doesn't re-litigate it.
-- [ ] Refresh `CLAUDE.md` so 6-month-future-you isn't bewildered.
-  - [ ] Update "Key Files" entry for `capture.mjs`: drop stale `captureEvents()` reference; describe current `attachCapture(page)` (low-level) vs `startCapture(opts)` (convenience wrapper) split.
-  - [ ] Document the BARRIER protocol, paired in two places so it's reachable where you'd look:
-    - `CLAUDE.md`: short paragraph — page-side `window.harBrowseMark("BARRIER:…")` carries a page-attested consumed list; capture defers each BARRIER's emit until in-flight body-fetches settle, so consumed RRs precede the BARRIER that names them. Point at `tests/barrier_consumed.spec.mjs` as the formal invariant.
-    - `src/capture.mjs`: header comment with the mechanic detail (snapshot-via-spread of `inFlight`, `allSettled`-superset ordering for concurrent BARRIERs) and a pointer to the same test.
-  - [ ] Cross-link to `.claude/ideas.kb/` for deferred work, especially the streaming-witness gate idea.
-  - [ ] Verify references to `toy_server/`, `toy_pluck.sh`, etc. still match the tree; remove or update stale paths.
+- [ ] Add a BARRIER-mechanics header comment to `src/capture.mjs` (snapshot-via-spread of `inFlight`, `allSettled`-superset ordering for concurrent BARRIERs; pointer to `tests/barrier_consumed.spec.mjs`) — the `src/capture.mjs` half of the 2026-07-26 CLAUDE.md refresh, deferred because the file was under active edit by the cache-hydration session; land with that work. Then repoint CLAUDE.md's BARRIER "mechanics:" reference at it.
 - [ ] `design.kb/070-future-work.kb/capture-implementation-frontier.md`'s `## Comparison Table` (marked `<!-- BEGIN/END GENERATED -->`, instructing "re-run and paste over") is stale against a concurrent-session rewrite of `capture-implementation-frontier.sh`, which no longer emits a markdown table — it emits one YAML document per candidate instead. Decide: keep a generated table (revert the script's output shape) or switch the doc to the YAML-dump shape; then reconcile the doc's instruction and marker comment either way.
 - [ ] Two broken links, unrelated to any recent har-browse work, noticed via `llm.kb-validate-links .`: `dev.kb/rust-port.kb/commits.kb/1300-retire-node.md` links up two levels to a sibling of `rust-port.kb/` that isn't there, one level short of where `dev.kb/rust-port.md` actually lives; and `dev.kb/rust-port.kb/handoffs.kb/CLAUDE.md` points at a `commits.kb` entry literally named with an `NNNN` placeholder (probably an intentional template example, not a real dangling link — worth a human glance either way).
 - [ ] Tighten `tsconfig.json` once the codebase is ready. Currently `strict: false` and `checkJs: true` (project-wide). Open items: declare a stub for `playwright-core/lib/server/registry/index` to silence TS7016; consider enabling `noImplicitAny` once fixture-callback params are typed.
@@ -80,3 +73,4 @@ mutation-testing work.
 - [x] [har-browse: handle EPIPE on stdout cleanly](todo.kb/2026-04-24-003-har-browse-handle-epipe-on-stdout-cleanly.md)
 - [x] Wire build-time typecheck — `tsc --noEmit` as a `node:test` (commit 041b31e). Took the project-wide `checkJs: true` path instead of per-file `@ts-check`, which subsumes the planned `@ts-check` sweep.
 - [x] `#capture-done` overlay invisible on aistudio.google.com — Trusted Types CSP blocked `insertAdjacentHTML`. Fixed and user-confirmed live. See devlog `docs/dev/devlog/2026-07-23-000-har-browse-Done-button-invisible-on-aistudio-google-com--Trusted-Types-.md`.
+- [x] Refresh `CLAUDE.md` — landed 2026-07-26: full rewrite (BB1 framing, `attachCapture`/`startCapture` split, Done-button + BARRIER protocols with `tests/barrier_consumed.spec.mjs` pointer, `ideas.kb` cross-link, dead `data/` artifact reference dropped, puppeteer-core-migration warning, Current Work section). The paired `src/capture.mjs` header comment is carved out above.
