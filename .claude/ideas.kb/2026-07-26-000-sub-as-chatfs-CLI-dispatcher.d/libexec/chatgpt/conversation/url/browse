@@ -1,0 +1,14 @@
+#!/usr/bin/env python3
+# Summary: Capture a conversation from chatgpt.com by URL
+# Usage: {cmd} <url> [--headful]
+# Options:
+#   url: ChatGPT conversation URL
+#
+# Opens a Chromium window, records CDP traffic, plucks
+# conversation.json and meta.json into the chat dir.
+import os
+import sys
+
+print(f"url-browse: argv={sys.argv[1:]}")
+for var in ("_CHATFS_ARGS", "_CHATFS_ROOT", "_CHATFS_CACHE"):
+    print(f"{var}={os.environ.get(var)!r}")

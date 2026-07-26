@@ -1,0 +1,6 @@
+#!/usr/bin/env python3
+# Summary: Render chat.md to stdout from a splatted chat dir (bare leaf)
+# Usage: {cmd} <chat_dir>
+import sys
+
+print(f"render: argv={sys.argv[1:]}")

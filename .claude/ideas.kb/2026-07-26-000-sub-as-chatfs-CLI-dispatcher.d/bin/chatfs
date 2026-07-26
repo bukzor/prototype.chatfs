@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+set -euo pipefail
+exec sub --name chatfs --executable "${BASH_SOURCE[0]}" --relative ".." -- "$@"
