@@ -155,7 +155,7 @@ unscoped operation, rather than reading it in place.
   `.kb/` — the frontier survey this session reviewed and ratified.
 - `.claude/todo.kb/2026-07-23-000-*`, `2026-07-23-001-*`, `2026-07-23-002-*`
   — the three todos this session's ratified plan touches.
-- `docs/dev/devlog/2026-07-23-001-capture-cut-semantics-pivot-and-gap-closure-planning.md`
+- `2026-07-23-001-capture-cut-semantics-pivot-and-gap-closure-planning.md`
   — the prior session this one picks up from.
 - `~/.claude/sessions.kb/penguin/har-browse-capture-implementation-frontier.md`,
   `~/.claude/sessions.kb/penguin/har-browse-completeness-bugs.md` — updated

@@ -8,6 +8,12 @@ capture session focus, decisions made, and what to pick up next.
 Use `ls docs/dev/devlog/` for the current index — no hand-curated list
 here.
 
+Subproject-scoped sessions log with their subproject, not here — e.g.
+`packages/har-browse/docs/dev/devlog/`,
+`docs/dev/design-incubators/chatfs-cli-mockup/devlog/`. This directory
+holds project-wide sessions and those predating a subproject's own
+devlog.
+
 ## What belongs in a devlog entry
 
 - **Focus** — what the session was about

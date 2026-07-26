@@ -59,6 +59,30 @@ their work is genuinely pending.
 rejected; the cwd-grep discovery recipe matches ended entries just the
 same, so only deletion actually removes the false "open thread" signal.
 
+### har-browse devlogs re-homed with the package (same session, later)
+
+**Rationale:** har-browse had no `devlog/` of its own — its nine
+session entries lived at repo-root `docs/dev/devlog/`, invisible to a
+subpath `/session-start` (whose discovery find is cwd-relative).
+Devlogs belong with the project they narrate (`Skill(llm-collab)`;
+same ownership principle as todos), and the incubator and
+aistudio-schema subprojects already keep their own. `git mv`'d all
+nine har-browse-scoped entries to
+`packages/har-browse/docs/dev/devlog/` (under the package's existing
+`docs/dev/`, which is also where `llm-collab-devlog -C` targets),
+added the skeleton `CLAUDE.md`, and left a breadcrumb in the root
+devlog README. Reference sweep: sessions.kb devlog lists repointed to
+the full repo-relative package path; moved-file sibling references
+reduced to bare basenames.
+**Alternatives considered:** package-root `devlog/` (incubator style)
+— rejected for consistency with har-browse's existing `docs/dev/`
+tree and the llm-collab skeleton.
+
+Postscript to the deferred-header-comment decision above: the comment
+landed later this same session at the user's direction, once the
+hydration session's `capture.mjs` motion had settled; CLAUDE.md's
+"mechanics:" pointer now targets it as originally intended.
+
 ## Conventions Established
 
 - When a file is contested by a concurrent session, don't re-apply a
@@ -77,4 +101,4 @@ same, so only deletion actually removes the false "open thread" signal.
 - `packages/har-browse/CLAUDE.md` — the rewrite
 - `packages/har-browse/.claude/todo.md` — refresh bullet closed; header-comment bullet added
 - `~/.claude/sessions.kb` commit `ec32208` — frontier entry deletion
-- `docs/dev/devlog/2026-07-23-002-Frontier-ratification--doc-accuracy-pass--todo-restructuring.md` — the ratification this cleanup trails
+- `2026-07-23-002-Frontier-ratification--doc-accuracy-pass--todo-restructuring.md` — the ratification this cleanup trails
