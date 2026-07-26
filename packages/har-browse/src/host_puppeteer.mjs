@@ -33,6 +33,66 @@ async function executablePath() {
   return chromium.executablePath();
 }
 
+// High-entropy client-hint fields, i.e. the ones a site must ask for.
+// Read together with the low-entropy set to reconstruct the browser's
+// own metadata whole.
+const HIGH_ENTROPY_HINTS = [
+  "architecture",
+  "bitness",
+  "model",
+  "platformVersion",
+  "uaFullVersion",
+  "fullVersionList",
+  "wow64",
+];
+
+/**
+ * Read the browser's own User-Agent Client Hint metadata, so a branded
+ * UA override can carry it forward unchanged.
+ *
+ * `Network.setUserAgentOverride` without `userAgentMetadata` makes
+ * Chromium send *no* `Sec-CH-UA*` headers at all -- a UA anomaly no
+ * real browser exhibits (`unblocked-sessions`), and a capture-fidelity
+ * hole besides: the recorded requests would lack headers the live app
+ * sends. The metadata must therefore be truthful, which means asking
+ * the browser rather than constructing it.
+ *
+ * `navigator.userAgentData` requires a secure context, which
+ * `about:blank` is not; `file:` (which Chromium resolves to the
+ * `file:///` root listing) is, and costs no temp file and no network
+ * request.
+ *
+ * @param {Browser} browser
+ * @returns {Promise<any>}
+ */
+async function userAgentMetadata(browser) {
+  const probe = await browser.newPage();
+  try {
+    await probe.goto("file:");
+    const hints = await probe.evaluate(
+      async (keys) =>
+        await /** @type {any} */ (navigator).userAgentData.getHighEntropyValues(
+          keys,
+        ),
+      HIGH_ENTROPY_HINTS,
+    );
+    return {
+      brands: hints.brands,
+      fullVersionList: hints.fullVersionList,
+      fullVersion: hints.uaFullVersion,
+      platform: hints.platform,
+      platformVersion: hints.platformVersion,
+      architecture: hints.architecture,
+      model: hints.model,
+      mobile: hints.mobile,
+      bitness: hints.bitness,
+      wow64: hints.wow64,
+    };
+  } finally {
+    await probe.close();
+  }
+}
+
 /**
  * Adapt one puppeteer page to a `HostSession`: raw send plus blanket
  * event subscription, with the branded UA applied before any capture
@@ -40,11 +100,15 @@ async function executablePath() {
  *
  * @param {Page} page
  * @param {string} brandedUA
+ * @param {any} metadata
  * @returns {Promise<HostSession>}
  */
-async function hostSession(page, brandedUA) {
+async function hostSession(page, brandedUA, metadata) {
   const cdp = await page.createCDPSession();
-  await cdp.send("Network.setUserAgentOverride", { userAgent: brandedUA });
+  await cdp.send("Network.setUserAgentOverride", {
+    userAgent: brandedUA,
+    userAgentMetadata: metadata,
+  });
   return {
     send: (method, params) =>
       cdp.send(/** @type {any} */ (method), /** @type {any} */ (params)),
@@ -85,6 +149,7 @@ async function hostSession(page, brandedUA) {
 export async function attachCapture(page, { howto, drainGraceMs } = {}) {
   const browser = page.browser();
   const brandedUA = `${await browser.userAgent()} ${UA_SUFFIX}`;
+  const metadata = await userAgentMetadata(browser);
 
   /** @type {() => void} */
   let resolveCut = () => {};
@@ -103,7 +168,8 @@ export async function attachCapture(page, { howto, drainGraceMs } = {}) {
           if (p) cb(p);
         });
       },
-      session: (target) => hostSession(/** @type {Page} */ (target), brandedUA),
+      session: (target) =>
+        hostSession(/** @type {Page} */ (target), brandedUA, metadata),
       cut,
     },
     { drainGraceMs },
@@ -164,6 +230,14 @@ export async function startCapture({
     executablePath: await executablePath(),
     userDataDir: profileDir,
     headless,
+    // Capture drives the Network domain itself; puppeteer's
+    // HTTPRequest/HTTPResponse, the only casualties of turning its
+    // network manager off, go unused here. Turning it off also stops
+    // it from sending a metadata-less `Network.setUserAgentOverride`
+    // to every session *it* attaches (see `userAgentMetadata` above),
+    // which matters for the sessions we never override ourselves --
+    // OOPIF frames, and new targets before capture attaches.
+    networkEnabled: false,
     // Use the real window size: a fixed viewport override pushes
     // fixed-position elements off-screen on Crostini's smaller windows.
     defaultViewport: null,
@@ -180,9 +254,17 @@ export async function startCapture({
       "--hide-crash-restore-bubble",
     ],
   });
-  // Human may take any amount of time to complete login/capture.
+  // A persistent profile restores the previous session's tabs. Only
+  // this page and targets created after attach get wired for capture,
+  // so a human who wandered into a restored tab would generate traffic
+  // no session is listening to -- a silent miss. Close them, leaving
+  // the capture window single-tabbed.
   const pages = await browser.pages();
   const page = pages[0] ?? (await browser.newPage());
+  for (const stale of pages.slice(1)) {
+    await stale.close().catch(() => {});
+  }
+  // Human may take any amount of time to complete login/capture.
   page.setDefaultTimeout(0);
 
   const { events, done } = await attachCapture(page, { howto, drainGraceMs });
@@ -208,6 +290,9 @@ export async function startCapture({
   const nav = await page.createCDPSession();
   await nav.send("Page.navigate", { url });
   await nav.detach();
+  // The captured page may not be the window's front tab (e.g. a
+  // restored blank tab sits in front of it); the human needs to see it.
+  await page.bringToFront();
 
   const close = async () => {
     await browser.close().catch(() => {});
