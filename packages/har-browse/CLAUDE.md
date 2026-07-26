@@ -71,6 +71,9 @@ narrative history: `docs/dev/devlog/`. Open session threads: grep
 - `tests/` -- `pnpm test` = node:test units (incl. a `tsc --noEmit`
   typecheck gate) + Playwright e2e against `toy_server/` and
   `tests/_common/server.mjs`.
+- `sbin/` -- hand-run tools we build for ourselves (capture forensics,
+  live-session probes). Check here before writing an analysis script;
+  see `sbin/CLAUDE.md`.
 
 ## Protocols
 
