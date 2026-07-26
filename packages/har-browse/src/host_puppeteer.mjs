@@ -30,7 +30,7 @@ const UA_PRODUCT = `${pkg.name}/${pkg.version} (+${pkg.homepage})`;
  * would suggest.
  *
  * The convention is unusable against at least one major provider.
- * Measured 2026-07-26 (`sbin/ua-gate-probe.mjs`): Google denies
+ * Measured 2026-07-26 (`design.kb/040-design.kb/self-identification.kb/`): Google denies
  * aistudio's GenerateContent outright -- `PERMISSION_DENIED`, while
  * every other RPC on the same service succeeds -- whenever anything
  * trails `Safari/537.36`. A neutral `Foo/1.0` is refused exactly like

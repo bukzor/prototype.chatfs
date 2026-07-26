@@ -29,7 +29,7 @@ as providers change.
 
 ## Re-measuring
 
-`sbin/ua-gate-probe.mjs` is the instrument: it replays one real captured
+`ua-position-gate.mjs` is the instrument: it replays one real captured
 request per variant from page context, control first. Update the tables
 here in place with the new date rather than appending a second round —
 a stale row that disagrees with a fresh one is worse than no row.

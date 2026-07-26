@@ -81,7 +81,7 @@ test("captured requests carry client hints and a branded User-Agent", async ({
     /har-browse\/\d[\d.]*; \+https?:\/\//,
   );
   // Anything trailing the browser's last product is what Google's
-  // aistudio gate refuses -- measured, not guessed (sbin/ua-gate-probe.mjs
+  // aistudio gate refuses -- measured, not guessed (design.kb/040-design.kb/self-identification.kb/
   // and the header comment on brandUserAgent). Identification lives in
   // the platform comment precisely so this stays true.
   expect(userAgent, "nothing trails the browser's product list").toMatch(

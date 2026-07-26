@@ -24,6 +24,12 @@ the improvement instead of the reflex.
   `requestWillBeSentExtraInfo` rather than `requestWillBeSent`, because
   measuring the wrong one costs an afternoon.
 - Cross-package tools belong in a repo-root `sbin/`, not here.
+- A tool whose whole job is producing or re-checking the evidence behind
+  one kb entry belongs **next to that entry**, not here: sibling
+  `entry.mjs` beside `entry.md`, or a sibling `entry.d/` if it needs
+  more than one file. Colocation is what keeps the claim and its
+  instrument from drifting apart, and `sbin/` is for tools that answer
+  questions, not tools that hold a document honest.
 
 Throwaway really is throwaway: scratch that answers one question and
 dies goes to `trash/`, which is gitignored. The test is whether the next

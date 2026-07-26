@@ -27,7 +27,7 @@ than the disclosure it was meant to carry.
 It is unmeasured against the aistudio gate. `Sec-CH-UA` may get the same
 shape check the `User-Agent` string does, which is the sort of thing to
 learn before shipping rather than after. Testing it needs
-`sbin/ua-gate-probe.mjs` fixed to send `userAgentMetadata` first — see
+`../ua-position-gate.mjs` fixed to send `userAgentMetadata` first — see
 the method caveat in `../ua-position-gate.md`.
 
 ## Cost to implement

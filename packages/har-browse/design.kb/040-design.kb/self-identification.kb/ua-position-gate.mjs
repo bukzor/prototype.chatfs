@@ -2,7 +2,11 @@
 // @ts-check
 // Which User-Agent strings does a provider refuse?
 //
-//   sbin/ua-gate-probe.mjs trash/live-verify/run8.jsonl [--match GenerateContent]
+//   ./ua-position-gate.mjs trash/live-verify/run8.jsonl [--match GenerateContent]
+//
+// The instrument behind the sibling `ua-position-gate.md`, and the way
+// to re-measure it when a provider changes. Its variant list and that
+// document's tables are meant to correspond row for row.
 //
 // Verified 2026-07-26 that aistudio answers PERMISSION_DENIED to
 // GenerateContent when our tool-identifying UA suffix is present, and
@@ -25,7 +29,7 @@ import { createInterface } from "node:readline";
 import { parseArgs } from "node:util";
 import puppeteer from "puppeteer-core";
 import { chromium } from "playwright-core";
-import { cachePath } from "../src/cache.mjs";
+import { cachePath } from "../../../src/cache.mjs";
 
 const { values, positionals } = parseArgs({
   options: {
@@ -38,26 +42,48 @@ const { values, positionals } = parseArgs({
 
 const TOOL = "har-browse/1.0.0";
 const HOME = "https://github.com/bukzor/prototype.chatfs";
+const PLATFORM = "(X11; Linux x86_64)";
 
-// Each variant is a way of being honest about what we are. The
-// question is which of them a provider treats as disqualifying.
+/**
+ * Each variant is a way of being honest about what we are; the question
+ * is which of them a provider treats as disqualifying. `name` doubles
+ * as the `edit` column of the sibling .md's table -- keep them phrased
+ * so a run's summary can be pasted straight in.
+ *
+ * @typedef {{
+ *   name: string,
+ *   ua: (base: string) => string,
+ *   header?: [string, string],
+ * }} Variant
+ * @type {Variant[]}
+ */
 const VARIANTS = [
-  { name: "control: untouched UA", ua: (base) => base },
-  { name: "suffix + contact URL (shipped)", ua: (base) => `${base} ${TOOL} (+${HOME})` },
-  { name: "suffix, no URL", ua: (base) => `${base} ${TOOL}` },
-  { name: "suffix, no version", ua: (base) => `${base} har-browse` },
+  { name: "none (control)", ua: (base) => base },
+  {
+    name: "`+ har-browse/1.0.0 (+URL)` after `Safari/537.36`",
+    ua: (base) => `${base} ${TOOL} (+${HOME})`,
+  },
+  { name: "`+ har-browse/1.0.0` after `Safari/537.36`", ua: (base) => `${base} ${TOOL}` },
+  { name: "`+ har-browse` after `Safari/537.36`", ua: (base) => `${base} har-browse` },
   // Is any trailing product refused, or only a name that reads like a
   // tool? Distinguishes "unknown token in the product list" from a
   // keyword match on ours.
-  { name: "suffix, neutral name", ua: (base) => `${base} Foo/1.0` },
+  { name: "`+ Foo/1.0` after `Safari/537.36`", ua: (base) => `${base} Foo/1.0` },
   {
-    name: "inside the platform comment",
-    ua: (base) => base.replace("(X11; Linux x86_64)", `(X11; Linux x86_64; ${TOOL})`),
+    name: "`(X11; Linux x86_64; har-browse/1.0.0)`",
+    ua: (base) => base.replace(PLATFORM, `(X11; Linux x86_64; ${TOOL})`),
   },
   {
-    name: "platform comment, with contact URL",
-    ua: (base) =>
-      base.replace("(X11; Linux x86_64)", `(X11; Linux x86_64; ${TOOL}; +${HOME})`),
+    name: "`(X11; Linux x86_64; har-browse/1.0.0; +URL)`",
+    ua: (base) => base.replace(PLATFORM, `(X11; Linux x86_64; ${TOOL}; +${HOME})`),
+  },
+  // Not a UA edit at all: the tidiest disclosure imaginable, and the
+  // one CORS forbids. Kept in the series so the .md's last row stays
+  // reproducible alongside the others.
+  {
+    name: "control UA, disclosure in an `X-Har-Browse` header",
+    ua: (base) => base,
+    header: ["X-Har-Browse", `${TOOL} (+${HOME})`],
   },
 ];
 
@@ -91,7 +117,7 @@ async function templateFrom(path, match) {
 
 const capture = positionals[0];
 if (!capture) {
-  console.error("usage: ua-gate-probe.mjs <capture.jsonl> [--match SUBSTRING]");
+  console.error("usage: ua-position-gate.mjs <capture.jsonl> [--match SUBSTRING]");
   process.exit(2);
 }
 const template = await templateFrom(capture, values.match);
@@ -125,7 +151,12 @@ try {
   const cdp = await page.createCDPSession();
   const baseUA = await browser.userAgent();
 
-  for (const variant of VARIANTS) {
+  console.log(`base UA: ${baseUA}\n`);
+
+  /** @type {Array<{name: string, status: number}>} */
+  const summary = [];
+
+  for (const [n, variant] of VARIANTS.entries()) {
     const ua = variant.ua(baseUA);
     await cdp.send("Network.setUserAgentOverride", { userAgent: ua });
     const result = await page.evaluate(
@@ -150,19 +181,33 @@ try {
       variant.header ?? null,
     );
 
-    const verdict = result.status === 200 ? "OK     " : "REFUSED";
-    console.log(`${verdict} ${String(result.status).padEnd(4)} ${variant.name}`);
-    console.log(`             ua: ...${ua.slice(-72)}`);
-    if (result.status !== 200) console.log(`             ${result.text.replace(/\n/g, " ")}`);
+    summary.push({ name: variant.name, status: result.status });
+
+    console.log(`[${n + 1}/${VARIANTS.length}] ${variant.name}`);
+    console.log(`   UA  ${ua}`);
+    if (variant.header) console.log(`   +   ${variant.header[0]}: ${variant.header[1]}`);
+    console.log(`   ==> ${result.status === 200 ? "OK" : "REFUSED"} ${result.status}`);
+    if (result.status !== 200) {
+      console.log(`       ${result.text.replace(/\s+/g, " ").trim()}`);
+    }
+    console.log("");
 
     if (variant === VARIANTS[0] && result.status !== 200) {
       console.log(
-        "\nControl failed: the captured credentials have expired, or the\n" +
+        "Control failed: the captured credentials have expired, or the\n" +
           "request is not replayable. Take a fresh capture and rerun --\n" +
           "no conclusion can be drawn from the variants below it.",
       );
       break;
     }
+  }
+
+  // Pasteable straight into the sibling .md's measurement table.
+  console.log(`--- summary (${new Date().toISOString().slice(0, 10)})\n`);
+  console.log("| edit | result |");
+  console.log("| --- | --- |");
+  for (const { name, status } of summary) {
+    console.log(`| ${name} | ${status || "did not reach the wire"} |`);
   }
 } finally {
   await browser.close();

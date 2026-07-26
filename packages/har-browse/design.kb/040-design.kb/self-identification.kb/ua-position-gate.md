@@ -37,8 +37,9 @@ actually is.
 
 ## Measured 2026-07-26
 
-`sbin/ua-gate-probe.mjs`, aistudio `GenerateContent`, one live session,
-control first. Every row is the full Chromium UA with the stated edit.
+The sibling `ua-position-gate.mjs`, aistudio `GenerateContent`, one
+live session, control first. Every row is the full Chromium UA with the
+stated edit; the table is the script's own summary output, pasted.
 
 | edit | result |
 | --- | --- |
@@ -49,12 +50,13 @@ control first. Every row is the full Chromium UA with the stated edit.
 | `+ Foo/1.0` after `Safari/537.36` | 403 |
 | `(X11; Linux x86_64; har-browse/1.0.0)` | 200 |
 | `(X11; Linux x86_64; har-browse/1.0.0; +URL)` | 200 |
-| control UA, disclosure in an `X-Har-Browse` header | CORS preflight failure |
+| control UA, disclosure in an `X-Har-Browse` header | did not reach the wire |
 
-The last row is not a policy result: a custom header is not in the
-endpoint's `Access-Control-Allow-Headers`, so the request never leaves
-the browser. Header-borne disclosure is unavailable to page-context
-traffic regardless of what the provider would think of it.
+The last row is not a policy result: the custom header is not in the
+endpoint's `Access-Control-Allow-Headers`, so preflight kills the
+request and the provider never sees it. Header-borne disclosure is
+unavailable to page-context traffic regardless of what the provider
+would think of it.
 
 ### Caveat on method
 

@@ -91,7 +91,7 @@ test("branding a Chromium UA extends the system-information comment", () => {
   assert.equal(elements[1].kind, "comment");
   assert.match(elements[1].text, /^X11; Linux x86_64; har-browse\/\d[\d.]*; \+https?:\/\//);
   // The gate Google enforces is on shape: nothing may trail the
-  // browser's product list (sbin/ua-gate-probe.mjs).
+  // browser's product list (design.kb/040-design.kb/self-identification.kb/).
   assert.deepEqual(
     elements.filter((_, n) => n !== 1),
     parseUserAgent(CHROMIUM).filter((_, n) => n !== 1),
