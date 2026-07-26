@@ -10,7 +10,7 @@ import { test, after } from "node:test";
 import assert from "node:assert/strict";
 
 import { chromium } from "../src/playwright.mjs";
-import { startCapture } from "../src/capture.mjs";
+import { startCapture } from "../src/host_playwright.mjs";
 
 const ROOT = mkdtempSync(join(tmpdir(), "har-browse-startcap-test-"));
 after(() => rmSync(ROOT, { recursive: true, force: true }));

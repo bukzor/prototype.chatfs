@@ -1,6 +1,6 @@
 // Done-button protocol: the injected overlay carries `#capture-done`,
-// whose click handler sets `dataset.clicked = "true"`; `capture.mjs`
-// waits on that via `page.waitForFunction`. The signal is DOM state, not
+// whose click handler sets `dataset.clicked = "true"`;
+// `host_playwright.mjs` waits on that via `page.waitForFunction`. The signal is DOM state, not
 // a `harBrowseMark("DONE")` binding call or a CDP event, so that it
 // survives a page that has torn down or never reached our binding, and
 // so the click needs nothing from the page's JS context.

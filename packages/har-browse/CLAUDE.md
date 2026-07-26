@@ -36,12 +36,17 @@ narrative history: `docs/dev/devlog/`. Open session threads: grep
   or closes the window. Profile state persists under
   `${XDG_CACHE_HOME:-$HOME/.cache}/har-browse/profile/<name>`, so
   real-site logins survive across runs.
-- `src/capture.mjs` -- the capture core, two surfaces:
-  `attachCapture(page)` wires CDP sessions onto an existing page and
-  returns `{events, done}`; `startCapture(opts)` is the convenience
-  wrapper (launch persistent context + attach + goto). Response bodies
-  attach at `Network.responseReceived.params.response.body`
-  (`.encoding = "base64"` when applicable).
+- `src/capture.mjs` -- venue-agnostic capture semantics
+  (`captureStream(host)`): pending-ledger drain, BARRIER, body
+  attachment (bodies land at
+  `Network.responseReceived.params.response.body`, `.encoding =
+  "base64"` when applicable). Consumes the `CaptureHost` seam -- "CDP
+  sessions + events per target" plus a cut signal -- defined in the
+  same file.
+- `src/host_playwright.mjs` -- the current host shell behind that seam:
+  `attachCapture(page)` wires capture onto an existing page and returns
+  `{events, done}`; `startCapture(opts)` is the flow (launch persistent
+  context + attach + optional origin-storage clear + goto).
 - `src/inject.mjs` -- persistent Done-button overlay; `addInitScript`
   so it survives navigations, Trusted-Types-safe injection.
 - `src/playwright.mjs` -- local-idiom wrapper: inside this package,
@@ -85,8 +90,8 @@ narrative history: `docs/dev/devlog/`. Open session threads: grep
   defaults off -- primitive versus flow. Coverage:
   `tests/clear_origin_storage.spec.mjs`, `tests/session_settings.spec.mjs`.
 - **Done button:** the injected overlay sets
-  `#capture-done[data-clicked="true"]` on click; `capture.mjs` observes
-  it via `page.waitForFunction`. DOM-dataset on purpose -- no CDP
+  `#capture-done[data-clicked="true"]` on click; `host_playwright.mjs`
+  observes it via `page.waitForFunction` and resolves the seam's cut. DOM-dataset on purpose -- no CDP
   round-trip needed from page context.
 - **BARRIER marks:** page JS calls `window.harBrowseMark("BARRIER:...")`
   (CDP binding) carrying a page-attested list of the responses it has

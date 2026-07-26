@@ -3,7 +3,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { startCapture as _startCapture } from "../src/capture.mjs";
+import { startCapture as _startCapture } from "../src/host_playwright.mjs";
 import { startServer } from "./_common/server.mjs";
 import { spawnToyServer } from "./_common/toy_server.mjs";
 

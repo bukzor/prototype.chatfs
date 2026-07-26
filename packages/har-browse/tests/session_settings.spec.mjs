@@ -1,6 +1,6 @@
 /**
- * Per-CDP-session capture settings, applied at wire-up in
- * `attachCapture`'s `wireSession`. Both serve one motive: force client
+ * Per-CDP-session capture settings, applied at wire-up in the capture
+ * core's `wireSession`. Both serve one motive: force client
  * state through the observable network, so a response the page uses is
  * a response the capture saw.
  *

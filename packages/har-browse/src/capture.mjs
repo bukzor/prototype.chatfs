@@ -1,4 +1,10 @@
 // @ts-check
+// Venue-agnostic capture semantics: pending-ledger, drain, BARRIER,
+// body attachment. Everything browser-specific reaches this module
+// through the `CaptureHost` seam below -- "CDP sessions + events per
+// target" plus a cut signal. `host_playwright.mjs` is the current
+// shell behind the seam.
+//
 // BARRIER protocol: a page-side `harBrowseMark("BARRIER:...")` binding
 // call must land in the stream *after* every response the page had
 // consumed when it fired. Mechanics: `onBindingCalled` snapshots
@@ -6,38 +12,56 @@
 // `Promise.allSettled` of that snapshot; concurrent BARRIERs serialize
 // via allSettled's superset ordering. Formal invariant:
 // `tests/barrier_consumed.spec.mjs`.
-import { mkdirSync } from "node:fs";
 import { EventEmitter, on } from "node:events";
-import { chromium } from "./playwright.mjs";
-import { injectOverlay } from "./inject.mjs";
 
 /** @typedef {{ method: string, params: any }} CDPEvent */
-/** @typedef {import("playwright").Page} Page */
-/** @typedef {import("playwright").BrowserContext} BrowserContext */
 
-// Bounds the final drain (see `attachCapture`'s `done`): a request that
+/**
+ * One target's CDP session.
+ *
+ * @typedef {object} HostSession
+ * @property {(method: string, params?: any) => Promise<any>} send
+ * @property {(cb: (method: string, params: any) => void) => void} onEvent
+ *   Blanket subscription: every CDP event on this session, no filter.
+ */
+
+/**
+ * The host seam.
+ *
+ * @typedef {object} CaptureHost
+ * @property {unknown} initialTarget
+ * @property {(cb: (target: unknown) => void) => void} onTarget
+ *   Targets appearing after attach (popups). The callback's returned
+ *   promise is tracked by the drain, so wiring still in progress at
+ *   the cut is awaited, not raced.
+ * @property {(target: unknown) => Promise<HostSession>} session
+ * @property {Promise<void>} cut
+ *   Resolves at the capture cut -- Done click or window close. Never
+ *   rejects.
+ */
+
+// Bounds the final drain (see `captureStream`'s `done`): a request that
 // never reaches a terminal CDP event (hung, or the CDP session dies
 // mid-flight) would otherwise block shutdown forever, since the caller
-// only closes the context after the events stream ends.
+// only closes the browser after the events stream ends.
 const DRAIN_GRACE_MS = 2000;
 
 /**
- * Stream CDP events from an open page as `{method, params}` JSONL —
+ * Stream CDP events from a host's targets as `{method, params}` JSONL --
  * chrome-har's wire format. Response bodies attach at
  * `Network.responseReceived.params.response.body`
- * (+ `.encoding = "base64"` when applicable). Stream ends on injected
- * "Done" click or context close. Caller owns the browser lifecycle.
+ * (+ `.encoding = "base64"` when applicable). Stream ends after
+ * `host.cut` resolves and the drain settles. Caller owns the browser
+ * lifecycle.
  *
- * @param {Page} page
- * @param {{ howto?: string, drainGraceMs?: number }} [opts]
+ * @param {CaptureHost} host
+ * @param {{ drainGraceMs?: number }} [opts]
  * @returns {Promise<{
  *   events: AsyncIterable<CDPEvent>,
  *   done: Promise<void>,
  * }>}
  */
-export async function attachCapture(page, { howto, drainGraceMs = DRAIN_GRACE_MS } = {}) {
-  const context = page.context();
-
+export async function captureStream(host, { drainGraceMs = DRAIN_GRACE_MS } = {}) {
   const emitter = new EventEmitter();
   // Subscribe before any CDP attachment: on() doesn't retroactively
   // capture events emitted before its iterator existed.
@@ -94,9 +118,9 @@ export async function attachCapture(page, { howto, drainGraceMs = DRAIN_GRACE_MS
     }
   };
 
-  /** @param {Page} subject */
-  const wireSession = async (subject) => {
-    const session = await context.newCDPSession(subject);
+  /** @param {unknown} target */
+  const wireSession = async (target) => {
+    const session = await host.session(target);
 
     // RR arrives with headers; stashed by requestId, flushed on LF/LFail
     // with body attached. `getResponseBody` is one-shot per response.
@@ -178,21 +202,13 @@ export async function attachCapture(page, { howto, drainGraceMs = DRAIN_GRACE_MS
       "Runtime.bindingCalled": onBindingCalled,
     };
 
-    // Blanket passthrough via emit-override: handlers special-case the
-    // methods that need transformation; everything else (Page.*, Target.*,
-    // etc.) flows through unchanged so downstream HAR builders see the
-    // full event set. CDPSession extends EventEmitter internally — cast
-    // through it to reach `.emit`, which isn't in playwright's public
-    // surface.
-    const sessionBus = /** @type {EventEmitter} */ (/** @type {unknown} */ (session));
-    const origEmit = sessionBus.emit.bind(sessionBus);
-    sessionBus.emit = function (name, ...args) {
-      if (typeof name === "string" && name.includes(".")) {
-        const params = args[0] ?? {};
-        (cdpHandlers[name] ?? ((p) => enqueue({ method: name, params: p })))(params);
-      }
-      return origEmit(name, ...args);
-    };
+    // Blanket passthrough: handlers special-case the methods that need
+    // transformation; everything else (Page.*, Target.*, etc.) flows
+    // through unchanged so downstream HAR builders see the full event
+    // set.
+    session.onEvent((method, params) => {
+      (cdpHandlers[method] ?? ((p) => enqueue({ method, params: p })))(params);
+    });
 
     await session.send("Network.enable");
     // Force client state through the observable network: full bodies
@@ -207,20 +223,12 @@ export async function attachCapture(page, { howto, drainGraceMs = DRAIN_GRACE_MS
     await session.send("Runtime.addBinding", { name: "harBrowseMark" });
   };
 
-  await wireSession(page);
-  context.on("page", (p) => track(wireSession(p)));
-
-  await injectOverlay(page, { howto });
+  await wireSession(host.initialTarget);
+  host.onTarget((t) => track(wireSession(t)));
 
   // Drain inFlight (body-fetches + deferred BARRIERs) before "end" so
   // their emits land in the queue first.
-  const done = Promise.race([
-    page.waitForFunction(
-      () => document.getElementById("capture-done")?.dataset.clicked === "true",
-    ),
-    context.waitForEvent("close"),
-  ])
-    .catch(() => {})
+  const done = host.cut
     .finally(async () => {
       await Promise.race([
         Promise.allSettled([...inFlight, ...pendingInFlight]),
@@ -236,73 +244,4 @@ export async function attachCapture(page, { howto, drainGraceMs = DRAIN_GRACE_MS
   })();
 
   return { events, done };
-}
-
-/**
- * Launch a persistent-context browser, navigate, and return a capture
- * session. Per-profile state persists under `profileDir`.
- *
- * `clearOriginStorage` defaults off here and on in the `har-browse`
- * CLI. The asymmetry is deliberate: this is the primitive, and it does
- * only what it is asked; the CLI is the capture *flow*, where a
- * silently payload-free capture is the worse failure.
- *
- * @param {{
- *   url: string,
- *   profileDir: string,
- *   howto?: string,
- *   headless?: boolean,
- *   drainGraceMs?: number,
- *   clearOriginStorage?: boolean,
- * }} opts
- * @returns {Promise<{
- *   page: Page,
- *   context: BrowserContext,
- *   events: AsyncIterable<CDPEvent>,
- *   done: Promise<void>,
- *   close: () => Promise<void>,
- * }>}
- */
-export async function startCapture({
-  url,
-  profileDir,
-  howto,
-  headless = false,
-  drainGraceMs,
-  clearOriginStorage = false,
-}) {
-  mkdirSync(profileDir, { recursive: true });
-
-  const context = await chromium.launchPersistentContext(profileDir, {
-    headless,
-  });
-  // Human may take any amount of time to complete login/capture.
-  context.setDefaultTimeout(0);
-
-  const page = context.pages()[0] ?? (await context.newPage());
-  const { events, done } = await attachCapture(page, { howto, drainGraceMs });
-  if (clearOriginStorage) {
-    // Wipe the target origin's app-level data caches BEFORE navigation,
-    // so an app that persisted them (claude.ai's React Query cache in
-    // IndexedDB; a service worker's cache-first store) must
-    // re-materialize its data as capturable network traffic. Origin
-    // comes from the target `url` — the page still sits on about:blank
-    // here. Cookies are untouched: login state is why the profile
-    // persists at all. `local_storage` stays out for the same reason
-    // (some providers keep auth tokens there).
-    const session = await context.newCDPSession(page);
-    await session.send("Storage.clearDataForOrigin", {
-      origin: new URL(url).origin,
-      storageTypes: "indexeddb,cache_storage",
-    });
-    await session.detach();
-  }
-  await page.goto(url, { waitUntil: "commit" });
-
-  const close = async () => {
-    await context.close().catch(() => {});
-    await done;
-  };
-
-  return { page, context, events, done, close };
 }

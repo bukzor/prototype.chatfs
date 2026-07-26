@@ -1,5 +1,5 @@
 /**
- * `attachCapture`'s final drain must wait for requests that are still
+ * The capture core's final drain must wait for requests that are still
  * in flight (sent but not yet finished/failed) at "Done Capturing" time
  * -- not just requests that already reached `loadingFinished`, which is
  * all `inFlight` tracked before this fix. The wait is bounded by an

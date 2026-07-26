@@ -76,12 +76,17 @@ this migration's first step rather than inherited from the cut work.
 
 ## Implementation Steps
 
-- [ ] **Extract the host seam** as the migration's first move (step
+- [x] **Extract the host seam** as the migration's first move (step
       moved here 2026-07-26 from `2026-07-23-000-*`): capture semantics
       consume "CDP sessions + events per target" through one small
       interface, so the swap below is a shell replacement. The
       abort-based cut, now sequenced after this migration, consumes the
-      same seam.
+      same seam. Landed 2026-07-26: `src/capture.mjs` is the
+      venue-agnostic core (`captureStream(host)` over a `CaptureHost`
+      typedef: `initialTarget`/`onTarget`/`session(target)`/`cut`);
+      `src/host_playwright.mjs` is the shell (`attachCapture`/
+      `startCapture` moved verbatim, emit-override session adaptation,
+      overlay + cut race). Full suite green, zero behavior change.
 - [ ] **Tripwires next (the only ways this migration aborts; entry is
       unconditional):** smoke-launch puppeteer-core on Crostini --
       persistent profile, headed, CDP attach, UA override -- before any

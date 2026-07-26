@@ -16,7 +16,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test, expect } from "./fixtures.mjs";
 import { cachePath } from "../src/cache.mjs";
-import { startCapture } from "../src/capture.mjs";
+import { startCapture } from "../src/host_playwright.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const CLI = join(__dirname, "..", "src", "har_browse.mjs");
