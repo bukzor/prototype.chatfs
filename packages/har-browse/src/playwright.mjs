@@ -1,12 +1,12 @@
-// Local-idiom wrapper on `playwright`. Inside this package, import
-// `{ chromium } from "./playwright.mjs"` instead of `"playwright"`; the
-// wrapper threads a branded User-Agent that matches the launch mode,
-// applies our tell-hiding args, and sets Crostini-friendly defaults.
+// Local-idiom wrapper on `playwright`, the test-suite shell (the
+// production capture host is `host_puppeteer.mjs`). Inside this
+// package, import `{ chromium } from "./playwright.mjs"` instead of
+// `"playwright"`; the wrapper applies our tell-hiding args and
+// Crostini-friendly defaults.
 //
 // Caller-supplied opts win: scalars override our defaults; arrays
 // (`ignoreDefaultArgs`, `args`) have caller entries appended.
 import * as playwright from "playwright";
-import { userAgent } from "./user-agent.mjs";
 
 export const chromium = {
   /**
@@ -14,12 +14,9 @@ export const chromium = {
    * @param {Parameters<typeof playwright.chromium.launchPersistentContext>[1]} [opts]
    */
   async launchPersistentContext(profileDir, opts = {}) {
-    const headless = opts.headless ?? true;
     return playwright.chromium.launchPersistentContext(profileDir, {
       ...opts,
-      headless,
-      userAgent:
-        opts.userAgent ?? (await userAgent(playwright.chromium, headless)),
+      headless: opts.headless ?? true,
       // Playwright defaults to a 1280x720 viewport override, which doesn't
       // match the physical window size on Crostini — fixed-position
       // elements render off-screen. `null` uses the actual window size.

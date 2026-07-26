@@ -120,10 +120,19 @@ this migration's first step rather than inherited from the cut work.
 - [ ] Swap launcher/profile/transport: `puppeteer.launch({executablePath,
       userDataDir, headless: false})`; port the per-profile
       `${XDG_CACHE_HOME}/har-browse/profile/${profile}` layout unchanged.
-- [ ] Replace the UA subsystem with `Browser.getVersion` +
+- [x] Replace the UA subsystem with `Browser.getVersion` +
       `Network.setUserAgentOverride`; delete `user-agent.mjs`,
       `cache.mjs`, their tests; retire the `ua-*`/`cache-*` mutation
-      entries whose target code is gone.
+      entries whose target code is gone. Landed 2026-07-26, two
+      deviations: `cache.mjs` STAYS (its `cachePath` serves the CLI's
+      profile dirs -- only the UA cache usage died) with its
+      `cachePath`-scoped mutation entries; and the swap trades away
+      launch-time whole-context UA branding for per-attached-session
+      override, leaving popup-first-request/non-page-target traffic
+      unbranded until auto-attach (`2026-07-23-001-*`) closes that
+      window by construction (user-ratified this trade 2026-07-26).
+      13 UA-scoped mutation entries deleted; UA-suffix correctness
+      re-files against the new shell under the mutation step below.
 - [ ] Delete `playwright.mjs` launch workarounds; verify on Crostini
       that a plain launch doesn't reintroduce them (the viewport
       override and SwiftShader flag were Playwright defaults, not

@@ -1,9 +1,8 @@
 // @ts-check
-// Playwright host shell behind `capture.mjs`'s CaptureHost seam:
+// Playwright host shell behind `capture.mjs`'s CaptureHost seam, the
+// test suite's driver (the production shell is `host_puppeteer.mjs`):
 // launcher, profile flow, per-target CDP session adaptation, overlay
-// install, and the cut race (Done click / window close). Ratified for
-// replacement by puppeteer-core (todo.kb/2026-07-23-002-*) -- the
-// semantics core stays; only this shell swaps.
+// install, and the cut race (Done click / window close).
 import { mkdirSync } from "node:fs";
 import { EventEmitter } from "node:events";
 import { chromium } from "./playwright.mjs";

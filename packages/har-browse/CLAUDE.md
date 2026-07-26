@@ -13,10 +13,12 @@ the chatfs pipeline's BB1 (capture) stage; the chatfs-cli-mockup
 incubator's provider pluck/splat stages consume its stream. Mission,
 requirements, and capture semantics: `design.kb/`.
 
-Playwright hosts the capture today but is ratified for replacement by
-puppeteer-core (`.claude/todo.kb/2026-07-23-002-*`; rationale in
-`design.kb/050-components.kb/toy-capture.md`) -- avoid deepening
-Playwright coupling in new work; it stays as the test-suite driver.
+puppeteer-core hosts the production capture (`src/host_puppeteer.mjs`;
+ratification rationale in
+`design.kb/070-future-work.kb/capture-implementation-frontier.md`);
+Playwright is a devDependency driving the test suite only -- avoid
+introducing it into the production path (guarded intent:
+`.claude/todo.kb/2026-07-23-002-*`'s import-graph step).
 
 ## Current Work
 
@@ -43,20 +45,26 @@ narrative history: `docs/dev/devlog/`. Open session threads: grep
   "base64"` when applicable). Consumes the `CaptureHost` seam -- "CDP
   sessions + events per target" plus a cut signal -- defined in the
   same file.
-- `src/host_playwright.mjs` -- the current host shell behind that seam:
-  `attachCapture(page)` wires capture onto an existing page and returns
-  `{events, done}`; `startCapture(opts)` is the flow (launch persistent
-  context + attach + optional origin-storage clear + goto).
+- `src/host_puppeteer.mjs` -- the production host shell behind that
+  seam (what the CLI runs): puppeteer-core launcher/profile/transport,
+  blanket events via the `'*'` wildcard, per-session branded-UA
+  override (`ToolName/Version (+URL)` suffix), `Page.navigate` for
+  commit-semantics navigation. Browser executable: `$HAR_BROWSE_BROWSER`,
+  else Playwright's pinned Chromium via dynamic import.
+- `src/host_playwright.mjs` -- the test suite's host shell, same
+  surface: `attachCapture(page)` wires capture onto an existing page
+  and returns `{events, done}`; `startCapture(opts)` is the flow
+  (launch persistent context + attach + optional origin-storage clear
+  + goto).
 - `src/inject.mjs` -- persistent Done-button overlay; `addInitScript`
   so it survives navigations, Trusted-Types-safe injection.
 - `src/playwright.mjs` -- local-idiom wrapper: inside this package,
-  import `chromium` from here, never from `"playwright"`. Threads the
-  branded User-Agent, strips automation tells, applies
-  Crostini-friendly defaults.
+  import `chromium` from here, never from `"playwright"`. Strips
+  automation tells, applies Crostini-friendly defaults.
 - `src/cdp_to_har.mjs` -- CLI (`cdp-to-har`): JSONL stdin -> HAR 1.2
   stdout via chrome-har.
-- `src/cache.mjs`, `src/user-agent.mjs` -- XDG cache paths (hive-style
-  keys); UA probe with `ToolName/Version (+URL)` self-identification.
+- `src/cache.mjs` -- XDG cache paths (hive-style keys); serves the
+  CLI's per-profile directories.
 - `toy_server/` -- static toy app on :8000 (`api/conversation`: 6-message
   tree with one fork) for tests and local runs; `toy_pluck.sh` extracts
   that fixture's body from a captured stream.

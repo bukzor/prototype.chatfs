@@ -12,14 +12,3 @@ declare module "chrome-har" {
     options?: { includeTextFromResponseBody?: boolean },
   ): Promise<any>;
 }
-
-declare module "playwright-core/lib/server/registry/index" {
-  /** Resolved Chromium build metadata for the installed playwright-core. */
-  export interface RegistryExecutable {
-    revision: string;
-    executablePath(): string;
-  }
-  export const registry: {
-    findExecutable(name: string): RegistryExecutable;
-  };
-}
