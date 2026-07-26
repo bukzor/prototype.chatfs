@@ -1,6 +1,6 @@
 // Done-button protocol: the injected overlay carries `#capture-done`,
-// whose click handler sets `dataset.clicked = "true"`;
-// `host_playwright.mjs` waits on that via `page.waitForFunction`. The signal is DOM state, not
+// whose click handler sets `dataset.clicked = "true"`; the host shells
+// wait on that via `page.waitForFunction`. The signal is DOM state, not
 // a `harBrowseMark("DONE")` binding call or a CDP event, so that it
 // survives a page that has torn down or never reached our binding, and
 // so the click needs nothing from the page's JS context.
@@ -13,79 +13,99 @@ const injectHTML = readFileSync(join(__dirname, "inject.html"), "utf-8");
 const injectCSS = readFileSync(join(__dirname, "inject.css"), "utf-8");
 
 /**
+ * The overlay's init-script as a host-registerable pair: hosts pass
+ * `fn`/`arg` to their new-document hook (Playwright `addInitScript`,
+ * puppeteer `evaluateOnNewDocument` -- both call `fn(arg)` in the page
+ * on every new document).
+ *
+ * @param {{ howto?: string }} [opts]
+ */
+export function overlayInitScript({ howto } = {}) {
+  return {
+    fn: overlayInit,
+    arg: { html: injectHTML, css: injectCSS, howto },
+  };
+}
+
+/**
  * Register persistent overlay injection on a Playwright page.
  *
  * @param {import('playwright').Page} page
  * @param {{ howto?: string }} [opts]
  */
-export async function injectOverlay(page, { howto } = {}) {
-  await page.addInitScript(
-    ({ html, css, howto }) => {
-      function inject() {
-        if (document.getElementById("capture-overlay")) return;
-        const style = document.createElement("style");
-        style.textContent = css;
-        document.head.appendChild(style);
-        // Sites enforcing `require-trusted-types-for 'script'` (e.g.
-        // aistudio.google.com) reject a raw-string insertAdjacentHTML,
-        // throwing and silently aborting the rest of inject() -- the
-        // style lands (textContent isn't a guarded sink) but the
-        // overlay never does. `html` is fixed, locally-authored markup
-        // (no attacker/page-controlled input), so a pass-through policy
-        // is safe here.
-        // `@types/trusted-types` isn't in the dependency tree and this
-        // is the only Trusted Types touch-point, so cast narrowly here
-        // rather than add ambient global types for one call site.
-        const trustedTypes = /** @type {any} */ (window).trustedTypes;
-        const trustedHtml = trustedTypes
-            ?.createPolicy("har-browse-inject", {
-              createHTML: (/** @type {string} */ s) => s,
-            })
-            .createHTML(html) ?? html;
-        document.body.insertAdjacentHTML("beforeend", trustedHtml);
-        const howtoEl = document.getElementById("capture-howto");
-        if (howto) {
-          document.getElementById("capture-howto-content").textContent = howto;
-        } else {
-          howtoEl.hidden = true;
-        }
-        const overlay = document.getElementById("capture-overlay");
-        const handle = document.getElementById("capture-drag-handle");
-        let dragging = false,
-          dx = 0,
-          dy = 0;
-        handle.addEventListener("mousedown", (e) => {
-          dragging = true;
-          const rect = overlay.getBoundingClientRect();
-          dx = e.clientX - rect.left;
-          dy = e.clientY - rect.top;
-          overlay.style.left = rect.left + "px";
-          overlay.style.top = rect.top + "px";
-          overlay.style.right = "auto";
-        });
-        document.addEventListener("mousemove", (e) => {
-          if (!dragging) return;
-          overlay.style.left = e.clientX - dx + "px";
-          overlay.style.top = e.clientY - dy + "px";
-        });
-        document.addEventListener("mouseup", () => {
-          dragging = false;
-        });
+export async function injectOverlay(page, opts = {}) {
+  const { fn, arg } = overlayInitScript(opts);
+  await page.addInitScript(fn, arg);
+}
 
-        document.getElementById("capture-done").addEventListener(
-          "click",
-          (e) => {
-            /** @type {HTMLElement} */ (e.target).dataset.clicked = "true";
-          },
-          { once: true },
-        );
-      }
-      if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", inject);
-      } else {
-        inject();
-      }
-    },
-    { html: injectHTML, css: injectCSS, howto },
-  );
+/**
+ * Runs in the page on every new document.
+ *
+ * @param {{ html: string, css: string, howto?: string }} arg
+ */
+function overlayInit({ html, css, howto }) {
+  function inject() {
+    if (document.getElementById("capture-overlay")) return;
+    const style = document.createElement("style");
+    style.textContent = css;
+    document.head.appendChild(style);
+    // Sites enforcing `require-trusted-types-for 'script'` (e.g.
+    // aistudio.google.com) reject a raw-string insertAdjacentHTML,
+    // throwing and silently aborting the rest of inject() -- the
+    // style lands (textContent isn't a guarded sink) but the
+    // overlay never does. `html` is fixed, locally-authored markup
+    // (no attacker/page-controlled input), so a pass-through policy
+    // is safe here.
+    // `@types/trusted-types` isn't in the dependency tree and this
+    // is the only Trusted Types touch-point, so cast narrowly here
+    // rather than add ambient global types for one call site.
+    const trustedTypes = /** @type {any} */ (window).trustedTypes;
+    const trustedHtml = trustedTypes
+        ?.createPolicy("har-browse-inject", {
+          createHTML: (/** @type {string} */ s) => s,
+        })
+        .createHTML(html) ?? html;
+    document.body.insertAdjacentHTML("beforeend", trustedHtml);
+    const howtoEl = document.getElementById("capture-howto");
+    if (howto) {
+      document.getElementById("capture-howto-content").textContent = howto;
+    } else {
+      howtoEl.hidden = true;
+    }
+    const overlay = document.getElementById("capture-overlay");
+    const handle = document.getElementById("capture-drag-handle");
+    let dragging = false,
+      dx = 0,
+      dy = 0;
+    handle.addEventListener("mousedown", (e) => {
+      dragging = true;
+      const rect = overlay.getBoundingClientRect();
+      dx = e.clientX - rect.left;
+      dy = e.clientY - rect.top;
+      overlay.style.left = rect.left + "px";
+      overlay.style.top = rect.top + "px";
+      overlay.style.right = "auto";
+    });
+    document.addEventListener("mousemove", (e) => {
+      if (!dragging) return;
+      overlay.style.left = e.clientX - dx + "px";
+      overlay.style.top = e.clientY - dy + "px";
+    });
+    document.addEventListener("mouseup", () => {
+      dragging = false;
+    });
+
+    document.getElementById("capture-done").addEventListener(
+      "click",
+      (e) => {
+        /** @type {HTMLElement} */ (e.target).dataset.clicked = "true";
+      },
+      { once: true },
+    );
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", inject);
+  } else {
+    inject();
+  }
 }

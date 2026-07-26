@@ -51,8 +51,12 @@ test("har-browse | head -n 1 exits cleanly", { timeout: 10000 }, async () => {
   // handles it cleanly; SIGKILL would forfeit the cleanup we want.
   //
   // Budget: green case ~2s; 5s is 2.5x headroom for slower machines.
+  // `--headless`: this test is about pipe teardown, not windowing, and
+  // a test suite has no business throwing browser windows onto the
+  // developer's desktop. (Headed startup also runs ~4s on Crostini
+  // under the puppeteer host -- too close to the 5s guard.)
   const bin = join(__dirname, "..", "src", "har_browse.mjs");
-  const cmd = `node ${JSON.stringify(bin)} --profile ${profileName} http://127.0.0.1:${port}/ | head -n 1`;
+  const cmd = `node ${JSON.stringify(bin)} --headless --profile ${profileName} http://127.0.0.1:${port}/ | head -n 1`;
   const { stdout, stderr } = await exec(
     "timeout",
     ["5s", "sh", "-c", cmd],

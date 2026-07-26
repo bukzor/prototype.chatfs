@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { parseArgs } from "node:util";
 import { readFileSync } from "node:fs";
-import { startCapture } from "./host_playwright.mjs";
+import { startCapture } from "./host_puppeteer.mjs";
 import { cachePath } from "./cache.mjs";
 
 const { values, positionals } = parseArgs({
