@@ -19,7 +19,7 @@ import { createInterface } from "node:readline";
 import { parseArgs } from "node:util";
 
 const { values, positionals } = parseArgs({
-  options: { url: { type: "string" }, bodies: { type: "boolean" } },
+  options: { url: { type: "string" }, headers: { type: "boolean" } },
   allowPositionals: true,
 });
 
@@ -132,6 +132,11 @@ if (values.url) {
     console.log(
       `  ${r.status}  ${postData ? "" : "(no request body -- preflight?) "}${r.url.slice(0, 120)}`,
     );
+    if (values.headers && request?.headers) {
+      for (const [k, v] of Object.entries(request.headers)) {
+        console.log(`     > ${k}: ${String(v).slice(0, 120)}`);
+      }
+    }
     if (postData) console.log(`     sent: ${postData.slice(0, 240)}`);
     if (r.body) console.log(`     recv: ${r.body.slice(0, 240).replace(/\n/g, " ")}`);
   }

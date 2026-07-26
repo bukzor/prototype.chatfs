@@ -14,10 +14,49 @@ import pkg from "../package.json" with { type: "json" };
 /** @typedef {import("puppeteer-core").Page} Page */
 /** @typedef {import("puppeteer-core").Browser} Browser */
 
-// Self-identifying User-Agent suffix, following the standard
-// `ToolName/Version (+ContactURL)` convention, so operators can
-// identify this tool's traffic and reach the maintainer.
-const UA_SUFFIX = `${pkg.name}/${pkg.version} (+${pkg.homepage})`;
+// Self-identification: who we are and where to reach the maintainer,
+// so operators can recognize this tool's traffic. Two spellings,
+// because a User-Agent's two positions accept different grammars
+// (RFC 9110 §10.1.5): inside a `comment` the text is free-form ctext,
+// conventionally `; `-separated; as a `product` the name and version
+// must be `token`s, and `;` and `:` are not token characters -- so the
+// contact URL needs a comment of its own out there.
+const UA_COMMENT_FIELDS = `${pkg.name}/${pkg.version}; +${pkg.homepage}`;
+const UA_PRODUCT = `${pkg.name}/${pkg.version} (+${pkg.homepage})`;
+
+/**
+ * Brand a User-Agent inside its platform comment, rather than as the
+ * trailing `ToolName/Version (+ContactURL)` product the convention
+ * would suggest.
+ *
+ * The convention is unusable against at least one major provider.
+ * Measured 2026-07-26 (`sbin/ua-gate-probe.mjs`): Google denies
+ * aistudio's GenerateContent outright -- `PERMISSION_DENIED`, while
+ * every other RPC on the same service succeeds -- whenever anything
+ * trails `Safari/537.36`. A neutral `Foo/1.0` is refused exactly like
+ * our own name, so the gate is on the UA's *shape*, not on us; the same
+ * identity in the platform comment is accepted, contact URL and all.
+ *
+ * This keeps `unblocked-sessions`' two halves compatible: we identify
+ * honestly, and we still parse as the browser we actually are. The
+ * client-hint metadata is unaffected -- `Sec-CH-UA-Platform` reports
+ * the real platform either way.
+ *
+ * @param {string} userAgent
+ */
+export function brandUserAgent(userAgent) {
+  // Extend the first comment -- the system-information field, `(X11;
+  // Linux x86_64)` on this platform. A third subfield there is
+  // unremarkable: Windows and Android ship more than two.
+  const branded = userAgent.replace(
+    /^([^(]*\()([^)]*)(\))/,
+    (_, head, platform, close) => `${head}${platform}; ${UA_COMMENT_FIELDS}${close}`,
+  );
+  // Fallback for an unrecognized shape (no comment at all): identifying
+  // in the refused position beats not identifying. Trailing product plus
+  // contact comment, the bot convention Googlebot follows.
+  return branded === userAgent ? `${userAgent} ${UA_PRODUCT}` : branded;
+}
 
 /**
  * Locate a Chromium for puppeteer-core (which bundles no browser).
@@ -148,7 +187,7 @@ async function hostSession(page, brandedUA, metadata) {
  */
 export async function attachCapture(page, { howto, drainGraceMs } = {}) {
   const browser = page.browser();
-  const brandedUA = `${await browser.userAgent()} ${UA_SUFFIX}`;
+  const brandedUA = brandUserAgent(await browser.userAgent());
   const metadata = await userAgentMetadata(browser);
 
   /** @type {() => void} */

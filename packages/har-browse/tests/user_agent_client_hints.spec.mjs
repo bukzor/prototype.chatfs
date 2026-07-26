@@ -76,10 +76,15 @@ test("captured requests carry client hints and a branded User-Agent", async ({
       .filter(Boolean),
   );
   expect(userAgents.size, "one UA across the capture").toBe(1);
-  expect(
-    [...userAgents][0],
-    "the UA identifies the tool without shedding its browser identity",
-    // Headless reports `HeadlessChrome/`, headed `Chrome/`; either way
-    // the suffix trails an otherwise untouched browser UA.
-  ).toMatch(/Chrome\/[\d.]+ Safari\/[\d.]+ har-browse\/\d/);
+  const userAgent = [...userAgents][0];
+  expect(userAgent, "the UA identifies the tool and how to reach us").toMatch(
+    /har-browse\/\d[\d.]*; \+https?:\/\//,
+  );
+  // Anything trailing the browser's last product is what Google's
+  // aistudio gate refuses -- measured, not guessed (sbin/ua-gate-probe.mjs
+  // and the header comment on brandUserAgent). Identification lives in
+  // the platform comment precisely so this stays true.
+  expect(userAgent, "nothing trails the browser's product list").toMatch(
+    /Safari\/[\d.]+$/,
+  );
 });
