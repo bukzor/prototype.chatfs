@@ -112,14 +112,27 @@ this migration's first step rather than inherited from the cut work.
   - [ ] Tripwire 2 (human-driven real-provider login) -- pending the
         swap producing a runnable capture; batch into the standing live
         `--howto` session (todo.md).
-- [ ] Decide browser acquisition: puppeteer-core bundles no browser.
-      Candidates: keep Playwright's Chromium (already a devDependency;
-      resolve via its registry as today), system Chrome, or
-      `@puppeteer/browsers`. Weigh against `unblocked-sessions`
-      (revision pinning affects fingerprint stability).
-- [ ] Swap launcher/profile/transport: `puppeteer.launch({executablePath,
-      userDataDir, headless: false})`; port the per-profile
-      `${XDG_CACHE_HOME}/har-browse/profile/${profile}` layout unchanged.
+- [x] Decide browser acquisition: puppeteer-core bundles no browser.
+      Decided 2026-07-26: `$HAR_BROWSE_BROWSER` env override, else
+      Playwright's Chromium via *dynamic* import of playwright-core
+      (static production graph stays clean). playwright/playwright-core
+      exact-pinned 1.59.1 in devDependencies so production captures and
+      the test suite share one browser revision (chromium-1217 --
+      fingerprint stability per `unblocked-sessions`). Caution learned:
+      a caret range re-resolve bumped playwright-core to 1.62, whose
+      registry points at an uninstalled Chromium and whose types clash
+      with @playwright/test's -- keep the three packages version-locked
+      together.
+- [x] Swap launcher/profile/transport -- landed 2026-07-26,
+      `src/host_puppeteer.mjs`: `puppeteer.launch({executablePath,
+      userDataDir, headless, defaultViewport: null})` + the stealth
+      flag pair; per-profile
+      `${XDG_CACHE_HOME}/har-browse/profile/${profile}` layout
+      unchanged (cross-host profile compatibility exercised by
+      `tests/cli_clear_default.spec.mjs`: seeds via the Playwright
+      shell, captures via the puppeteer CLI). Navigation is raw
+      `Page.navigate` (commit semantics; puppeteer `goto` has no
+      `commit` lifecycle option).
 - [x] Replace the UA subsystem with `Browser.getVersion` +
       `Network.setUserAgentOverride`; delete `user-agent.mjs`,
       `cache.mjs`, their tests; retire the `ua-*`/`cache-*` mutation
@@ -133,17 +146,22 @@ this migration's first step rather than inherited from the cut work.
       window by construction (user-ratified this trade 2026-07-26).
       13 UA-scoped mutation entries deleted; UA-suffix correctness
       re-files against the new shell under the mutation step below.
-- [ ] Delete `playwright.mjs` launch workarounds; verify on Crostini
-      that a plain launch doesn't reintroduce them (the viewport
-      override and SwiftShader flag were Playwright defaults, not
-      Chromium's).
-- [ ] Replace `context.on("page")` wiring; `2026-07-23-001-*`
-      implements auto-attach in this venue (its natural shape), which
-      supersedes the popup-race machinery and `popup_race.spec.mjs`'s
-      workaround posture.
-- [ ] Keep Playwright as devDependency; assert the production import
-      graph is playwright-free (cheap `node:test` walking `src/`
-      imports, à la `typecheck.test.mjs`).
+- [x] Delete `playwright.mjs` launch workarounds -- resolved 2026-07-26
+      with a deviation: the file survives as the *test shell's*
+      launcher (UA threading deleted; viewport/flag workarounds still
+      apply to Playwright-driven tests). The puppeteer host needs only
+      `defaultViewport: null` + the stealth flag pair, verified on
+      Crostini by the tripwire smoke.
+- [~] Replace `context.on("page")` wiring -- the mechanical swap landed
+      (`browser.on("targetcreated")` in `host_puppeteer.mjs`, same
+      popup-race tracking shape through the seam); `2026-07-23-001-*`'s
+      auto-attach still supersedes that machinery and
+      `popup_race.spec.mjs`'s workaround posture when it lands.
+- [x] Keep Playwright as devDependency; assert the production import
+      graph is playwright-free -- landed 2026-07-26:
+      `tests/import_graph.test.mjs` walks static imports from
+      `har_browse.mjs` (red-verified against the Playwright shell);
+      playwright/playwright-core demoted to devDependencies.
 - [ ] Fold in the `.mjs`→`.ts` rename (`todo.md`'s standing bullet) +
       `devtools-protocol` typing while every integration point is
       already being touched; typed CDP events pay off most in the new
