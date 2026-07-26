@@ -87,7 +87,7 @@ this migration's first step rather than inherited from the cut work.
       `src/host_playwright.mjs` is the shell (`attachCapture`/
       `startCapture` moved verbatim, emit-override session adaptation,
       overlay + cut race). Full suite green, zero behavior change.
-- [ ] **Tripwires next (the only ways this migration aborts; entry is
+- [~] **Tripwires next (the only ways this migration aborts; entry is
       unconditional):** smoke-launch puppeteer-core on Crostini --
       persistent profile, headed, CDP attach, UA override -- before any
       wholesale swap; then, first time a page is up, a human-driven
@@ -95,6 +95,23 @@ this migration's first step rather than inherited from the cut work.
       bot-challenge/acceptance regressions the Playwright workarounds
       may have been masking. Either failing reverts to the Playwright
       shell behind the seam; the seam still lands either way.
+  - [x] Tripwire 1 (Crostini smoke) PASSED 2026-07-26
+        (`trash/puppeteer-smoke.mjs`, puppeteer-core 25.3.0 driving
+        Playwright's Chromium 147): headed launch + `userDataDir`
+        profile OK; `createCDPSession` OK; mitt-style `'*'` wildcard
+        delivers blanket events (emit-override hack unnecessary);
+        `Browser.getVersion` + `Network.setUserAgentOverride`
+        round-trips (UA probe/cache subsystem deletable);
+        `defaultViewport: null` uses real window size (1018x791);
+        `ignoreDefaultArgs: ["--enable-automation"]` +
+        `--disable-blink-features=AutomationControlled` give
+        `navigator.webdriver === false`; cookies persist across
+        relaunch. Wrinkle: a reused profile session-restored the prior
+        run's tabs (3 initial pages) -- the port must pin initial-page
+        selection and consider crash-restore suppression.
+  - [ ] Tripwire 2 (human-driven real-provider login) -- pending the
+        swap producing a runnable capture; batch into the standing live
+        `--howto` session (todo.md).
 - [ ] Decide browser acquisition: puppeteer-core bundles no browser.
       Candidates: keep Playwright's Chromium (already a devDependency;
       resolve via its registry as today), system Chrome, or
