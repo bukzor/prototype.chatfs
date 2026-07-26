@@ -42,8 +42,19 @@ export async function attachCapture(page, { howto, drainGraceMs = DRAIN_GRACE_MS
   // Subscribe before any CDP attachment: on() doesn't retroactively
   // capture events emitted before its iterator existed.
   const queue = on(emitter, "event", { close: ["end"] });
+  // Post-"end" the queue is closed and the event is unrecoverable; a
+  // silent drop here would be invisible data loss, so name it on stderr.
+  let ended = false;
   /** @param {CDPEvent} msg */
-  const enqueue = (msg) => emitter.emit("event", msg);
+  const enqueue = (msg) => {
+    if (ended) {
+      process.stderr.write(
+        `har-browse: dropped event after stream end: ${msg.method}\n`,
+      );
+      return;
+    }
+    emitter.emit("event", msg);
+  };
 
   // BARRIER's deferred-emit (see `onBindingCalled` below) snapshots
   // `inFlight` to wait out active body-fetches so consumed RRs land
@@ -215,6 +226,7 @@ export async function attachCapture(page, { howto, drainGraceMs = DRAIN_GRACE_MS
         Promise.allSettled([...inFlight, ...pendingInFlight]),
         new Promise((resolve) => setTimeout(resolve, drainGraceMs)),
       ]);
+      ended = true;
       emitter.emit("end");
     })
     .then(() => {});
