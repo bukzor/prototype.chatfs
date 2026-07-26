@@ -104,7 +104,7 @@ const HIGH_ENTROPY_HINTS = [
  * @param {Browser} browser
  * @returns {Promise<any>}
  */
-async function userAgentMetadata(browser) {
+export async function userAgentMetadata(browser) {
   const probe = await browser.newPage();
   try {
     await probe.goto("file:");
