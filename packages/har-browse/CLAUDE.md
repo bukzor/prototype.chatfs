@@ -22,14 +22,16 @@ Playwright coupling in new work; it stays as the test-suite driver.
 
 `.claude/todo.md` is the prioritized list; breakdowns in
 `.claude/todo.kb/`; deferred ideas in `.claude/ideas.kb/` (notably the
-streaming-witness gate and streaming-response-bodies entries). Open
-session threads: grep `~/.claude/sessions.kb/` for this directory's
-`cwd:`. Load `Skill(llm-subtask)` for maintenance.
+streaming-witness gate and streaming-response-bodies entries). Session
+narrative history: `docs/dev/devlog/`. Open session threads: grep
+`~/.claude/sessions.kb/` for this directory's `cwd:`. Load
+`Skill(llm-subtask)` for maintenance.
 
 ## Key Files
 
 - `src/har_browse.mjs` -- CLI (`har-browse`, via package `bin`):
-  `har-browse [URL] [--profile NAME] [--howto PATH] > events.jsonl`.
+  `har-browse [URL] [--profile NAME] [--howto PATH]
+  [--clear-origin-storage] > events.jsonl`.
   Streams until the human clicks the injected "Done Capturing" button
   or closes the window. Profile state persists under
   `${XDG_CACHE_HOME:-$HOME/.cache}/har-browse/profile/<name>`, so
@@ -59,6 +61,15 @@ session threads: grep `~/.claude/sessions.kb/` for this directory's
 
 ## Protocols
 
+- **Forcing state through the network:** an app that already holds its
+  data locally makes no request, and a capture cannot record what never
+  crossed the wire. Three settings push against that. Every session gets
+  `Network.setCacheDisabled` and `Network.setBypassServiceWorker` at
+  wire-up; `--clear-origin-storage` additionally wipes the target
+  origin's IndexedDB and Cache Storage before navigation (cookies
+  survive -- login state is why profiles persist). Off by default, since
+  whether to force a refetch is provider policy. Coverage:
+  `tests/clear_origin_storage.spec.mjs`, `tests/session_settings.spec.mjs`.
 - **Done button:** the injected overlay sets
   `#capture-done[data-clicked="true"]` on click; `capture.mjs` observes
   it via `page.waitForFunction`. DOM-dataset on purpose -- no CDP
@@ -68,8 +79,8 @@ session threads: grep `~/.claude/sessions.kb/` for this directory's
   consumed; capture defers each BARRIER's emit until the body-fetches
   in flight at its CDP arrival settle, so every consumed RR precedes
   the BARRIER that names it in the stream. Formal invariant:
-  `tests/barrier_consumed.spec.mjs`; mechanics: the `inFlight` and
-  `onBindingCalled` comments in `src/capture.mjs`.
+  `tests/barrier_consumed.spec.mjs`; mechanics: `src/capture.mjs`
+  header comment.
 
 ## Design Knowledge
 

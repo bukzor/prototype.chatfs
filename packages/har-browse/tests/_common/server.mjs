@@ -11,6 +11,21 @@ import { createServer } from "node:http";
  *   need a request that never reaches a terminal CDP event.
  * - GET /redirect → 302 to /payload?id=redirected. For tests exercising
  *   requestId reuse across CDP's repeated requestWillBeSent per hop.
+ * - GET /hydrate → HTML page that persists /payload to IndexedDB: on
+ *   first load it fetches `/payload?id=hydrate` and stores the response;
+ *   on later loads it renders from the stored copy *without* fetching.
+ *   The decision runs in an inline parse-time script (not deferred) so a
+ *   storage-clear issued after navigation deterministically loses the
+ *   race — see docs/dev/mutation-testing.kb/clear-origin-storage-after-goto.md.
+ *   `#content` text starts with "fetched:" or "hydrated:" accordingly.
+ * - GET /cacheable → JSON {n} with `cache-control: max-age=300`. A
+ *   second fetch is served from the HTTP cache -- and never reaches
+ *   this server -- unless the capture disabled caching.
+ * - GET /sw-page, GET /sw.js → page registering a cache-first service
+ *   worker for `/payload?id=sw`. Once the worker controls the page, a
+ *   refetch is served from Cache Storage without network traffic unless
+ *   the capture bypasses service workers. `#content` reports
+ *   "sw:<controlled>:<n>" once the payload has been (re)fetched.
  * - GET /trusted-types → minimal HTML served with
  *   `Content-Security-Policy: require-trusted-types-for 'script'`,
  *   matching aistudio.google.com's enforcement. For tests exercising
@@ -61,6 +76,73 @@ export async function startServer() {
     if (url.pathname === "/redirect") {
       res.writeHead(302, { location: "/payload?id=redirected" });
       res.end();
+      return;
+    }
+    if (url.pathname === "/hydrate") {
+      res.writeHead(200, { "content-type": "text/html" });
+      res.end(`<!doctype html>
+<html><body><div id="content">loading</div>
+<script>
+const open = indexedDB.open("hydrate", 1);
+open.onupgradeneeded = () => open.result.createObjectStore("kv");
+open.onsuccess = () => {
+  const db = open.result;
+  const get = db.transaction("kv", "readonly").objectStore("kv").get("payload");
+  get.onsuccess = async () => {
+    let data = get.result;
+    let how = "hydrated";
+    if (data === undefined) {
+      how = "fetched";
+      data = await (await fetch("/payload?id=hydrate")).json();
+      db.transaction("kv", "readwrite").objectStore("kv").put(data, "payload");
+    }
+    document.getElementById("content").textContent =
+      how + ": " + JSON.stringify(data);
+  };
+};
+</script></body></html>`);
+      return;
+    }
+    if (url.pathname === "/cacheable") {
+      res.writeHead(200, {
+        "content-type": "application/json",
+        "cache-control": "max-age=300",
+      });
+      res.end(JSON.stringify({ n: ++payloadCount }));
+      return;
+    }
+    if (url.pathname === "/sw.js") {
+      res.writeHead(200, { "content-type": "application/javascript" });
+      res.end(`
+self.addEventListener("install", (e) => e.waitUntil(self.skipWaiting()));
+self.addEventListener("activate", (e) => e.waitUntil(self.clients.claim()));
+self.addEventListener("fetch", (e) => {
+  if (!e.request.url.includes("id=sw")) return;
+  e.respondWith((async () => {
+    const cache = await caches.open("sw-payload");
+    const hit = await cache.match(e.request);
+    if (hit) return hit;
+    const res = await fetch(e.request);
+    await cache.put(e.request, res.clone());
+    return res;
+  })());
+});
+`);
+      return;
+    }
+    if (url.pathname === "/sw-page") {
+      res.writeHead(200, { "content-type": "text/html" });
+      res.end(`<!doctype html>
+<html><body><div id="content">loading</div>
+<script>
+(async () => {
+  await navigator.serviceWorker.register("/sw.js");
+  await navigator.serviceWorker.ready;
+  const data = await (await fetch("/payload?id=sw")).json();
+  document.getElementById("content").textContent =
+    "sw:" + !!navigator.serviceWorker.controller + ":" + data.n;
+})();
+</script></body></html>`);
       return;
     }
     if (url.pathname === "/trusted-types") {

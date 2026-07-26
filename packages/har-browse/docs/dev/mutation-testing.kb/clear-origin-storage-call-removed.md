@@ -1,14 +1,14 @@
 ---
-status: todo
+status: done
 ---
 
 # `capture.mjs`: `Storage.clearDataForOrigin` call removed (option silently ignored)
 
 **Priority:** High. **Confidence:** High.
 
-Prospective — targets `packages/har-browse/.claude/todo.kb/2026-07-22-
+Targets `packages/har-browse/.claude/todo.kb/2026-07-22-
 001-claude-ai-revisits-render-from-persisted-React-Query-IndexedDB-
-cache--so-capture-sees-no-conversation-traffic.md`, not yet implemented.
+cache--so-capture-sees-no-conversation-traffic.md`.
 If `startCapture` accepts `clearOriginStorage: true` but the CDP call is
 deleted (or the option never wired through), the revisit-hydration
 failure mode returns exactly: the app boots on its persisted IndexedDB
@@ -19,27 +19,37 @@ of the feature.
 
 ## Injection
 
+`src/capture.mjs`, in `startCapture`:
+
 ```diff
    const page = context.pages()[0] ?? (await context.newPage());
-   const { events, done } = await attachCapture(page, { howto });
+   const { events, done } = await attachCapture(page, { howto, drainGraceMs });
 -  if (clearOriginStorage) {
 -    const session = await context.newCDPSession(page);
 -    await session.send("Storage.clearDataForOrigin", {
 -      origin: new URL(url).origin,
--      storageTypes: "indexeddb",
+-      storageTypes: "indexeddb,cache_storage",
 -    });
+-    await session.detach();
 -  }
    await page.goto(url, { waitUntil: "commit" });
 ```
 
-## Anticipated Test Coverage
+## Test Coverage
 
-Needs a hydrating fixture: a toy-server page whose script, on first
-load, fetches `/api/payload` and writes it to IndexedDB; on subsequent
-loads, if the IndexedDB entry exists, renders from it *without*
-fetching. Test: capture once (populates IndexedDB in the persistent
-profile), then capture again with `clearOriginStorage: true` and assert
-the second capture's stream contains `Network.requestWillBeSent` +
-`Network.responseReceived` (with body) for `/api/payload`. With this
-mutation injected, the second capture has zero payload events — the
-faithful miniature of the claude.ai symptom.
+`tests/clear_origin_storage.spec.mjs`: "clearOriginStorage forces a
+revisit to refetch; payload body is captured" — the `/hydrate` fixture
+in `tests/_common/server.mjs` is the miniature (first load fetches
+`/payload?id=hydrate` and stores it in IndexedDB; later loads render
+from the store without fetching). One capture populates the store, a
+second capture of the same persistent profile runs with
+`clearOriginStorage: true` and must see the payload's
+`requestWillBeSent` plus a `responseReceived` carrying the body.
+Confirmed red under injection: the revisit hydrates, and the payload
+never crosses the network. "clearOriginStorage preserves cookies" fails
+alongside it for the same reason.
+
+The suite's third test, "fixture control: revisit hydrates from
+IndexedDB with zero payload traffic", pins the fixture itself to the
+symptom regime, so a fixture that quietly stopped hydrating couldn't
+turn the kill assertion into a tautology.

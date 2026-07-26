@@ -99,18 +99,31 @@ shape, force the traffic instead.
 
 ## Implementation Steps
 
-- [ ] Add `clearOriginStorage` to `startCapture` (CDP
+- [x] Add `clearOriginStorage` to `startCapture` (CDP
       `Storage.clearDataForOrigin`, indexeddb + cache_storage, pre-goto;
-      local_storage opt-in — see Proposed Solution's 2026-07-23 widening)
-- [ ] Apply per-session capture settings in `wireSession`:
+      local_storage left out)
+- [x] Apply per-session capture settings in `wireSession`:
       `Network.setCacheDisabled(true)`,
       `Network.setBypassServiceWorker(true)`
-- [ ] Expose via `har_browse.mjs` CLI flag
+- [x] Expose via `har_browse.mjs` CLI flag (`--clear-origin-storage`)
 - [ ] Live verification per provider: a claude.ai revisit capture now
       contains `chat_conversation*` rWBS + RR with body; same forensic
       grep on chatgpt + aistudio revisit captures checks them for
-      equivalent persisted-cache hydration
-- [ ] Burn down the 4 `status: todo` mutation-testing.kb entries pre-filed 2026-07-22 for this feature. Two test constructions cover all four: the hydrating fixture (toy-server page: fetch-and-store-to-IndexedDB on first load via *inline parse-time script*, render-from-IndexedDB-without-fetching on revisit; assert the second capture under `clearOriginStorage: true` contains the payload rWBS + RR) kills `clear-origin-storage-call-removed.md`, `clear-origin-storage-after-goto.md`, `clear-origin-storage-wrong-origin.md`; a cookie-survival assertion kills `clear-origin-storage-types-include-cookies.md`. The hydrating fixture doubles as this todo's regression test. (Whether this todo also owns the incubator's `has_more=false` symptom is decided by the discriminator step — first step — of `2026-07-22-000-*`.)
+      equivalent persisted-cache hydration. Ask-first (real browser,
+      real login) — the only step left, and the one that closes the
+      Success Criteria below.
+- [x] Burn down the 4 pre-filed mutation-testing.kb entries, all now
+      `status: done`. Two new entries cover the session settings
+      (`session-cache-not-disabled`,
+      `session-service-worker-not-bypassed`). Local coverage is
+      `tests/clear_origin_storage.spec.mjs` (4 tests) and
+      `tests/session_settings.spec.mjs` (2), on `/hydrate`, `/cacheable`
+      and `/sw-page` fixtures in `tests/_common/server.mjs`; every
+      mutation was confirmed red. `clear-origin-storage-wrong-origin`'s
+      predicted kill was wrong — see that entry: a `"null"` origin (what
+      `about:blank` serializes to) makes CDP clear *every* origin, so
+      the defect is scope and the test asserts a bystander origin
+      survives.
 
 ## Open Questions
 

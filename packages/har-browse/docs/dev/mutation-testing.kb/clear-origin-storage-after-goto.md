@@ -1,13 +1,13 @@
 ---
-status: todo
+status: done
 ---
 
 # `capture.mjs`: origin storage cleared after `page.goto` instead of before
 
 **Priority:** Medium-High. **Confidence:** Medium-High.
 
-Prospective — targets `packages/har-browse/.claude/todo.kb/2026-07-22-
-001-*.md`, not yet implemented. Ordering mutation: the clear call moves
+Targets `packages/har-browse/.claude/todo.kb/2026-07-22-
+001-*.md`. Ordering mutation: the clear call moves
 below the `goto`. The app's boot script reads IndexedDB during startup —
 in claude.ai's case from a document *inline script*, i.e. at parse time,
 before any post-navigation CDP roundtrip can win the race. The cache is
@@ -17,18 +17,19 @@ like a first-visit capture on every subsequent inspection.
 
 ## Injection
 
+`src/capture.mjs`, in `startCapture` — the whole `if (clearOriginStorage)`
+block moves below the navigation:
+
 ```diff
--  await clearStorage();
+-  if (clearOriginStorage) { ...Storage.clearDataForOrigin... }
    await page.goto(url, { waitUntil: "commit" });
-+  await clearStorage();
++  if (clearOriginStorage) { ...Storage.clearDataForOrigin... }
 ```
 
-## Anticipated Test Coverage
+## Test Coverage
 
-Same hydrating fixture and assertion as
-`clear-origin-storage-call-removed.md`, with one requirement on the
-fixture: the read-IndexedDB-and-render-without-fetching decision must
-happen in an inline script at document parse time (not deferred), so the
-post-goto clear deterministically loses the race and the payload fetch
-deterministically does not happen. Then the same
-rWBS+RR-present-on-second-capture assertion kills this mutant.
+Killed by the same test as `clear-origin-storage-call-removed.md`. The
+`/hydrate` fixture reads IndexedDB from an inline parse-time script, so
+a clear issued after `page.goto` deterministically loses the race:
+confirmed red under injection, with the revisit hydrating exactly as in
+the call-removed case.

@@ -1,4 +1,11 @@
 // @ts-check
+// BARRIER protocol: a page-side `harBrowseMark("BARRIER:...")` binding
+// call must land in the stream *after* every response the page had
+// consumed when it fired. Mechanics: `onBindingCalled` snapshots
+// `inFlight` via spread and defers the BARRIER's emit behind
+// `Promise.allSettled` of that snapshot; concurrent BARRIERs serialize
+// via allSettled's superset ordering. Formal invariant:
+// `tests/barrier_consumed.spec.mjs`.
 import { mkdirSync } from "node:fs";
 import { EventEmitter, on } from "node:events";
 import { chromium } from "./playwright.mjs";
@@ -177,6 +184,13 @@ export async function attachCapture(page, { howto, drainGraceMs = DRAIN_GRACE_MS
     };
 
     await session.send("Network.enable");
+    // Force client state through the observable network: full bodies
+    // instead of cache hits (standard for HAR tooling), and
+    // network-direct fetches so service-worker-mediated traffic shows
+    // up as ordinary page-session events (interim mitigation for the
+    // non-page-target gap — todo.kb/2026-07-23-001-*).
+    await session.send("Network.setCacheDisabled", { cacheDisabled: true });
+    await session.send("Network.setBypassServiceWorker", { bypass: true });
     await session.send("Page.enable");
     await session.send("Runtime.enable");
     await session.send("Runtime.addBinding", { name: "harBrowseMark" });
@@ -222,6 +236,7 @@ export async function attachCapture(page, { howto, drainGraceMs = DRAIN_GRACE_MS
  *   howto?: string,
  *   headless?: boolean,
  *   drainGraceMs?: number,
+ *   clearOriginStorage?: boolean,
  * }} opts
  * @returns {Promise<{
  *   page: Page,
@@ -237,6 +252,7 @@ export async function startCapture({
   howto,
   headless = false,
   drainGraceMs,
+  clearOriginStorage = false,
 }) {
   mkdirSync(profileDir, { recursive: true });
 
@@ -248,6 +264,22 @@ export async function startCapture({
 
   const page = context.pages()[0] ?? (await context.newPage());
   const { events, done } = await attachCapture(page, { howto, drainGraceMs });
+  if (clearOriginStorage) {
+    // Wipe the target origin's app-level data caches BEFORE navigation,
+    // so an app that persisted them (claude.ai's React Query cache in
+    // IndexedDB; a service worker's cache-first store) must
+    // re-materialize its data as capturable network traffic. Origin
+    // comes from the target `url` — the page still sits on about:blank
+    // here. Cookies are untouched: login state is why the profile
+    // persists at all. `local_storage` stays out for the same reason
+    // (some providers keep auth tokens there).
+    const session = await context.newCDPSession(page);
+    await session.send("Storage.clearDataForOrigin", {
+      origin: new URL(url).origin,
+      storageTypes: "indexeddb,cache_storage",
+    });
+    await session.detach();
+  }
   await page.goto(url, { waitUntil: "commit" });
 
   const close = async () => {

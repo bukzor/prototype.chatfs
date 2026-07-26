@@ -8,6 +8,7 @@ const { values, positionals } = parseArgs({
   options: {
     howto: { type: "string" },
     profile: { type: "string", default: "default_profile" },
+    "clear-origin-storage": { type: "boolean", default: false },
   },
   allowPositionals: true,
 });
@@ -30,7 +31,12 @@ process.stdout.on("error", (/** @type {NodeJS.ErrnoException} */ err) => {
   else throw err;
 });
 
-const session = await startCapture({ url, profileDir, howto });
+const session = await startCapture({
+  url,
+  profileDir,
+  howto,
+  clearOriginStorage: values["clear-origin-storage"],
+});
 try {
   for await (const ev of session.events) {
     if (stdoutClosed) break;
