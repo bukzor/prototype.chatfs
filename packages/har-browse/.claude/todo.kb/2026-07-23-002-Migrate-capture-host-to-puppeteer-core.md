@@ -30,17 +30,18 @@ cost-benefit-sweh:
       value is unblocking and simplification.
     confidence: confident
   cost-of-delay-2w:
-    "@value": 0.2
+    "@value": 0.5
     rationale: |
-      Gated work: low while the venue spike is unrun; jumps to high if
-      the spike returns can't-carry (auto-attach — a completeness
-      requirement — would then be blocked on this migration).
+      Ungated since the 2026-07-26 re-ordering: the abort cut and the
+      auto-attach implementation (a completeness requirement) both
+      queue behind this migration, and every week on the Playwright
+      host invites more code shaped around it.
     confidence: tentative
 ---
 
 # Migrate capture host to puppeteer-core; demote Playwright to dev/test-only
 
-**Priority:** Medium — rises to High if the `2026-07-23-001-*` venue spike shows Playwright's transport can't carry auto-attach.
+**Priority:** High -- next major work item (2026-07-26 re-ordering): the abort-based cut and the auto-attach implementation both queue behind it; only the venue-independent todo.md quick items precede it.
 **Complexity:** Medium — shell-only swap behind the capture-semantics seam; risk concentrates in launch/profile parity and browser acquisition.
 **Context:** Ratified 2026-07-23 frontier plan (survey: `design.kb/070-future-work.kb/capture-implementation-frontier.md`). The current Playwright host is off the frontier: largest middleware footprint of any candidate, with ~180 owned lines existing only to fight it (UA probe/cache subsystem, `playwright.mjs` launch workarounds, popup-attach race machinery), while its page-automation value goes unused in production (the human drives). Both open completeness todos already route around it.
 
@@ -50,7 +51,8 @@ Playwright serves three production roles — launcher, profile manager,
 CDP transport — all replaceable by a small CDP library, and it obstructs
 the next requirement-driven change: `Target.setAutoAttach` with
 `waitForDebuggerOnStart` may conflict with Playwright's own attach
-machinery (the venue spike in `2026-07-23-001-*` exists to find out).
+machinery (the venue spike in `2026-07-23-001-*` existed to find out;
+retired 2026-07-26 as moot under migrate-first).
 Meanwhile the framework forces owned workarounds: pre-launch UA
 cache/probe (`user-agent.mjs` + `cache.mjs`), Crostini launch fights
 (`playwright.mjs`), and reactive `context.on("page")` wiring with its
@@ -64,15 +66,30 @@ the venue-agnostic capture semantics (ledger/drain/barrier/overlay)
 unchanged behind the host seam. Playwright remains a devDependency for
 the test suite, where page automation is the actual job.
 
-**Trigger:** the `2026-07-23-001-*` venue spike. Can't-carry-auto-attach
-→ migrate immediately; can-carry → migrate at the next natural lull
-(the deletion arguments stand on their own).
+**Re-ordered 2026-07-26:** this migration is next -- no trigger, no
+gate. The `2026-07-23-001-*` venue spike that formerly timed it is
+retired (migrate-first answers the venue by fiat). The abort-based cut
+(`2026-07-23-000-*`) is sequenced behind it because the cut's delivery
+barrier and detach-settlement are transport-sensitive and should be
+built once, against the host that ships; the host seam is extracted as
+this migration's first step rather than inherited from the cut work.
 
 ## Implementation Steps
 
-- [ ] **Precondition:** host seam landed (`2026-07-23-000-*`'s seam
-      step) — capture semantics consume "CDP sessions + events per
-      target" through one small interface.
+- [ ] **Extract the host seam** as the migration's first move (step
+      moved here 2026-07-26 from `2026-07-23-000-*`): capture semantics
+      consume "CDP sessions + events per target" through one small
+      interface, so the swap below is a shell replacement. The
+      abort-based cut, now sequenced after this migration, consumes the
+      same seam.
+- [ ] **Tripwires next (the only ways this migration aborts; entry is
+      unconditional):** smoke-launch puppeteer-core on Crostini --
+      persistent profile, headed, CDP attach, UA override -- before any
+      wholesale swap; then, first time a page is up, a human-driven
+      login to one real provider (`--howto` policy) to check for
+      bot-challenge/acceptance regressions the Playwright workarounds
+      may have been masking. Either failing reverts to the Playwright
+      shell behind the seam; the seam still lands either way.
 - [ ] Decide browser acquisition: puppeteer-core bundles no browser.
       Candidates: keep Playwright's Chromium (already a devDependency;
       resolve via its registry as today), system Chrome, or

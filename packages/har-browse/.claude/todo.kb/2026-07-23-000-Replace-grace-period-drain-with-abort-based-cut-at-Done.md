@@ -40,9 +40,10 @@ cost-benefit-sweh:
 
 # Replace grace-period drain with abort-based cut at Done
 
-**Priority:** Medium-High — deletes the last silent-loss path and a per-capture latency floor; mostly code removal.
+**Priority:** Medium, sequenced behind the host migration (`2026-07-23-002-*`) -- deletes the last silent-loss path and a per-capture latency floor; mostly code removal.
 **Complexity:** Low-Medium — two spikes gate the mechanism choice; the change itself is localized to `capture.mjs`'s drain.
 **Context:** The 2026-07-22 grace-period drain (todo.kb `2026-07-22-000-*`, fixes 1+2) made the drain *wait* for in-flight requests, bounded by `drainGraceMs`. The 2026-07-23 cut-semantics analysis (see `design.kb/030-requirements.kb/capture-cut-completeness.md`) established that post-cut response data is outside the capture's cohort — so waiting for it buys nothing the requirement values, and the right move at the cut is to *force* termination, not to wait politely.
+**Re-ordered 2026-07-26** behind the host migration: spike 2 verifies a *per-transport* ordering guarantee and detach-settlement wires the transport's session lifecycle, so building them on the Playwright host already ratified for deletion means building and re-verifying them twice. Run both spikes and the implementation against the puppeteer-core host. Two steps left this file: the seam extraction moved to `2026-07-23-002-*`, and the loud post-`end` enqueue step moved to `todo.md` (venue-independent, scheduled before the migration). The current grace drain is correct for completed-before-click payloads -- the main chatfs workflow -- which is what makes the wait affordable.
 
 ## Problem Statement
 
@@ -110,21 +111,15 @@ question), its firing is a logged defect, never a normal path.
 - [ ] Implement the cut (per-session network disable at Done-detection
       and at context-close), ledger settle, delivery barrier, and
       detach-settles-ledger. Delete the grace machinery.
-- [ ] **Extract the host seam** while in this code: isolate "provide CDP
-      sessions + events per target" behind one small interface that the
-      ledger/drain/barrier logic consumes, independent of how sessions
-      are obtained. This costs little on top of the cut rewrite (the
-      cut already touches every session-handling call site) and is the
-      precondition for `2026-07-23-002-*` (host migration to
-      puppeteer-core) — it converts that migration from a rewrite into
-      a shell swap.
-- [ ] Make post-`emit("end")` enqueues loud: anything the passthrough
-      tries to enqueue after `end` fires today lands in a closed queue
-      and vanishes with no signal (same silent-loss shape this whole
-      todo exists to close, just at the pipe's exit rather than the
-      cut). Log to stderr at minimum; consider making it throw in tests.
-      Independent of the abort-cut mechanism — worth doing even if a
-      spike kills the rest of this todo.
+- [x] ~~Extract the host seam while in this code~~ **Moved 2026-07-26**
+      to `2026-07-23-002-*`: with the migration re-ordered ahead of this
+      todo, the seam is extracted there and this todo consumes it.
+- [x] ~~Make post-`emit("end")` enqueues loud~~ **Moved 2026-07-26** to
+      `todo.md` as an immediate, venue-independent item: anything the
+      passthrough tries to enqueue after `end` fires today lands in a
+      closed queue and vanishes with no signal (same silent-loss shape
+      this whole todo exists to close, just at the pipe's exit rather
+      than the cut).
 - [ ] Rewrite `tests/inflight_drain.spec.mjs`: the two grace-variant
       tests collapse (no constant left to protect); the hung-request
       test's assertion strengthens from "ends within grace + slack" to
@@ -187,6 +182,6 @@ yields headers + abort record only; with
 in the stream. Not required for the current revisit-capture workflow
 (its payload completes before the human clicks Done).
 
-The host seam extracted here is the dependency `2026-07-23-002-*` (host
-migration) waits on; nothing else in that todo requires this one's cut
-mechanism specifically, only the seam.
+The host seam this todo consumes is extracted by `2026-07-23-002-*`
+(host migration), which precedes it since the 2026-07-26 re-ordering;
+nothing in the migration requires this todo's cut mechanism.

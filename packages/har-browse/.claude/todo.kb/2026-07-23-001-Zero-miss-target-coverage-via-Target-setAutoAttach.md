@@ -86,7 +86,12 @@ shrinks this todo's urgency.)
       provider for service-worker registration and fetch-event handlers;
       one `navigator.serviceWorker.getRegistrations()` evaluate per live
       provider page. A registered SW plus payload gaps is the tell.
-- [ ] **Venue spike (decides architecture):** determine whether
+      Batched 2026-07-26 into todo.md's live `--howto` session.
+- [x] ~~Venue spike (decides architecture)~~ **Retired 2026-07-26:**
+      the migrate-first re-ordering answers the venue by fiat
+      (puppeteer-core), so the question the spike asked is moot and
+      nothing remains for it to time. Kept for history: it was to
+      determine whether
       Playwright's transport can carry our own auto-attach — does its
       `CDPSession` surface `sessionId`-tagged messages for child
       sessions we create, and do two clients using
@@ -108,10 +113,12 @@ shrinks this todo's urgency.)
       but doesn't remove its rationale (see that todo's Context).
       Outcome 3 (rust port) is decided only on its own forcing function,
       per `dev.kb/rust-port.md` — not as a fallback from this spike.
-- [ ] Implement per venue verdict: on attach of any target, apply the
+- [ ] Implement in the puppeteer-core host, post-migration: on attach of any target, apply the
       standard session setup (Network.enable + capture settings) before
       release; route all sessions' events into the shared queue;
-      per-session `awaitingBody`/ledger as today.
+      per-session `awaitingBody`/ledger as today. Re-ordered 2026-07-26:
+      implementation lands after the host migration
+      (`2026-07-23-002-*`), where auto-attach is a plain API call.
 - [ ] Fixtures + tests: SW-registering page (cache-first fetch handler),
       popup firing a request at parse time (pre-attach window),
       cross-origin iframe (second listener in `tests/_common/server.mjs`).

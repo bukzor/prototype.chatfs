@@ -93,7 +93,7 @@ Full code-level sketch (diffs against current `capture.mjs`) was worked out in t
   - bounded-end-with-hung-request (never-responding `/hang` fixture; proves shutdown terminates) — kills `drain-grace-period-removed.md`, both injection variants
   - rWBS-presence assertion folded into the first test rather than standalone — kills `request-will-be-sent-passthrough-dropped.md`
   - hung-body-truncation-flush (fix 3's test) — not written; fix 3 not implemented this pass
-- [ ] Validate the fix by its own signature, not the original symptom: a post-fix live capture should contain responses (or truncation-marked RRs) for requests like the 2 `api/directory/servers` drops in the a59dc891 capture. The original zero-conversation-events symptom will NOT be resolved by this fix — that's `2026-07-22-001-*` (IndexedDB cache hydration). Needs a live capture (ask-first), not run this session; the automated suite (`pnpm test`) is green otherwise.
+- [ ] Validate the fix by its own signature, not the original symptom: a post-fix live capture should contain responses (or truncation-marked RRs) for requests like the 2 `api/directory/servers` drops in the a59dc891 capture. The original zero-conversation-events symptom will NOT be resolved by this fix — that's `2026-07-22-001-*` (IndexedDB cache hydration). Now runnable offline: the 2026-07-26 live series (`trash/live-verify/run*.jsonl`, all post-fix builds except run 2) can be grepped for rWBS-without-RR victims directly — no new capture needed for this half; fe37a61's commit message already reports zero such victims among run 1's index pages.
 
 ## Open Questions
 
