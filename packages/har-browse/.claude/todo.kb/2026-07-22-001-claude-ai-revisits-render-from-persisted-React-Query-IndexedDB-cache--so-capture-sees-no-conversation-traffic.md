@@ -106,12 +106,14 @@ shape, force the traffic instead.
       `Network.setCacheDisabled(true)`,
       `Network.setBypassServiceWorker(true)`
 - [x] Expose via `har_browse.mjs` CLI flag (`--clear-origin-storage`)
-- [ ] Live verification per provider: a claude.ai revisit capture now
-      contains `chat_conversation*` rWBS + RR with body; same forensic
-      grep on chatgpt + aistudio revisit captures checks them for
-      equivalent persisted-cache hydration. Ask-first (real browser,
-      real login) — the only step left, and the one that closes the
-      Success Criteria below.
+- [x] Live verification on claude.ai — done 2026-07-26, five human-driven
+      captures against the real site (`trash/live-verify/`, devlog
+      `2026-07-26-002`). The bug reproduces today and the flag fixes it;
+      see Live Verification below for the run matrix and the two
+      corrections it forced.
+- [ ] Same forensic grep on chatgpt + aistudio revisit captures, to see
+      whether they hydrate equivalently. Ask-first (real browser, real
+      login). Not started.
 - [x] Burn down the 4 pre-filed mutation-testing.kb entries, all now
       `status: done`. Two new entries cover the session settings
       (`session-cache-not-disabled`,
@@ -139,10 +141,51 @@ shape, force the traffic instead.
 
 ## Success Criteria
 
-- [ ] Two consecutive captures of the same claude.ai conversation with
+- [x] Two consecutive captures of the same claude.ai conversation with
       the same profile both contain the conversation response body in
-      the CDP stream
-- [ ] Login state survives (no re-auth needed on the second capture)
+      the CDP stream — runs 4 and 5, both `200` with a 198115-byte body,
+      byte-identical in length.
+- [x] Login state survives (no re-auth needed on the second capture) —
+      no login/auth navigation in either run, and an authenticated `200`
+      carrying real conversation content is itself the proof.
+
+## Live Verification (2026-07-26)
+
+One conversation, one persistent profile (`default_profile`), five
+captures. Conversation-request counts:
+
+| run | build | `--clear-origin-storage` | entered via | conversation requests |
+|-----|-------|--------------------------|-------------|----------------------|
+| 1 | fixed | no | Recents, then clicked in | 1 (198115-byte body) |
+| 2 | pre-fix (`fb60208^`) | n/a | cold load of the chat URL | **0** |
+| 3 | fixed | no | cold load | **0** |
+| 4 | fixed | **yes** | cold load | 1 (198115-byte body) |
+| 5 | fixed | **yes** | cold load | 1 (198115-byte body) |
+
+Run 2 is the reproduction: the human watched the conversation render
+while the capture recorded no request for it. Runs 4 and 5 are the fix.
+The human also reported run 4 loading visibly slower than the hydrating
+runs, which is the mechanism made observable.
+
+Two corrections this forced:
+
+1. **The per-session settings do not fix this.** Run 3 has
+   `setCacheDisabled` and `setBypassServiceWorker` and still captures
+   zero conversation traffic. Neither capture showed a single
+   `requestServedFromCache` event or a `fromServiceWorker` response, so
+   for claude.ai they address neither path. They remain justified for
+   the gap classes they target, but they are unvalidated live and must
+   not be described as covering this bug.
+2. **Run 1 fetched for an unrelated reason.** It entered the
+   conversation by clicking through from Recents -- a client-side route
+   change, which fetches regardless. Only a cold load of the
+   conversation URL exercises the parse-time hydration path. Any future
+   verification must cold-load the URL, or it measures nothing.
+
+Follow-on: entering via Recents sidesteps the bug, so a capture
+workflow that always navigates in from the list is incidentally safe.
+That is a fragile property to rely on -- it depends on claude.ai's
+routing -- but it explains why this was not noticed sooner.
 
 ## Notes
 

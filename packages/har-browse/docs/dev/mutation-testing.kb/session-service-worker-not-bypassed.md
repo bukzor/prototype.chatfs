@@ -41,3 +41,12 @@ The page also reports `navigator.serviceWorker.controller` into
 `#content`, asserted `false` — bypassing leaves the page uncontrolled,
 which is the mechanism behind the network-fetch count and the reason a
 fixture cannot wait for a controller before fetching.
+
+## Live Status
+
+Unvalidated against any live provider. The 2026-07-26 claude.ai
+verification (devlog `2026-07-26-002`) found no `fromServiceWorker` responses in any capture,
+and a run carrying this setting still recorded zero conversation
+traffic -- so this setting is not what fixes
+`.claude/todo.kb/2026-07-22-001-*`, and must not be described as
+covering it. The coverage above is fixture-level only.
