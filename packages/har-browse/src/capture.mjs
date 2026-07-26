@@ -230,6 +230,11 @@ export async function attachCapture(page, { howto, drainGraceMs = DRAIN_GRACE_MS
  * Launch a persistent-context browser, navigate, and return a capture
  * session. Per-profile state persists under `profileDir`.
  *
+ * `clearOriginStorage` defaults off here and on in the `har-browse`
+ * CLI. The asymmetry is deliberate: this is the primitive, and it does
+ * only what it is asked; the CLI is the capture *flow*, where a
+ * silently payload-free capture is the worse failure.
+ *
  * @param {{
  *   url: string,
  *   profileDir: string,

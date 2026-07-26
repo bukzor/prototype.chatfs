@@ -88,8 +88,8 @@ the app is forced to re-materialize its data as network traffic:
   traffic into ordinary page-session events without touching the
   profile — interim mitigation for `2026-07-23-001-*`'s non-page-target
   gap).
-- Wire the flag through `har_browse.mjs` CLI (`--clear-origin-storage`?)
-  and default it ON for the chatfs provider flows.
+- Wire it through the `har_browse.mjs` CLI and default it ON. *(Landed
+  2026-07-26 as an opt-out flag, `--keep-origin-storage`.)*
 
 Alternative considered: extract the conversation directly from the
 persisted cache via CDP `IndexedDB.requestData` — the cache *is* the
@@ -112,8 +112,10 @@ shape, force the traffic instead.
       see Live Verification below for the run matrix and the two
       corrections it forced.
 - [ ] Same forensic grep on chatgpt + aistudio revisit captures, to see
-      whether they hydrate equivalently. Ask-first (real browser, real
-      login). Not started.
+      whether they hydrate equivalently. Batched 2026-07-26 into
+      todo.md's live `--howto` session (request it per CLAUDE.md
+      Protocols); must cold-load each conversation's own URL, per the
+      run-1 correction below.
 - [x] Burn down the 4 pre-filed mutation-testing.kb entries, all now
       `status: done`. Two new entries cover the session settings
       (`session-cache-not-disabled`,
@@ -136,8 +138,15 @@ shape, force the traffic instead.
 - Which origin(s) to clear for claude.ai (claude.ai vs api CDN
   origins)? IndexedDB is origin-scoped; the `keyval` db lives on
   `https://claude.ai`.
-- Should clearing be per-provider policy (chatfs side) rather than a
-  har-browse default? har-browse provides the mechanism either way.
+- ~~Should clearing be per-provider policy (chatfs side) rather than a
+  har-browse default?~~ **Resolved 2026-07-26: har-browse default.**
+  This was the plan in Proposed Solution all along ("default it ON for
+  the chatfs provider flows"); the live runs made the cost of getting
+  it wrong concrete -- a capture that looks fine and holds none of its
+  payload. The CLI clears unless given `--keep-origin-storage`.
+  `startCapture` keeps the option defaulting off: the primitive does
+  what it is asked, the flow protects the human. Both directions pinned
+  by `tests/cli_clear_default.spec.mjs`.
 
 ## Success Criteria
 

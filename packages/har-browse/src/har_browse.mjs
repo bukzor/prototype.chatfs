@@ -8,7 +8,16 @@ const { values, positionals } = parseArgs({
   options: {
     howto: { type: "string" },
     profile: { type: "string", default: "default_profile" },
-    "clear-origin-storage": { type: "boolean", default: false },
+    // Clearing is the default: a provider that hydrates from its own
+    // persisted cache produces a capture with none of the payload in
+    // it, and that failure is silent. `--keep-origin-storage` opts out
+    // for the cases where the local state is the point -- inspecting
+    // what an app persisted, or preserving a locally-held draft.
+    "keep-origin-storage": { type: "boolean", default: false },
+    // For tests and automation. A headless run has no Done button to
+    // click, so it ends only when the caller closes the pipe or kills
+    // it.
+    headless: { type: "boolean", default: false },
   },
   allowPositionals: true,
 });
@@ -35,7 +44,8 @@ const session = await startCapture({
   url,
   profileDir,
   howto,
-  clearOriginStorage: values["clear-origin-storage"],
+  clearOriginStorage: !values["keep-origin-storage"],
+  headless: values.headless,
 });
 try {
   for await (const ev of session.events) {

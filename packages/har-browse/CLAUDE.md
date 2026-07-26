@@ -31,7 +31,7 @@ narrative history: `docs/dev/devlog/`. Open session threads: grep
 
 - `src/har_browse.mjs` -- CLI (`har-browse`, via package `bin`):
   `har-browse [URL] [--profile NAME] [--howto PATH]
-  [--clear-origin-storage] > events.jsonl`.
+  [--keep-origin-storage] > events.jsonl`.
   Streams until the human clicks the injected "Done Capturing" button
   or closes the window. Profile state persists under
   `${XDG_CACHE_HOME:-$HOME/.cache}/har-browse/profile/<name>`, so
@@ -61,14 +61,28 @@ narrative history: `docs/dev/devlog/`. Open session threads: grep
 
 ## Protocols
 
+- **Live verification via `--howto`:** when open work needs evidence
+  only a real provider session can give, request one -- the human
+  drives `har-browse --howto steps.txt` while the agent reads the
+  captured stream afterward. Standing policy (user-ratified
+  2026-07-26): asking is cheap and welcome; do not leave a todo parked
+  on "ask-first" when a session would settle it, and batch related
+  checks into one run series. Brief any timing-critical step in chat
+  *before* launch and place its instruction ahead of the action in the
+  howto file -- the human reads while the page is already live and
+  misses short windows otherwise. Protocol lessons (control = pre-fix
+  build; cold-load the artifact's own URL): devlog `2026-07-26-002`.
 - **Forcing state through the network:** an app that already holds its
   data locally makes no request, and a capture cannot record what never
   crossed the wire. Three settings push against that. Every session gets
   `Network.setCacheDisabled` and `Network.setBypassServiceWorker` at
-  wire-up; `--clear-origin-storage` additionally wipes the target
-  origin's IndexedDB and Cache Storage before navigation (cookies
-  survive -- login state is why profiles persist). Off by default, since
-  whether to force a refetch is provider policy. Coverage:
+  wire-up; the CLI additionally wipes the target origin's IndexedDB and
+  Cache Storage before navigation (cookies survive -- login state is why
+  profiles persist). That clear is **on by default**, because without it
+  a cold-loaded claude.ai conversation capture contains none of the
+  conversation: verified live 2026-07-26, devlog `2026-07-26-002`.
+  `--keep-origin-storage` opts out. The `startCapture` option itself
+  defaults off -- primitive versus flow. Coverage:
   `tests/clear_origin_storage.spec.mjs`, `tests/session_settings.spec.mjs`.
 - **Done button:** the injected overlay sets
   `#capture-done[data-clicked="true"]` on click; `capture.mjs` observes

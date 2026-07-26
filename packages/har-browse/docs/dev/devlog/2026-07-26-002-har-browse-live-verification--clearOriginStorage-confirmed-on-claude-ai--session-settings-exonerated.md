@@ -89,12 +89,15 @@ bug, so they cannot test that model. Only a run that could fail counts.
 
 ## Open Questions
 
-- Should `--clear-origin-storage` default on? A cold-load claude.ai
-  capture without it is silently empty of its payload, which is what the
-  data-possession mission forbids. Against: it clears app storage every
-  capture, including locally held drafts, and slows the load.
-  Recommendation recorded on the taskfile as yes for provider flows;
-  left off pending the user's call.
+- ~~Should the clear default on?~~ Resolved the same day: yes, and the
+  user noted this had already been agreed -- the taskfile's Proposed
+  Solution said "default it ON for the chatfs provider flows" and I had
+  shipped it off, over-reading a later open question as reopening a
+  settled call. The CLI now clears unless given `--keep-origin-storage`;
+  the `startCapture` primitive still defaults off. Pinned both ways by
+  `tests/cli_clear_default.spec.mjs`, which also drove adding
+  `--headless` to the CLI so the suite stops opening windows on the
+  developer's desktop.
 - Do chatgpt and aistudio hydrate equivalently? Untested. Same protocol,
   cold-loading a conversation URL on each.
 - Does the index page hydrate the same way? Run 1 paginated live, but it
