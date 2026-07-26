@@ -26,6 +26,11 @@ import { createServer } from "node:http";
  *   refetch is served from Cache Storage without network traffic unless
  *   the capture bypasses service workers. `#content` reports
  *   "sw:<controlled>:<n>" once the payload has been (re)fetched.
+ * - GET /client-hints → HTML served with `Accept-CH:
+ *   Sec-CH-UA-Full-Version-List`, which then fetches
+ *   `/payload?id=hints`. That second request carries both the
+ *   low-entropy `Sec-CH-UA` and the negotiated full-version list, so a
+ *   test can check the two agree.
  * - GET /trusted-types → minimal HTML served with
  *   `Content-Security-Policy: require-trusted-types-for 'script'`,
  *   matching aistudio.google.com's enforcement. For tests exercising
@@ -151,6 +156,26 @@ self.addEventListener("fetch", (e) => {
         "content-security-policy": "require-trusted-types-for 'script'",
       });
       res.end("<!doctype html><html><body>trusted types</body></html>");
+      return;
+    }
+    if (url.pathname === "/client-hints") {
+      // `Accept-CH` opts this origin into a high-entropy hint, which the
+      // browser then sends on *subsequent* requests -- hence the fetch
+      // below rather than an assertion on this response. Lets a test see
+      // both brand lists: `Sec-CH-UA` (low-entropy, always sent) and
+      // `Sec-CH-UA-Full-Version-List` (only when asked for).
+      res.writeHead(200, {
+        "content-type": "text/html",
+        "accept-ch": "Sec-CH-UA-Full-Version-List",
+      });
+      res.end(`<!doctype html>
+<html><body><div id="content">loading</div>
+<script>
+(async () => {
+  const data = await (await fetch("/payload?id=hints")).json();
+  document.getElementById("content").textContent = "hints:" + data.n;
+})();
+</script></body></html>`);
       return;
     }
     if (url.pathname === "/abort-after-headers") {

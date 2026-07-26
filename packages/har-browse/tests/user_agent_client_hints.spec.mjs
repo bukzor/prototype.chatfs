@@ -25,19 +25,79 @@
 import { test, expect } from "./fixtures.mjs";
 import { startCapture } from "../src/host_puppeteer.mjs";
 import { cachePath } from "../src/cache.mjs";
-import { rmSync } from "node:fs";
+// `playwright-core` only for the pinned browser's path -- the same
+// lookup `host_puppeteer.mjs` does, not a Playwright launch.
+import { chromium } from "playwright-core";
+import puppeteer from "puppeteer-core";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import pkg from "../package.json" with { type: "json" };
+
+/**
+ * Parse a `Sec-CH-UA`-style structured header into its entries.
+ * Deliberately strict -- a mangled list should fail here rather than
+ * silently reduce to fewer entries.
+ *
+ * @param {string} header
+ * @returns {Array<{brand: string, version: string}>}
+ */
+function parseBrandList(header) {
+  return header.split(", ").map((entry) => {
+    const m = /^"(.*)";v="(.*)"$/.exec(entry);
+    if (!m) throw new Error(`unparseable brand entry: ${JSON.stringify(entry)}`);
+    return { brand: m[1], version: m[2] };
+  });
+}
+
+/**
+ * The browser's own brand list, read from a browser we have not
+ * touched. An independent oracle on purpose: deriving the expectation
+ * from `userAgentMetadata()` would make the assertion circular, and
+ * hard-coding it would fail on every Chromium bump for no reason.
+ *
+ * It must be the *same* browser the host launches. Playwright's
+ * launcher is not: it reports `"HeadlessChrome";v="147", "Not.A/Brand",
+ * "Chromium";v="147"` where a puppeteer launch of the same binary
+ * reports two entries led by `"Chromium"`. Reading the wrong one makes
+ * this a comparison of two launchers rather than of one launcher
+ * against itself.
+ *
+ * @returns {Promise<Array<{brand: string, version: string}>>}
+ */
+async function unbrandedBrands() {
+  const dir = mkdtempSync(join(tmpdir(), "ua-oracle-"));
+  const browser = await puppeteer.launch({
+    executablePath: process.env.HAR_BROWSE_BROWSER ?? chromium.executablePath(),
+    userDataDir: dir,
+    headless: true,
+    networkEnabled: false,
+  });
+  try {
+    const page = await browser.newPage();
+    // Secure context required; `file:` is one and costs no server.
+    await page.goto("file:");
+    return await page.evaluate(
+      () => /** @type {any} */ (navigator).userAgentData.brands,
+    );
+  } finally {
+    await browser.close();
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
 
 test("captured requests carry client hints and a branded User-Agent", async ({
   payloadServer,
 }) => {
   test.setTimeout(60_000);
 
+  const browserBrands = await unbrandedBrands();
   const profileDir = cachePath("profile", `ua-hints-test-${process.pid}`);
   /** @type {import("../src/capture.mjs").CDPEvent[]} */
   const messages = [];
   try {
     const session = await startCapture({
-      url: `${payloadServer.url}/`,
+      url: `${payloadServer.url}/client-hints`,
       profileDir,
       headless: true,
     });
@@ -58,15 +118,70 @@ test("captured requests carry client hints and a branded User-Agent", async ({
   );
   expect(wire.length, "the capture recorded on-the-wire headers").toBeGreaterThan(0);
 
-  for (const { params } of wire) {
-    const hints = Object.keys(params.headers).filter((h) =>
-      h.toLowerCase().startsWith("sec-ch-ua"),
+  /** @type {Array<Record<string, string>>} */
+  const wireHeaders = wire.map(({ params }) =>
+    Object.fromEntries(
+      Object.entries(params.headers).map(([h, v]) => [h.toLowerCase(), String(v)]),
+    ),
+  );
+
+  for (const headers of wireHeaders) {
+    // Exact, in both regimes: the three low-entropy hints always, plus
+    // the full-version list on requests that follow the `Accept-CH`
+    // negotiation and nothing else either way.
+    const hints = Object.keys(headers).filter((h) => h.startsWith("sec-ch-ua")).sort();
+    const negotiated = hints.includes("sec-ch-ua-full-version-list");
+    expect(hints, "exactly the hints we expect, no more").toEqual(
+      negotiated
+        ? ["sec-ch-ua", "sec-ch-ua-full-version-list", "sec-ch-ua-mobile", "sec-ch-ua-platform"]
+        : ["sec-ch-ua", "sec-ch-ua-mobile", "sec-ch-ua-platform"],
     );
-    expect(hints.sort(), "every request carries the default client hints").toEqual([
-      "sec-ch-ua",
-      "sec-ch-ua-mobile",
-      "sec-ch-ua-platform",
-    ]);
+
+    // The brand list is the only disclosure a client-hints-only site can
+    // see -- the UA's comment is invisible to it. Assert the parsed
+    // list, not a substring: what matters is that we added exactly one
+    // entry, at the end, and left the browser's own list intact ahead of
+    // it. A `toContain` passes just as happily on a list we mangled.
+    const brands = parseBrandList(headers["sec-ch-ua"]);
+    expect(brands.at(-1), "our brand is appended, major version only").toEqual({
+      brand: "har-browse",
+      version: "1",
+    });
+    expect(
+      brands.filter((b) => b.brand === "har-browse"),
+      "exactly once",
+    ).toHaveLength(1);
+    expect(
+      brands.slice(0, -1),
+      "the browser's own brands survive ahead of ours",
+    ).toEqual(browserBrands);
+    expect(
+      browserBrands.map((b) => b.brand),
+      "including the real engine -- we added, not replaced",
+    ).toContain("Chromium");
+  }
+
+  // `Sec-CH-UA-Full-Version-List` is only sent where a site negotiated
+  // it, which `/client-hints` does. The two lists must agree: a token in
+  // one and not the other is an inconsistency more conspicuous than the
+  // disclosure it carries.
+  const negotiatedRequests = wireHeaders.filter(
+    (h) => h["sec-ch-ua-full-version-list"],
+  );
+  expect(
+    negotiatedRequests.length,
+    "the Accept-CH negotiation produced a full-version list",
+  ).toBeGreaterThan(0);
+  for (const headers of negotiatedRequests) {
+    const full = parseBrandList(headers["sec-ch-ua-full-version-list"]);
+    expect(full.at(-1), "the full list carries our exact version").toEqual({
+      brand: "har-browse",
+      version: pkg.version,
+    });
+    expect(
+      full.map((b) => b.brand),
+      "and names the same brands, in the same order, as the short list",
+    ).toEqual(parseBrandList(headers["sec-ch-ua"]).map((b) => b.brand));
   }
 
   const userAgents = new Set(

@@ -12,8 +12,10 @@ and each has a different cost against `unblocked-sessions`' requirement
 that the session stay indistinguishable from a real browser in every
 other respect. Each file opens with its verdict.
 
-Exactly one is shipped today. The measurements they cite are in
-`../ua-position-gate.md`.
+Two are shipped, and they are complementary rather than redundant: the
+User-Agent comment reaches servers that read `User-Agent`, the brand
+list reaches those that read only client hints. The measurements they
+cite are in `../ua-position-gate.md`.
 
 ## What belongs here
 

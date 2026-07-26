@@ -1,6 +1,6 @@
 # Sec-CH-UA brand list
 
-**Verdict: not implemented. Measured viable — the candidate to add.**
+**Verdict: shipped.**
 
 A site that reads only client hints — an increasing share — sees no
 disclosure from us today. The `User-Agent` channels reach the rest; this
@@ -39,8 +39,34 @@ two entries, no `"Google Chrome"`, because this is Chromium rather than
 branded Chrome. Any code that assumes a three-entry list or a particular
 GREASE spelling is assuming wrong.
 
-## Cost to implement
+## Position
 
-Small. `userAgentMetadata()` already reads the browser's true metadata
-and `hostSession()` already sends it, so this is an insertion into an
-existing structure rather than new machinery.
+Appended, and the GREASE entry is left wherever the browser put it.
+Nothing requires GREASE to be last: Chromium's `GenerateBrandVersionList`
+picks from a 3! permutation table seeded by the major version, so the
+order is fixed per release and varies across them — real captures show
+GREASE leading (`"Not/A)Brand";v="99", "Microsoft Edge";v="115", …`) as
+readily as trailing. Position carries no meaning by construction, which
+is the whole point of GREASEing the list.
+
+Appending does have one concrete virtue: the browser's own entries stay
+contiguous and in their original order, so a comparison against a known
+profile for this Chromium sees one clean addition at the end rather than
+a shift through the middle.
+
+## Implementation
+
+`userAgentMetadata()` in `src/host_puppeteer.mjs`, which was already
+reading the browser's true metadata for `hostSession()` to send — this
+is an insertion into an existing structure, not new machinery.
+
+`tests/user_agent_client_hints.spec.mjs` holds it against the wire
+headers, and asserts the parsed lists rather than substrings: our entry
+appears exactly once, at the end, with the right version in each list,
+and the browser's own brands survive ahead of it unchanged. The oracle
+for "unchanged" is a second, untouched puppeteer launch — it must be
+puppeteer and not Playwright, whose launcher reports a different brand
+list (`"HeadlessChrome"` leading three entries) for the same binary.
+The fixture's `/client-hints` route sends `Accept-CH` so the negotiated
+full-version list actually appears on the wire; without it, half of this
+ships untested.

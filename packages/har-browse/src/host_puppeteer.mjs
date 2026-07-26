@@ -15,14 +15,24 @@ import pkg from "../package.json" with { type: "json" };
 /** @typedef {import("puppeteer-core").Browser} Browser */
 
 // Self-identification: who we are and where to reach the maintainer,
-// so operators can recognize this tool's traffic. Two spellings,
-// because a User-Agent's two positions accept different grammars
-// (RFC 9110 §10.1.5): inside a `comment` the text is free-form ctext,
-// conventionally `; `-separated; as a `product` the name and version
-// must be `token`s, and `;` and `:` are not token characters -- so the
-// contact URL needs a comment of its own out there.
+// so operators can recognize this tool's traffic. Several spellings,
+// because each place a disclosure can go accepts a different grammar
+// (survey: `design.kb/040-design.kb/self-identification.kb/`).
+//
+// A User-Agent's two positions differ per RFC 9110 §10.1.5: inside a
+// `comment` the text is free-form ctext, conventionally `; `-separated;
+// as a `product` the name and version must be `token`s, and `;` and
+// `:` are not token characters -- so the contact URL needs a comment of
+// its own out there.
 const UA_COMMENT_FIELDS = `${pkg.name}/${pkg.version}; +${pkg.homepage}`;
 const UA_PRODUCT = `${pkg.name}/${pkg.version} (+${pkg.homepage})`;
+
+// The client-hint brand list takes a third: significant version only in
+// `brands`, full version in `fullVersionList`, per the two lists'
+// definitions. Both or neither -- a token in one and not the other is
+// an inconsistency more conspicuous than the disclosure it carries.
+const UA_BRAND = { brand: pkg.name, version: pkg.version.split(".")[0] };
+const UA_BRAND_FULL = { brand: pkg.name, version: pkg.version };
 
 /**
  * Brand a User-Agent inside its platform comment, rather than as the
@@ -87,7 +97,7 @@ const HIGH_ENTROPY_HINTS = [
 
 /**
  * Read the browser's own User-Agent Client Hint metadata, so a branded
- * UA override can carry it forward unchanged.
+ * UA override can carry it forward with only our own brand added.
  *
  * `Network.setUserAgentOverride` without `userAgentMetadata` makes
  * Chromium send *no* `Sec-CH-UA*` headers at all -- a UA anomaly no
@@ -95,6 +105,14 @@ const HIGH_ENTROPY_HINTS = [
  * hole besides: the recorded requests would lack headers the live app
  * sends. The metadata must therefore be truthful, which means asking
  * the browser rather than constructing it.
+ *
+ * The brand list is the one field we add to rather than pass through: a
+ * site that reads only client hints would otherwise see no disclosure
+ * at all, the UA comment being invisible to it. The list is built for
+ * this -- unordered, extensible, and already carrying a GREASE entry
+ * sites must tolerate -- and it is measured-compatible with the gate
+ * that rules out a trailing UA product
+ * (`design.kb/040-design.kb/self-identification.kb/`).
  *
  * `navigator.userAgentData` requires a secure context, which
  * `about:blank` is not; `file:` (which Chromium resolves to the
@@ -116,8 +134,8 @@ export async function userAgentMetadata(browser) {
       HIGH_ENTROPY_HINTS,
     );
     return {
-      brands: hints.brands,
-      fullVersionList: hints.fullVersionList,
+      brands: [...hints.brands, UA_BRAND],
+      fullVersionList: [...hints.fullVersionList, UA_BRAND_FULL],
       fullVersion: hints.uaFullVersion,
       platform: hints.platform,
       platformVersion: hints.platformVersion,
