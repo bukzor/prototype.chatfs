@@ -64,9 +64,9 @@ is an insertion into an existing structure, not new machinery.
 headers, and asserts the parsed lists rather than substrings: our entry
 appears exactly once, at the end, with the right version in each list,
 and the browser's own brands survive ahead of it unchanged. The oracle
-for "unchanged" is a second, untouched puppeteer launch — it must be
-puppeteer and not Playwright, whose launcher reports a different brand
-list (`"HeadlessChrome"` leading three entries) for the same binary.
-The fixture's `/client-hints` route sends `Accept-CH` so the negotiated
-full-version list actually appears on the wire; without it, half of this
-ships untested.
+for "unchanged" is a second, untouched puppeteer launch. It must be
+puppeteer: Playwright *headless* runs a different executable and reports
+a three-entry list led by `"HeadlessChrome"` (see
+`../headless-changes-the-agent.md`). The fixture's `/client-hints` route
+sends `Accept-CH` so the negotiated full-version list actually appears on
+the wire; without it, half of this ships untested.

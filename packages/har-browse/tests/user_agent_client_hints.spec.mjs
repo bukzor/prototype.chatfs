@@ -56,12 +56,14 @@ function parseBrandList(header) {
  * from `userAgentMetadata()` would make the assertion circular, and
  * hard-coding it would fail on every Chromium bump for no reason.
  *
- * It must be the *same* browser the host launches. Playwright's
- * launcher is not: it reports `"HeadlessChrome";v="147", "Not.A/Brand",
- * "Chromium";v="147"` where a puppeteer launch of the same binary
- * reports two entries led by `"Chromium"`. Reading the wrong one makes
- * this a comparison of two launchers rather than of one launcher
- * against itself.
+ * It must be the *same* browser the host launches, and headless makes
+ * that easy to get wrong. Playwright headless runs a different
+ * executable -- the `chromium_headless_shell`, betrayed by its
+ * un-reduced version -- and reports a three-entry list led by
+ * `"HeadlessChrome"`, where puppeteer driving the headful binary with
+ * `--headless=new` reports two led by `"Chromium"`. Headful the two
+ * agree. Reading the wrong one compares two browsers rather than one
+ * browser against itself.
  *
  * @returns {Promise<Array<{brand: string, version: string}>>}
  */
