@@ -8,6 +8,7 @@ references.
 **Start here based on your goal:**
 
 - **New user? Want overview?** → [../README.md] - What the project does
+- **Want to actually use it?** → [how-to-chatfs.md] - Pull a conversation down as markdown
 - **Want to contribute?** → [../HACKING.md] - Setup and development workflow
 - **Resume development session?** → Latest [../.claude/todo*]
 - **Learn system architecture?** → [dev/design.kb/] - Layered design knowledge; decision rationale lives inline with each entry
@@ -20,6 +21,7 @@ references.
 
 ## Structure
 
+- **how-to-chatfs.md** - User-facing: how to pull conversations down today
 - **dev/** - Developer-focused documentation (design, plans, logs)
 - (future) **examples/** - Usage examples and tutorials for end users
 - top-level namespace reserved for user-facing documentation.

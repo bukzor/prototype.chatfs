@@ -4,7 +4,11 @@ Browse your chat conversations (claude.ai, ChatGPT) as files and directories, wi
 
 ## Status
 
-⚠️ **Pre-Alpha:** Not ready for use. Documentation and design phase.
+⚠️ **Pre-Alpha.** The FUSE mount below doesn't exist yet.
+
+What does work today: a hand-driven CLI that pulls a conversation out of
+claude.ai, chatgpt.com, or AI Studio and writes it to disk as markdown. See
+[docs/how-to-chatfs.md].
 
 ## What This Will Do
 

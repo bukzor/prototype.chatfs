@@ -1,28 +1,33 @@
 # Hacking on chatfs
 
-**Last Updated:** 2025-11-01
+**Last Updated:** 2026-07-27
 
 ## Setup
 
+To *use* chatfs rather than develop it, see [docs/how-to-chatfs.md] — the
+working pipeline lives in `docs/dev/design-incubators/chatfs-cli-mockup/`, not
+in `packages/chatfs/` (still a stub).
+
 **Prerequisites:**
 
-- Python 3.10+
-- uv (Python package manager)
-- Claude.ai session key
+- Python 3.12+
+- Node 22+
+- uv (Python package manager), pnpm (Node package manager)
 
-**Install dependencies:**
+**Install dependencies** — from the repo root:
 
 ```bash
-cd claude-api
-uv sync
+uv sync        # Python workspace members, into .venv/
+pnpm install   # Node workspace (har-browse)
 ```
 
-**Get session key:**
+`direnv` (`.envrc`) puts `.venv/bin`, `node_modules/.bin`, and `bin/` on your
+PATH; that's how `har-browse` becomes callable.
 
-1. Log into claude.ai in your browser
-2. Open browser DevTools → Application → Cookies
-3. Copy the `sessionKey` cookie value
-4. Store in `.env`: `CLAUDE_SESSION_KEY=sk-ant-...`
+**No API key is needed.** Capture drives your own logged-in browser session via
+CDP — see [docs/how-to-chatfs.md]. (Earlier prototypes used a `sessionKey`
+cookie against the claude.ai API; that approach is abandoned and survives only
+in `trash/`.)
 
 ## Project Structure
 
@@ -40,9 +45,11 @@ packages/
 ├── bukzor.chatgpt-export/   # Python: ChatGPT conversation export/splat
 ├── har-browse/              # Node/Playwright: HAR capture (BB1)
 docs/
+├── how-to-chatfs.md         # User-facing: pulling conversations down today
 └── dev/
     ├── design.kb/           # Layered design knowledge
     ├── design-incubators/   # Active design explorations
+    │   └── chatfs-cli-mockup/  # The working capture→render pipeline
     ├── background.kb/       # Technology primers
     ├── technical-policy.kb/ # Cross-cutting guidance
     └── devlog/              # Session history

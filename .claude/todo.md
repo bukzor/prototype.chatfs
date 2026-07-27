@@ -31,6 +31,12 @@ Driver: [Harmonize with llm-* skills](todo.kb/2026-01-02-000-harmonize-with-llm-
       `docs/dev/devlog/2026-07-13-000-graduation-and-integration-planning.md`;
       decided names/conventions in
       `docs/dev/design.kb/040-design.kb/package-division.md`.
+- [ ] Re-cut `docs/how-to-chatfs.md` at graduation — every command in it is
+      `python -m chatfs.provider.<name>...` run from the incubator dir, and
+      becomes wrong the moment `packages/chatfs-cli` (or `chatfs mount`) is the
+      real entry point. Same pass should de-overlap it from the incubator
+      README (user-facing vs stage-by-stage). Written 2026-07-27 — devlog
+      `docs/dev/devlog/2026-07-27-000-First-user-facing-doc--how-to-chatfs.md`.
 
 ## chatfs-cli-mockup — next sessions
 
