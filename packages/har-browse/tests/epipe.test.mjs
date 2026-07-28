@@ -50,21 +50,20 @@ test("har-browse | head -n 1 exits cleanly", { timeout: 25000 }, async () => {
   // window for the user to close manually. SIGTERM only — Chromium
   // handles it cleanly; SIGKILL would forfeit the cleanup we want.
   //
-  // This opens a real window, because the capture is headful by
-  // construction -- headless rewrites the User-Agent, so the mode was
-  // removed rather than shipped (see `startCapture`'s doc comment). Put
-  // the suite under a virtual display if that matters; do not reach for
-  // a headless flag that no capture could use.
+  // `--headless` is the CLI's windowless mode: no visible surface, but
+  // the same browser and the same User-Agent (see `startCapture`'s
+  // `windowless`). Not Chromium's headless mode, which this package
+  // does not use anywhere.
   //
   // Budget: 4.30/4.31/4.38s over three standalone headed runs on
   // Crostini. The old 5s guard was the cause of this test's
-  // intermittent failures, and headless was never the cure -- it
-  // measured 4.6-4.7s, *slower*, so 5s was marginal either way. 15s is
-  // ~3.5x the measured cost, which is right for a guard whose job is
+  // intermittent failures, and Chromium's headless was never the cure --
+  // it measured 4.6-4.7s, *slower*, so 5s was marginal either way. 15s
+  // is ~3.5x the measured cost, which is right for a guard whose job is
   // catching an infinite hang: a tight budget buys nothing here and
   // costs flakes.
   const bin = join(__dirname, "..", "src", "har_browse.mjs");
-  const cmd = `node ${JSON.stringify(bin)} --profile ${profileName} http://127.0.0.1:${port}/ | head -n 1`;
+  const cmd = `node ${JSON.stringify(bin)} --headless --profile ${profileName} http://127.0.0.1:${port}/ | head -n 1`;
   const { stdout, stderr } = await exec(
     "timeout",
     ["15s", "sh", "-c", cmd],

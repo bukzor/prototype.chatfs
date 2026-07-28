@@ -68,6 +68,25 @@ export function brandUserAgent(userAgent) {
   return branded === userAgent ? `${userAgent} ${UA_PRODUCT}` : branded;
 }
 
+// Run without a visible surface, while remaining the browser we would
+// otherwise be. `--ozone-platform` selects a display *backend*; it is
+// not `--headless`, which is a mode and rewrites the User-Agent.
+//
+// The other two flags are not optional decoration. Without
+// `--window-size` the viewport is 0x0, and without `--screen-info` the
+// `screen` object reports 1x1 -- a value no real display has, and the
+// only measured anomaly this configuration would otherwise carry. Given
+// both, every property we know how to check matches a headful run:
+// User-Agent, client-hint brands, `requestAnimationFrame`, and the real
+// GPU renderer. Measured by the sibling script of the design note above.
+const WINDOWLESS_SCREEN = { width: 1440, height: 960 };
+const WINDOWLESS_WINDOW = { width: 1280, height: 900 };
+export const WINDOWLESS_ARGS = [
+  "--ozone-platform=headless",
+  `--window-size=${WINDOWLESS_WINDOW.width},${WINDOWLESS_WINDOW.height}`,
+  `--screen-info={0,0 ${WINDOWLESS_SCREEN.width}x${WINDOWLESS_SCREEN.height}}`,
+];
+
 /**
  * Locate a Chromium for puppeteer-core (which bundles no browser).
  * `$HAR_BROWSE_BROWSER` wins; otherwise use Playwright's installed
@@ -257,14 +276,19 @@ export async function attachCapture(page, { howto, drainGraceMs } = {}) {
  * only what it is asked; the CLI is the capture *flow*, where a
  * silently payload-free capture is the worse failure.
  *
- * Always headful, and not configurable. Headless rewrites the
- * User-Agent's browser product to `HeadlessChrome`, so a headless
- * capture announces automation on every request -- an
- * `unblocked-sessions` violation
+ * `windowless` drops the visible surface without altering the browser.
+ * It is emphatically *not* puppeteer's `headless`, which is a mode, and
+ * which rewrites the User-Agent's browser product to `HeadlessChrome`
+ * -- that mode was removed from this package for exactly that reason
  * (`design.kb/040-design.kb/self-identification.kb/headless-changes-the-agent.md`).
- * It also cannot work as a capture: the cut is a human clicking Done.
- * For a quiet test run, put the whole suite under a virtual display
- * rather than giving the capture a mode nobody can ship.
+ * This is a display *backend*: same binary, same mode, same User-Agent,
+ * same brands, working `requestAnimationFrame`, real GPU. Do not
+ * "simplify" it into `headless: true`.
+ *
+ * There is no Done button to click without a surface, so a windowless
+ * capture ends only when its consumer closes the stream or the process
+ * dies. That is the honest use: unattended runs and the test suite,
+ * where the correct human interaction is none.
  *
  * @param {{
  *   url: string,
@@ -272,6 +296,7 @@ export async function attachCapture(page, { howto, drainGraceMs } = {}) {
  *   howto?: string,
  *   drainGraceMs?: number,
  *   clearOriginStorage?: boolean,
+ *   windowless?: boolean,
  * }} opts
  * @returns {Promise<{
  *   page: Page,
@@ -287,6 +312,7 @@ export async function startCapture({
   howto,
   drainGraceMs,
   clearOriginStorage = false,
+  windowless = false,
 }) {
   mkdirSync(profileDir, { recursive: true });
 
@@ -316,6 +342,7 @@ export async function startCapture({
       // A reused profile can offer to restore the previous session's
       // tabs; a capture run always starts from its own navigation.
       "--hide-crash-restore-bubble",
+      ...(windowless ? WINDOWLESS_ARGS : []),
     ],
   });
   // A persistent profile restores the previous session's tabs. Only

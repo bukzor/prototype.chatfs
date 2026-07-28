@@ -14,6 +14,12 @@ const { values, positionals } = parseArgs({
     // for the cases where the local state is the point -- inspecting
     // what an app persisted, or preserving a locally-held draft.
     "keep-origin-storage": { type: "boolean", default: false },
+    // No visible window, same browser -- see `startCapture`'s
+    // `windowless`. Not Chromium's `--headless`, which would rewrite
+    // the User-Agent. There is no Done button to click without a
+    // surface, so the run ends when its consumer closes the pipe or the
+    // process dies: for unattended captures and the test suite.
+    headless: { type: "boolean", default: false },
   },
   allowPositionals: true,
 });
@@ -41,6 +47,7 @@ const session = await startCapture({
   profileDir,
   howto,
   clearOriginStorage: !values["keep-origin-storage"],
+  windowless: values.headless,
 });
 try {
   for await (const ev of session.events) {

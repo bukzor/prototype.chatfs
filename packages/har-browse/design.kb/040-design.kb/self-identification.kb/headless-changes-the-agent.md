@@ -3,79 +3,89 @@ why:
   - unblocked-sessions
 ---
 
-# Headless changes the agent
+# Headless changes the agent; windowless does not
 
-`--headless` is not a display choice the wire is unaware of. It rewrites
-the User-Agent's browser product, and under one launcher it rewrites the
-client-hint brand list too. A headless capture therefore announces
-itself as automation on every request — an `unblocked-sessions`
-violation that has nothing to do with our deliberate disclosure.
+Chromium's `--headless` is a *mode*, and it rewrites what the browser
+says about itself — starting with the User-Agent's browser product.
+`--ozone-platform=headless` is a display *backend*: it removes the
+visible surface and nothing else. The distinction is the whole content
+of this note, because one of them is unshippable and the other is what
+we ship.
 
-## Measured 2026-07-27
+## Measured 2026-07-28
 
-Same `chromium.executablePath()` passed to puppeteer; Playwright
-launching itself. `file:` page, `navigator.userAgent` and
-`navigator.userAgentData.brands` read directly.
+Sibling `headless-changes-the-agent.mjs`, same pinned Chromium
+throughout, properties read from a `file:` page.
 
-| launcher | headless | UA product | `Sec-CH-UA` |
-| --- | --- | --- | --- |
-| puppeteer | yes | `HeadlessChrome/147.0.0.0` | `"Chromium";v="147", "Not.A/Brand";v="8"` |
-| puppeteer | no | `Chrome/147.0.0.0` | `"Chromium";v="147", "Not.A/Brand";v="8"` |
-| playwright | yes | `HeadlessChrome/147.0.7727.15` | `"HeadlessChrome";v="147", "Not.A/Brand";v="8", "Chromium";v="147"` |
-| playwright | no | `Chrome/147.0.0.0` | `"Chromium";v="147", "Not.A/Brand";v="8"` |
+| launch | UA product | `Sec-CH-UA` | screen | GPU |
+| --- | --- | --- | --- | --- |
+| puppeteer headful (control) | `Chrome/147.0.0.0` | `Chromium, Not.A/Brand` | 1410x940 | virgl / Intel UHD |
+| puppeteer, Chromium `--headless` | **`HeadlessChrome/…`** | `Chromium, Not.A/Brand` | **800x600** | **SwiftShader** |
+| playwright `--headless` | **`HeadlessChrome/147.0.7727.15`** | **`HeadlessChrome, Not.A/Brand, Chromium`** | **800x600** | **SwiftShader** |
+| windowless (what we ship) | `Chrome/147.0.0.0` | `Chromium, Not.A/Brand` | 1440x960 | virgl / Intel UHD |
 
-Two separate effects, easily conflated:
+`requestAnimationFrame` fires in all four — worth knowing, since the
+Done-button predicate polls on it.
 
-- **Headless rewrites the UA product** under both launchers. This is
-  Chromium's own behavior, not the launcher's.
-- **Playwright headless is a different executable.** Its un-reduced
-  version string (`147.0.7727.15` where Chromium's UA reduction gives
-  everyone else `147.0.0.0`) marks it as `chromium_headless_shell`,
-  which Playwright downloads separately and prefers when headless. It
-  alone injects a `HeadlessChrome` *brand*. Puppeteer driving the
-  headful binary with `--headless=new` leaves the brand list alone.
+Chromium's headless mode carries three tells at once: the User-Agent
+product, a stock 800x600 screen, and a software renderer in place of the
+real GPU. Playwright's adds a fourth by running a different executable
+entirely — `chromium_headless_shell`, betrayed by its un-reduced version
+string — which injects a `HeadlessChrome` *brand* into the client hints.
 
-Headful, all four agree. The disagreement is entirely a headless
-artifact.
+The windowless row differs from the control in no property we know how
+to check. `devicePixelRatio` is 1 rather than this machine's 1.6, and
+the renderer reports desktop GL rather than GLES; both are ordinary
+values a real browser reports, not anomalies.
 
-## Resolution: the capture is headful, and that is not an option
+## What we ship, and why it is called `--headless`
 
-`brandUserAgent()` extends whatever `browser.userAgent()` returns, so a
-headless run shipped `… HeadlessChrome/147.0.0.0 Safari/537.36` with our
-field in the platform comment — disclosure intact, shape gate satisfied,
-and `unblocked-sessions`' other half violated, since no human's browser
-says `HeadlessChrome`.
+`har-browse --headless` and `startCapture({ windowless: true })` pass
+three flags:
 
-The obvious repair was to normalize `HeadlessChrome` back to `Chrome`
-under `--headless`. It was the wrong one, and the reason is worth
-keeping: that would be the single place where we *hide* something rather
-than add to it, adopted to preserve a mode nothing could ship. The
-capture's cut is a human clicking Done; a headless capture has no
-human, and never had a legitimate caller. Removing the mode subtracts a
-problem instead of buying a lie to keep it.
+```
+--ozone-platform=headless
+--window-size=1280,900
+--screen-info={0,0 1440x960}
+```
 
-So `har-browse --headless` is gone (2026-07-28) and `startCapture` no
-longer takes `headless` — the production host launches headful, full
-stop. The test-only `host_playwright.mjs` keeps its option: it misstates
-nothing about production, and taking it away would put a window on the
-developer's desktop for all 31 e2e specs to no purpose.
+The last two are load-bearing, not tuning. Without `--window-size` the
+viewport is 0x0. Without `--screen-info` the `screen` object reports
+1x1 — a value no real display has, and the only anomaly this
+configuration would otherwise carry.
 
-The payoff is in the test that could not previously do its job. While
-`--headless` existed, `tests/user_agent_client_hints.spec.mjs` ran
-headless, so its User-Agent assertion had to tolerate `HeadlessChrome/`
-— it validated a string that would draw a challenge in production, and
-could not have caught one that did. It now asserts ` Chrome/… Safari`
-and the absence of `Headless`.
+The CLI flag keeps the name users expect for "no window". The internal
+option does not: `windowless` avoids colliding with puppeteer's
+`headless`, which sits a few lines away in the same launch call and
+means the thing we are avoiding. A future reader who "simplifies" one
+into the other reintroduces every tell in the table above.
 
-Cost: a handful of specs open real windows. Put the suite under a
-virtual display (`xvfb-run pnpm test`) if that matters; the fix belongs
-in how the suite is run, not in what the capture pretends to be.
+## History
 
-## Re-measuring
+`--headless` originally meant Chromium's mode. It was added 2026-07-26
+so the suite would stop opening windows, removed 2026-07-28 once the
+User-Agent consequence was measured, and reinstated the same day with
+this definition.
 
-The table came from a throwaway; if it needs re-deriving, launch each
-combination against a `file:` page and read `navigator.userAgent` and
-`navigator.userAgentData.brands`. The only subtlety is passing
-`chromium.executablePath()` to puppeteer explicitly, so that the
-comparison is against Playwright's *choice* of binary rather than
-against a different install.
+The removal was right on its own terms: the mode could not ship, and
+worse, the suite ran in it —
+`tests/user_agent_client_hints.spec.mjs` had to tolerate
+`HeadlessChrome/` in its assertion, so it validated a string that would
+draw a challenge in production and could not have caught one that did.
+Normalizing the string back to `Chrome` was rejected as the one place we
+would hide something rather than add to it; the table above shows it
+would also have been futile, since the GPU and screen would still have
+given it away.
+
+What changed is that the goal turned out to be reachable without the
+mode. A windowless run is a real browser in every measurable sense,
+purpose-built for the case where the correct human interaction is none —
+so the suite is quiet *and* asserts ` Chrome/… Safari` with no
+`Headless` anywhere.
+
+## Consequence for the capture
+
+Without a surface there is no Done button, so a windowless capture ends
+only when its consumer closes the stream or the process dies. That is
+the honest use: unattended runs and tests. A human-driven capture wants
+the window, which is why headful remains the default everywhere.

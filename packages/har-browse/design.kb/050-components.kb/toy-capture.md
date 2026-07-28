@@ -29,7 +29,7 @@ playwright-free.
 ## Interface
 
 ```
-har-browse [URL] [--profile NAME] [--howto PATH] [--keep-origin-storage] > events.jsonl
+har-browse [URL] [--profile NAME] [--howto PATH] [--keep-origin-storage] [--headless] > events.jsonl
 ```
 
 Defaults: URL `http://127.0.0.1:8000`, `--profile default_profile`.
@@ -57,9 +57,17 @@ reconstruction logic lives in this repo.
 ## Behavior
 
 1. Launch visible Chromium with a persistent `userDataDir`
-   (headful by default — human-in-the-loop)
+   (headful by default — human-in-the-loop). `--headless` drops the
+   visible surface without altering the browser: a display backend, not
+   Chromium's headless *mode*, which would rewrite the User-Agent
+   (`../040-design.kb/self-identification.kb/headless-changes-the-agent.md`).
+   With no surface there is no Done button, so such a run ends only when
+   its consumer closes the stream — unattended captures and tests.
 2. Attach a CDP session per page; enable Network + Page domains; brand
-   the session's User-Agent (`ToolName/Version (+URL)` suffix)
+   the session's identity — tool name and contact URL in the
+   User-Agent's system-information comment, and a matching entry in the
+   client-hint brand list (`../040-design.kb/self-identification.kb/`;
+   the trailing-product convention is measured-refused by Google)
 3. Register persistent overlay injection (survives navigations via
    new-document init script)
 4. If `--howto` provided, overlay includes a collapsible instructions panel

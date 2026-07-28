@@ -22,17 +22,17 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const CLI = join(__dirname, "..", "src", "har_browse.mjs");
 
 /**
- * Run the CLI against `url` until a timer kills it. This opens a real
- * window: the CLI is a human-in-the-loop tool and the capture is headful
- * by construction, headless having been removed once it turned out to
- * rewrite the User-Agent. Run the suite under a virtual display if the
- * windows are a problem.
+ * Run the CLI against `url` until a timer kills it. `--headless` here
+ * is the CLI's windowless mode -- a display backend, not Chromium's
+ * headless *mode*, which would rewrite the User-Agent. It is also the
+ * only way this test can work: without a surface there is no Done
+ * button, so the run ends exactly when the timer kills it.
  *
  * @param {string[]} args
  */
 function runCli(args) {
   return new Promise((resolve) => {
-    execFile("timeout", ["-s", "TERM", "15s", "node", CLI, ...args], () =>
+    execFile("timeout", ["-s", "TERM", "15s", "node", CLI, "--headless", ...args], () =>
       resolve(undefined),
     );
   });
@@ -54,8 +54,11 @@ test("CLI clears origin storage by default; --keep-origin-storage opts out", asy
   try {
     // Populate the profile's IndexedDB via the library (explicitly not
     // clearing) so the CLI runs below start from the hydrating state
-    // that makes this test meaningful.
-    const seed = await startCapture({ url, profileDir });
+    // that makes this test meaningful. This is the Playwright host, so
+    // `headless` here is Chromium's mode -- fine, because all this run
+    // has to do is leave bytes in IndexedDB, and nothing downstream
+    // reads the User-Agent it used.
+    const seed = await startCapture({ url, profileDir, headless: true });
     await seed.page.waitForFunction(
       () =>
         /^(fetched|hydrated):/.test(

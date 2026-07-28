@@ -23,7 +23,7 @@
  * fixture server sees the same hints a real site would.
  */
 import { test, expect } from "./fixtures.mjs";
-import { startCapture } from "../src/host_puppeteer.mjs";
+import { startCapture, WINDOWLESS_ARGS } from "../src/host_puppeteer.mjs";
 import { cachePath } from "../src/cache.mjs";
 // `playwright-core` only for the pinned browser's path -- the same
 // lookup `host_puppeteer.mjs` does, not a Playwright launch.
@@ -56,13 +56,14 @@ function parseBrandList(header) {
  * from `userAgentMetadata()` would make the assertion circular, and
  * hard-coding it would fail on every Chromium bump for no reason.
  *
- * It must be the *same* browser the host launches -- headful, like the
- * host, and via puppeteer, like the host. Headless is what makes that
- * easy to get wrong: Playwright headless runs a different executable
+ * It must be the *same* browser the host launches, which is why it
+ * borrows the host's own `WINDOWLESS_ARGS` rather than approximating
+ * them. Chromium's `--headless` is what makes this easy to get wrong:
+ * Playwright in that mode runs a different executable entirely
  * (`chromium_headless_shell`, betrayed by its un-reduced version) and
- * reports a three-entry list led by `"HeadlessChrome"`. Headful, every
- * combination agrees. Reading the wrong one compares two browsers
- * rather than one browser against itself.
+ * reports a three-entry list led by `"HeadlessChrome"`. Our windowless
+ * mode is a display backend, not that mode, and agrees with headful on
+ * every property here.
  *
  * @returns {Promise<Array<{brand: string, version: string}>>}
  */
@@ -73,6 +74,7 @@ async function unbrandedBrands() {
     userDataDir: dir,
     headless: false,
     networkEnabled: false,
+    args: WINDOWLESS_ARGS,
   });
   try {
     const page = await browser.newPage();
@@ -100,6 +102,7 @@ test("captured requests carry client hints and a branded User-Agent", async ({
     const session = await startCapture({
       url: `${payloadServer.url}/client-hints`,
       profileDir,
+      windowless: true,
     });
     const collected = (async () => {
       for await (const message of session.events) messages.push(message);
