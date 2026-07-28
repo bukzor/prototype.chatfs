@@ -257,11 +257,19 @@ export async function attachCapture(page, { howto, drainGraceMs } = {}) {
  * only what it is asked; the CLI is the capture *flow*, where a
  * silently payload-free capture is the worse failure.
  *
+ * Always headful, and not configurable. Headless rewrites the
+ * User-Agent's browser product to `HeadlessChrome`, so a headless
+ * capture announces automation on every request -- an
+ * `unblocked-sessions` violation
+ * (`design.kb/040-design.kb/self-identification.kb/headless-changes-the-agent.md`).
+ * It also cannot work as a capture: the cut is a human clicking Done.
+ * For a quiet test run, put the whole suite under a virtual display
+ * rather than giving the capture a mode nobody can ship.
+ *
  * @param {{
  *   url: string,
  *   profileDir: string,
  *   howto?: string,
- *   headless?: boolean,
  *   drainGraceMs?: number,
  *   clearOriginStorage?: boolean,
  * }} opts
@@ -277,7 +285,6 @@ export async function startCapture({
   url,
   profileDir,
   howto,
-  headless = false,
   drainGraceMs,
   clearOriginStorage = false,
 }) {
@@ -286,7 +293,7 @@ export async function startCapture({
   const browser = await puppeteer.launch({
     executablePath: await executablePath(),
     userDataDir: profileDir,
-    headless,
+    headless: false,
     // Capture drives the Network domain itself; puppeteer's
     // HTTPRequest/HTTPResponse, the only casualties of turning its
     // network manager off, go unused here. Turning it off also stops

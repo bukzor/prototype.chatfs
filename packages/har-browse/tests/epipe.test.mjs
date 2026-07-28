@@ -38,7 +38,7 @@ after(() => {
   rmSync(profileDir, { recursive: true, force: true });
 });
 
-test("har-browse | head -n 1 exits cleanly", { timeout: 10000 }, async () => {
+test("har-browse | head -n 1 exits cleanly", { timeout: 25000 }, async () => {
   // sh-built pipeline so the OS pipe is direct between har-browse and
   // head — no Node mediation that could keep the pipe alive after head
   // exits.
@@ -50,17 +50,25 @@ test("har-browse | head -n 1 exits cleanly", { timeout: 10000 }, async () => {
   // window for the user to close manually. SIGTERM only — Chromium
   // handles it cleanly; SIGKILL would forfeit the cleanup we want.
   //
-  // Budget: green case ~2s; 5s is 2.5x headroom for slower machines.
-  // `--headless`: this test is about pipe teardown, not windowing, and
-  // a test suite has no business throwing browser windows onto the
-  // developer's desktop. (Headed startup also runs ~4s on Crostini
-  // under the puppeteer host -- too close to the 5s guard.)
+  // This opens a real window, because the capture is headful by
+  // construction -- headless rewrites the User-Agent, so the mode was
+  // removed rather than shipped (see `startCapture`'s doc comment). Put
+  // the suite under a virtual display if that matters; do not reach for
+  // a headless flag that no capture could use.
+  //
+  // Budget: 4.30/4.31/4.38s over three standalone headed runs on
+  // Crostini. The old 5s guard was the cause of this test's
+  // intermittent failures, and headless was never the cure -- it
+  // measured 4.6-4.7s, *slower*, so 5s was marginal either way. 15s is
+  // ~3.5x the measured cost, which is right for a guard whose job is
+  // catching an infinite hang: a tight budget buys nothing here and
+  // costs flakes.
   const bin = join(__dirname, "..", "src", "har_browse.mjs");
-  const cmd = `node ${JSON.stringify(bin)} --headless --profile ${profileName} http://127.0.0.1:${port}/ | head -n 1`;
+  const cmd = `node ${JSON.stringify(bin)} --profile ${profileName} http://127.0.0.1:${port}/ | head -n 1`;
   const { stdout, stderr } = await exec(
     "timeout",
-    ["5s", "sh", "-c", cmd],
-    { timeout: 8000 },
+    ["15s", "sh", "-c", cmd],
+    { timeout: 20000 },
   );
 
   const parsed = JSON.parse(stdout.trim());

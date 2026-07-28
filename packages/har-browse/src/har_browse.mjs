@@ -14,10 +14,6 @@ const { values, positionals } = parseArgs({
     // for the cases where the local state is the point -- inspecting
     // what an app persisted, or preserving a locally-held draft.
     "keep-origin-storage": { type: "boolean", default: false },
-    // For tests and automation. A headless run has no Done button to
-    // click, so it ends only when the caller closes the pipe or kills
-    // it.
-    headless: { type: "boolean", default: false },
   },
   allowPositionals: true,
 });
@@ -45,7 +41,6 @@ const session = await startCapture({
   profileDir,
   howto,
   clearOriginStorage: !values["keep-origin-storage"],
-  headless: values.headless,
 });
 try {
   for await (const ev of session.events) {

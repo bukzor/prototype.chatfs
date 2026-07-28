@@ -29,7 +29,7 @@ playwright-free.
 ## Interface
 
 ```
-har-browse [URL] [--profile NAME] [--howto PATH] [--keep-origin-storage] [--headless] > events.jsonl
+har-browse [URL] [--profile NAME] [--howto PATH] [--keep-origin-storage] > events.jsonl
 ```
 
 Defaults: URL `http://127.0.0.1:8000`, `--profile default_profile`.

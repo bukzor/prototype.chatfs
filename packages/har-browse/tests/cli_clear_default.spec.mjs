@@ -22,19 +22,18 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const CLI = join(__dirname, "..", "src", "har_browse.mjs");
 
 /**
- * Run the CLI against `url` until a timer kills it. `--headless` is not
- * incidental: without it the CLI opens a real window (it is a
- * human-in-the-loop tool), and a test suite has no business throwing
- * browser windows onto the developer's desktop.
+ * Run the CLI against `url` until a timer kills it. This opens a real
+ * window: the CLI is a human-in-the-loop tool and the capture is headful
+ * by construction, headless having been removed once it turned out to
+ * rewrite the User-Agent. Run the suite under a virtual display if the
+ * windows are a problem.
  *
  * @param {string[]} args
  */
 function runCli(args) {
   return new Promise((resolve) => {
-    execFile(
-      "timeout",
-      ["-s", "TERM", "8s", "node", CLI, "--headless", ...args],
-      () => resolve(undefined),
+    execFile("timeout", ["-s", "TERM", "15s", "node", CLI, ...args], () =>
+      resolve(undefined),
     );
   });
 }
@@ -53,10 +52,10 @@ test("CLI clears origin storage by default; --keep-origin-storage opts out", asy
   const url = `${payloadServer.url}/hydrate`;
 
   try {
-    // Populate the profile's IndexedDB via the library (headless, and
-    // explicitly not clearing) so the CLI runs below start from the
-    // hydrating state that makes this test meaningful.
-    const seed = await startCapture({ url, profileDir, headless: true });
+    // Populate the profile's IndexedDB via the library (explicitly not
+    // clearing) so the CLI runs below start from the hydrating state
+    // that makes this test meaningful.
+    const seed = await startCapture({ url, profileDir });
     await seed.page.waitForFunction(
       () =>
         /^(fetched|hydrated):/.test(

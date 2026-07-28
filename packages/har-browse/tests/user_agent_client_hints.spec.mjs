@@ -56,14 +56,13 @@ function parseBrandList(header) {
  * from `userAgentMetadata()` would make the assertion circular, and
  * hard-coding it would fail on every Chromium bump for no reason.
  *
- * It must be the *same* browser the host launches, and headless makes
- * that easy to get wrong. Playwright headless runs a different
- * executable -- the `chromium_headless_shell`, betrayed by its
- * un-reduced version -- and reports a three-entry list led by
- * `"HeadlessChrome"`, where puppeteer driving the headful binary with
- * `--headless=new` reports two led by `"Chromium"`. Headful the two
- * agree. Reading the wrong one compares two browsers rather than one
- * browser against itself.
+ * It must be the *same* browser the host launches -- headful, like the
+ * host, and via puppeteer, like the host. Headless is what makes that
+ * easy to get wrong: Playwright headless runs a different executable
+ * (`chromium_headless_shell`, betrayed by its un-reduced version) and
+ * reports a three-entry list led by `"HeadlessChrome"`. Headful, every
+ * combination agrees. Reading the wrong one compares two browsers
+ * rather than one browser against itself.
  *
  * @returns {Promise<Array<{brand: string, version: string}>>}
  */
@@ -72,7 +71,7 @@ async function unbrandedBrands() {
   const browser = await puppeteer.launch({
     executablePath: process.env.HAR_BROWSE_BROWSER ?? chromium.executablePath(),
     userDataDir: dir,
-    headless: true,
+    headless: false,
     networkEnabled: false,
   });
   try {
@@ -101,7 +100,6 @@ test("captured requests carry client hints and a branded User-Agent", async ({
     const session = await startCapture({
       url: `${payloadServer.url}/client-hints`,
       profileDir,
-      headless: true,
     });
     const collected = (async () => {
       for await (const message of session.events) messages.push(message);
@@ -203,5 +201,16 @@ test("captured requests carry client hints and a branded User-Agent", async ({
   // the platform comment precisely so this stays true.
   expect(userAgent, "nothing trails the browser's product list").toMatch(
     /Safari\/[\d.]+$/,
+  );
+  // The capture is headful by construction, so this can be exact.
+  // While `--headless` existed the suite ran headless and this
+  // assertion had to tolerate `HeadlessChrome/` -- meaning the suite
+  // validated a User-Agent that would have drawn a challenge in
+  // production, and could not have caught one that did.
+  expect(userAgent, "announces a real browser, not an automated one").toMatch(
+    / Chrome\/[\d.]+ Safari/,
+  );
+  expect(userAgent, "and says nothing about being headless").not.toContain(
+    "Headless",
   );
 });

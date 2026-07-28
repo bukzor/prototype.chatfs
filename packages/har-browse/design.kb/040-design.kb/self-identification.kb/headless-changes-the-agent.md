@@ -38,26 +38,38 @@ Two separate effects, easily conflated:
 Headful, all four agree. The disagreement is entirely a headless
 artifact.
 
-## Consequences
+## Resolution: the capture is headful, and that is not an option
 
 `brandUserAgent()` extends whatever `browser.userAgent()` returns, so a
-headless run ships `… HeadlessChrome/147.0.0.0 Safari/537.36` with our
-field in the platform comment. The disclosure is intact and the shape
-gate is satisfied; what is not satisfied is `unblocked-sessions`' other
-half, since no human's browser says `HeadlessChrome`.
+headless run shipped `… HeadlessChrome/147.0.0.0 Safari/537.36` with our
+field in the platform comment — disclosure intact, shape gate satisfied,
+and `unblocked-sessions`' other half violated, since no human's browser
+says `HeadlessChrome`.
 
-The CLI defaults to headful and the `har-browse --headless` flag exists
-for tests and unattended runs, so nothing ships broken today. But the
-flag is a foot-gun against a real provider, and the offline suite cannot
-catch it: the suite runs headless, so its User-Agent assertions validate
-a string that would draw a challenge in production.
+The obvious repair was to normalize `HeadlessChrome` back to `Chrome`
+under `--headless`. It was the wrong one, and the reason is worth
+keeping: that would be the single place where we *hide* something rather
+than add to it, adopted to preserve a mode nothing could ship. The
+capture's cut is a human clicking Done; a headless capture has no
+human, and never had a legitimate caller. Removing the mode subtracts a
+problem instead of buying a lie to keep it.
 
-Whether to normalize `HeadlessChrome` back to `Chrome` under `--headless`
-is an open policy question, not an oversight. It pulls the requirement's
-two halves against each other: suppressing it is the only way to be no
-more suspicious than the same human uninstrumented, and it is also the
-one place we would be *hiding* something rather than adding to it.
-Tracked in `.claude/todo.md`.
+So `har-browse --headless` is gone (2026-07-28) and `startCapture` no
+longer takes `headless` — the production host launches headful, full
+stop. The test-only `host_playwright.mjs` keeps its option: it misstates
+nothing about production, and taking it away would put a window on the
+developer's desktop for all 31 e2e specs to no purpose.
+
+The payoff is in the test that could not previously do its job. While
+`--headless` existed, `tests/user_agent_client_hints.spec.mjs` ran
+headless, so its User-Agent assertion had to tolerate `HeadlessChrome/`
+— it validated a string that would draw a challenge in production, and
+could not have caught one that did. It now asserts ` Chrome/… Safari`
+and the absence of `Headless`.
+
+Cost: a handful of specs open real windows. Put the suite under a
+virtual display (`xvfb-run pnpm test`) if that matters; the fix belongs
+in how the suite is run, not in what the capture pretends to be.
 
 ## Re-measuring
 
