@@ -72,7 +72,8 @@ carrying `{requestId, url, body, base64Encoded}`. Injects a persistent
 when the human clicks the button or closes the window.
 
 ```bash
-har-browse [URL] [--profile NAME] [--howto PATH] > events.jsonl
+har-browse [URL] [--profile NAME] [--howto PATH] [--keep-origin-storage]
+           [--headless] > events.jsonl
 ```
 
 Defaults: URL `http://127.0.0.1:8000`, `--profile default_profile`.

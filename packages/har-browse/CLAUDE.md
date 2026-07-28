@@ -33,7 +33,8 @@ narrative history: `docs/dev/devlog/`. Open session threads: grep
 
 - `src/har_browse.mjs` -- CLI (`har-browse`, via package `bin`):
   `har-browse [URL] [--profile NAME] [--howto PATH]
-  [--keep-origin-storage] > events.jsonl`.
+  [--keep-origin-storage] [--headless] > events.jsonl`; `--help` for
+  flag semantics.
   Streams until the human clicks the injected "Done Capturing" button
   or closes the window. Profile state persists under
   `${XDG_CACHE_HOME:-$HOME/.cache}/har-browse/profile/<name>`, so
