@@ -8,6 +8,36 @@ dependencies = [
     "bukzor.chatgpt-export",
 ]
 
+# One command per pipeline leaf: kebab name == module path, per
+# design.kb/040-design.kb/cli-command-shape.md. The bare `chatfs` name is
+# reserved for the future Rust dispatcher (package-division.md).
+[project.scripts]
+chatfs-claude-conversation-url-browse = "chatfs.provider.claude.conversation.url_browse:main"
+chatfs-claude-conversation-url-render = "chatfs.provider.claude.conversation.url_render:main"
+chatfs-claude-conversation-url-trash = "chatfs.provider.claude.conversation.url_trash:main"
+chatfs-claude-conversation-path-browse = "chatfs.provider.claude.conversation.path_browse:main"
+chatfs-claude-conversation-path-render = "chatfs.provider.claude.conversation.path_render:main"
+chatfs-claude-conversation-render = "chatfs.provider.claude.conversation.render:main"
+chatfs-claude-conversation-splat = "chatfs.provider.claude.conversation.splat:main"
+chatfs-claude-index-browse = "chatfs.provider.claude.index.browse:main"
+chatfs-claude-index-splat = "chatfs.provider.claude.index.splat:main"
+chatfs-chatgpt-conversation-url-browse = "chatfs.provider.chatgpt.conversation.url_browse:main"
+chatfs-chatgpt-conversation-url-render = "chatfs.provider.chatgpt.conversation.url_render:main"
+chatfs-chatgpt-conversation-path-browse = "chatfs.provider.chatgpt.conversation.path_browse:main"
+chatfs-chatgpt-conversation-path-render = "chatfs.provider.chatgpt.conversation.path_render:main"
+chatfs-chatgpt-conversation-render = "chatfs.provider.chatgpt.conversation.render:main"
+chatfs-chatgpt-index-browse = "chatfs.provider.chatgpt.index.browse:main"
+chatfs-chatgpt-index-splat = "chatfs.provider.chatgpt.index.splat:main"
+chatfs-aistudio-conversation-url-browse = "chatfs.provider.aistudio.conversation.url_browse:main"
+chatfs-aistudio-conversation-url-render = "chatfs.provider.aistudio.conversation.url_render:main"
+chatfs-aistudio-conversation-path-browse = "chatfs.provider.aistudio.conversation.path_browse:main"
+chatfs-aistudio-conversation-path-render = "chatfs.provider.aistudio.conversation.path_render:main"
+chatfs-aistudio-conversation-render = "chatfs.provider.aistudio.conversation.render:main"
+chatfs-aistudio-conversation-splat = "chatfs.provider.aistudio.conversation.splat:main"
+chatfs-aistudio-conversation-massage-json = "chatfs.provider.aistudio.conversation.massage_json:main"
+chatfs-aistudio-index-browse = "chatfs.provider.aistudio.index.browse:main"
+chatfs-aistudio-index-splat = "chatfs.provider.aistudio.index.splat:main"
+
 [dependency-groups]
 dev = ["bukzor.chatgpt-export[dev]"]
 
