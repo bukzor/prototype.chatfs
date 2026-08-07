@@ -30,14 +30,6 @@ exclude = [
   "**/typesafety",
 ]
 
-# Temporary workaround: design-incubators use flat sibling-importing scripts
-# rather than proper packages. Each incubator dir gets a scoped extraPath so
-# pyright resolves intra-incubator imports without polluting the global module
-# namespace. Drop entries here when an incubator graduates to packages/*.
-executionEnvironments = [
-  { root = "docs/dev/design-incubators/chatfs-cli-mockup", extraPaths = ["docs/dev/design-incubators/chatfs-cli-mockup"] },
-]
-
 [tool.pytest.ini_options]
 python_classes = ["Describe*", "When*", "Test*"]
 python_functions = ["it_*", "test_*"]

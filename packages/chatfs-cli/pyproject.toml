@@ -6,12 +6,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "bukzor.chatgpt-export",
-    "python-dotenv>=1.2.1",
-    "sseclient-py>=1.8.0",
 ]
-
-[project.scripts]
-chatfs = "chatfs.cli:main"
 
 [dependency-groups]
 dev = ["bukzor.chatgpt-export[dev]"]

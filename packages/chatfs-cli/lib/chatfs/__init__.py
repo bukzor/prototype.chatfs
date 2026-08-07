@@ -1,3 +1,5 @@
-"""chatfs — lazy filesystem for chat conversations."""
+"""Every function outside main() is pure: no I/O, no side effects.
 
-__version__ = "0.1.0"
+main() may import os/sys/subprocess/etc., inline, never at module top
+level. Exception: the shell/ subpackage.
+"""
