@@ -2,7 +2,7 @@
 """Capture an aistudio.google.com prompt by URL.
 
 Usage:
-    python -m chatfs.provider.aistudio.conversation.url_browse <aistudio-url>
+    chatfs-aistudio-conversation-url-browse --cache <dir> <aistudio-url>
 
 Unlike chatgpt/claude, there's no separate index endpoint to derive
 meta.json from yet (ListPrompts hasn't been reverse-engineered — see
@@ -21,28 +21,29 @@ Steps:
     4. place_meta from the raw doc (writes meta.json, view dir-symlink)
     5. delegate to path_render
 """
+from pathlib import Path
+
 from chatfs import json as chatfs_json
 from chatfs.layout import chat_dir_for
-from chatfs.paths import INCUBATOR_ROOT, demo_root
 from chatfs.provider.aistudio import layout as aistudio_layout
 from chatfs.provider.aistudio.types import is_conversation
 from chatfs.shell import sh as chatfs_sh
 from chatfs.shell.capture import run_module
 
-ROOT = demo_root("aistudio")
-
 
 def main() -> None:
     import sys
 
-    if len(sys.argv) != 2:
-        print(f"usage: {sys.argv[0]} <aistudio-url>", file=sys.stderr)
-        sys.exit(2)
+    match sys.argv[1:]:
+        case ["--cache", cache, url]:
+            root = Path(cache)
+        case _:
+            print(f"usage: {sys.argv[0]} --cache <dir> <aistudio-url>", file=sys.stderr)
+            sys.exit(2)
 
-    url = sys.argv[1]
     id_ = aistudio_layout.uuid_from_url(url)
 
-    chat_dir = chat_dir_for(id_, ROOT)
+    chat_dir = chat_dir_for(id_, root)
     data_dir = aistudio_layout.capture(url, chat_dir)
     raw = data_dir / "conversation.json.d" / "raw.json"
     conversation = data_dir / "conversation.json"
@@ -52,14 +53,13 @@ def main() -> None:
         "chatfs.provider.aistudio.conversation.massage_json",
         raw,
         conversation,
-        cwd=INCUBATOR_ROOT,
     )
 
     parsed = chatfs_json.loads(conversation.read_text())
     assert is_conversation(parsed), parsed
     item = aistudio_layout.index_item(parsed)
     assert item["id"] == id_, (item["id"], id_)
-    chat_dir = aistudio_layout.place_meta(item, ROOT)
+    chat_dir = aistudio_layout.place_meta(item, root)
 
     _ = chatfs_sh.run(
         [
@@ -68,7 +68,6 @@ def main() -> None:
             "chatfs.provider.aistudio.conversation.path_render",
             str(chat_dir),
         ],
-        cwd=INCUBATOR_ROOT,
     )
 
 

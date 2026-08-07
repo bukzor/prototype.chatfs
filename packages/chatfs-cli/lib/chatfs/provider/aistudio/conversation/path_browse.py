@@ -2,7 +2,7 @@
 """Capture an AI Studio prompt by chat-dir address.
 
 Usage:
-    python -m chatfs.provider.aistudio.conversation.path_browse <path-to-chat-dir-or-inside>
+    chatfs-aistudio-conversation-path-browse <path-to-chat-dir-or-inside>
 
 The argument resolves to a `.chat/$id/` directory (see
 chatfs.shell.place.resolve_chat_dir; need not exist yet). Its
@@ -17,7 +17,6 @@ Steps:
 """
 from chatfs import json as chatfs_json
 from chatfs.layout import data_dir_of
-from chatfs.paths import INCUBATOR_ROOT
 from chatfs.provider.aistudio import layout as aistudio_layout
 from chatfs.provider.aistudio.types import is_index_item
 from chatfs.shell import sh as chatfs_sh
@@ -43,7 +42,6 @@ def main() -> None:
         "chatfs.provider.aistudio.conversation.massage_json",
         raw,
         data_dir / "conversation.json",
-        cwd=INCUBATOR_ROOT,
     )
 
     _ = chatfs_sh.run(
@@ -53,7 +51,6 @@ def main() -> None:
             "chatfs.provider.aistudio.conversation.path_render",
             str(chat_dir),
         ],
-        cwd=INCUBATOR_ROOT,
     )
 
 

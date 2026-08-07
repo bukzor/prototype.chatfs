@@ -14,7 +14,6 @@ import shlex
 import subprocess
 import sys
 from collections.abc import Sequence
-from pathlib import Path
 from typing import IO
 
 _TEAL = "\033[36;1m"
@@ -41,7 +40,6 @@ def run(
     *,
     stdin: IO[bytes] | int | None = None,
     stdout: IO[bytes] | int | None = None,
-    cwd: Path | None = None,
     timeout: float | None = None,
 ) -> subprocess.CompletedProcess[bytes]:
     """Run a command to completion, tracing it first. Raises on non-zero exit.
@@ -49,11 +47,6 @@ def run(
     close_fds=False: the child inherits the whole fd table, matching plain
     Unix exec semantics -- Python's close_fds=True default silently drops
     any fd not explicitly listed in pass_fds.
-
-    cwd: needed by `python -m chatfs.…` delegation calls (`-m` puts the
-    interpreter's cwd, not the invoking script's directory, at
-    `sys.path[0]`), so the callee resolves the `chatfs` package
-    regardless of the caller's own cwd.
 
     timeout unused by any production call site (2026-07-18); it exists so
     tests can bound a would-be deadlock instead of hanging the suite.
@@ -63,7 +56,6 @@ def run(
         [_stringify(arg) for arg in cmd],
         stdin=stdin,
         stdout=stdout,
-        cwd=cwd,
         close_fds=False,
         check=True,
         timeout=timeout,

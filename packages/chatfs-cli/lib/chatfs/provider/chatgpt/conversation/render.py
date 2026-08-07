@@ -11,7 +11,7 @@ turn-less fork gets a synthetic heading linking its `.json` record, so
 fork facts always have an anchor.
 
 Usage:
-    python -m chatfs.provider.chatgpt.conversation.render <path-to-chat-dir-or-inside>
+    chatfs-chatgpt-conversation-render <path-to-chat-dir-or-inside>
 
 Reads `conversation.json` via `chat_dir/.data` (the inspection symlink
 to `.data/$UUID/`), not by computing that path directly -- path_render

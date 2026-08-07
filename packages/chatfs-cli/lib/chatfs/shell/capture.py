@@ -17,7 +17,7 @@ from chatfs.shell import locks as chatfs_locks
 from chatfs.shell import sh as chatfs_sh
 
 
-def run_module(module: str, src: Path, dst: Path, *, cwd: Path) -> None:
+def run_module(module: str, src: Path, dst: Path) -> None:
     """Run `python -m module` as an external filter: read src, write its stdout to dst.
 
     Shared low-level primitive behind pipeline stages that still shell
@@ -25,12 +25,12 @@ def run_module(module: str, src: Path, dst: Path, *, cwd: Path) -> None:
     AI Studio's massage stage (`conversation.json.d/raw.json` ->
     `conversation.json`). `-m`, not a direct script path, so the callee
     resolves `chatfs.*` imports the same way every other subprocess
-    delegation in this codebase does (see `chatfs.shell.sh.run`'s `cwd`
-    docstring). Kept generic (any module, not just massage) in case a
+    delegation in this codebase does: via the installed package, from
+    any cwd. Kept generic (any module, not just massage) in case a
     future stage needs the same "external filter, teed to disk" shape.
     """
     with src.open("rb") as fin, dst.open("wb") as fout:
-        _ = chatfs_sh.run([sys.executable, "-m", module], stdin=fin, stdout=fout, cwd=cwd)
+        _ = chatfs_sh.run([sys.executable, "-m", module], stdin=fin, stdout=fout)
 
 
 def browse(url: str, dst: Path) -> None:

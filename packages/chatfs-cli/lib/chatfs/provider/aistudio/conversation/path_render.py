@@ -2,7 +2,7 @@
 """Render an AI Studio conversation from already-captured artifacts.
 
 Usage:
-    python -m chatfs.provider.aistudio.conversation.path_render <path-to-chat-dir-or-inside>
+    chatfs-aistudio-conversation-path-render <path-to-chat-dir-or-inside>
 
 Prerequisites in the resolved chat dir's `.data/$id/` twin:
     meta.json           — placed by conversation url browse
@@ -22,7 +22,6 @@ deliberately -- see `design.kb/040-design.kb/driver-model.md`: every
 pipeline-stage boundary stays crossable only through argv/stdio.
 """
 from chatfs.layout import data_dir_of
-from chatfs.paths import INCUBATOR_ROOT
 from chatfs.shell import sh as chatfs_sh
 from chatfs.shell.atomic import staged
 from chatfs.shell.place import link_data_dir, resolve_chat_dir
@@ -60,7 +59,6 @@ def main() -> None:
                 str(conversation),
                 str(tmp),
             ],
-            cwd=INCUBATOR_ROOT,
         )
 
         out = tmp / "chat.md"
@@ -73,7 +71,6 @@ def main() -> None:
                     "chatfs.provider.aistudio.conversation.render",
                     str(tmp),
                 ],
-                cwd=INCUBATOR_ROOT,
                 stdout=f,
             )
 

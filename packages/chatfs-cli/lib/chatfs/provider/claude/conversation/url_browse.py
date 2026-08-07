@@ -2,7 +2,7 @@
 """Capture a claude.ai conversation by URL.
 
 Usage:
-    python -m chatfs.provider.claude.conversation.url_browse <claude-url>
+    chatfs-claude-conversation-url-browse --cache <dir> <claude-url>
 
 Assumes (per browse-incidental-capture.md) that visiting `/chat/$UUID`
 also fires `/chat_conversations_v2` for the sidebar, so one browse trip
@@ -38,7 +38,6 @@ from typing import cast
 from chatfs import json as chatfs_json
 from chatfs.json import JsonObject
 from chatfs.layout import chat_dir_for
-from chatfs.paths import INCUBATOR_ROOT, demo_root
 from chatfs.provider.claude import layout as claude_layout
 from chatfs.provider.claude.pluck import pluck_conversation, pluck_index_pages
 from chatfs.provider.claude.types import IndexItem, is_index_page
@@ -46,8 +45,6 @@ from chatfs.shell import sh as chatfs_sh
 from chatfs.shell.capture import capture, pluck
 from chatfs.shell.place import place_meta
 from chatfs.url_browse import null_tolerant_mismatches
-
-ROOT = demo_root("claude")
 
 
 def find_index_item(data_dir: Path, uuid: str) -> IndexItem:
@@ -81,14 +78,16 @@ def find_index_item(data_dir: Path, uuid: str) -> IndexItem:
 def main() -> None:
     import sys
 
-    if len(sys.argv) != 2:
-        print(f"usage: {sys.argv[0]} <claude-url>", file=sys.stderr)
-        sys.exit(2)
+    match sys.argv[1:]:
+        case ["--cache", cache, url]:
+            root = Path(cache)
+        case _:
+            print(f"usage: {sys.argv[0]} --cache <dir> <claude-url>", file=sys.stderr)
+            sys.exit(2)
 
-    url = sys.argv[1]
     uuid = claude_layout.uuid_from_url(url)
 
-    chat_dir = chat_dir_for(uuid, ROOT)
+    chat_dir = chat_dir_for(uuid, root)
     data_dir = capture(url, chat_dir, pluck_conversation)
     conversation = data_dir / "conversation.json"
 
@@ -106,7 +105,7 @@ def main() -> None:
     )
 
     _ = place_meta(
-        item["uuid"], item["name"], claude_layout.created_at(item["created_at"]), item, ROOT
+        item["uuid"], item["name"], claude_layout.created_at(item["created_at"]), item, root
     )
 
     _ = chatfs_sh.run(
@@ -116,7 +115,6 @@ def main() -> None:
             "chatfs.provider.claude.conversation.path_render",
             str(chat_dir),
         ],
-        cwd=INCUBATOR_ROOT,
     )
 
 

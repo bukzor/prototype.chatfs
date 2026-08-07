@@ -12,7 +12,7 @@ dev.kb/claims.kb/aistudio-jspb-prompt-shape.md, "Turn order is linear").
 real fork; `current` is always the chain's last turn.
 
 Usage:
-    python -m chatfs.provider.aistudio.conversation.render <path-to-chat-dir-or-inside>
+    chatfs-aistudio-conversation-render <path-to-chat-dir-or-inside>
 
 stdout: rendered markdown.
 """

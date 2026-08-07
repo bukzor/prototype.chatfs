@@ -2,7 +2,7 @@
 """Capture a claude.ai conversation by chat-dir address.
 
 Usage:
-    python -m chatfs.provider.claude.conversation.path_browse <path-to-chat-dir-or-inside>
+    chatfs-claude-conversation-path-browse <path-to-chat-dir-or-inside>
 
 The argument resolves to a `.chat/$UUID/` directory (see
 chatfs.shell.place.resolve_chat_dir; need not exist yet). Its
@@ -18,7 +18,6 @@ Steps:
 """
 from chatfs import json as chatfs_json
 from chatfs.layout import data_dir_of
-from chatfs.paths import INCUBATOR_ROOT
 from chatfs.provider.claude import layout as claude_layout
 from chatfs.provider.claude.pluck import pluck_conversation
 from chatfs.provider.claude.types import is_index_item
@@ -48,7 +47,6 @@ def main() -> None:
             "chatfs.provider.claude.conversation.path_render",
             str(chat_dir),
         ],
-        cwd=INCUBATOR_ROOT,
     )
 
 

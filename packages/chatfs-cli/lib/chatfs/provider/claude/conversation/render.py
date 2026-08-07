@@ -7,7 +7,7 @@ module contributes only the claude-shaped parts: message-file stems, the
 all-zero root sentinel, and pruning of bodiless canceled retries.
 
 Usage:
-    python -m chatfs.provider.claude.conversation.render <path-to-chat-dir-or-inside>
+    chatfs-claude-conversation-render <path-to-chat-dir-or-inside>
 
 Reads `conversation.json` via `chat_dir/.data` (the inspection symlink
 to `.data/$UUID/`), not by computing that path directly -- path_render

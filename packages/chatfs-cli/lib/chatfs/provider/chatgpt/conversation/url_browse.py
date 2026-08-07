@@ -2,7 +2,7 @@
 """Capture a chatgpt.com conversation by URL.
 
 Usage:
-    python -m chatfs.provider.chatgpt.conversation.url_browse <chatgpt-url>
+    chatfs-chatgpt-conversation-url-browse --cache <dir> <chatgpt-url>
 
 Assumes (per browse-incidental-capture.md) that visiting `/c/$UUID` also
 fires `/backend-api/conversations` for the sidebar, so one browse trip
@@ -40,15 +40,12 @@ from pathlib import Path
 from chatfs import json as chatfs_json
 from chatfs.json import JsonObject
 from chatfs.layout import chat_dir_for
-from chatfs.paths import INCUBATOR_ROOT, demo_root
 from chatfs.provider.chatgpt import layout as chatgpt_layout
 from chatfs.provider.chatgpt.pluck import pluck_index_pages
 from chatfs.provider.chatgpt.types import IndexItem, is_index_page
 from chatfs.shell import sh as chatfs_sh
 from chatfs.shell.capture import pluck
 from chatfs.url_browse import null_tolerant_mismatches
-
-ROOT = demo_root("chatgpt")
 
 
 def find_index_item(data_dir: Path, uuid: str) -> IndexItem:
@@ -101,14 +98,16 @@ def _index_shaped(conv_doc: JsonObject) -> JsonObject:
 def main() -> None:
     import sys
 
-    if len(sys.argv) != 2:
-        print(f"usage: {sys.argv[0]} <chatgpt-url>", file=sys.stderr)
-        sys.exit(2)
+    match sys.argv[1:]:
+        case ["--cache", cache, url]:
+            root = Path(cache)
+        case _:
+            print(f"usage: {sys.argv[0]} --cache <dir> <chatgpt-url>", file=sys.stderr)
+            sys.exit(2)
 
-    url = sys.argv[1]
     uuid = chatgpt_layout.uuid_from_url(url)
 
-    chat_dir = chat_dir_for(uuid, ROOT)
+    chat_dir = chat_dir_for(uuid, root)
     data_dir = chatgpt_layout.capture(url, chat_dir)
     conversation = data_dir / "conversation.json"
 
@@ -128,7 +127,7 @@ def main() -> None:
         f"for {uuid}: {mismatches}"
     )
 
-    _ = chatgpt_layout.place_meta(item, ROOT)
+    _ = chatgpt_layout.place_meta(item, root)
 
     _ = chatfs_sh.run(
         [
@@ -137,7 +136,6 @@ def main() -> None:
             "chatfs.provider.chatgpt.conversation.path_render",
             str(chat_dir),
         ],
-        cwd=INCUBATOR_ROOT,
     )
 
 

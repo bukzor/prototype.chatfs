@@ -2,7 +2,7 @@
 """Render a claude conversation from already-captured artifacts.
 
 Usage:
-    python -m chatfs.provider.claude.conversation.path_render <path-to-chat-dir-or-inside>
+    chatfs-claude-conversation-path-render <path-to-chat-dir-or-inside>
 
 Prerequisites in the resolved chat dir's `.data/$UUID/` twin:
     meta.json           — placed by index splat or url browse
@@ -29,7 +29,6 @@ from here.
 from pathlib import Path
 
 from chatfs.layout import data_dir_of
-from chatfs.paths import INCUBATOR_ROOT
 from chatfs.shell import sh as chatfs_sh
 from chatfs.shell.atomic import staged
 from chatfs.shell.place import link_data_dir, resolve_chat_dir
@@ -60,7 +59,6 @@ def path_render(chat_dir: Path) -> None:
                 str(conversation),
                 str(tmp),
             ],
-            cwd=INCUBATOR_ROOT,
         )
 
         out = tmp / "chat.md"
@@ -73,7 +71,6 @@ def path_render(chat_dir: Path) -> None:
                     "chatfs.provider.claude.conversation.render",
                     str(tmp),
                 ],
-                cwd=INCUBATOR_ROOT,
                 stdout=f,
             )
 

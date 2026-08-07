@@ -15,7 +15,6 @@ from chatfs.shell import sh as chatfs_sh
 from chatfs.shell.locks import Lock, read_locked, registry, run, write_locked
 
 HERE = Path(__file__).parent
-INCUBATOR_ROOT = HERE.parent.parent
 ENV = chatfs_locks._ENV  # pyright: ignore[reportPrivateUsage]
 seed = chatfs_locks._seed  # pyright: ignore[reportPrivateUsage]
 
@@ -161,10 +160,9 @@ def child(
     script: Path, anchor: Path, *, via_run: bool = True, timeout: float = 10
 ) -> subprocess.CompletedProcess[bytes]:
     argv = [sys.executable, str(script), str(anchor)]
-    env = {**os.environ, "PYTHONPATH": str(INCUBATOR_ROOT)}
     if via_run:
-        return run(argv, capture_output=True, timeout=timeout, env=env)
-    return subprocess.run(argv, capture_output=True, timeout=timeout, env=env)
+        return run(argv, capture_output=True, timeout=timeout)
+    return subprocess.run(argv, capture_output=True, timeout=timeout)
 
 
 class DescribeSubprocessReentry:
@@ -191,12 +189,11 @@ class DescribeSubprocessReentry:
 
     def it_blocks_a_second_writer_from_an_unrelated_process_tree(self, tmp_path: Path):
         with write_locked(tmp_path):
-            env = {**os.environ, "PYTHONPATH": str(INCUBATOR_ROOT)}
             proc = subprocess.Popen(
                 [sys.executable, str(CHILD_REENTER_W), str(tmp_path)],
-                env=env,  # unrelated tree: no pass_fds, so the inherited
-                # __CHATFS_LOCKS entry (if any survives env-copy) names a
-                # dead fd -- the child must genuinely re-flock and block
+                # unrelated tree: no pass_fds, so the inherited
+                # __CHATFS_LOCKS entry (if any) names a dead fd -- the
+                # child must genuinely re-flock and block
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
             )
@@ -206,7 +203,7 @@ class DescribeSubprocessReentry:
         stdout, stderr = proc.communicate(timeout=10)
         assert proc.returncode == 0, stderr
         assert stdout == b"ok\n"
-        assert b"not open" in stderr  # dead fd from the copied-but-unshared env entry
+        assert b"not open" in stderr  # dead fd from the inherited-but-unshared env entry
 
     def it_survives_a_grandchild_two_execs_deep(self, tmp_path: Path):
         with write_locked(tmp_path):
@@ -214,13 +211,10 @@ class DescribeSubprocessReentry:
         assert result.returncode == 0, result.stderr
         assert result.stdout == b"ok\n"
 
-    def it_reenters_the_parents_write_lock_via_chatfs_sh_run(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ):
+    def it_reenters_the_parents_write_lock_via_chatfs_sh_run(self, tmp_path: Path):
         # Production spawns through chatfs_sh.run (close_fds=False, whole
         # fd table crosses exec), not chatfs_locks.run's curated pass_fds
         # -- this exercises that actual path instead of the child() helper.
-        monkeypatch.setenv("PYTHONPATH", str(INCUBATOR_ROOT))
         with write_locked(tmp_path):
             result = chatfs_sh.run(
                 [sys.executable, str(CHILD_REENTER_W), str(tmp_path)],

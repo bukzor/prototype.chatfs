@@ -8,18 +8,24 @@ Reads chatgpt.index.jsonl on stdin (one page per line, each
     - purges existing view symlinks for $UUID
     - creates view symlinks under $root/YYYY/MM/DD/HH:MM:SS±HH:MM/
 """
+from pathlib import Path
+
 from chatfs import json as chatfs_json
-from chatfs.paths import demo_root
 from chatfs.provider.chatgpt.layout import place_meta
 from chatfs.provider.chatgpt.types import is_index_page
-
-OUT_DIR = demo_root("chatgpt")
 
 
 def main() -> None:
     import sys
 
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    match sys.argv[1:]:
+        case ["--cache", cache]:
+            root = Path(cache)
+        case _:
+            print(f"usage: {sys.argv[0]} --cache <dir>", file=sys.stderr)
+            sys.exit(2)
+
+    root.mkdir(parents=True, exist_ok=True)
     seen: set[str] = set()
     for line in sys.stdin:
         page = chatfs_json.loads(line)
@@ -28,8 +34,8 @@ def main() -> None:
             uuid = item["id"]
             assert uuid not in seen, f"duplicate UUID across index pages: {uuid}"
             seen.add(uuid)
-            _ = place_meta(item, OUT_DIR)
-    print(f"placed {len(seen)} item(s) under {OUT_DIR}", file=sys.stderr)
+            _ = place_meta(item, root)
+    print(f"placed {len(seen)} item(s) under {root}", file=sys.stderr)
 
 
 if __name__ == "__main__":

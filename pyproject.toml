@@ -22,14 +22,20 @@ chatfs-cli = { workspace = true }
 bukzor-chatgpt-export = { workspace = true }
 
 [tool.pyright]
+# docs/ holds vendored reference implementations and one-off exploration
+# scripts, not product code -- that graduates to packages/* and is checked
+# there (child-001: clean from repo root, no per-incubator scoping).
 exclude = [
   "**/node_modules",
   "**/__pycache__",
   "**/.venv",
   "**/trash",
   "**/typesafety",
+  "**/docs",
 ]
 
 [tool.pytest.ini_options]
 python_classes = ["Describe*", "When*", "Test*"]
 python_functions = ["it_*", "test_*"]
+# pytest defaults, plus trash/ (scratch; pyright excludes it above too)
+norecursedirs = ["*.egg", ".*", "build", "dist", "node_modules", "venv", "trash"]

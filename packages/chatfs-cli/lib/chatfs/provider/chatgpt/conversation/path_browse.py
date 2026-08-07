@@ -2,7 +2,7 @@
 """Capture a chatgpt.com conversation by chat-dir address.
 
 Usage:
-    python -m chatfs.provider.chatgpt.conversation.path_browse <path-to-chat-dir-or-inside>
+    chatfs-chatgpt-conversation-path-browse <path-to-chat-dir-or-inside>
 
 The argument resolves to a `.chat/$UUID/` directory (see
 chatfs.shell.place.resolve_chat_dir; need not exist yet). Its
@@ -16,7 +16,6 @@ Steps:
 """
 from chatfs import json as chatfs_json
 from chatfs.layout import data_dir_of
-from chatfs.paths import INCUBATOR_ROOT
 from chatfs.provider.chatgpt import layout as chatgpt_layout
 from chatfs.provider.chatgpt.types import is_index_item
 from chatfs.shell import sh as chatfs_sh
@@ -44,7 +43,6 @@ def main() -> None:
             "chatfs.provider.chatgpt.conversation.path_render",
             str(chat_dir),
         ],
-        cwd=INCUBATOR_ROOT,
     )
 
 

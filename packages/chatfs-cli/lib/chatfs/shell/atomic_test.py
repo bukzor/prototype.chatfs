@@ -14,8 +14,6 @@ import pytest
 from chatfs.shell import atomic as chatfs_atomic
 from chatfs.shell.atomic import recover, staged
 
-INCUBATOR_ROOT = Path(__file__).parent.parent.parent
-
 
 def sibling(dst: Path, kind: str) -> Path:
     """The documented in-flight sibling path for `dst`: `.{name}.{kind}`."""
@@ -218,7 +216,6 @@ def kill_at_ready(script: Path, dst: Path, anchor: Path) -> None:
     """
     proc = subprocess.Popen(
         [sys.executable, str(script), str(dst), str(anchor)],
-        env={**os.environ, "PYTHONPATH": str(INCUBATOR_ROOT)},
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
