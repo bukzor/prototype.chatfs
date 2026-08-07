@@ -3,7 +3,7 @@ name = "chatfs-workspace"
 version = "0"
 description = "Top-level workspace for chatfs development; depends on chatfs for default install"
 requires-python = ">=3.12"
-dependencies = ["chatfs"]
+dependencies = ["chatfs-cli"]
 
 [dependency-groups]
 dev = [
@@ -18,7 +18,7 @@ members = ["packages/*"]
 exclude = ["packages/chatfs-fuser", "packages/har-browse"]
 
 [tool.uv.sources]
-chatfs = { workspace = true }
+chatfs-cli = { workspace = true }
 bukzor-chatgpt-export = { workspace = true }
 
 [tool.pyright]

@@ -1,5 +1,5 @@
 [project]
-name = "chatfs"
+name = "chatfs-cli"
 version = "0.1.0"
 description = "Lazy filesystem for chat conversations (claude.ai, ChatGPT)"
 readme = "README.md"
