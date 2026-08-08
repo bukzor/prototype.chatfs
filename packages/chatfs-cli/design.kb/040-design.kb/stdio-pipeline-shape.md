@@ -22,10 +22,10 @@ A script with one logical input and one logical output uses stdin/stdout
 for those — no file arguments, no hardcoded output paths. Progress and
 status go to stderr; data goes to stdout. This applies to:
 
-- `chatfs_chatgpt_index_splat.py` — stdin: index pages jsonl
-- `chatfs_chatgpt_conversation_render.py` — stdout: markdown
-- `chatfs_chatgpt_index_browse.py` — stdout: index pages jsonl (pluck
-  itself — `chatfs_layout.iter_responses_matching` plus a provider's thin
+- `chatfs-chatgpt-index-splat` — stdin: index pages jsonl
+- `chatfs-chatgpt-conversation-render` — stdout: markdown
+- `chatfs-chatgpt-index-browse` — stdout: index pages jsonl (pluck
+  itself — `chatfs.pluck.iter_responses_matching` plus a provider's thin
   wrapper — is an in-process generator, not a standalone stdio leaf; see
   `driver-model.md`)
 
@@ -33,14 +33,15 @@ Multi-input or multi-output stages need parameterization other than
 stdio — there is no single stream to plumb. Two patterns:
 
 - **Positional target arg** when the target varies — URL or chat dir.
-  - `chatfs_chatgpt_conversation_path_browse.py <chat-dir>` — reads
+  - `chatfs-chatgpt-conversation-path-browse <chat-dir>` — reads
     `meta.json`, writes `cdp.jsonl` + `conversation.json` next to it.
-  - `chatfs_chatgpt_conversation_path_render.py <chat-dir>` — reads
+  - `chatfs-chatgpt-conversation-path-render <chat-dir>` — reads
     `meta.json` + `conversation.json`, runs splat, writes `chat.md`.
-- **Fixed-by-convention root** when there is exactly one. `index_splat`
-  writes to the lone `chatfs.demo/chatgpt/` tree — making this an
-  argument would invent variability the rest of the pipeline does not
-  have.
+- **Required `--cache <dir>`** when the stage places files into a cache
+  root — `index-splat` and the url-addressed commands take it, with
+  deliberately no default (see
+  `docs/dev/technical-policy.kb/path-ownership.md`). This supersedes the
+  incubator-era fixed-by-convention `chatfs.demo/` root.
 
 Either way, never file paths to individual inputs.
 
@@ -51,7 +52,7 @@ the captured stream to a debug file first, then pluck from that same
 file as a second pass:
 
 ```python
-browse(url, cdp_path)               # chatfs.demo/chatgpt/.data/index.cdp.jsonl
+browse(url, cdp_path)               # $CACHE/.data/index.cdp.jsonl
 pluck(pluck_index_pages, cdp_path, dst)
 ```
 
@@ -65,9 +66,9 @@ The debug file is not consumed by any later stage — it exists so a
 half-broken run is inspectable. When something looks wrong downstream,
 the user can re-run pluck against the captured CDP without re-driving
 Chromium. (Since the 2026-07-15 jq→Python port that re-run is a library
-affordance — `chatfs_layout.pluck` from Python — not a shell one; the
-provider pluck modules planned in the module-shape-refactor todo restore
-the stdin→stdout surface.)
+affordance — `chatfs.shell.capture.pluck` over a provider pluck function,
+from Python — not a shell one; a stdin→stdout pluck leaf was sketched
+during the module-shape refactor but has not landed.)
 
 This is currently default-on. A future flag will gate it default-off
 once the pipeline stabilizes; keeping it on during incubation pays for
@@ -80,7 +81,7 @@ itself the first time a render produces something surprising.
   all work without modification.
 - **Single-purpose scripts.** Each leaf does one transformation; the
   orchestrators handle file placement and naming. No leaf knows about
-  the date tree under `chatfs.demo/`.
+  the date tree under the cache root.
 - **Fail-loud composition.** `set -o pipefail` plus stderr-only
   progress means broken pipelines exit non-zero. Mixing data and
   progress on stdout would corrupt downstream JSON parsers.

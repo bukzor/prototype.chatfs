@@ -1,4 +1,4 @@
-# Design — chatfs-cli-mockup
+# Design — chatfs-cli
 
 Decisions about the shape of the capture/splat/render pipeline and the CLI
 surface that drives it.
@@ -12,7 +12,8 @@ surface that drives it.
 
 ## What does NOT belong
 
-- Implementation details of individual scripts (live in the scripts
+- Cross-package seams — the on-disk cache contract is
+  `docs/dev/technical-policy.kb/path-ownership.md`; subsystem boundaries
+  are the project `040-design.kb/`
+- Implementation details of individual modules (live in the modules
   themselves or in devlogs)
-- The specific filesystem layout under `chatfs.demo/` (parent
-  `040-design.kb/rotate-90-degrees-layout.md` and `user-interface.kb/`)

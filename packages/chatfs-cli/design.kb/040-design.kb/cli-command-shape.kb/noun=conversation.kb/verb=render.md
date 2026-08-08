@@ -102,7 +102,7 @@ positions.
 
 This notation is **provider-agnostic** — it's a property of rendering a
 forked conversation, not of any one provider's capture. It is written
-once, in `chatfs_render.py` (`Turn`/`ConversationTree` in,
+once, in `chatfs/render.py` (`Turn`/`ConversationTree` in,
 markdown out); each provider renderer reduces its wire shape to that
 seam, repairing its legitimately turn-less nodes first — chatgpt via
 `normalize_turnless` (drop turn-less leaves, splice pass-throughs,
@@ -124,10 +124,11 @@ Deterministic regen: orchestrator forms rebuild the splat tree and
 
 AI Studio's wire shape has no fork representation at all — no
 parent/child field anywhere, a flat `chunkedPrompt.chunks` list in
-document order (see `dev.kb/claims.kb/aistudio-jspb-prompt-shape.md`,
-"Turn order is linear"). `chatfs_aistudio_conversation_render.py`
+document order (see
+`docs/dev/design-incubators/chatfs-cli-mockup/dev.kb/claims.kb/aistudio-jspb-prompt-shape.md`,
+"Turn order is linear"). `chatfs.provider.aistudio.conversation.render`
 builds a straight predecessor chain (each turn's parent is the one
-before it) and hands it to the *same* `chatfs_render.render_tree` —
+before it) and hands it to the *same* `chatfs.render.render_tree` —
 no bespoke linear renderer. The fork-fact notation above degenerates
 to a no-op on every node (no `replies:`/`superseded by:`/`(re: N)`
 ever appears), by construction, not by a provider-specific special

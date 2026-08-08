@@ -113,6 +113,6 @@ pure vocabulary the leaves compose.
 ## Design
 
 - `docs/dev/design.kb/` — project-level layered design knowledge
-- `docs/dev/design-incubators/chatfs-cli-mockup/design.kb/` — pipeline-
-  and CLI-shape decisions made while this code incubated
+- `design.kb/` — pipeline- and CLI-shape decisions, package-scoped
+  (graduated with the code from the chatfs-cli-mockup incubator)
 - `docs/dev/technical-policy.kb/` — cross-cutting invariants

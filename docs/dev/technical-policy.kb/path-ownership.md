@@ -113,5 +113,5 @@ No component other than `place_meta` writes under the view tree.
   discipline the future daemon side of this contract follows.
 - `../design.kb/040-design.kb/sync-control-plane.md` — control-plane
   path names used above.
-- `../design-incubators/chatfs-cli-mockup/design.kb/040-design.kb/chat-as-directory.md` —
+- `../../../packages/chatfs-cli/design.kb/040-design.kb/chat-as-directory.md` —
   storage-vs-view rationale behind the `.chat/` / view-tree split.

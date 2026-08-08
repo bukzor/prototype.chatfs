@@ -30,7 +30,7 @@ Verified by dogfood (2026-07-26, chatfs-shaped probe tree):
 
 - Mixed bare-leaf + orchestrator dirs (`conversation/render` beside
   `conversation/url/`) render correctly in help -- matches
-  `docs/dev/design-incubators/chatfs-cli-mockup/design.kb/040-design.kb/cli-command-shape.md`
+  `packages/chatfs-cli/design.kb/040-design.kb/cli-command-shape.md`
   exactly.
 - Magic comments in Python files (after shebang) produce polished leaf
   `--help`; clap-grade validation runs before the interpreter starts.

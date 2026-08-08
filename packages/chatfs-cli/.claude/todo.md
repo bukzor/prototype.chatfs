@@ -98,7 +98,7 @@ listing is the index, not restated here.
       stderr; higher-level orchestrators take URL or chat-dir args and tee
       debug intermediates (e.g. `$CACHE/.data/index.cdp.jsonl`,
       `$CACHE/.data/$UUID/cdp.jsonl`) unconditionally today.
-- [ ] `docs/dev/design-incubators/chatfs-cli-mockup/design.kb/040-design.kb/cli-command-shape.md`'s unquoted
+- [ ] `packages/chatfs-cli/design.kb/040-design.kb/cli-command-shape.md`'s unquoted
       `last-updated: 2026-05-11` fails `llm.kb-validate` (schema wants a string;
       YAML parses the bare date as `datetime.date`). Found 2026-07-09 doing an
       unrelated gate check. Fix by either quoting the value here or adding the

@@ -32,7 +32,7 @@ richer per-turn structure (tool calls, sub-agents, hooks).
 - `docs/dev/design.kb/040-design.kb/black-box-decomposition.md` — BB1 is
   optional for this provider (filesystem read replaces browser
   capture).
-- `docs/dev/design-incubators/chatfs-cli-mockup/design.kb/040-design.kb/cli-command-shape.kb/`
+- `packages/chatfs-cli/design.kb/040-design.kb/cli-command-shape.kb/`
   — noun-verb command shape must extend to a non-URL locator.
 
 ## Scope

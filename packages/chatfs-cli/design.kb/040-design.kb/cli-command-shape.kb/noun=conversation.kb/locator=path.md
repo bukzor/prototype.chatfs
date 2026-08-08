@@ -2,7 +2,7 @@
 
 Path addresses a conversation by any filesystem path inside or
 referencing the chat dir. `resolve_chat_dir` (in
-`chatfs_chatgpt_layout`) normalizes input — accepts the chat dir itself,
+`chatfs.shell.place`) normalizes input — accepts the chat dir itself,
 a file inside it, the view dir-symlink under the date tree, or any
 descendant — and walks up to canonical `.chat/$UUID/`. Post-condition
 asserted: result is a real directory whose parent is named `.chat`.

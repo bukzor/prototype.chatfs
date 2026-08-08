@@ -70,7 +70,7 @@ JSPB positional decoding (see `docs/dev/design-incubators/chatfs-cli-mockup/dev.
       `cdp.jsonl` + `conversation.raw.json` + `conversation.json` +
       `meta.json` + view symlink, all verified correct.
 - [x] New naming convention (documented in
-      `docs/dev/design-incubators/chatfs-cli-mockup/design.kb/040-design.kb/cli-command-shape.kb/noun=conversation.kb/verb=browse.md`):
+      `packages/chatfs-cli/design.kb/040-design.kb/cli-command-shape.kb/noun=conversation.kb/verb=browse.md`):
       `conversation.raw.json` (plucked JSPB, for audit) vs. `conversation.json`
       (named, massage's output) — a split unique to AI Studio; chatgpt/claude
       have no `.raw.json` since pluck's output is already "good."
@@ -172,5 +172,5 @@ JSPB positional decoding (see `docs/dev/design-incubators/chatfs-cli-mockup/dev.
 - AI Studio is a third *browser-captured* provider. This strengthened
   the shared-lib signal earlier than the claude-code trigger originally
   assumed (in the now-deleted `todo.kb/2026-05-11-001-shared-code-among-providers.md`) —
-  already revisited in `docs/dev/design-incubators/chatfs-cli-mockup/design.kb/040-design.kb/provider-plugin-model.md`
+  already revisited in `packages/chatfs-cli/design.kb/040-design.kb/provider-plugin-model.md`
   § "Revised rule-of-three take".

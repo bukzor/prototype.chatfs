@@ -41,5 +41,5 @@ has no such flag.
 
 ## See also
 
-- `docs/dev/design-incubators/chatfs-cli-mockup/design.kb/040-design.kb/deterministic-regeneration.md` — forward-facing rule.
+- `packages/chatfs-cli/design.kb/040-design.kb/deterministic-regeneration.md` — forward-facing rule.
 - `docs/dev/devlog/2026-04-29-000-chatfs-mockup-chatgpt-url-flow-and-determinism.md` — session that landed the change.

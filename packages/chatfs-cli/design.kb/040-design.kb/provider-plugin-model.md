@@ -10,24 +10,26 @@ states the abstract shape (a provider defines locator parsing, artifact
 placement, BB1/BB2/BB3 invocation, staleness, mount layout). This entry
 records what building chatgpt, claude, and AI Studio side by side actually
 showed about where the provider/universal boundary falls — the extraction
-landed 2026-07-05 as `chatfs_layout.py` + `chatfs_render.py`.
+landed 2026-07-05 as `chatfs_layout.py` + `chatfs_render.py` (since the
+2026-07-19 module-shape refactor: `chatfs/layout.py` +
+`chatfs/shell/place.py`, and `chatfs/render.py`).
 
 ## The three-way split
 
-**Byte-for-byte identical across all three** (→ `chatfs_layout.py`):
-`safe_filename`, `_iso_offset`, `time_dir_for`, `chat_dir_for`,
-`data_dir_for`, `resolve_chat_dir`, `_purge_view_symlinks`,
-`DATA_DIR_NAME`, and the body of `place_meta` (meta.json write +
-view-symlink placement). Same story on the render side:
-`chatfs_render.py`'s tree algorithms (`live_ancestors`, `primary_child`,
-`normalize_turnless`, `number_turns`, the fork-fact `Renderer`) are one
-shared implementation; `chatfs_chatgpt_conversation_render.py`,
-`chatfs_claude_conversation_render.py`, and (landed 2026-07-11)
-`chatfs_aistudio_conversation_render.py` contribute only wire-shape
-parsing. AI Studio's contribution is the strongest evidence yet that the
+**Byte-for-byte identical across all three** (→ `chatfs/layout.py` +
+`chatfs/shell/place.py`): `safe_filename`, `_iso_offset`, `time_dir_for`,
+`chat_dir_for`, `data_dir_for`, `resolve_chat_dir`,
+`_purge_view_symlinks`, `DATA_DIR_NAME`, and the body of `place_meta`
+(meta.json write + view-symlink placement). Same story on the render
+side: `chatfs/render.py`'s tree algorithms (`live_ancestors`,
+`primary_child`, `normalize_turnless`, `number_turns`, the fork-fact
+`Renderer`) are one shared implementation; the three providers'
+`conversation/render.py` modules (aistudio's landed 2026-07-11)
+contribute only wire-shape parsing. AI Studio's contribution is the strongest evidence yet that the
 render-side seam is right: its wire shape has *no fork representation at
 all* (a flat, linear turn list — see
-`dev.kb/claims.kb/aistudio-jspb-prompt-shape.md`), so its renderer feeds
+`docs/dev/design-incubators/chatfs-cli-mockup/dev.kb/claims.kb/aistudio-jspb-prompt-shape.md`),
+so its renderer feeds
 `render_tree` a degenerate single-child-chain tree; the shared fork-fact
 machinery costs nothing on that input rather than needing a
 provider-specific bypass.
@@ -43,7 +45,7 @@ def place_meta(item, root) -> Path:
 ```
 
 Every provider's `place_meta` wrapper is this shape, verified identical in
-structure across `chatfs_{chatgpt,claude,aistudio}_layout.py` — only the
+structure across the three `chatfs.provider.<name>.layout` modules — only the
 key names (`id`/`title`/`create_time` vs `uuid`/`name`/`created_at` vs
 `id`/`title`/`create_time`) and the timestamp parser's input type
 (str | float vs str vs int) differ. This one seam absorbs both the
@@ -51,7 +53,7 @@ key-name divergence and the timestamp-type divergence; nothing else
 about `place_meta` varies.
 
 `capture()` (landed shared 2026-07-11, see devlog
-`../../devlog/2026-07-11-002-unification-shared-capture-and-drift-fixes.md`
+`docs/dev/design-incubators/chatfs-cli-mockup/devlog/2026-07-11-002-unification-shared-capture-and-drift-fixes.md`
 — the driving todo.kb file's "Solve by unification" is deleted now that
 it's fully executed) turned out to be the same adapter shape, one
 level simpler — a 2-value tuple (`pluck_fn`,
@@ -72,14 +74,14 @@ def capture(url, chat_dir) -> Path:
   `IndexItem` for free from their already-keyed wire format).
 - Each provider's extractor (HAR-pluck, CDP+pluck, JSONL-read) and content
   splat — genuinely different wire formats, the opaque-extractor boundary
-  (`../../../../technical-policy.kb/`) puts these out of scope for sharing
+  (`docs/dev/technical-policy.kb/`) puts these out of scope for sharing
   by design, not by omission.
 
 ## Revised rule-of-three take
 
 The pre-registration (formerly `todo.kb/2026-05-11-001-shared-code-among-providers.md`,
 deleted 2026-07-12 once fully resolved — see devlog
-`../../devlog/2026-07-11-002-unification-shared-capture-and-drift-fixes.md`)
+`docs/dev/design-incubators/chatfs-cli-mockup/devlog/2026-07-11-002-unification-shared-capture-and-drift-fixes.md`)
 expected claude-code (a fourth, non-browser provider) to be the extraction
 trigger. AI Studio — a third *browser-captured* provider, but the first
 non-keyed (JSPB) one — turned out to be sufficient signal on its own: the

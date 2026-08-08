@@ -46,7 +46,7 @@ share a filename.
 - `meta.json` is exactly the shape of one entry in the index endpoint's
   `items[]` array. Anything writing `meta.json` must produce that shape
   byte-for-byte (modulo formatting). Canonical location is
-  `.chat/$UUID/meta.json`; the date-tree view does not store its own
+  `.data/$UUID/meta.json`; the date-tree view does not store its own
   copy.
 - The browse-incidental-capture decision (sibling entry) is what makes
   this rule cheap to follow for `conversation url browse`: the index
@@ -62,7 +62,7 @@ another field's name just because they're close enough. A field name is
 a claim about what the value means and how precisely it's known.
 
 AI Studio's `IndexItem.create_time` is the motivating case
-(`chatfs_aistudio_layout.py::index_item`). A full `ResolveDriveResource`
+(`chatfs.provider.aistudio.layout.index_item`). A full `ResolveDriveResource`
 fetch knows true creation time (the first turn's `createTime`); a
 `ListPrompts` index entry carries no turn content and so cannot — the
 only timestamp it has is `metadata.lastModified.revisionTime`, which is

@@ -18,7 +18,7 @@ and new.
 
 A verb builds its complete output in a destination-adjacent scratch
 (`.tmp` sibling) and atomically promotes it over the prior artifact
-(mechanism: `chatfs_atomic.py`) -- supersession happens at the rename,
+(mechanism: `chatfs.shell.atomic`) -- supersession happens at the rename,
 with no advance purge and no window where outputs are absent, partial,
 or mixed. Failed attempts are preserved as `.fail` siblings
 (latest-wins, cleared by the next success), so a crash leaves the
@@ -66,8 +66,8 @@ sweep doesn't immediately undo the placement it's meant to follow):
 def _purge_view_symlinks(uuid: str, root: Path, *, keep: Path | None = None) -> None:
     for path in root.rglob("*"):
         rel_parts = path.relative_to(root).parts
-        if ".chat" in rel_parts or ".data" in rel_parts:
-            continue  # storage-internal symlinks, not views
+        if ".chat" in rel_parts or ".data" in rel_parts or "trash" in rel_parts:
+            continue  # storage-internal or preserved (trash) -- not views
         if path == keep:
             continue
         if path.is_symlink() and uuid in os.readlink(path):
@@ -91,4 +91,4 @@ derivation logic may relocate.
 Stage-skipping caches hide code changes (in the stage and in external
 tools it shells out to), upstream input changes, and partial-write
 failures. The full rationale and history of the removal lives in
-`adr/2026-04-29-000-no-freshness-caches.md`.
+`docs/dev/adr/2026-04-29-000-no-freshness-caches.md`.

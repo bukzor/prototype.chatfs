@@ -8,7 +8,7 @@ was chosen), see `../cli-command-shape.md` + `../cli-command-shape.kb/`.
 
 ## `place_meta(item, root)`
 
-1. Stages `meta.json` into `$root/.data/$UUID/` (`chatfs_atomic.staged`,
+1. Stages `meta.json` into `$root/.data/$UUID/` (`chatfs.shell.atomic.staged`,
    under `.data/$UUID/`'s write lock).
 2. Stages the view dir-symlink under `$root/<ts-dir>/$TITLE`, pointing
    at `$root/.chat/$UUID/` — placed *before* the identity-scoped purge
@@ -18,7 +18,7 @@ was chosen), see `../cli-command-shape.md` + `../cli-command-shape.kb/`.
    cleanup).
 
 All three steps share one outer write lock on `.data/$UUID/`, so a
-cooperating reader (`chatfs_locks.read_locked`) sees them as a single
+cooperating reader (`chatfs.shell.locks.read_locked`) sees them as a single
 transition. The `$UUID/` dirs may already exist (re-place); derived
 files under `.chat/$UUID/` from a prior render are not touched here —
 that's path-render's job.
@@ -39,7 +39,7 @@ delegates to path-render at the end; path browse takes the
 Takes a `.chat/$UUID/` dir as its argument (the canonical derived
 unit).
 
-1. Opens a staged scratch sibling (`chatfs_atomic.staged`, under
+1. Opens a staged scratch sibling (`chatfs.shell.atomic.staged`, under
    `.data/$UUID/`'s write lock).
 2. Creates the scratch dir and its `.data` inspection symlink
    (`link_data_dir`, pointing at `.data/$UUID/`).

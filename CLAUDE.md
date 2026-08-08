@@ -46,9 +46,9 @@ For how to create and maintain design knowledge, see `Skill(llm-design-kb)`.
 
 - `packages/` — Polyglot workspace members (Python packages, Rust crates)
 - `docs/dev/design.kb/` — Project-level design knowledge (design.kb)
-- `packages/chatfs-cli/` — **the working pipeline** (capture → splat → render, all three providers)
+- `packages/chatfs-cli/` — **the working pipeline** (capture → splat → render, all three providers); its `design.kb/` holds the package-scoped design decisions
 - `packages/har-browse/` — BB1 capture (Playwright HAR)
-- `docs/dev/design-incubators/chatfs-cli-mockup/` — where the pipeline incubated (graduated 2026-08-07); its `design.kb/` and `chatfs.demo/` fixtures remain
+- `docs/dev/design-incubators/chatfs-cli-mockup/` — where the pipeline incubated (graduated 2026-08-07; its `design.kb/` followed 2026-08-08); `chatfs.demo/` fixtures remain
 - `docs/dev/design-incubators/fuser-vfs/` — FUSE filesystem learning
 - `docs/dev/design-incubators/fork-representation/` — Fork representation investigation
 - `docs/dev/devlog/` — Session narrative history

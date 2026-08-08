@@ -9,13 +9,13 @@ why:
 # Chat as Directory
 
 A chat is a directory in a flat, UUID-keyed canonical store. Everything
-else under `chatfs.demo/chatgpt/` is a *view* — a tree of symlinks
-derived from that store.
+else under the cache root is a *view* — a tree of symlinks derived from
+that store.
 
 ## Layout
 
 ```
-chatfs.demo/chatgpt/
+$CACHE/
     .data/
         69dfa575-c0e0-832c-99c2-4e1919ab50de/
             meta.json          # captured (index endpoint item)
@@ -35,7 +35,7 @@ Captured exhaust lives in a parallel UUID-keyed tree, `.data/$UUID/`,
 leaving `.chat/$UUID/` 100% derived -- a pure function of `.data/$UUID/`,
 and the unit of atomic regeneration: built complete in a sibling scratch
 (`.chat/.$UUID.tmp/`), promoted into place by rename (mechanism:
-`chatfs_atomic.py`).
+`chatfs.shell.atomic`).
 
 Readers see the previous complete chat dir or the new one -- never
 partial, never mixed (requirement: `atomic-cache-updates`), with no

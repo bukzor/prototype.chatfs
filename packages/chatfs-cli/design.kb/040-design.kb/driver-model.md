@@ -6,8 +6,8 @@ why:
 
 # Driver Model — Pipe and Delegation as Thin Drivers Over One Library
 
-Index flow is user-composed by pipe (`chatfs_chatgpt_index_browse.py |
-chatfs_chatgpt_index_splat.py`); conversation flow is nested delegation
+Index flow is user-composed by pipe (`chatfs-chatgpt-index-browse |
+chatfs-chatgpt-index-splat`); conversation flow is nested delegation
 (`url_browse` calls `path_render`, which calls splat and render as
 subprocesses). The two surfaces look like competing philosophies, but
 neither should give way to the other: the resolution is that both are
@@ -35,17 +35,17 @@ should still be shared.
 
 ## What's landed
 
-`chatfs_layout.py::capture()`, built on its `browse()`/`pluck()`
+`chatfs.shell.capture.capture()`, built on its `browse()`/`pluck()`
 primitives, is the first instance of this: every provider's
 `url_browse`/`path_browse` delegation orchestrator, and every
 incidental-index pluck call, now calls these shared functions rather
 than each reimplementing `subprocess.run(["har-browse", url],
-stdout=...)` inline or shelling out to a `.jq` filter. A provider's own
-`capture()` wrapper (`chatfs_claude_layout.capture`, etc.) is a thin
-partial application — it supplies the provider's pluck function and
-output filename, nothing else. `run_pluck()` (subprocess-to-a-script)
-still exists for the one case that's a genuine external script rather
-than an in-process generator: AI Studio's massage stage.
+stdout=...)` inline or shelling out to a `.jq` filter. The provider
+`capture()` wrappers have since dissolved into leaf `main()`s that pass
+the provider's pluck function and output filename to `capture()`
+directly (the 2026-07-19 purity split). `run_module()` (subprocess
+`python -m`) still exists for the one stage that's a genuine separate
+command rather than an in-process generator: AI Studio's massage stage.
 
 ## Decided against: converting splat/render delegation to in-process calls
 

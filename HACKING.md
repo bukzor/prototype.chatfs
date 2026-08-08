@@ -49,7 +49,7 @@ docs/
 └── dev/
     ├── design.kb/           # Layered design knowledge
     ├── design-incubators/   # Active design explorations
-    │   └── chatfs-cli-mockup/  # Where chatfs-cli incubated; design.kb + demo fixtures remain
+    │   └── chatfs-cli-mockup/  # Where chatfs-cli incubated; demo fixtures remain
     ├── background.kb/       # Technology primers
     ├── technical-policy.kb/ # Cross-cutting guidance
     └── devlog/              # Session history
