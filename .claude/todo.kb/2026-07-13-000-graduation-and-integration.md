@@ -58,7 +58,7 @@ that ground truth has outgrown.
 - [x] [002 — path-ownership contract v1](2026-07-13-000-graduation-and-integration.kb/2026-07-13-002-path-ownership-contract-v1.md) — landed 2026-07-14 as `docs/dev/technical-policy.kb/path-ownership.md`.
 - [ ] [003 — `chatfs` bin crate + `chatfs mount` MVP](2026-07-13-000-graduation-and-integration.kb/2026-07-13-003-chatfs-bin-crate-and-mount-mvp.md)
 - [ ] [004 — control plane + work-enqueueing](2026-07-13-000-graduation-and-integration.kb/2026-07-13-004-control-plane-and-work-enqueueing.md)
-- [ ] [005 — design.kb reconciliation + graduation ADR](2026-07-13-000-graduation-and-integration.kb/2026-07-13-005-design-kb-reconciliation-and-graduation-adr.md)
+- [x] [005 — design.kb reconciliation + graduation ADR](2026-07-13-000-graduation-and-integration.kb/2026-07-13-005-design-kb-reconciliation-and-graduation-adr.md) — closed 2026-08-08: kb moved to `packages/chatfs-cli/design.kb/` (`8385abb`), project 040 seams-only (`7b73518`), ADR `2026-08-08-000`, dead-link sweep clean.
 
 Dependency edges live in each child's `blocked-by:` frontmatter. Shape:
 
@@ -105,8 +105,8 @@ prototyped against the incubator's `chatfs.demo/` tree at any time.
 - [ ] Sync is triggerable through the mount (control plane) without
       violating no-network-on-read; kill-mid-sync leaves prior content
       serving (atomic-cache-updates verification).
-- [ ] Project design.kb states seams only; package-scoped kbs own
-      internals; graduation recorded as ADR.
+- [x] Project design.kb states seams only; package-scoped kbs own
+      internals; graduation recorded as ADR. — 2026-08-08 (child 005).
 
 ## Notes
 

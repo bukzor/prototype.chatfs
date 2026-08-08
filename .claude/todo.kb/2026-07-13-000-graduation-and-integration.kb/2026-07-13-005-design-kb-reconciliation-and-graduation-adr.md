@@ -36,12 +36,13 @@ code graduation (sibling child 001) has this documentation twin.
 
 ## Implementation Steps
 
-- [ ] Rewrite `stack-split.md` seams-only: the three-way split, invocation
+- [x] Rewrite `stack-split.md` seams-only: the three-way split, invocation
       direction (Rust → Python CLI → Node sidecar, subprocess + files),
       pointing at the path-ownership contract and `package-division.md`;
       no subsystem-internal ownership enumerations. Keep the language-
       choice rationale ("why not all-Rust", "why not long-lived sidecar").
-- [ ] Graduate incubator design entries under **interim cross-kb
+      Done 2026-08-08 (`7b73518`).
+- [x] Graduate incubator design entries under **interim cross-kb
       conventions** (symlinks for shared files, relative cross-kb
       references, backlink grep on moves): package-internal decisions
       (`cli-command-shape` + sub-kb, `driver-model`,
@@ -51,11 +52,20 @@ code graduation (sibling child 001) has this documentation twin.
       `no-partial-synthesis`, `browse-incidental-capture`) → evaluate
       one-by-one for project 040 vs package scope. Curated, not bulk —
       the naive-push failure mode is the thing to avoid.
-- [ ] ADR (`docs/dev/adr/`): the graduation itself — incubator closed,
-      what it settled, where code and docs went.
-- [ ] Sweep: dead links repo-wide (living docs fixed, devlogs left);
+      Done 2026-08-08 (`8385abb`): whole kb moved to
+      `packages/chatfs-cli/design.kb/` — the per-entry evaluation found
+      every entry package-scoped; the cross-subsystem residue became two
+      `[!QUESTION]` blocks in project `provider-plugin-model.md` (`7b73518`).
+- [x] ADR (`docs/dev/adr/`): the graduation itself — incubator closed,
+      what it settled, where code and docs went. Done 2026-08-08:
+      `2026-08-08-000-chatfs-cli-graduates-from-the-incubator-with-its-design-kb.md`.
+- [x] Sweep: dead links repo-wide (living docs fixed, devlogs left);
       incubator design.kb left as pointers or removed per what
-      graduation leaves behind.
+      graduation leaves behind. Done 2026-08-08: only hits were the five
+      aistudio-schema discourse.kb schema symlinks (pre-existing, dangling
+      since June 23) — replaced with `$ref: skill://` stubs per user
+      (`9324dba`); no pointer stubs left at the old kb location, README
+      carries the pointer.
 
 ## Open Questions
 
@@ -65,9 +75,10 @@ code graduation (sibling child 001) has this documentation twin.
 
 ## Success Criteria
 
-- [ ] Project 040 contains no claims about any single package's
-      internals.
-- [ ] Every graduated entry reachable from its new home's `ls`; no
+- [x] Project 040 contains no claims about any single package's
+      internals. (Full 040 audit in `7b73518`; unbuilt surfaces marked
+      `[!TODO]`, open designs `[!QUESTION]`.)
+- [x] Every graduated entry reachable from its new home's `ls`; no
       dangling `why:` or prose links (repo-wide grep + `find -xtype l`
-      clean).
-- [ ] ADR recorded; incubator README points at it.
+      clean). (Verified 2026-08-08 after the stub replacement.)
+- [x] ADR recorded; incubator README points at it.

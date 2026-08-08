@@ -4,8 +4,9 @@
 > `packages/chatfs-cli/` (2026-08-07) and installs real commands —
 > see that package's README for the pipeline anatomy and
 > `docs/how-to-chatfs.md` for usage. Its `design.kb/` followed the code
-> (2026-08-08) to `packages/chatfs-cli/design.kb/`. What remains in
-> this directory:
+> (2026-08-08) to `packages/chatfs-cli/design.kb/` — ADR:
+> `docs/dev/adr/2026-08-08-000-chatfs-cli-graduates-from-the-incubator-with-its-design-kb.md`.
+> What remains in this directory:
 >
 > - `chatfs.demo/<provider>` — captured fixtures (gitignored bulk).
 >   Point the installed commands' `--cache` at one to exercise render
