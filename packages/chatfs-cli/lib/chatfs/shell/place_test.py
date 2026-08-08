@@ -82,6 +82,22 @@ class DescribePlaceMeta:
         assert data_link.is_symlink()
         assert data_link.resolve() == data_dir_for("abc123", tmp_path).resolve()
 
+    def it_does_not_purge_view_symlinks_preserved_in_trash(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ):
+        # trashed content is a preserved artifact, not a view: re-capturing
+        # a previously-trashed chat must not reach into trash/ and strip
+        # the symlinks url-trash moved there.
+        use_chicago_tz(monkeypatch)
+        dt = datetime.fromtimestamp(DEMO_EPOCH, tz=timezone.utc)
+        trashed_link = tmp_path / "trash" / "2026-06-20T00:00:00,000000000" / "Hello"
+        trashed_link.parent.mkdir(parents=True)
+        trashed_link.symlink_to("../../.chat/abc123")
+
+        _ = place_meta("abc123", "Hello", dt, {"v": 1}, tmp_path)
+
+        assert trashed_link.is_symlink()
+
     def it_places_the_fresh_symlink_before_purging_the_stale_one(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ):

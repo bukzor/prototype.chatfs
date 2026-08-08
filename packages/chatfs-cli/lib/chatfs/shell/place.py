@@ -74,7 +74,9 @@ def _purge_view_symlinks(uuid: str, root: Path, *, keep: Path | None = None) -> 
     identity, not path. Skips `.chat/` and `.data/` -- those hold
     storage-internal symlinks (e.g. `.chat/$UUID/.data`'s inspection
     link back to `.data/$UUID/`), not views, and their targets
-    legitimately contain the uuid too.
+    legitimately contain the uuid too. Skips `trash/` -- trashed
+    content is a preserved artifact, not a view (a re-captured chat
+    must not reach into an earlier trashing of itself).
 
     `keep` is the symlink `place_meta` just placed (place-then-purge:
     see `deterministic-regeneration.md`) -- its target also contains
@@ -83,7 +85,7 @@ def _purge_view_symlinks(uuid: str, root: Path, *, keep: Path | None = None) -> 
     """
     for path in root.rglob("*"):
         rel_parts = path.relative_to(root).parts
-        if ".chat" in rel_parts or ".data" in rel_parts:
+        if ".chat" in rel_parts or ".data" in rel_parts or "trash" in rel_parts:
             continue
         if path == keep:
             continue
