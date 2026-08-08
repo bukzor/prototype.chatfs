@@ -20,7 +20,6 @@ exclude = ["packages/chatfs-fuser", "packages/har-browse"]
 [tool.uv.sources]
 chatfs-cli = { workspace = true }
 bukzor-chatgpt-export = { workspace = true }
-typed-json = { git = "https://github.com/bukzor/typed-json" }
 
 [tool.pyright]
 # Vendored third-party code is excluded by name; our own exploration

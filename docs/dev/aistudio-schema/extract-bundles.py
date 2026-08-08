@@ -1,10 +1,7 @@
 #!/usr/bin/env -S uv run --script
 # /// script
 # requires-python = ">=3.13"
-# dependencies = ["typed-json"]
-#
-# [tool.uv.sources]
-# typed-json = { git = "https://github.com/bukzor/typed-json" }
+# dependencies = ["python-typed-json"]
 # ///
 """Extract the AI Studio boq-makersuite JS modules from a CDP capture into
 `bundles/<module-id>.js` — one file per module, raw (minified) bytes.

@@ -1,10 +1,7 @@
 #!/usr/bin/env -S uv run --script
 # /// script
 # requires-python = ">=3.13"
-# dependencies = ["typed-json"]
-#
-# [tool.uv.sources]
-# typed-json = { git = "https://github.com/bukzor/typed-json" }
+# dependencies = ["python-typed-json"]
 # ///
 """Print the populated-index tree of a JSPB array.
 

@@ -74,6 +74,9 @@ can be dropped).
   this entry and 2026-08-08-001 are its history.
 - User is publishing typed-json to PyPI out-of-repo; once it lands, drop the
   `[tool.uv.sources]` git pins here and in the script metadata blocks.
+  — Done later the same day: PyPI blocked the name `typed-json` (collides
+  with third-party `typedjson`), so the dist is **`python-typed-json`**
+  (import name still `typed_json`); pins dropped, dependency renamed.
 - TypeGuard → TypeIs for typed-json's guards: filed at typed-json scope
   (`.claude/todo.md` in that repo).
 

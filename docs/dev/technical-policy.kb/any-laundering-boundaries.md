@@ -22,8 +22,9 @@ downstream handles honestly-typed values.
   invocation, with these options, yields this shape" — it cannot be shared
   across configurations that guarantee different shapes.
 - Cast to the strongest type the producing call guarantees **by construction**:
-  - Default-decoder JSON: `typed_json.loads`/`load` (git dependency;
-    `github.com/bukzor/typed-json`). Never write a new local JSON alias/cast.
+  - Default-decoder JSON: `typed_json.loads`/`load` (PyPI dist
+    `python-typed-json`; source `github.com/bukzor/typed-json`). Never write
+    a new local JSON alias/cast.
   - Nonstandard decoder: its own boundary module, one cast, config-specific
     alias (e.g. `bukzor.chatgpt_export.json` — `parse_float=Decimal`, so its
     `JsonValue` contains `Decimal` and no `float`).
