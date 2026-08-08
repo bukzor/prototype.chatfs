@@ -291,9 +291,18 @@ surfaces) is the guide.
 - [x] No `chatfs_*`-prefixed flat scripts remain; every stage importable
       as `chatfs.…` and runnable from any cwd.
 - [x] Full test suite + basedpyright clean (97/97, 0 errors/0 warnings).
-- [ ] Live end-to-end run of one provider's url-browse against the demo
+- [x] Live end-to-end run of one provider's url-browse against the demo
       tree — needs an explicit ask-first browser/network action; not
-      done by any of the three family edit-pass sessions.
+      done by any of the three family edit-pass sessions. Done
+      2026-08-08 (asked; user pre-granted and drove the browser), in
+      post-graduation form: the installed
+      `chatfs-claude-conversation-url-browse` against a fresh
+      `--cache trash/live-cache/claude` rather than the baked demo tree
+      (which no longer exists as a default). Full pipeline succeeded:
+      capture → pluck → splat (101 messages) → render (102 turns);
+      contract layout on disk (`.chat/`, `.data/` exhaust with
+      `cdp.jsonl.d/` scratch, `Created=` view symlink), no
+      `.tmp`/`.fail` leftovers.
 
 ## Notes
 

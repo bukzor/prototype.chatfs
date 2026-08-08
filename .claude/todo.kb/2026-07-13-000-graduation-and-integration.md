@@ -53,8 +53,8 @@ that ground truth has outgrown.
 
 ## Children (in `2026-07-13-000-graduation-and-integration.kb/`)
 
-- [ ] [000 — module-shape refactor](2026-07-13-000-graduation-and-integration.kb/2026-07-13-000-module-shape-refactor.md)
-- [x] [001 — promote to packages/chatfs-cli](2026-07-13-000-graduation-and-integration.kb/2026-07-13-001-promote-to-packages-chatfs-cli.md) — landed 2026-08-07: installed kebab entry points, required `--cache`, todos re-homed, docs re-cut. (000 retains one open criterion: a live url-browse verification, ask-first.)
+- [x] [000 — module-shape refactor](2026-07-13-000-graduation-and-integration.kb/2026-07-13-000-module-shape-refactor.md) — closed 2026-08-08: the last open criterion (live url-browse verification) ran via the installed entry point against a fresh cache; full pipeline green.
+- [x] [001 — promote to packages/chatfs-cli](2026-07-13-000-graduation-and-integration.kb/2026-07-13-001-promote-to-packages-chatfs-cli.md) — landed 2026-08-07: installed kebab entry points, required `--cache`, todos re-homed, docs re-cut.
 - [x] [002 — path-ownership contract v1](2026-07-13-000-graduation-and-integration.kb/2026-07-13-002-path-ownership-contract-v1.md) — landed 2026-07-14 as `docs/dev/technical-policy.kb/path-ownership.md`.
 - [ ] [003 — `chatfs` bin crate + `chatfs mount` MVP](2026-07-13-000-graduation-and-integration.kb/2026-07-13-003-chatfs-bin-crate-and-mount-mvp.md)
 - [ ] [004 — control plane + work-enqueueing](2026-07-13-000-graduation-and-integration.kb/2026-07-13-004-control-plane-and-work-enqueueing.md)
