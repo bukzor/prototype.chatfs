@@ -60,6 +60,7 @@ Plan from 2026-05-05 design.kb consolidation. Order is dependency-driven; 1-2 ar
 ## Deferred
 
 - [ ] Create `docs/dev/milestones.kb/` — double-blocked (no milestone content yet; skills-repo pattern not defined)
+- [ ] Fix pre-existing basedpyright errors in docs/ exploration scripts (3 as of 2026-08-08: implicitly-relative `convert` imports in `docs/dev/aistudio-schema/rosetta/{correlate,verify}.py`; unresolvable vendored `claude_api` import in `docs/dev/design-incubators/fork-representation/investigate-forks.py`) — deliberately left visible rather than excluded when the `**/docs` pyright exclude was narrowed to vendored code only
 
 ## Upstream (mirrors of skills-repo todos; kept here for visibility)
 

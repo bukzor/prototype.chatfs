@@ -84,5 +84,8 @@ and expose the CLI surface as installed entry points.
       violation — see `technical-policy.kb/path-ownership.md`).
 - [x] Full test suite + basedpyright clean from repo root, no
       per-incubator pyright scoping — 2026-08-07: pytest 143/143,
-      basedpyright 0 errors.
+      basedpyright 0 errors. (2026-08-08: the `**/docs` exclude that
+      produced the 0 was narrowed to vendored code only, per user;
+      `packages/*` remain clean, and 3 pre-existing errors in docs/
+      exploration scripts are now visible as deliberate future work.)
 - [x] `packages/chatfs` directory name is free.

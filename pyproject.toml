@@ -22,16 +22,16 @@ chatfs-cli = { workspace = true }
 bukzor-chatgpt-export = { workspace = true }
 
 [tool.pyright]
-# docs/ holds vendored reference implementations and one-off exploration
-# scripts, not product code -- that graduates to packages/* and is checked
-# there (child-001: clean from repo root, no per-incubator scoping).
+# Vendored third-party code is excluded by name; our own exploration
+# scripts under docs/ stay checked -- their pre-existing errors are future
+# work, left visible rather than suppressed.
 exclude = [
   "**/node_modules",
   "**/__pycache__",
   "**/.venv",
   "**/trash",
   "**/typesafety",
-  "**/docs",
+  "docs/dev/reference-implementations",
 ]
 
 [tool.pytest.ini_options]

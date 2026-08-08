@@ -72,7 +72,8 @@ cargo run --example static_tree  # mount a static demo tree
 
 ```bash
 pytest          # whole workspace, from the repo root
-basedpyright    # likewise
+basedpyright    # likewise; packages/* are clean, but a few pre-existing
+                # errors in docs/ exploration scripts are known future work
 ```
 
 ### Understanding Data Flow
