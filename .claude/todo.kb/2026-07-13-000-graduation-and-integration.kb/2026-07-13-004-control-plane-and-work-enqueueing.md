@@ -1,9 +1,10 @@
 ---
 managed-by: Skill(llm-subtask)
 blocked-by:
+  # atomic-regeneration blocker satisfied 2026-07-18 (todo closed and
+  # deleted at re-homing; see the umbrella's Related section)
   - 2026-07-13-003-chatfs-bin-crate-and-mount-mvp.md
   - 2026-07-13-002-path-ownership-contract-v1.md
-  - docs/dev/design-incubators/chatfs-cli-mockup/.claude/todo.kb/2026-07-13-000-Atomic-chat-dir-regeneration---stage-and-rename--never-rewrite-in-place.md
 cost-benefit-sweh:
   timebox:
     "@value": 16.0
