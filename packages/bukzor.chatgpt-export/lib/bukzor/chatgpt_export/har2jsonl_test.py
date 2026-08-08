@@ -121,7 +121,7 @@ class DescribeMain:
         body: JsonObj = {"title": "My Chat", "mapping": {}}
         har = _har([_conversation_entry(body=body)])
         src = tmp_path / "test.har"
-        src.write_text(json.dumps(har))
+        _ = src.write_text(json.dumps(har))
 
         monkeypatch.setattr("sys.argv", ["har2jsonl", str(src)])
         M.main()
@@ -144,7 +144,7 @@ class DescribeMain:
         )
         har = _har([entry1, entry2])
         src = tmp_path / "test.har"
-        src.write_text(json.dumps(har))
+        _ = src.write_text(json.dumps(har))
 
         monkeypatch.setattr("sys.argv", ["har2jsonl", str(src)])
         M.main()
@@ -160,7 +160,7 @@ class DescribeMain:
     ):
         har = _har([])
         src = tmp_path / "test.har"
-        src.write_text(json.dumps(har))
+        _ = src.write_text(json.dumps(har))
 
         monkeypatch.setattr("sys.argv", ["har2jsonl", str(src)])
         M.main()
@@ -173,7 +173,7 @@ class DescribeMain:
     ):
         har = _har([_conversation_entry()])
         src = tmp_path / "export.har"
-        src.write_text(json.dumps(har))
+        _ = src.write_text(json.dumps(har))
 
         monkeypatch.setattr("sys.argv", ["har2jsonl", str(src)])
         M.main()

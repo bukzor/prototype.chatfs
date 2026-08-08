@@ -10,9 +10,13 @@ counterpart to walk-graph.py's schema field numbers.
 """
 import json
 import sys
+from typing import cast
+
+type JsonValue = None | bool | int | float | str | list[JsonValue] | dict[str, JsonValue]
+type Row = tuple[int, int, str]
 
 
-def descriptor(value):
+def descriptor(value: JsonValue) -> str:
     """Short one-line type/size hint for a JSPB slot value."""
     if isinstance(value, list):
         filled = sum(1 for v in value if v is not None)
@@ -23,7 +27,7 @@ def descriptor(value):
         return repr(value)
 
 
-def show(value, depth, maxdepth, out):
+def show(value: JsonValue, depth: int, maxdepth: int, out: list[Row]) -> None:
     """Append `(indent, idx, descriptor)` rows for each non-null slot, recursing into lists."""
     if not isinstance(value, list) or depth > maxdepth:
         return
@@ -40,8 +44,8 @@ def main():
         line = line.strip()
         if not line:
             continue
-        out = []
-        show(json.loads(line), 0, maxdepth, out)
+        out: list[Row] = []
+        show(cast(JsonValue, json.loads(line)), 0, maxdepth, out)
         for depth, idx, desc in out:
             print(f"{'  ' * depth}[{idx}] {desc}")
         print()

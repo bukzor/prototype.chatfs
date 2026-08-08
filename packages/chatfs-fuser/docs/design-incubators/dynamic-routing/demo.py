@@ -49,7 +49,7 @@ from __future__ import annotations
 
 import errno
 from dataclasses import dataclass, field
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 
 
 class FuseError(OSError):
@@ -145,7 +145,7 @@ class VFS:
             raise FuseError(errno.ENOTDIR, path)
 
         children = entry.read()
-        result = []
+        result: list[tuple[int, str]] = []
         for name in children:
             child_path = f"{path.rstrip('/')}/{name}"
             child_ino = self._ensure_ino(child_path)
@@ -184,11 +184,11 @@ class UserVFSModule:
     """User's business logic — no framework types, no inodes, just data."""
 
     # Data sources (in real life: API calls, cache reads, etc.)
-    convos_by_org = {
+    convos_by_org: Mapping[str, list[str]] = {
         "personal": ["conv-aaa", "conv-bbb"],
         "work": ["conv-ccc"],
     }
-    messages_by_convo = {
+    messages_by_convo: Mapping[str, str] = {
         "conv-aaa": "Hello world",
         "conv-bbb": "Goodbye world",
         "conv-ccc": "Work stuff",

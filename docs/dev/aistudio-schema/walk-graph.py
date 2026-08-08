@@ -24,6 +24,10 @@ yet typed (see README primitive legend).
 """
 import re
 import sys
+from collections.abc import Iterator
+from typing import cast
+
+type Field = tuple[int, str, str, str | None]
 
 # Whitespace-tolerant: the bundle ships beautified (newlines + indentation)
 # in some modules and minified in others.
@@ -37,7 +41,7 @@ CTOR = re.compile(r"_\.[A-Za-z0-9]+|[A-Za-z0-9$]+")
 LEGEND = {"_.l", "_.Mj", "_.X", "_.xi"}
 
 
-def rpc_response_ctor(src, method):
+def rpc_response_ctor(src: str, method: str) -> str | None:
     """The response ctor of MakerSuiteService/<method>, or None.
 
     Stub shape (prettified): the method path string is followed by the request
@@ -50,10 +54,10 @@ def rpc_response_ctor(src, method):
         r"MakerSuiteService/" + re.escape(method) + r'"\s*,\s*([\w$.]+)\s*,\s*([\w$.]+)',
         src,
     )
-    return m.group(2) if m else None
+    return cast(str, m.group(2)) if m else None
 
 
-def class_body(src, ctor):
+def class_body(src: str, ctor: str) -> str | None:
     """The full `{…}` of `ctor=class extends …`, brace-matched, or None if absent.
 
     Brace-counting (quote-aware) rather than a `}};` scan: accessor bodies that
@@ -86,10 +90,11 @@ def class_body(src, ctor):
     return src[open_brace:]
 
 
-def fields(body):
+def fields(body: str) -> list[Field]:
     """(number, prim, name, submsg-ctor|None) per accessor, in declaration order."""
-    rows = []
-    for name, prim, args in ACCESSOR.findall(body):
+    rows: list[Field] = []
+    for match in ACCESSOR.finditer(body):
+        name, prim, args = cast(tuple[str, str, str], match.groups())
         toks = [t.strip() for t in args.split(",")]
         number = next(t for t in toks if t.isdigit())
         ctor = next((t for t in toks if t and not t.isdigit()), None)
@@ -97,9 +102,9 @@ def fields(body):
     return rows
 
 
-def walk(src, start, maxdepth):
+def walk(src: str, start: str, maxdepth: int) -> Iterator[tuple[int, str, str, list[Field] | None]]:
     """BFS the message graph from `start`, yielding (depth, label, ctor, rows|None)."""
-    seen = set()
+    seen: set[str] = set()
     frontier = [(0, start, start)]
     while frontier:
         depth, label, ctor = frontier.pop(0)
@@ -122,13 +127,13 @@ def main():
         maxdepth = int(args[i + 1])
         del args[i : i + 2]
 
-    method = None
+    method: str | None = None
     if "--rpc" in args:
         i = args.index("--rpc")
         method = args[i + 1]
         del args[i : i + 2]
 
-    start = None
+    start: str | None = None
     if not method:
         start, *args = args  # first positional is the start ctor
 
@@ -140,6 +145,7 @@ def main():
         if start is None:
             sys.exit(f"no stub for MakerSuiteService/{method} in the given bundles")
         print(f"# {method} response -> {start}")
+    assert start is not None, args
 
     for depth, label, ctor, rows in walk(src, start, maxdepth):
         pad = "  " * depth

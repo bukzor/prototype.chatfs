@@ -16,6 +16,10 @@ import json
 import os
 import re
 import sys
+from collections.abc import Iterable, Iterator
+from typing import cast
+
+type JsonValue = None | bool | int | float | str | list[JsonValue] | dict[str, JsonValue]
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_OUTDIR = os.path.join(HERE, "bundles")
@@ -23,28 +27,33 @@ DEFAULT_OUTDIR = os.path.join(HERE, "bundles")
 MODULE_ID = re.compile(r"/m=([A-Za-z0-9_]+)")
 
 
-def module_id(url):
+def module_id(url: str) -> str:
     """The `m=<id>` module name from a gstatic boq URL, else 'unknown'."""
     m = MODULE_ID.search(url)
-    return m.group(1) if m else "unknown"
+    return cast(str, m.group(1)) if m else "unknown"
 
 
-def bundle_responses(events):
+def bundle_responses(events: Iterable[JsonValue]) -> Iterator[tuple[str, str]]:
     """(module-id, body) for each boq-makersuite JS module response."""
     for event in events:
+        assert isinstance(event, dict), event
         if event.get("method") != "Network.responseReceived":
             continue
-        response = event["params"]["response"]
+        params = event["params"]
+        assert isinstance(params, dict), params
+        response = params["response"]
+        assert isinstance(response, dict), response
         url = response.get("url", "")
+        assert isinstance(url, str), url
         body = response.get("body")
         if "boq-makersuite" in url and "/js/" in url and isinstance(body, str):
             yield module_id(url), body
 
 
-def collect(events):
+def collect(events: Iterable[JsonValue]) -> dict[str, str]:
     """{tag: body}, deduped by body; distinct bodies under one id get `~N`."""
-    by_tag = {}
-    bodies_seen = set()
+    by_tag: dict[str, str] = {}
+    bodies_seen: set[str] = set()
     for tag, body in bundle_responses(events):
         if body in bodies_seen:
             continue
@@ -59,11 +68,11 @@ def collect(events):
 def main():
     outdir = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_OUTDIR
 
-    modules = collect(json.loads(line) for line in sys.stdin)
+    modules = collect(cast(JsonValue, json.loads(line)) for line in sys.stdin)
     os.makedirs(outdir, exist_ok=True)
     for tag, body in modules.items():
         with open(os.path.join(outdir, f"{tag}.js"), "w") as f:
-            f.write(body)
+            _ = f.write(body)
     print(f"extracted {len(modules)} module(s) to {outdir}", file=sys.stderr)
 
 

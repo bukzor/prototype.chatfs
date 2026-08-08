@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 from decimal import Decimal
-from typing import IO
+from typing import IO, cast
 
 type JsonValue = None | bool | int | Decimal | str | list[JsonValue] | JsonObj
 type JsonObj = Mapping[str, JsonValue]
@@ -18,8 +18,7 @@ def loads(s: str) -> JsonValue:
     """Parse JSON string with floats as Decimal."""
     from json import loads as json_loads
 
-    result: JsonValue = json_loads(s, parse_float=Decimal)
-    return result
+    return cast(JsonValue, json_loads(s, parse_float=Decimal))
 
 
 def load(f: IO[str]) -> JsonValue:
@@ -36,4 +35,4 @@ def dumps(obj: JsonValue, *, indent: int | None = None) -> str:
 
 def dump(obj: JsonValue, f: IO[str], *, indent: int | None = None) -> None:
     """Dump JSON, serializing Decimal as float."""
-    f.write(dumps(obj, indent=indent))
+    _ = f.write(dumps(obj, indent=indent))

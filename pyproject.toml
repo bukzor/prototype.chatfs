@@ -23,8 +23,7 @@ bukzor-chatgpt-export = { workspace = true }
 
 [tool.pyright]
 # Vendored third-party code is excluded by name; our own exploration
-# scripts under docs/ stay checked -- their pre-existing errors are future
-# work, left visible rather than suppressed.
+# scripts under docs/ stay checked.
 exclude = [
   "**/node_modules",
   "**/__pycache__",
@@ -33,6 +32,14 @@ exclude = [
   "**/typesafety",
   "docs/dev/reference-implementations",
 ]
+
+# rosetta/ scripts import their sibling convert.py by bare name (they run
+# with rosetta/ as cwd); mirror the incubator-local config
+# (docs/dev/aistudio-schema/pyproject.toml) so the root check resolves it
+# the same way.
+[[tool.pyright.executionEnvironments]]
+root = "docs/dev/aistudio-schema/rosetta"
+extraPaths = ["docs/dev/aistudio-schema/rosetta"]
 
 [tool.pytest.ini_options]
 python_classes = ["Describe*", "When*", "Test*"]

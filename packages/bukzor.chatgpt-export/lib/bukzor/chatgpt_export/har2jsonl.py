@@ -69,7 +69,7 @@ def main() -> None:
     count = 0
     with dest.open("w") as f:
         for conversation in extract_conversations(har):
-            f.write(json.dumps(conversation) + "\n")
+            _ = f.write(json.dumps(conversation) + "\n")
             count += 1
 
     print(f"Wrote {count} conversations to {dest}", file=sys.stderr)

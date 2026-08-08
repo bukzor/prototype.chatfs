@@ -13,17 +13,26 @@ collapse — the same field is read from many call sites.
 import json
 import re
 import sys
+from typing import TypedDict, cast
+
+
+class SchemaRow(TypedDict):
+    name: str
+    number: int
+    prim: str
+    submsg: str | None
+
 
 # Whitespace-agnostic: the accessor may arrive minified or prettified
 # (the grep stage folds newlines to spaces but leaves prettier's spacing).
 ACCESSOR = re.compile(r"^get([A-Za-z0-9]+)\(\)\s*\{\s*return\s+(_\.[A-Za-z0-9]+)\(this,(.*)\)$")
 
 
-def parse_accessor(line):
+def parse_accessor(line: str) -> SchemaRow:
     """Schema row for one accessor line; the lone integer arg is the field number."""
     match = ACCESSOR.match(line)
     assert match, line
-    name, prim, argstr = match.groups()
+    name, prim, argstr = cast(tuple[str, str, str], match.groups())
     args = [a.strip() for a in argstr.split(",")]
     numbers = [a for a in args if a.isdigit()]
     assert numbers, line
@@ -37,7 +46,7 @@ def parse_accessor(line):
 
 
 def main():
-    seen = set()
+    seen: set[tuple[str, int, str, str | None]] = set()
     for line in sys.stdin:
         line = line.strip()
         if not line:

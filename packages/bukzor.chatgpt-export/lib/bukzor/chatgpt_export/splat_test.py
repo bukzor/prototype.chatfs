@@ -294,7 +294,7 @@ class DescribePrepareMessage:
                 }
             }
         }
-        M.prepare_message(raw)
+        _ = M.prepare_message(raw)
         inner = raw["message"]
         assert isinstance(inner, Mapping)
         content = inner["content"]

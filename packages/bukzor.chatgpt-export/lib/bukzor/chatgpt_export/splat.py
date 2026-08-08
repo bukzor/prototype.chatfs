@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from decimal import Decimal
 from pathlib import Path
+from typing import override
 
 from . import json
 from .json import JsonObj
@@ -61,6 +62,7 @@ class Message:
         assert isinstance(ct, str), ct
         return ct
 
+    @override
     def __str__(self) -> str:
         ts_str = format_timestamp(self.timestamp)
         return f"{ts_str}.{self.role}.{self.uuid}.{self.content_type}"
@@ -71,9 +73,9 @@ class Message:
         prepared = prepare_message(self.raw)
         with (messages_dir / f"{basename}.json").open("w") as f:
             json.dump(prepared, f, indent=2)
-            f.write("\n")
+            _ = f.write("\n")
         if self.text_content is not None:
-            (messages_dir / f"{basename}.md").write_text(self.text_content + "\n")
+            _ = (messages_dir / f"{basename}.md").write_text(self.text_content + "\n")
 
 
 @dataclass
@@ -92,6 +94,7 @@ class ConversationLink:
     def content_type(self) -> str:
         return self.message.content_type
 
+    @override
     def __str__(self) -> str:
         return f"{self.seq:03d}.{self.role}.{self.content_type}"
 
