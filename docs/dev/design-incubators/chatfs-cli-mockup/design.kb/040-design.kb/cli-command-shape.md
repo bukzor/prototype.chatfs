@@ -2,14 +2,17 @@
 why:
   - unix-composability
   - pipeline-composability
-last-updated: 2026-05-11
+last-updated: 2026-08-07
 ---
 
 # CLI Command Shape
 
-Pipeline scripts are named as if they were subcommands of a future
+Pipeline commands are named as if they were subcommands of a future
 `chatfs` CLI: noun-then-verb, with an explicit locator sub-noun where
-the same action accepts multiple input shapes.
+the same action accepts multiple input shapes. Since 2026-08-07 they
+are installed entry points (`packages/chatfs-cli`'s
+`[project.scripts]`), no longer loose scripts; the naming scheme
+promoted unchanged.
 
 ## Partition vocabulary
 
@@ -33,12 +36,13 @@ clarity.
 
 ## Naming conventions
 
-Subcommand paths map to scripts on `$PATH` with `-` separators
+Subcommand paths map to commands on `$PATH` with `-` separators
 (`chatgpt conversation url browse` →
-`chatfs-chatgpt-conversation-url-browse`). Python module names use `_`
-for the same path: `chatfs_chatgpt_layout` for shared primitives,
-including provider-internal helpers with no `$PATH` command of their
-own (e.g. `pluck_conversation`, `pluck_index_pages`).
+`chatfs-chatgpt-conversation-url-browse`). Python module paths express
+the same partition as dots, with `_` inside a single segment:
+`chatfs.provider.chatgpt.conversation.url_browse` — including
+provider-internal helpers with no `$PATH` command of their own
+(e.g. `chatfs.provider.chatgpt.pluck`).
 
 ---
 

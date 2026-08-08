@@ -31,16 +31,18 @@ Driver: [Harmonize with llm-* skills](todo.kb/2026-01-02-000-harmonize-with-llm-
       `docs/dev/devlog/2026-07-13-000-graduation-and-integration-planning.md`;
       decided names/conventions in
       `docs/dev/design.kb/040-design.kb/package-division.md`.
-- [ ] Re-cut `docs/how-to-chatfs.md` at graduation — every command in it is
+- [x] Re-cut `docs/how-to-chatfs.md` at graduation — every command in it is
       `python -m chatfs.provider.<name>...` run from the incubator dir, and
       becomes wrong the moment `packages/chatfs-cli` (or `chatfs mount`) is the
       real entry point. Same pass should de-overlap it from the incubator
       README (user-facing vs stage-by-stage). Written 2026-07-27 — devlog
       `docs/dev/devlog/2026-07-27-000-First-user-facing-doc--how-to-chatfs.md`.
+      Re-cut 2026-08-07 with child 001: installed kebab commands, required
+      `--cache <dir>`, package README carries the stage-by-stage anatomy.
 
 ## chatfs-cli-mockup — next sessions
 
-Plan from 2026-05-05 design.kb consolidation. Order is dependency-driven; 1-2 are blocking, 3-4 are deferrable. Incubator-tactical breakdowns at `docs/dev/design-incubators/chatfs-cli-mockup/.claude/todo.kb/`.
+Plan from 2026-05-05 design.kb consolidation. Order is dependency-driven; 1-2 are blocking, 3-4 are deferrable. Incubator-tactical breakdowns re-homed 2026-08-07 to `packages/chatfs-cli/.claude/todo.kb/` (child 001).
 
 1. [x] **`.chat/$UUID/` implementation.** Landed 2026-05-08; see devlog `2026-05-08-000-chatfs-mockup-chatgpt-chat-as-directory-implementation.md`.
 2. [x] **README rewrite + end-to-end test.** Landed 2026-05-08; live URL test passed (188 messages / 129 turns initial, 262 / 206 follow-up). See devlogs `2026-04-29-000` and `2026-05-08-001`.

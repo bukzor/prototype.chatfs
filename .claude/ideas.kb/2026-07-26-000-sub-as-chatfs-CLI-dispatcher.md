@@ -12,8 +12,9 @@ cost-benefit-sweh:
 
 ## The Idea
 
-Wire the stub `chatfs` entry point (`packages/chatfs/lib/chatfs/cli.py`,
-"No subcommands wired yet") to the incubator's provider tree using
+Provide the `chatfs` dispatcher command (the stub Python entry point was
+dropped at graduation, 2026-08-07 — the name is reserved for a future
+dispatcher per `package-division.md`) over `chatfs-cli`'s provider tree using
 [juanibiapina/sub](https://github.com/juanibiapina/sub) -- a 1.3k-line Rust
 dispatcher that turns a `libexec/` directory tree into a CLI with nested
 subcommands, per-level help, completions, and argument validation.
@@ -57,9 +58,9 @@ Probe tree preserved in this entry's `.d/` sibling
 (`2026-07-26-000-sub-as-chatfs-CLI-dispatcher.d/`): run
 `.d/bin/chatfs chatgpt conversation url browse --help` to see the contract
 in action.
-`cli-command-shape.md`'s "Naming conventions" section is stale either way
-(flat kebab `$PATH` scripts and flat underscore module names both gone);
-adopting sub decides how it rewrites.
+`cli-command-shape.md`'s "Naming conventions" section was updated
+2026-08-07 for the installed kebab entry points; adopting sub would
+rewrite it again (nested subcommands replacing the flat kebab names).
 
 ## Next Steps (if pursuing)
 

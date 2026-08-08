@@ -1,12 +1,12 @@
 # Hacking on chatfs
 
-**Last Updated:** 2026-07-27
+**Last Updated:** 2026-08-07
 
 ## Setup
 
 To *use* chatfs rather than develop it, see [docs/how-to-chatfs.md] — the
-working pipeline lives in `docs/dev/design-incubators/chatfs-cli-mockup/`, not
-in `packages/chatfs/` (still a stub).
+working pipeline is `packages/chatfs-cli/`; `uv sync` installs its
+`chatfs-<provider>-<noun>-<verb>` commands.
 
 **Prerequisites:**
 
@@ -33,7 +33,7 @@ in `trash/`.)
 
 ```
 packages/
-├── chatfs/                  # Python: top-level CLI and coordination package
+├── chatfs-cli/              # Python: the capture→splat→render pipeline (import package `chatfs`)
 ├── chatfs-fuser/            # Rust: idiomatic wrapper on fuser (FUSE library)
 │   ├── src/
 │   │   ├── lib.rs
@@ -49,7 +49,7 @@ docs/
 └── dev/
     ├── design.kb/           # Layered design knowledge
     ├── design-incubators/   # Active design explorations
-    │   └── chatfs-cli-mockup/  # The working capture→render pipeline
+    │   └── chatfs-cli-mockup/  # Where chatfs-cli incubated; design.kb + demo fixtures remain
     ├── background.kb/       # Technology primers
     ├── technical-policy.kb/ # Cross-cutting guidance
     └── devlog/              # Session history
@@ -68,12 +68,11 @@ cargo test
 cargo run --example static_tree  # mount a static demo tree
 ```
 
-**Python (bukzor.chatgpt-export):**
+**Python (chatfs-cli, bukzor.chatgpt-export):**
 
 ```bash
-cd packages/bukzor.chatgpt-export
-uv sync
-uv run pytest
+pytest          # whole workspace, from the repo root
+basedpyright    # likewise
 ```
 
 ### Understanding Data Flow

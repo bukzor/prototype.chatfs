@@ -9,8 +9,8 @@ depends:
 Human-in-the-loop capture: launch a persistent-profile Chromium, let the
 human browse (login, 2FA, scrolling included), and stream every CDP
 event as `{method, params}` JSONL -- chrome-har's wire format. This is
-the chatfs pipeline's BB1 (capture) stage; the chatfs-cli-mockup
-incubator's provider pluck/splat stages consume its stream. Mission,
+the chatfs pipeline's BB1 (capture) stage; `chatfs-cli`'s provider
+pluck/splat stages consume its stream. Mission,
 requirements, and capture semantics: `design.kb/`.
 
 puppeteer-core hosts the production capture (`src/host_puppeteer.mjs`;

@@ -10,7 +10,9 @@ README explains *how* the toolkit works and *why* the bundle approach is
 necessary, but never names a downstream consumer.
 
 **Resolved 2026-07-03.** A named consumer now exists:
-`../../design-incubators/chatfs-cli-mockup/chatfs_aistudio_conversation_massage_json.py`.
+`chatfs_aistudio_conversation_massage_json.py` in the chatfs-cli-mockup
+incubator (since graduated: now
+`../../../../../packages/chatfs-cli/lib/chatfs/provider/aistudio/conversation/massage_json.py`).
 It's a *port*, not an import — this package stays exploratory/disposable per
 the user, so the mockup pipeline owns its own copy of `rosetta/convert.py`'s
 `SCHEMA` (verified against `rosetta/resolvedrive.alt-json.json` while

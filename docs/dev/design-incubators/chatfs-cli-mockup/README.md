@@ -1,138 +1,49 @@
-# chatfs-mockup — what should the filesystem *look* like?
+# chatfs-cli-mockup — what should the filesystem *look* like? (graduated)
 
-A small, hand-driven prototype of the chatfs surface — built on real
-captured data from chatgpt.com, but without any FUSE involvement yet.
-The goal is to settle the directory layout and lazy-loading idioms by
-materializing a static mockup we can `ls`, `tree`, `cd`, and `cat`.
+> **Historical.** The code that grew here was promoted to
+> `packages/chatfs-cli/` (2026-08-07) and installs real commands —
+> see that package's README for the pipeline anatomy and
+> `docs/how-to-chatfs.md` for usage. What remains in this directory:
+>
+> - `design.kb/` — decisions made while the pipeline incubated
+>   (chat-as-directory, driver model, CLI command shape, deterministic
+>   regeneration, ...). Still the authority for those topics until
+>   folded into project-level `design.kb/`.
+> - `chatfs.demo/<provider>` — captured fixtures (gitignored bulk).
+>   Point the installed commands' `--cache` at one to exercise render
+>   stages offline.
+> - `.claude/` — incubator-era todos and session notes.
 
-## Pipeline
+## What this incubator asked
 
-End-to-end runs capture → splat (per-conversation) → render. Storage
-is flat and UUID-keyed; the date tree is a view of symlinks pointing
-into storage (see `design.kb/040-design.kb/chat-as-directory.md`).
-
-```
-chatfs.demo/chatgpt/
-    .chat/$UUID/
-        chat.md                   # rendered current_node path with dead-branch asides
-        messages/                 # chatgpt-splat output (per-message .md/.json)
-        conversations/            # chatgpt-splat output (per-branch symlinks)
-        .data/                    # captured exhaust (hidden from default ls)
-            meta.json             # one item from /backend-api/conversations
-            conversation.json     # plucked conversation mapping document
-            cdp.jsonl             # raw CDP from har-browse for this conversation
-    YYYY/MM/DD/HH:MM:SS±HH:MM/
-        $TITLE -> ../../../../.chat/$UUID/      # single directory-symlink per chat
-```
-
-The view entry is a directory-symlink — `view/$TITLE/` *is* the chat
-dir. `cat 2026/.../$TITLE/chat.md` reads chat content;
-`cat 2026/.../$TITLE/messages/<stem>.md` reads atomic turn content
-textually (web renderers and editors both work).
-
-There are two entry points for capturing a single conversation:
-
-- **By URL** (most common) — one browse fetches both the conversation
-  document and the sidebar index page; we derive `meta.json` from the
-  latter and place files into `.chat/$UUID/`.
-- **By path** — used after `index browse` + `index splat` have already
-  laid down chat dirs, when iterating across many conversations.
-
-### Stages
-
-Leaf stages read stdin and write stdout (data only; progress goes to
-stderr). Higher-level orchestrators take an addressable target (URL or
-ts-dir), tee intermediate streams to disk for debuggability, and drive
-the leaves.
-
-1. **Index browse** (`python -m chatfs.provider.chatgpt.index.browse`) —
-   drives `har-browse` against `https://chatgpt.com`, tees the raw CDP
-   to `chatfs.demo/chatgpt/.data/index.cdp.jsonl` (debug intermediate),
-   plucks it in-process
-   (`chatfs.provider.chatgpt.pluck.pluck_index_pages`), emits index
-   pages on stdout.
-2. **Index splat** (`python -m chatfs.provider.chatgpt.index.splat`) —
-   reads index pages on stdin; per item, writes
-   `.chat/$UUID/.data/meta.json`, purges any prior view symlinks for
-   that UUID, and places a fresh `$TITLE` directory-symlink under the
-   date tree.
-3. **Conversation URL browse**
-   (`python -m chatfs.provider.chatgpt.conversation.url_browse <url>`) —
-   captures one chat by URL: browses to a staging dir, runs both pluck
-   filters, filters the index pluck to the matching item for
-   `meta.json`, moves captures into `.chat/$UUID/.data/`, calls
-   `place_meta`, and delegates to path render. Fails loudly if the
-   sidebar didn't include the target.
-4. **Conversation path browse**
-   (`python -m chatfs.provider.chatgpt.conversation.path_browse <chat-dir>`) —
-   writes `cdp.jsonl` and `conversation.json` directly into
-   `.chat/$UUID/.data/` (which already has `meta.json` from index
-   splat), then delegates to path render.
-5. **Path render** (`python -m chatfs.provider.chatgpt.conversation.path_render <chat-dir>`) —
-   purges non-captured contents (allowlist `{".data"}`), splats
-   `.data/conversation.json`, moves `messages/` and `conversations/`
-   from `.data/conversation.splat/` up two levels into the chat-dir
-   root, and runs the conversation render, redirecting its stdout
-   into `chat.md`.
-6. **Conversation render**
-   (`python -m chatfs.provider.chatgpt.conversation.render <chat-dir>`) —
-   walks the full mapping tree from `current_node` back to root,
-   streams H1 turn headings `(seq · role · time, variant suffix)`
-   linking to atomic `.md` files under `messages/`. Dead branches
-   render as nested blockquoted asides at their fork point; depth =
-   nesting in `> ` prefixes. Markdown goes to stdout.
-
-Every leaf and orchestrator above is a `chatfs.provider.<name>.<noun>.<verb>`
-module, runnable via `python -m` from the incubator root (or in-process,
-for the pure driver functions each stage also exposes). `<name>` is
-`chatgpt`, `claude`, or `aistudio` — the three providers share this same
-shape; see `chatfs/provider/*/` for each one's actual modules.
-
-Every stage rebuilds its outputs from scratch (no freshness caches);
-see `design.kb/040-design.kb/deterministic-regeneration.md`.
-
-## Run it
-
-```bash
-cd docs/dev/design-incubators/chatfs-cli-mockup
-
-# single conversation by URL — common case
-python -m chatfs.provider.chatgpt.conversation.url_browse https://chatgpt.com/c/<uuid>
-
-# bulk: index first, then iterate chat dirs
-python -m chatfs.provider.chatgpt.index.browse | python -m chatfs.provider.chatgpt.index.splat
-python -m chatfs.provider.chatgpt.conversation.path_browse chatfs.demo/chatgpt/.chat/<uuid>/
-
-tree chatfs.demo/chatgpt/ | head -20
-```
-
-Swap `chatgpt` for `claude` or `aistudio` to run the same pipeline
-against those providers — the module path is the only thing that
-changes.
-
-## Why this incubator
-
-The pipeline `BB1 (capture) → BB2 (extract) → BB3 (render)` is
+The pipeline `BB1 (capture) → BB2 (extract) → BB3 (render)` was
 specified in the design.kb in terms of JSONL streams. This incubator
-asks the perpendicular question: **what does the user-facing surface
-look like?** Decisions to settle here:
+asked the perpendicular question: **what does the user-facing surface
+look like?** — hierarchy (date tree vs. UUID storage), lazy markers,
+filename collisions, per-conversation layout.
 
-- Hierarchy: by date? by title? by provider/account/conversation? Mix?
-- Lazy markers: broken symlink? empty file? extended attribute?
-- Filename collisions (titles, timestamps): suffix scheme? UUID fallback?
-- Per-conversation layout: single file? `messages/`, `forks/` subdirs?
+## What it settled
 
-This is a prototype of a future `chatfs-cli` that will be load-bearing
-for the final chatfs — the same CLI surface FUSE invokes lazily under
-the hood. Lessons settled here get folded back to project-level
-`design.kb/`; the code itself graduates to `lib/chatfs/` once
-libraryized.
+- **Chat-as-directory**: flat UUID-keyed storage under `.chat/`, with a
+  `Created=YYYY/MM/DD/...` view of directory-symlinks pointing into it
+  (`design.kb/040-design.kb/chat-as-directory.md`).
+- **Capture exhaust placement**: raw CDP, plucked conversation document,
+  and index metadata live in `.data/`, per-UUID, never destroyed by a
+  failed re-capture.
+- **Render shape**: `chat.md` walks the live path from `current_node`;
+  dead branches appear as nested blockquoted asides at their fork
+  point; per-message atomic `.md`/`.json` under `messages/`.
+- **Two capture entry points**: by URL (one browse trip yields both the
+  conversation document and the sidebar index page) and by path (after
+  `index-browse | index-splat` has laid down chat dirs).
+- **Driver model**: orchestrators address a target and drive leaf
+  stages as subprocesses over stdio, teeing intermediates to disk
+  (`design.kb/040-design.kb/driver-model.md`).
+- **Deterministic regeneration**: every stage rebuilds from scratch;
+  re-running is always safe
+  (`design.kb/040-design.kb/deterministic-regeneration.md`).
+- **Multi-provider**: chatgpt.com first, then claude.ai (2026-05-11)
+  and AI Studio (2026-06-20..07-03) under the same module shape.
 
-## Status
-
-- [x] Index capture working against real chatgpt.com
-- [x] Date-tree splat with `meta.json` per timestamp directory
-- [x] Per-conversation pluck (`/backend-api/conversation/{id}`)
-- [x] Render `$TITLE.md` from `current_node` walk
-- [x] Dead-branch forks rendered as nested blockquoted asides
-- [x] Multi-provider: claude.ai (2026-05-11) and AI Studio (2026-06-20..07-03) landed under the same tree
+Lessons continue to fold back into project-level `design.kb/`; the code
+itself now lives (and evolves) in `packages/chatfs-cli/lib/chatfs/`.

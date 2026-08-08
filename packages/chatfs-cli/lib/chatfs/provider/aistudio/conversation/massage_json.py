@@ -21,12 +21,12 @@ partial guess: per design.kb/040-design.kb/no-partial-synthesis.md, a schema
 must be written whole or not at all. SCHEMA below only omits slots nobody has
 reverse-engineered yet (they stay dropped, same as any other null slot).
 
-SCHEMA is ported from ../aistudio-schema/rosetta/convert.py (not imported —
-that package is exploratory/disposable), where it's cross-checked against a
-live `?alt=json` response for the same prompt (see that package's
+SCHEMA is ported from docs/dev/aistudio-schema/rosetta/convert.py (not
+imported — that package is exploratory/disposable), where it's cross-checked
+against a live `?alt=json` response for the same prompt (see that package's
 verify.py). Field numbers additionally cross-checked against
-dev.kb/claims.kb/aistudio-jspb-prompt-shape.md and
-chatfs/provider/aistudio/layout.py / conversation/splat.py, which index
+docs/dev/design-incubators/chatfs-cli-mockup/dev.kb/claims.kb/aistudio-jspb-prompt-shape.md
+and chatfs.provider.aistudio.layout / .conversation.splat, which index
 this same payload by hand.
 
 A field spec is one of:
@@ -169,7 +169,7 @@ def massage(doc: JsonValue) -> JsonObject:
     """Project one plucked prompt message onto the named PROMPT schema.
 
     Wrapped in a `prompt` key to match the real named API response shape
-    (verified against aistudio-schema/rosetta/resolvedrive.alt-json.json,
+    (verified against docs/dev/aistudio-schema/rosetta/resolvedrive.alt-json.json,
     whose top-level key is `prompt`) — not an arbitrary envelope choice.
     """
     return {"prompt": from_message(doc, PROMPT)}

@@ -29,11 +29,11 @@ richer per-turn structure (tool calls, sub-agents, hooks).
 - User note (2026-05-11): *"after claude.ai we add support for
   (localhost) claude-code, where the datasource is rather `~/.claude`,
   but the resulting chatfs is very similar."*
-- `../../design.kb/040-design.kb/black-box-decomposition.md` — BB1 is
+- `docs/dev/design.kb/040-design.kb/black-box-decomposition.md` — BB1 is
   optional for this provider (filesystem read replaces browser
   capture).
-- `../../design.kb/040-design.kb/cli-command-shape.kb/` — noun-verb
-  command shape must extend to a non-URL locator.
+- `docs/dev/design-incubators/chatfs-cli-mockup/design.kb/040-design.kb/cli-command-shape.kb/`
+  — noun-verb command shape must extend to a non-URL locator.
 
 ## Scope
 

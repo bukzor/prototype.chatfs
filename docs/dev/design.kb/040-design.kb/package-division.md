@@ -19,13 +19,11 @@ if it decides otherwise.)
   `chatfs.provider.chatgpt.conversation…`). Providers nest under
   `chatfs.provider`, not separate distributions — the adapter seam is
   small and freshly stabilized, and per-provider code carries no
-  divergent dependencies.
+  divergent dependencies. Landed 2026-08-07: promoted from
+  `docs/dev/design-incubators/chatfs-cli-mockup/` with one installed
+  `chatfs-<provider>-<noun>-<verb>` command per stage
+  (graduation child 001).
 - **`bukzor.chatgpt-export`** — prior art, unchanged.
-
-> [!TODO]
-> `chatfs-cli` is today's `chatfs` distribution, renamed; the pipeline
-> lands there from `docs/dev/design-incubators/chatfs-cli-mockup/`.
-> Tracked: `.claude/todo.kb/2026-07-13-000-graduation-and-integration.kb/`.
 
 ## Rust (cargo workspace)
 

@@ -32,12 +32,14 @@ cost-benefit-sweh:
     confidence: tentative
 ---
 
-# Tactical Tasks — chatfs-cli-mockup
+# Tactical Tasks — chatfs-cli
 
-Scope: this incubator only. Project-wide tactical work lives in
-`../../../../.claude/todo.md`. Completed work is recorded in
-`../../devlog/` (project-wide) and this incubator's own `devlog/` —
-directory listing is the index, not restated here.
+Scope: the `chatfs-cli` package only (re-homed 2026-08-07 from the
+`chatfs-cli-mockup` incubator it graduated out of). Project-wide
+tactical work lives in `../../../.claude/todo.md`. Completed work is
+recorded in `docs/dev/devlog/` (project-wide) and the incubator's own
+`docs/dev/design-incubators/chatfs-cli-mockup/devlog/` — directory
+listing is the index, not restated here.
 
 ## Next
 
@@ -80,10 +82,10 @@ directory listing is the index, not restated here.
 ## Later
 
 - [ ] Live-verify AI Studio's `conversation.json.d/raw.json` round-trip —
-      run `chatfs_aistudio_conversation_url_browse.py` against a real
+      run `chatfs-aistudio-conversation-url-browse` against a real
       prompt URL and confirm a correct `conversation.json` results. The
       2026-07-15 `.data/` scratch dot-d migration (devlog
-      `devlog/2026-07-15-001-migrate-data-scratch-files-into-dot-d-sibling-directories.md`)
+      `docs/dev/design-incubators/chatfs-cli-mockup/devlog/2026-07-15-001-migrate-data-scratch-files-into-dot-d-sibling-directories.md`)
       was verified by test suite + basedpyright + a unit-level `pluck()`
       mkdir check only — no live Chromium/network access in that
       session's sandbox.
@@ -92,12 +94,11 @@ directory listing is the index, not restated here.
       cross-provider-drift file's deferred scope. Closes the render-time
       timezone-dependency caveat noted in devlog `2026-07-11-001-...`.
 - [ ] Gate debug intermediates (e.g. `cdp.jsonl` tees) behind a flag, default
-      off. Leaf scripts read stdin / write data to stdout / send progress to
-      stderr; higher-level orchestrators take URL or ts-dir args and tee debug
-      intermediates (e.g. `chatfs.demo/chatgpt/.data/index.cdp.jsonl`,
-      `<ts-dir>/cdp.jsonl`)
-      unconditionally today.
-- [ ] `design.kb/040-design.kb/cli-command-shape.md`'s unquoted
+      off. Leaf commands read stdin / write data to stdout / send progress to
+      stderr; higher-level orchestrators take URL or chat-dir args and tee
+      debug intermediates (e.g. `$CACHE/.data/index.cdp.jsonl`,
+      `$CACHE/.data/$UUID/cdp.jsonl`) unconditionally today.
+- [ ] `docs/dev/design-incubators/chatfs-cli-mockup/design.kb/040-design.kb/cli-command-shape.md`'s unquoted
       `last-updated: 2026-05-11` fails `llm.kb-validate` (schema wants a string;
       YAML parses the bare date as `datetime.date`). Found 2026-07-09 doing an
       unrelated gate check. Fix by either quoting the value here or adding the

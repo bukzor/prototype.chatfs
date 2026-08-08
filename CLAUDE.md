@@ -24,10 +24,11 @@ chatfs provides lazy filesystem access to chat conversations (claude.ai, ChatGPT
 ## What Works Today
 
 The README describes the destination (FUSE mount, `chatfs` command); neither
-exists yet, and `packages/chatfs/`'s CLI is a stub. The pipeline that actually
-runs end-to-end — capture a conversation URL, get markdown on disk, all three
-providers — is the hand-driven CLI in
-`docs/dev/design-incubators/chatfs-cli-mockup/`.
+exists yet. The pipeline that actually runs end-to-end — capture a
+conversation URL, get markdown on disk, all three providers — is
+`packages/chatfs-cli/`: `uv sync` installs one `chatfs-<provider>-<noun>-<verb>`
+command per stage, runnable from any directory against an explicit
+`--cache <dir>`.
 
 **To run anything, read `docs/how-to-chatfs.md` first.** It has the commands,
 setup, output layout, and failure modes. Don't reconstruct them from source.
@@ -45,8 +46,9 @@ For how to create and maintain design knowledge, see `Skill(llm-design-kb)`.
 
 - `packages/` — Polyglot workspace members (Python packages, Rust crates)
 - `docs/dev/design.kb/` — Project-level design knowledge (design.kb)
+- `packages/chatfs-cli/` — **the working pipeline** (capture → splat → render, all three providers)
 - `packages/har-browse/` — BB1 capture (Playwright HAR)
-- `docs/dev/design-incubators/chatfs-cli-mockup/` — **the working pipeline** (capture → splat → render, all three providers)
+- `docs/dev/design-incubators/chatfs-cli-mockup/` — where the pipeline incubated (graduated 2026-08-07); its `design.kb/` and `chatfs.demo/` fixtures remain
 - `docs/dev/design-incubators/fuser-vfs/` — FUSE filesystem learning
 - `docs/dev/design-incubators/fork-representation/` — Fork representation investigation
 - `docs/dev/devlog/` — Session narrative history

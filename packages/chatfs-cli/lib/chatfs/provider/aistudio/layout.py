@@ -57,7 +57,7 @@ def index_item(doc: Conversation) -> IndexItem:
 
     Two provenances feed this function through the same `Conversation`
     shape — both decode via the identical PROMPT/METADATA jspb schema
-    (cross-checked in ../aistudio-schema/rosetta/'s ListPrompts golden
+    (cross-checked in docs/dev/aistudio-schema/rosetta/'s ListPrompts golden
     pair, which shares this schema with ResolveDriveResource's):
 
     - A full `ResolveDriveResource` fetch: `chunkedPrompt.chunks` is

@@ -23,7 +23,7 @@ cost-benefit-sweh:
 
 **Priority:** Medium — third provider; first JSPB source.
 **Complexity:** Medium — orchestration mirrors claude; the new cost is
-JSPB positional decoding (see `dev.kb/claims.kb/aistudio-jspb-prompt-shape.md`).
+JSPB positional decoding (see `docs/dev/design-incubators/chatfs-cli-mockup/dev.kb/claims.kb/aistudio-jspb-prompt-shape.md`).
 
 ## Landed this session (2026-06-20)
 
@@ -52,7 +52,7 @@ JSPB positional decoding (see `dev.kb/claims.kb/aistudio-jspb-prompt-shape.md`).
 ## Landed 2026-07-03
 
 - [x] `chatfs_aistudio_conversation_massage_json.py` — JSPB → named JSON,
-      schema ported (not imported) from `../aistudio-schema/rosetta/convert.py`
+      schema ported (not imported) from `docs/dev/aistudio-schema/rosetta/convert.py`
       and fixed against its golden pair while porting: restored the `"prompt"`
       top-level wrapper (verified against `resolvedrive.alt-json.json`, the
       real ground truth) and `Literal["map"]` type precision, both lost in
@@ -70,7 +70,7 @@ JSPB positional decoding (see `dev.kb/claims.kb/aistudio-jspb-prompt-shape.md`).
       `cdp.jsonl` + `conversation.raw.json` + `conversation.json` +
       `meta.json` + view symlink, all verified correct.
 - [x] New naming convention (documented in
-      `design.kb/040-design.kb/cli-command-shape.kb/noun=conversation.kb/verb=browse.md`):
+      `docs/dev/design-incubators/chatfs-cli-mockup/design.kb/040-design.kb/cli-command-shape.kb/noun=conversation.kb/verb=browse.md`):
       `conversation.raw.json` (plucked JSPB, for audit) vs. `conversation.json`
       (named, massage's output) — a split unique to AI Studio; chatgpt/claude
       have no `.raw.json` since pluck's output is already "good."
@@ -101,7 +101,7 @@ JSPB positional decoding (see `dev.kb/claims.kb/aistudio-jspb-prompt-shape.md`).
 
 - [x] `chatfs_aistudio_conversation_render.py` — landed 2026-07-11.
       Confirmed linear/fork-less first (see
-      `dev.kb/claims.kb/aistudio-jspb-prompt-shape.md`'s "Turn order is
+      `docs/dev/design-incubators/chatfs-cli-mockup/dev.kb/claims.kb/aistudio-jspb-prompt-shape.md`'s "Turn order is
       linear" section): the 15-turn demo capture is a flat, strictly
       increasing-`createTime` list with no parent/child field anywhere
       in the wire shape, so `build_tree` is a straight predecessor
@@ -135,7 +135,7 @@ JSPB positional decoding (see `dev.kb/claims.kb/aistudio-jspb-prompt-shape.md`).
       `layout.index_item` now read `conversation.json`'s named projection
       (`prompt.chunkedPrompt.chunks[]` / `prompt.metadata`) instead of
       positionally indexing raw JSPB — see devlog
-      `../../devlog/2026-07-11-002-unification-shared-capture-and-drift-fixes.md`
+      `docs/dev/design-incubators/chatfs-cli-mockup/devlog/2026-07-11-002-unification-shared-capture-and-drift-fixes.md`
       for verification (the driving todo.kb file, cross-provider-data-flow-drift,
       is deleted now that it's fully executed). The `create_time`-is-really-
       `lastModified` mislabel, tracked as a separate item in that same file,
@@ -146,7 +146,7 @@ JSPB positional decoding (see `dev.kb/claims.kb/aistudio-jspb-prompt-shape.md`).
 - [ ] Latent fragility in `turn_kind()` (`chatfs_aistudio_conversation_splat.py`):
       `TURN_IS_ANSWER` (slot 16) is really `finishReason` (per rosetta's
       ground-truth-verified schema — see
-      `dev.kb/claims.kb/aistudio-jspb-prompt-shape.md`'s 2026-07-03
+      `docs/dev/design-incubators/chatfs-cli-mockup/dev.kb/claims.kb/aistudio-jspb-prompt-shape.md`'s 2026-07-03
       cross-check), and `== 1` is a proxy that happens to hold in every
       capture seen so far. A future capture with a non-`1` finish reason
       (`MAX_TOKENS`, `SAFETY`, error) would fall through `turn_kind`'s
@@ -157,9 +157,9 @@ JSPB positional decoding (see `dev.kb/claims.kb/aistudio-jspb-prompt-shape.md`).
 - [ ] Decide where **reasoning** lands in the canonical conversation
       graph. The graph has no reasoning slot, and the three providers
       shape it three ways — see
-      `dev.kb/claims.kb/reasoning-turn-mapping-differs-by-provider.md`
+      `docs/dev/design-incubators/chatfs-cli-mockup/dev.kb/claims.kb/reasoning-turn-mapping-differs-by-provider.md`
       and the gap note in
-      `../../../../design.kb/040-design.kb/canonical-conversation-graph.md`.
+      `docs/dev/design.kb/040-design.kb/canonical-conversation-graph.md`.
       A uniform "one response = one unit" view must be synthesized in
       BB2/BB3.
 
@@ -172,5 +172,5 @@ JSPB positional decoding (see `dev.kb/claims.kb/aistudio-jspb-prompt-shape.md`).
 - AI Studio is a third *browser-captured* provider. This strengthened
   the shared-lib signal earlier than the claude-code trigger originally
   assumed (in the now-deleted `todo.kb/2026-05-11-001-shared-code-among-providers.md`) —
-  already revisited in `design.kb/040-design.kb/provider-plugin-model.md`
+  already revisited in `docs/dev/design-incubators/chatfs-cli-mockup/design.kb/040-design.kb/provider-plugin-model.md`
   § "Revised rule-of-three take".

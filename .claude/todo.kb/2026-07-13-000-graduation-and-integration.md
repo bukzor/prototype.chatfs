@@ -54,7 +54,7 @@ that ground truth has outgrown.
 ## Children (in `2026-07-13-000-graduation-and-integration.kb/`)
 
 - [ ] [000 — module-shape refactor](2026-07-13-000-graduation-and-integration.kb/2026-07-13-000-module-shape-refactor.md)
-- [ ] [001 — promote to packages/chatfs-cli](2026-07-13-000-graduation-and-integration.kb/2026-07-13-001-promote-to-packages-chatfs-cli.md)
+- [x] [001 — promote to packages/chatfs-cli](2026-07-13-000-graduation-and-integration.kb/2026-07-13-001-promote-to-packages-chatfs-cli.md) — landed 2026-08-07: installed kebab entry points, required `--cache`, todos re-homed, docs re-cut. (000 retains one open criterion: a live url-browse verification, ask-first.)
 - [x] [002 — path-ownership contract v1](2026-07-13-000-graduation-and-integration.kb/2026-07-13-002-path-ownership-contract-v1.md) — landed 2026-07-14 as `docs/dev/technical-policy.kb/path-ownership.md`.
 - [ ] [003 — `chatfs` bin crate + `chatfs mount` MVP](2026-07-13-000-graduation-and-integration.kb/2026-07-13-003-chatfs-bin-crate-and-mount-mvp.md)
 - [ ] [004 — control plane + work-enqueueing](2026-07-13-000-graduation-and-integration.kb/2026-07-13-004-control-plane-and-work-enqueueing.md)
@@ -74,9 +74,9 @@ prototyped against the incubator's `chatfs.demo/` tree at any time.
 
 ## Related, outside this umbrella
 
-- **Atomic chat-dir regeneration** — first-priority incubator todo
-  (`docs/dev/design-incubators/chatfs-cli-mockup/.claude/todo.kb/2026-07-13-000-Atomic-chat-dir-regeneration---stage-and-rename--never-rewrite-in-place.md`);
-  lands before or with 000/001, consumed by 004.
+- **Atomic chat-dir regeneration** — landed 2026-07-18 (incubator devlog
+  `docs/dev/design-incubators/chatfs-cli-mockup/devlog/2026-07-18-002-design-doc-unwrap-and-kill-mid-flight-tests-close-the-atomic-regen-task.md`;
+  todo closed and deleted at re-homing); consumed by 004.
 - **`.data/` scratch dot-d migration** — implements 002's `.data/`
   scratch convention; landed 2026-07-15, see incubator devlog
   `docs/dev/design-incubators/chatfs-cli-mockup/devlog/2026-07-15-001-migrate-data-scratch-files-into-dot-d-sibling-directories.md`
@@ -98,8 +98,8 @@ prototyped against the incubator's `chatfs.demo/` tree at any time.
 
 ## Success Criteria
 
-- [ ] `uv sync` installs `chatfs-cli`; every pipeline entry point runs from
-      `$PATH` against a user-chosen cache root.
+- [x] `uv sync` installs `chatfs-cli`; every pipeline entry point runs from
+      `$PATH` against a user-chosen cache root — 2026-08-07 (child 001).
 - [ ] `chatfs mount --cache DIR MOUNTPOINT` serves captured conversations
       to standard tools.
 - [ ] Sync is triggerable through the mount (control plane) without

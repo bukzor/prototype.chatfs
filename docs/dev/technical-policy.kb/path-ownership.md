@@ -13,29 +13,29 @@ outputs" — but stops short of saying which paths. This is that seam,
 written down as of 2026-07-14: for each subpath under a cache root, which
 component may write it, and which only read it.
 
-**Scope:** describes `$PWD` reality in the `chatfs-cli-mockup` incubator
-today. Stage names (capture, index splat, path render, ...) match the
-incubator README's "Stages" section — commands and arguments stay
-single-sourced there and in each package; this doc names owners, not
-invocations. Aspirational content (the not-yet-built daemon, the
-not-yet-argument cache root) is marked `[!TODO]`.
+**Scope:** describes on-disk reality in `packages/chatfs-cli` today.
+Stage names (capture, index splat, path render, ...) match the package
+README's "Stages" section — commands and arguments stay single-sourced
+there and in each package; this doc names owners, not invocations.
+Aspirational content (the not-yet-built daemon) is marked `[!TODO]`.
 
 ## Cache root
 
-Every path below is relative to a cache root, one per provider.
+Every path below is relative to a cache root, one per provider. The root
+is a required argument everywhere (2026-08-07, child 001): url-addressed
+and index commands take `--cache <dir>`; path-addressed commands resolve
+the root from the given path. No baked default exists, so the daemon can
+point arbitrary mounts at arbitrary cache roots.
 
-> [!TODO] Today the root is a baked default (`<incubator-dir>/chatfs.demo/
-> $provider/`), not a parameter — every entry point (index splat, url
-> browse) hardcodes it. Promotion (child 000/001) makes it a required
-> argument everywhere, with no baked default, so the daemon can point
-> arbitrary mounts at arbitrary cache roots.
+Besides `.chat/`, `.data/`, and the view tree below, the root carries
+`trash/` — the url-trash verb's destination (`trash/$TIMESTAMP/`, chat
+dir plus its view symlinks). Sweeps and view-symlink purges skip it.
 
 ## `.chat/$UUID/` — canonical storage
 
-Flat, UUID-keyed, owned end-to-end by the pipeline (today: the incubator
-scripts; post-promotion: `chatfs-cli`). Nothing outside the pipeline
-writes here — see Future daemon, below, for why that boundary holds even
-once a daemon exists.
+Flat, UUID-keyed, owned end-to-end by the pipeline (`chatfs-cli`).
+Nothing outside the pipeline writes here — see Future daemon, below, for
+why that boundary holds even once a daemon exists.
 
 ### `.data/` — contract files vs. reserved scratch
 
@@ -75,7 +75,7 @@ reads it — and `index.cdp.jsonl.d/` is reserved per the rule above.
 
 | Subpath | Owner (writes) | Others | Notes |
 |---|---|---|---|
-| `messages/`, `chat.md` | path render | view-tree readers | Regenerated destructively every path-render run: purge everything except `.data/`, re-splat, re-render. **Not yet atomic** — a crash mid-run can strand the chat dir incomplete (tracked: incubator todo `2026-07-13-000-Atomic-chat-dir-regeneration...`). |
+| `messages/`, `chat.md` | path render | view-tree readers | Regenerated from scratch every path-render run, atomically: built in a staged sibling and swapped whole (`chatfs.shell.atomic.staged`, landed 2026-07-18) — readers only ever see old-complete or new-complete; a crashed attempt is preserved as `.fail` and the next run self-heals. |
 | `conversations/` | path render | view-tree readers | Splat-produced only when the source conversation has branches to represent; not every capture does today. |
 
 ## View tree (`Created=YYYY/MM/DD/HH:MM:SS±HH:MM/$TITLE`, etc.)
@@ -115,5 +115,3 @@ No component other than `place_meta` writes under the view tree.
   path names used above.
 - `../design-incubators/chatfs-cli-mockup/design.kb/040-design.kb/chat-as-directory.md` —
   storage-vs-view rationale behind the `.chat/` / view-tree split.
-- `../design-incubators/chatfs-cli-mockup/.claude/todo.kb/2026-07-13-000-Atomic-chat-dir-regeneration---stage-and-rename--never-rewrite-in-place.md` —
-  closes the non-atomicity gap noted above.

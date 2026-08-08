@@ -19,12 +19,16 @@ document describes the road.
 Once per checkout, from the repo root:
 
 ```bash
-uv sync        # Python deps, into .venv/
+uv sync        # installs chatfs-cli and its commands into .venv/
 pnpm install   # Node deps; puts `har-browse` on your PATH
 ```
 
-The commands below are `python -m ...`, run from the incubator directory, so
-that `.venv` needs to be active (direnv does this for you in this checkout).
+That puts one command per pipeline stage on your PATH, named
+`chatfs-<provider>-<noun>-<verb>` (activate `.venv` — direnv does this for
+you in this checkout). They run from any directory; every command that isn't
+addressed by an on-disk path takes `--cache <dir>`, the per-provider root it
+reads and writes. There is deliberately no default — pick a directory and
+keep using it.
 
 Node 22+ is required. You do **not** need an API key — capture drives your
 own browser session, so whatever you can read while logged in, you can pull.
@@ -32,12 +36,11 @@ own browser session, so whatever you can read while logged in, you can pull.
 ## Pull one conversation
 
 ```bash
-cd docs/dev/design-incubators/chatfs-cli-mockup
-python -m chatfs.provider.claude.conversation.url_browse https://claude.ai/chat/$UUID
+chatfs-claude-conversation-url-browse --cache ~/chats/claude https://claude.ai/chat/$UUID
 ```
 
-Swap `claude` for `chatgpt` or `aistudio`; the module path is the only thing
-that changes.
+Swap `claude` for `chatgpt` or `aistudio`; the command name is the only
+thing that changes.
 
 A browser window opens on the conversation. Log in if you need to, let the
 page finish loading, then click **Done Capturing** in the overlay. The command
@@ -49,7 +52,7 @@ separate from your daily one.
 
 ## Where it lands
 
-Everything goes under `chatfs.demo/<provider>/`:
+Everything goes under the `--cache` directory:
 
 ```
 .chat/$UUID/
@@ -72,23 +75,29 @@ where the conversation forked, so nothing you said is silently dropped.
 Re-render from bytes already captured (no browser, no network):
 
 ```bash
-python -m chatfs.provider.claude.conversation.url_render https://claude.ai/chat/$UUID
+chatfs-claude-conversation-url-render --cache ~/chats/claude https://claude.ai/chat/$UUID
 ```
 
 Pull many conversations — capture the sidebar index first, which lays down a
-chat dir per conversation, then walk them:
+chat dir per conversation, then walk them (path-addressed commands need no
+`--cache`; the path says which cache they're in):
 
 ```bash
-python -m chatfs.provider.claude.index.browse | python -m chatfs.provider.claude.index.splat
-python -m chatfs.provider.claude.conversation.path_browse chatfs.demo/claude/.chat/$UUID/
-python -m chatfs.provider.claude.conversation.path_render chatfs.demo/claude/.chat/$UUID/
+chatfs-claude-index-browse --cache ~/chats/claude | chatfs-claude-index-splat --cache ~/chats/claude
+chatfs-claude-conversation-path-browse ~/chats/claude/.chat/$UUID/
+chatfs-claude-conversation-path-render ~/chats/claude/.chat/$UUID/
 ```
 
-Throw one away — moves the chat dir and its symlinks to the repo's `trash/`:
+Throw one away — moves the chat dir and its symlinks to the cache root's own
+`trash/`:
 
 ```bash
-python -m chatfs.provider.claude.conversation.url_trash https://claude.ai/chat/$UUID
+chatfs-claude-conversation-url-trash --cache ~/chats/claude https://claude.ai/chat/$UUID
 ```
+
+The repo carries captured fixtures at
+`docs/dev/design-incubators/chatfs-cli-mockup/chatfs.demo/<provider>` — point
+`--cache` there to try the render stages without capturing anything.
 
 ## When it goes wrong
 
@@ -104,7 +113,7 @@ one.
 **"no sidebar index page included $UUID"** — capturing by URL relies on the
 page also loading your conversation list, which is where the title and
 timestamp come from. If it didn't, run the bulk path above instead:
-`index.browse | index.splat`, then `path_browse`.
+`index-browse | index-splat`, then `path-browse`.
 
 **Capture succeeded but the conversation isn't in it** — providers hydrate
 from their own client-side cache and may never hit the network on a revisit.
@@ -114,6 +123,6 @@ opted out with `har-browse --keep-origin-storage`, don't.
 ## Deeper
 
 - Stage-by-stage walkthrough, and why the layout is shaped this way:
-  [dev/design-incubators/chatfs-cli-mockup/README.md]
+  [packages/chatfs-cli/README.md](../packages/chatfs-cli/README.md)
 - Where all this is headed: [../README.md]
 - The design knowledge behind it: [dev/design.kb/]
