@@ -23,7 +23,7 @@ Steps:
 """
 from pathlib import Path
 
-from chatfs import json as chatfs_json
+import typed_json
 from chatfs.layout import chat_dir_for
 from chatfs.provider.aistudio import layout as aistudio_layout
 from chatfs.provider.aistudio.types import is_conversation
@@ -55,7 +55,7 @@ def main() -> None:
         conversation,
     )
 
-    parsed = chatfs_json.loads(conversation.read_text())
+    parsed = typed_json.loads(conversation.read_text())
     assert is_conversation(parsed), parsed
     item = aistudio_layout.index_item(parsed)
     assert item["id"] == id_, (item["id"], id_)

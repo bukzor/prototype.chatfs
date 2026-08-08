@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from chatfs import json as chatfs_json
+import typed_json
 from chatfs.layout import chat_dir_for, data_dir_for
 from chatfs.shell import place as chatfs_place
 from chatfs.shell.place import link_data_dir, place_meta, resolve_chat_dir
@@ -33,7 +33,7 @@ class DescribePlaceMeta:
 
         assert chat_dir == chat_dir_for("abc123", tmp_path)
         assert not chat_dir.exists()  # place_meta doesn't touch .chat/ -- render's job
-        meta = chatfs_json.loads((data_dir_for("abc123", tmp_path) / "meta.json").read_text())
+        meta = typed_json.loads((data_dir_for("abc123", tmp_path) / "meta.json").read_text())
         assert meta == {"foo": "bar"}
 
         link = tmp_path / "Created=2026/06/20/12:42:40-05:00" / "Hello"
@@ -60,7 +60,7 @@ class DescribePlaceMeta:
         fresh_link = tmp_path / "Created=2026/06/20/12:42:40-05:00" / "Hello"
         assert fresh_link.is_symlink()
         assert fresh_link.resolve() == chat_dir.resolve()
-        meta = chatfs_json.loads((data_dir_for("abc123", tmp_path) / "meta.json").read_text())
+        meta = typed_json.loads((data_dir_for("abc123", tmp_path) / "meta.json").read_text())
         assert meta == {"real": True}
 
     def it_does_not_purge_a_rendered_chats_data_inspection_symlink(

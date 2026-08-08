@@ -23,7 +23,7 @@ from collections.abc import Container, Mapping
 from datetime import datetime
 from pathlib import Path
 
-from chatfs import json as chatfs_json
+import typed_json
 from chatfs.layout import DATA_DIR_NAME
 from chatfs.provider.claude.types import ChatMessage, Several, is_conversation
 from chatfs.render import ConversationTree, Turn, render_tree
@@ -130,7 +130,7 @@ def render_conversation(
 def render_chat_dir(chat_dir: Path) -> tuple[str, int]:
     """Load conversation.json + messages/ under an already-splatted
     chat_dir and render markdown. Returns (markdown, turn count)."""
-    conversation = chatfs_json.loads(
+    conversation = typed_json.loads(
         (chat_dir / DATA_DIR_NAME / "conversation.json").read_text()
     )
     assert is_conversation(conversation), conversation

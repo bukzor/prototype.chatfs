@@ -9,8 +9,8 @@ from pathlib import Path
 
 import pytest
 
-from chatfs import json as chatfs_json
-from chatfs.json import JsonValue
+import typed_json
+from typed_json import JsonValue
 from chatfs.layout import chat_dir_for, data_dir_for
 from chatfs.shell import capture as chatfs_capture
 from chatfs.shell.capture import capture
@@ -34,7 +34,7 @@ class DescribeCapture:
 
         assert data_dir == data_dir_for("abc123", tmp_path)
         assert (data_dir / "cdp.jsonl").read_text() == '{"line": 1}\n'
-        assert chatfs_json.loads((data_dir / "conversation.json").read_text()) == {"ok": True}
+        assert typed_json.loads((data_dir / "conversation.json").read_text()) == {"ok": True}
 
     def it_preserves_the_prior_cdp_jsonl_when_browse_fails(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch

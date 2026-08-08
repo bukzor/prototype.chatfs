@@ -14,7 +14,7 @@ duplicate uuids across pages are expected; last-write-wins.
 """
 from pathlib import Path
 
-from chatfs import json as chatfs_json
+import typed_json
 from chatfs.provider.claude import layout as claude_layout
 from chatfs.provider.claude.types import is_index_page
 from chatfs.shell.place import place_meta
@@ -34,7 +34,7 @@ def main() -> None:
     seen: set[str] = set()
     dups = 0
     for line in sys.stdin:
-        page = chatfs_json.loads(line)
+        page = typed_json.loads(line)
         assert is_index_page(page), page
         for item in page["data"]:
             uuid = item["uuid"]

@@ -31,7 +31,7 @@ A field spec is one of:
 import json
 from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import IO, Literal, TypeAlias, TypeGuard
+from typing import IO, Literal, TypeAlias, TypeGuard, cast
 
 Schema: TypeAlias = Mapping[int, "Field"]
 Field: TypeAlias = (
@@ -186,11 +186,11 @@ def from_jspb(jspb: object, meta: Mapping[str, object]) -> dict[str, object]:
 
 
 def load_json(fp: IO[str]) -> object:
-    """json.load retyped Any -> object — the lone suppression for stdlib's Any.
+    """json.load retyped Any -> object — the zero-trust boundary for stdlib's Any.
 
     Callers narrow the result themselves (is_sequence) before using it.
     """
-    return json.load(fp)  # pyright: ignore[reportAny]
+    return cast(object, json.load(fp))
 
 
 def load_meta(endpoint_dir: Path) -> Mapping[str, object]:

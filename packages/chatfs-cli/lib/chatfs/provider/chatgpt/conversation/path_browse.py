@@ -14,7 +14,7 @@ Steps:
     2. pluck cdp.jsonl → .data/$UUID/conversation.json
     3. delegate to path_render
 """
-from chatfs import json as chatfs_json
+import typed_json
 from chatfs.layout import data_dir_of
 from chatfs.provider.chatgpt import layout as chatgpt_layout
 from chatfs.provider.chatgpt.types import is_index_item
@@ -30,7 +30,7 @@ def main() -> None:
         sys.exit(2)
 
     chat_dir = resolve_chat_dir(sys.argv[1])
-    meta = chatfs_json.loads((data_dir_of(chat_dir) / "meta.json").read_text())
+    meta = typed_json.loads((data_dir_of(chat_dir) / "meta.json").read_text())
     assert is_index_item(meta), meta
     url = chatgpt_layout.url_for(meta["id"])
 

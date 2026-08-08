@@ -1,4 +1,11 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.13"
+# dependencies = ["typed-json"]
+#
+# [tool.uv.sources]
+# typed-json = { git = "https://github.com/bukzor/typed-json" }
+# ///
 """Analyze a claude.ai conversation JSON for fork-related structure.
 
 Usage:
@@ -12,12 +19,10 @@ scalar metadata -- raw material for api-investigation.md (Phase 1 of
 the fork-representation investigation).
 """
 
-import json
 import sys
 from collections.abc import Iterator
-from typing import cast
 
-type JsonValue = None | bool | int | float | str | list[JsonValue] | dict[str, JsonValue]
+from typed_json import JsonObject, JsonValue, dumps, load
 
 FORK_KEYWORDS = ("fork", "parent", "branch", "ancestor", "child", "thread")
 
@@ -46,11 +51,11 @@ def main() -> None:
         sys.exit(f"Usage: {sys.argv[0]} [conversation.json]  (default: stdin)")
     source = open(sys.argv[1]) if len(sys.argv) == 2 else sys.stdin
     with source as f:
-        conversation = cast(JsonValue, json.load(f))
+        conversation = load(f)
     assert isinstance(conversation, dict), type(conversation)
 
     print_banner("FULL RAW RESPONSE")
-    print(json.dumps(conversation, indent=2))
+    print(dumps(conversation, indent=2))
     print()
 
     print_banner("FORK-RELATED FIELDS")
@@ -59,8 +64,10 @@ def main() -> None:
 
     print()
     print_banner("CONVERSATION METADATA")
-    metadata = {k: v for k, v in conversation.items() if not isinstance(v, (dict, list))}
-    print(json.dumps(metadata, indent=2))
+    metadata: JsonObject = {
+        k: v for k, v in conversation.items() if not isinstance(v, (dict, list))
+    }
+    print(dumps(metadata, indent=2))
 
 
 if __name__ == "__main__":

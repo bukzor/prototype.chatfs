@@ -20,6 +20,7 @@ exclude = ["packages/chatfs-fuser", "packages/har-browse"]
 [tool.uv.sources]
 chatfs-cli = { workspace = true }
 bukzor-chatgpt-export = { workspace = true }
+typed-json = { git = "https://github.com/bukzor/typed-json" }
 
 [tool.pyright]
 # Vendored third-party code is excluded by name; our own exploration
@@ -34,9 +35,8 @@ exclude = [
 ]
 
 # rosetta/ scripts import their sibling convert.py by bare name (they run
-# with rosetta/ as cwd); mirror the incubator-local config
-# (docs/dev/aistudio-schema/pyproject.toml) so the root check resolves it
-# the same way.
+# with rosetta/ as cwd); put it on the resolution path so the root check
+# agrees.
 [[tool.pyright.executionEnvironments]]
 root = "docs/dev/aistudio-schema/rosetta"
 extraPaths = ["docs/dev/aistudio-schema/rosetta"]

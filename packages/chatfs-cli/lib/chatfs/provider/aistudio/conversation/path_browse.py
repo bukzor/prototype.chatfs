@@ -15,7 +15,7 @@ Steps:
     3. massage → .data/$id/conversation.json
     4. delegate to path_render
 """
-from chatfs import json as chatfs_json
+import typed_json
 from chatfs.layout import data_dir_of
 from chatfs.provider.aistudio import layout as aistudio_layout
 from chatfs.provider.aistudio.types import is_index_item
@@ -32,7 +32,7 @@ def main() -> None:
         sys.exit(2)
 
     chat_dir = resolve_chat_dir(sys.argv[1])
-    meta = chatfs_json.loads((data_dir_of(chat_dir) / "meta.json").read_text())
+    meta = typed_json.loads((data_dir_of(chat_dir) / "meta.json").read_text())
     assert is_index_item(meta), meta
     url = aistudio_layout.url_for(meta["id"])
 

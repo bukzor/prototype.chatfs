@@ -10,7 +10,7 @@ from collections.abc import Callable, Iterable, Iterator
 from pathlib import Path
 from typing import TextIO
 
-from chatfs.json import JsonValue
+from typed_json import JsonValue
 from chatfs.layout import data_dir_of
 from chatfs.shell import atomic as chatfs_atomic
 from chatfs.shell import locks as chatfs_locks

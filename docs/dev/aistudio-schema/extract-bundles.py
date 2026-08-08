@@ -1,4 +1,11 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.13"
+# dependencies = ["typed-json"]
+#
+# [tool.uv.sources]
+# typed-json = { git = "https://github.com/bukzor/typed-json" }
+# ///
 """Extract the AI Studio boq-makersuite JS modules from a CDP capture into
 `bundles/<module-id>.js` — one file per module, raw (minified) bytes.
 
@@ -12,14 +19,12 @@ Usage:
 Module id: the `m=<id>` segment of the gstatic module URL (`_b`, `AgQvWc`, ...).
 Bodies are deduped; a tag collision with differing content gets a `~N` suffix.
 """
-import json
 import os
 import re
 import sys
 from collections.abc import Iterable, Iterator
-from typing import cast
 
-type JsonValue = None | bool | int | float | str | list[JsonValue] | dict[str, JsonValue]
+from typed_json import JsonValue, loads
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_OUTDIR = os.path.join(HERE, "bundles")
@@ -72,7 +77,7 @@ def collect(events: Iterable[JsonValue]) -> dict[str, str]:
 def main():
     outdir = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_OUTDIR
 
-    modules = collect(cast(JsonValue, json.loads(line)) for line in sys.stdin)
+    modules = collect(loads(line) for line in sys.stdin)
     os.makedirs(outdir, exist_ok=True)
     for tag, body in modules.items():
         with open(os.path.join(outdir, f"{tag}.js"), "w") as f:

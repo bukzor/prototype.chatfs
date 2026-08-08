@@ -30,7 +30,7 @@ import json
 import re
 from pathlib import Path
 
-from chatfs import json as chatfs_json
+import typed_json
 from chatfs.provider.aistudio.types import Conversation, Turn, is_conversation
 
 
@@ -125,7 +125,7 @@ def main() -> None:
         sys.exit(1)
 
     src = Path(sys.argv[1])
-    parsed = chatfs_json.loads(src.read_text())
+    parsed = typed_json.loads(src.read_text())
     assert is_conversation(parsed), parsed
     turns = turns_of(parsed)
 

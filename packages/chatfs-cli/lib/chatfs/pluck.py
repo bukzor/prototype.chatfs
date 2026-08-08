@@ -5,8 +5,8 @@ is built on.
 import re
 from collections.abc import Iterable, Iterator
 
-from chatfs import json as chatfs_json
-from chatfs.json import JsonValue
+import typed_json
+from typed_json import JsonValue
 
 
 def iter_responses_matching(
@@ -28,7 +28,7 @@ def iter_responses_matching(
     for line in cdp_lines:
         if not line.strip():
             continue
-        event = chatfs_json.loads(line)
+        event = typed_json.loads(line)
         assert isinstance(event, dict), event
         if event.get("method") != "Network.responseReceived":
             continue
@@ -43,4 +43,4 @@ def iter_responses_matching(
         body = response.get("body")
         if not isinstance(body, str):
             continue
-        yield chatfs_json.loads(body)
+        yield typed_json.loads(body)

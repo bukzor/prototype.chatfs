@@ -10,7 +10,7 @@ Reads chatgpt.index.jsonl on stdin (one page per line, each
 """
 from pathlib import Path
 
-from chatfs import json as chatfs_json
+import typed_json
 from chatfs.provider.chatgpt.layout import place_meta
 from chatfs.provider.chatgpt.types import is_index_page
 
@@ -28,7 +28,7 @@ def main() -> None:
     root.mkdir(parents=True, exist_ok=True)
     seen: set[str] = set()
     for line in sys.stdin:
-        page = chatfs_json.loads(line)
+        page = typed_json.loads(line)
         assert is_index_page(page), page
         for item in page["items"]:
             uuid = item["id"]

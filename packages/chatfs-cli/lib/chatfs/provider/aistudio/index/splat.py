@@ -19,8 +19,8 @@ chatfs.provider.aistudio.layout).
 """
 from pathlib import Path
 
-from chatfs import json as chatfs_json
-from chatfs.json import JsonObject, JsonValue
+import typed_json
+from typed_json import JsonObject, JsonValue
 from chatfs.provider.aistudio.conversation.massage_json import PROMPT, from_message
 from chatfs.provider.aistudio.layout import index_item, place_meta
 from chatfs.provider.aistudio.types import Conversation, is_conversation
@@ -52,7 +52,7 @@ def main() -> None:
     seen: set[str] = set()
     dups = 0
     for line in sys.stdin:
-        entry = chatfs_json.loads(line)
+        entry = typed_json.loads(line)
         item = index_item(massage_entry(entry))
         if item["id"] in seen:
             dups += 1

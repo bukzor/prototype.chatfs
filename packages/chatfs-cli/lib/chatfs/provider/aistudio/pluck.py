@@ -9,7 +9,7 @@ other two providers' plucks need.
 import re
 from collections.abc import Iterable, Iterator
 
-from chatfs.json import JsonValue, is_json_array
+from typed_json import JsonValue, is_json_array
 from chatfs.pluck import iter_responses_matching
 
 # ResolveDriveResource resolves any Drive resource, not just prompts, so URL

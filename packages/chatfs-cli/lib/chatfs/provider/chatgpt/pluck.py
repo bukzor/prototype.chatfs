@@ -5,7 +5,7 @@ the CDP-response filters built on chatfs.pluck's shared skeleton.
 import re
 from collections.abc import Iterable, Iterator
 
-from chatfs.json import JsonValue
+from typed_json import JsonValue
 from chatfs.pluck import iter_responses_matching
 
 # Excludes sub-paths like /stream_status, /textdocs, /init.

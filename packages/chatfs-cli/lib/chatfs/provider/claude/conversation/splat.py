@@ -22,8 +22,8 @@ import json
 from datetime import datetime
 from pathlib import Path
 
-from chatfs import json as chatfs_json
-from chatfs.json import JsonValue
+import typed_json
+from typed_json import JsonValue
 from chatfs.layout import safe_filename
 from chatfs.provider.claude.types import (
     ChatMessage,
@@ -193,7 +193,7 @@ def splat(src: Path, base_dir: Path) -> tuple[int, int]:
     Returns (message count, rendered-with-body count)."""
     import shutil
 
-    doc = chatfs_json.loads(src.read_text())
+    doc = typed_json.loads(src.read_text())
     assert is_conversation(doc), doc
     chat_messages = doc["chat_messages"]
 

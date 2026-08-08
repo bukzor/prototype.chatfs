@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "bukzor.chatgpt-export",
+    "typed-json",
 ]
 
 # One command per pipeline leaf: kebab name == module path, per

@@ -1,4 +1,11 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.13"
+# dependencies = ["typed-json"]
+#
+# [tool.uv.sources]
+# typed-json = { git = "https://github.com/bukzor/typed-json" }
+# ///
 """Print the populated-index tree of a JSPB array.
 
 Input (stdin): one JSPB value (JSON array) per line — e.g. the prompt body
@@ -8,11 +15,10 @@ Output (stdout): each non-null array slot as `idx` → descriptor, indented by
 depth. JSPB array index = proto field number - 1, so this is the observed
 counterpart to walk-graph.py's schema field numbers.
 """
-import json
 import sys
-from typing import cast
 
-type JsonValue = None | bool | int | float | str | list[JsonValue] | dict[str, JsonValue]
+from typed_json import JsonValue, dumps, loads
+
 type Row = tuple[int, int, str]
 
 
@@ -22,7 +28,7 @@ def descriptor(value: JsonValue) -> str:
         filled = sum(1 for v in value if v is not None)
         return f"list({len(value)}, {filled} set)"
     elif isinstance(value, str):
-        return json.dumps(value[:48])
+        return dumps(value[:48])
     else:
         return repr(value)
 
@@ -45,7 +51,7 @@ def main():
         if not line:
             continue
         out: list[Row] = []
-        show(cast(JsonValue, json.loads(line)), 0, maxdepth, out)
+        show(loads(line), 0, maxdepth, out)
         for depth, idx, desc in out:
             print(f"{'  ' * depth}[{idx}] {desc}")
         print()

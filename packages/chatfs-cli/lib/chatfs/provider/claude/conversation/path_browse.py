@@ -16,7 +16,7 @@ Steps:
        module docstring for why: the CLI-shaped calling convention stays
        exercised, and subsystem coupling stays scoped to argv/stdio)
 """
-from chatfs import json as chatfs_json
+import typed_json
 from chatfs.layout import data_dir_of
 from chatfs.provider.claude import layout as claude_layout
 from chatfs.provider.claude.pluck import pluck_conversation
@@ -34,7 +34,7 @@ def main() -> None:
         sys.exit(2)
 
     chat_dir = resolve_chat_dir(sys.argv[1])
-    meta = chatfs_json.loads((data_dir_of(chat_dir) / "meta.json").read_text())
+    meta = typed_json.loads((data_dir_of(chat_dir) / "meta.json").read_text())
     assert is_index_item(meta), meta
     url = claude_layout.url_for(meta["uuid"])
 

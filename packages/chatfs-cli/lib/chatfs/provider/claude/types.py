@@ -2,7 +2,7 @@
 
 from typing import Literal, TypeGuard, TypedDict
 
-from chatfs.json import JsonObject, JsonValue
+from typed_json import JsonObject, JsonValue
 
 
 type Several[T] = tuple[T, ...]

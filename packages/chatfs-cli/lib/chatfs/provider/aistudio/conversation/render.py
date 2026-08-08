@@ -21,7 +21,7 @@ from collections.abc import Mapping
 from datetime import datetime, timezone
 from pathlib import Path
 
-from chatfs import json as chatfs_json
+import typed_json
 from chatfs.provider.aistudio.types import Turn as RawTurn
 from chatfs.provider.aistudio.types import is_turn
 from chatfs.render import ConversationTree, Turn, render_tree
@@ -62,7 +62,7 @@ def load_turns(messages_dir: Path) -> tuple[dict[str, Turn], dict[str, float]]:
         if not md_path.exists():
             continue
         _, role, note = parse_stem(entry.stem)
-        raw = chatfs_json.loads(entry.read_text())
+        raw = typed_json.loads(entry.read_text())
         assert is_turn(raw), raw
         turns[entry.stem] = Turn(
             role, _time(raw), f"messages/{entry.stem}.md", md_path.read_text().rstrip(), note

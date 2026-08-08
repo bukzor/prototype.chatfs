@@ -37,8 +37,8 @@ captures remain there for inspection.
 """
 from pathlib import Path
 
-from chatfs import json as chatfs_json
-from chatfs.json import JsonObject
+import typed_json
+from typed_json import JsonObject
 from chatfs.layout import chat_dir_for
 from chatfs.provider.chatgpt import layout as chatgpt_layout
 from chatfs.provider.chatgpt.pluck import pluck_index_pages
@@ -64,7 +64,7 @@ def find_index_item(data_dir: Path, uuid: str) -> IndexItem:
     for line in index_pages.read_text().splitlines():
         if not line.strip():
             continue
-        page = chatfs_json.loads(line)
+        page = typed_json.loads(line)
         assert is_index_page(page), page
         for item in page["items"]:
             if item["id"] == uuid:
@@ -113,7 +113,7 @@ def main() -> None:
 
     item = find_index_item(data_dir, uuid)
 
-    conv_doc = chatfs_json.loads(conversation.read_text())
+    conv_doc = typed_json.loads(conversation.read_text())
     assert isinstance(conv_doc, dict), conv_doc
     projected = _index_shaped(conv_doc)
     item_normalized: JsonObject = {

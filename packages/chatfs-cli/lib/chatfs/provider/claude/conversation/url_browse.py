@@ -35,8 +35,8 @@ already-captured cdp.jsonl + conversation.json).
 from pathlib import Path
 from typing import cast
 
-from chatfs import json as chatfs_json
-from chatfs.json import JsonObject
+import typed_json
+from typed_json import JsonObject
 from chatfs.layout import chat_dir_for
 from chatfs.provider.claude import layout as claude_layout
 from chatfs.provider.claude.pluck import pluck_conversation, pluck_index_pages
@@ -62,7 +62,7 @@ def find_index_item(data_dir: Path, uuid: str) -> IndexItem:
     for line in index_pages.read_text().splitlines():
         if not line.strip():
             continue
-        page = chatfs_json.loads(line)
+        page = typed_json.loads(line)
         assert is_index_page(page), page
         matches.extend(item for item in page["data"] if item["uuid"] == uuid)
     assert matches, (
@@ -93,7 +93,7 @@ def main() -> None:
 
     item = find_index_item(data_dir, uuid)
 
-    conv_doc = chatfs_json.loads(conversation.read_text())
+    conv_doc = typed_json.loads(conversation.read_text())
     assert isinstance(conv_doc, dict), conv_doc
     # IndexItem's fields are all str, so this is a safe reinterpretation, not an
     # unverified cast — TypedDict's synthesized Mapping view widens values to
