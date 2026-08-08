@@ -50,6 +50,14 @@ Plan from 2026-05-05 design.kb consolidation. Order is dependency-driven; 1-2 ar
 4. [x] [Rename incubator to chatfs-cli-mockup](todo.kb/2026-05-11-000-rename-incubator-to-chatfs-cli-mockup.md) — precursor to multi-provider sketch; current name encodes a single provider. Done 2026-07-10: `git mv` + full reference sweep (remaining old-name hits are historical: devlog filenames/bodies, the ADR title); README closing reframed to the `$REPO/lib/chatfs/` graduation target. Verified: basedpyright 0/0/0, pytest 19/19, no symlink targets the old path.
 5. [x] **Multi-provider sketch** (deferrable). Scope B from 2026-05-11 conversation: hand-prepare a Claude data-export-derived `chatfs.demo/claude/.chat/$UUID/` and run splat + render through it; no live BB1 capture from claude.ai yet. Tests the parent project's `provider-plugin-model.md` against a second provider in practice. Also the natural moment to promote the incubator's `provider-plugin-model.md` symlink to a real entry or sub-kb. Superseded 2026-07-10: the claude provider landed via live BB1 capture (MVP closed 2026-05-11, devlog `2026-05-11-001`) — stronger than the hand-prepared export sketch — and AI Studio followed as a third provider (2026-06-20..07-03); the `provider-plugin-model.md` promotion landed 2026-07-09 (devlog `2026-07-09-000`). Nothing of this scope remains.
 
+## Transcript consumer ergonomics
+
+- [ ] [Transcript consumer ergonomics: toc, message access, export verify](todo.kb/2026-08-08-000-Transcript-consumer-ergonomics--toc--message-access--export-verify.md)
+      — requirements filed 2026-08-08 from the consumer side (agent
+      serializing/auditing the llm-stet export with grep/sed): message
+      index, single-message access, intra-export link verification.
+      Command spelling deferred to `packages/chatfs-cli/design.kb/`.
+
 ## Rust port — kb scope refactor
 
 - [ ] [Execute the rust-port kb scope refactor](todo.kb/2026-05-16-000-execute-rust-port-kb-scope-refactor.md) — 9 steps; must land before commits 0750/1000/1050. Layered with 2026-05-21 meta-planning evolutions (see todo's "Additional decisions" section).
@@ -61,7 +69,8 @@ Plan from 2026-05-05 design.kb consolidation. Order is dependency-driven; 1-2 ar
 
 - [ ] Fix 4 frontmatter violations in `docs/dev/aistudio-schema/discourse.kb/` — drift accumulated 2026-06-23..08-08 while the schema symlinks dangled (revealed when the `$ref: skill://` stubs restored validation, commit 9324dba): `sources.kb/{bundle-audit,live-replay-probe,rosetta-correlation-experiment}.md` use `kind: investigation` (not in the canonical enum — may want an enum addition in llm-discourse-graph instead of a content edit), and `questions.kb/how-does-this-serve-chatfs.md` has an unexpected `status:` plus a date-typed `resolved:` where the canonical wants a string
 - [ ] Create `docs/dev/milestones.kb/` — double-blocked (no milestone content yet; skills-repo pattern not defined)
-- [ ] Fix pre-existing basedpyright errors in docs/ exploration scripts (3 as of 2026-08-08: implicitly-relative `convert` imports in `docs/dev/aistudio-schema/rosetta/{correlate,verify}.py`; unresolvable vendored `claude_api` import in `docs/dev/design-incubators/fork-representation/investigate-forks.py`) — deliberately left visible rather than excluded when the `**/docs` pyright exclude was narrowed to vendored code only
+- [x] Fix pre-existing basedpyright errors in docs/ exploration scripts (3 as of 2026-08-08: implicitly-relative `convert` imports in `docs/dev/aistudio-schema/rosetta/{correlate,verify}.py`; unresolvable vendored `claude_api` import in `docs/dev/design-incubators/fork-representation/investigate-forks.py`) — deliberately left visible rather than excluded when the `**/docs` pyright exclude was narrowed to vendored code only. Done 2026-08-08: rosetta imports resolved via root `executionEnvironments`; `investigate-forks.py` rewritten to file/stdin input (dead `claude_api` fetch path removed). Repo-wide pyright 0/0 — devlogs `2026-08-08-001`, `2026-08-08-003`.
+- [ ] Drop the typed-json `[tool.uv.sources]` git pins — root `pyproject.toml` plus the PEP 723 blocks in `docs/dev/aistudio-schema/{body-shape,extract-bundles}.py` and `docs/dev/design-incubators/fork-representation/investigate-forks.py` — blocked on typed-json landing on PyPI (user is publishing out-of-repo; name confirmed free 2026-08-08)
 
 ## Upstream (mirrors of skills-repo todos; kept here for visibility)
 
