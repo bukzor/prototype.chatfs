@@ -35,9 +35,10 @@ if it decides otherwise.)
 - **`chatfs-fuser`** — lib crate: generic declarative FUSE builder. Not
   chatfs-specific; carries no chatfs policy.
 
-> [!TODO]
-> The `chatfs` bin crate does not exist yet. Ordering constraint: the
-> Python rename above frees the `packages/chatfs` directory first.
+> [!TODO] the `chatfs` bin crate
+> Does not exist yet (graduation child 003). Its directory is free: the
+> Python package landed as `chatfs-cli` (2026-08-07), leaving
+> `packages/chatfs` to the crate.
 
 ## Node (pnpm workspace)
 
@@ -57,6 +58,7 @@ if it decides otherwise.)
   generic browser tooling stays generically named.
 
 **Why not per-provider packages now.** The provider/universal boundary
-collapsed to a small fixed adapter (see the incubator's
-`provider-plugin-model.md`); entry-point discovery provides the extension
+collapsed to a small fixed adapter (see
+`packages/chatfs-cli/design.kb/040-design.kb/provider-plugin-model.md`);
+entry-point discovery provides the extension
 mechanism without distribution overhead, and splitting later is cheap.

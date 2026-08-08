@@ -5,7 +5,11 @@ why:
 
 # On-Disk Representation: "Rotate 90 Degrees"
 
-The splat format (see `packages/bukzor.chatgpt-export/lib/bukzor/chatgpt_export/splat.py`)
+The splat format (prior art:
+`packages/bukzor.chatgpt-export/lib/bukzor/chatgpt_export/splat.py`;
+chatfs-cli's provider splat stages produce the same layout under each
+chat dir — see
+`packages/chatfs-cli/design.kb/040-design.kb/chat-as-directory.md`)
 uses a "rotated" layout where:
 
 - **Linear chains -> flat siblings.** Sequential messages are symlinks in the

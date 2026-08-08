@@ -11,6 +11,10 @@ source:
 
 # Work-Enqueueing Model
 
+> [!TODO] entire surface — lands with graduation child 004
+> Nothing below exists yet; the job queue is designed here ahead of the
+> daemon that will implement it.
+
 FUSE handlers must stay fast. Expensive work (BB pipelines, user interaction,
 file parsing) runs in a background job queue, not in the filesystem call path.
 

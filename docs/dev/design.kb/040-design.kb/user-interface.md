@@ -17,6 +17,10 @@ filesystem at a user-chosen mount point; standard tools (`ls`, `cat`,
 `grep`, editors, file managers) work unmodified against it. See
 `user-interface.kb/fuse-mount.md`.
 
+> [!TODO] the mount itself — graduation child 003
+> The daemon/mount described here is not built yet; what exists is the
+> `chatfs-fuser` builder library and this decided design.
+
 ## Why this one
 
 - **Standard tools work.** The mission

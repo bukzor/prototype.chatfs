@@ -8,6 +8,10 @@ source:
 
 # Sync Control Plane (Procfs/Sysfs Style)
 
+> [!TODO] entire surface — lands with graduation child 004
+> Nothing below exists yet; the control plane is designed here ahead of
+> the daemon that will implement it.
+
 Sync is triggered through control files, never through reads. Three primitives:
 
 ```

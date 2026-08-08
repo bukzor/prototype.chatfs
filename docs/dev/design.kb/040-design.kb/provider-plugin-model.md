@@ -19,14 +19,31 @@ cache layout rules.
 4. How to detect staleness (manual-only, TTL, version file)
 5. What the mounted directory structure looks like
 
-**Mount layout:** Providers mount under `/mnt/llmfs/<provider>/` (e.g.,
-`chatgpt/`, `claude.ai/`). The filesystem core never needs to know message
-schemas — only that the provider can materialize a conversation into cache
-when asked.
+The filesystem core never needs to know message schemas — only that the
+provider can materialize a conversation into cache when asked.
 
-**Provider manifest** (per-provider configuration):
-- Accepted `conv_ref` forms (URL, ID, "active tab")
-- Artifact landing paths
-- Cache locations
-- TTL/invalidation rules (manual-only, time-based, version file)
-- How to report "needs user interaction" (for wizard-style capture)
+What building three providers showed about where the provider/universal
+boundary actually falls is recorded at
+`packages/chatfs-cli/design.kb/040-design.kb/provider-plugin-model.md`:
+provider-shaped logic collapsed to two tiny adapters (a 3-value tuple
+plus timestamp parser for placement, a 2-value tuple for capture), with
+extractors and splat genuinely provider-only.
+
+> [!QUESTION] one multi-provider mount root, or one mount per cache dir?
+> The original sketch mounts providers side by side under
+> `/mnt/llmfs/<provider>/` (`chatgpt/`, `claude.ai/`, ...). The pipeline
+> that exists addresses one `--cache <dir>` at a time, and the cache
+> contract (`docs/dev/technical-policy.kb/path-ownership.md`) has no
+> `<provider>/` level inside it. Settles with the mount MVP (graduation
+> child 003): either the daemon composes per-provider cache roots into
+> one mount tree, or a mount serves one cache root and multi-provider
+> is the consumer's arrangement of mounts.
+
+> [!QUESTION] is a declarative provider manifest still wanted?
+> The sketched per-provider configuration record — accepted `conv_ref`
+> forms, artifact landing paths, cache locations, TTL/invalidation
+> rules, how to report "needs user interaction" — was never built.
+> Three providers landed as code-level adapters (see the package
+> lessons entry above) with no manifest. Settles when the daemon needs
+> to enumerate or configure providers it does not link against; until
+> then the adapter shape may simply have superseded this.
