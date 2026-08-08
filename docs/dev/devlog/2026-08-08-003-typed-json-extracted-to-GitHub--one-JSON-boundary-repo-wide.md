@@ -67,10 +67,19 @@ can be dropped).
 - Standalone scripts that need a dependency: PEP 723 inline metadata +
   `#!/usr/bin/env -S uv run --script`, not an incubator venv.
 
+## Follow-up
+
+- The cast policy is promoted to
+  `technical-policy.kb/any-laundering-boundaries.md` — the durable statement;
+  this entry and 2026-08-08-001 are its history.
+- User is publishing typed-json to PyPI out-of-repo; once it lands, drop the
+  `[tool.uv.sources]` git pins here and in the script metadata blocks.
+- TypeGuard → TypeIs for typed-json's guards: filed at typed-json scope
+  (`.claude/todo.md` in that repo).
+
 ## Open Questions
 
-- Publish typed-json to PyPI (name is free) and drop the `[tool.uv.sources]`
-  git pins here and in the script metadata blocks.
+-
 
 ## References
 
