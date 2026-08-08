@@ -38,6 +38,13 @@ independent and can be prototyped any time against the incubator's
 `chatfs.demo/` tree; relax the edge by starting in a scratch dir if
 parallelism is wanted.
 
+**Dev-env note (2026-08-08):** homebrew's non-setuid `fusermount3`
+shadows the setuid `/usr/bin/fusermount3` on PATH, making every mount
+test fail with `Operation not permitted` + 30s timeout. Readiness
+verified with the workaround: `cargo check --workspace` green,
+`PATH="/usr/bin:$PATH" cargo test -p chatfs-fuser --test mount` 4/4.
+Use that PATH prefix for mount runs, or fix the shadowing.
+
 ## Problem Statement
 
 chatfs-fuser is a library; nothing mounts chatfs data. Create the bin
