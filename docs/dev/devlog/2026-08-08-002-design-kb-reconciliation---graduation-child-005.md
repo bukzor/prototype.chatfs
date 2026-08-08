@@ -27,7 +27,7 @@ mid-sweep repair that grew a validator fix upstream.
 - **Commit C** — graduation ADR
   (`docs/dev/adr/2026-08-08-000-chatfs-cli-graduates-from-the-incubator-with-its-design-kb.md`),
   incubator README pointer, this devlog, todo bookkeeping.
-- **Sweep repair (`9324dba` + skills repo `489562b`)** — the dead-link
+- **Sweep repair (`9324dba` + skills repo `3c7de8a`)** — the dead-link
   sweep's only hits were the five `docs/dev/aistudio-schema/discourse.kb/`
   schema symlinks, dangling since the skill renamed `schemas/` →
   `jsonschema/` (June 23). Replaced per user instruction with
@@ -37,7 +37,14 @@ mid-sweep repair that grew a validator fix upstream.
   exposed an llm-kb validator bug: an in-body `$schema` in a `$ref`
   target made jsonschema evolve() to that dialect's stock validator,
   dropping the custom `date`/`instant` types (UnknownType crash). Fixed
-  upstream with a regression test. Restored validation surfaced 4
+  upstream with a regression test. The first fix (`489562b`) stripped
+  the declared `$schema` on retrieval; review overturned that as
+  lie-tolerance. The landed fix (`3c7de8a`) instead gives the llmd
+  dialect a declared, fetchable identity —
+  `skill://llm-kb/jsonschema/dialect.jsonschema.yaml` — honored by
+  validator selection on `$ref` crossings; unknown dialects and
+  extension types under a stock dialect now error legibly instead of
+  crashing or being guessed around. Restored validation surfaced 4
   frontmatter violations from the unvalidated six weeks — filed in
   `.claude/todo.md` Deferred, not fixed (schema-evolution territory).
 
@@ -78,5 +85,5 @@ the cross-kb conventions question 005's timebox says not to leak into.
 
 - Plan: `.claude/todo.kb/2026-07-13-000-graduation-and-integration.kb/2026-07-13-005-design-kb-reconciliation-and-graduation-adr.md`
 - ADR: `docs/dev/adr/2026-08-08-000-chatfs-cli-graduates-from-the-incubator-with-its-design-kb.md`
-- Upstream fix: bukzor-agent-skills `489562b`
-  (`llm-kb/lib/python/llmd/frontmatter_validate.py`)
+- Upstream fix: bukzor-agent-skills `3c7de8a` (supersedes `489562b`;
+  `llm-kb/lib/python/llmd/`, `llm-kb/jsonschema/dialect.jsonschema.yaml`)
