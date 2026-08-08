@@ -13,7 +13,7 @@ collapse — the same field is read from many call sites.
 import json
 import re
 import sys
-from typing import TypedDict, cast
+from typing import TypedDict
 
 
 class SchemaRow(TypedDict):
@@ -32,7 +32,10 @@ def parse_accessor(line: str) -> SchemaRow:
     """Schema row for one accessor line; the lone integer arg is the field number."""
     match = ACCESSOR.match(line)
     assert match, line
-    name, prim, argstr = cast(tuple[str, str, str], match.groups())
+    name, prim, argstr = match.groups()
+    assert isinstance(name, str), name
+    assert isinstance(prim, str), prim
+    assert isinstance(argstr, str), argstr
     args = [a.strip() for a in argstr.split(",")]
     numbers = [a for a in args if a.isdigit()]
     assert numbers, line

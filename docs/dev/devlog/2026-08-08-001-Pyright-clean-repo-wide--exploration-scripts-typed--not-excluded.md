@@ -47,10 +47,32 @@ each defines its own recursive `type JsonValue` and narrows with asserts,
 config suppression — consistent with the 2026-08-08-000 stance that our
 own code stays checked.
 
+### Casts only at Any boundaries; narrowing is assert/TypeGuard (review)
+
+**Rationale:** User review: prefer TypeGuard over cast. The regex-group
+casts (`Match.group`/`Match.groups`, typeshed's `str | Any` MaybeNone
+trick) asserted a falsifiable invariant -- a future optional group would
+make them silently wrong -- and plain `assert isinstance(g, str), g`
+narrows them with runtime checking and no helper. Replaced; output
+re-verified byte-identical on the fixtures. The `cast(JsonValue,
+json.loads(...))` boundary casts stay: under reportAny with ignore
+comments banned, every stdlib Any boundary needs exactly one laundering
+primitive, and a TypeGuard can't be it (its argument expression is still
+Any at the call site -- cf. convert.py's `load_json`, which needs the
+repo's lone ignore comment for the same job). The recursive claim is
+lazily re-verified downstream by the assert-per-access pattern.
+**Alternatives considered:** Deep TypeIs walk at the boundary -- O(n)
+runtime to prove what the parser guarantees by construction; shallow
+TypeIs claiming JsonValue -- a cast in a verification costume, worse
+than an overt one.
+
 ## Conventions Established
 
 - The "pre-existing errors are future work" note on the root pyright
   config is gone; from here, new diagnostics are regressions, not backlog.
+- Cast policy: `cast` only at a named parse boundary (one per boundary,
+  invariant stated); everywhere else, narrow with `assert isinstance` or
+  an honest TypeGuard/TypeIs that checks exactly what it claims.
 
 ## Open Questions
 

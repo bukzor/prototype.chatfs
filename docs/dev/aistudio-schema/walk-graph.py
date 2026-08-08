@@ -25,7 +25,6 @@ yet typed (see README primitive legend).
 import re
 import sys
 from collections.abc import Iterator
-from typing import cast
 
 type Field = tuple[int, str, str, str | None]
 
@@ -54,7 +53,11 @@ def rpc_response_ctor(src: str, method: str) -> str | None:
         r"MakerSuiteService/" + re.escape(method) + r'"\s*,\s*([\w$.]+)\s*,\s*([\w$.]+)',
         src,
     )
-    return cast(str, m.group(2)) if m else None
+    if m is None:
+        return None
+    ctor = m.group(2)
+    assert isinstance(ctor, str), ctor
+    return ctor
 
 
 def class_body(src: str, ctor: str) -> str | None:
@@ -94,7 +97,10 @@ def fields(body: str) -> list[Field]:
     """(number, prim, name, submsg-ctor|None) per accessor, in declaration order."""
     rows: list[Field] = []
     for match in ACCESSOR.finditer(body):
-        name, prim, args = cast(tuple[str, str, str], match.groups())
+        name, prim, args = match.groups()
+        assert isinstance(name, str), name
+        assert isinstance(prim, str), prim
+        assert isinstance(args, str), args
         toks = [t.strip() for t in args.split(",")]
         number = next(t for t in toks if t.isdigit())
         ctor = next((t for t in toks if t and not t.isdigit()), None)

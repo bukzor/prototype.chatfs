@@ -30,7 +30,11 @@ MODULE_ID = re.compile(r"/m=([A-Za-z0-9_]+)")
 def module_id(url: str) -> str:
     """The `m=<id>` module name from a gstatic boq URL, else 'unknown'."""
     m = MODULE_ID.search(url)
-    return cast(str, m.group(1)) if m else "unknown"
+    if m is None:
+        return "unknown"
+    tag = m.group(1)
+    assert isinstance(tag, str), tag
+    return tag
 
 
 def bundle_responses(events: Iterable[JsonValue]) -> Iterator[tuple[str, str]]:
