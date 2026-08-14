@@ -22,6 +22,7 @@ node_modules/
 
 # local scratch
 data/
+chatfs-root/
 
 # dirty hacks
 trash/
