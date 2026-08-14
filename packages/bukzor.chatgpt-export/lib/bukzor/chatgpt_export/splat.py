@@ -199,6 +199,40 @@ def _extract_code(content: JsonObj) -> str | None:
     return f"```{lang}\n{text}\n```"
 
 
+def _extract_execution_output(content: JsonObj) -> str | None:
+    """Extract from content_type=execution_output: wrap text in a fenced code block."""
+    text = content.get("text")
+    if text is None:
+        return None
+    assert isinstance(text, str), text
+    if not text.strip():
+        return None
+    return f"```\n{text}\n```"
+
+
+def _extract_multimodal_text(content: JsonObj) -> str | None:
+    """Extract from content_type=multimodal_text: parts mix strings and
+    image_asset_pointer dicts. Strings pass through; image parts become a
+    placeholder carrying `asset_pointer`, since the image bytes aren't in
+    the capture. Order is preserved so nothing is silently dropped."""
+    parts = content.get("parts", [])
+    assert isinstance(parts, list), parts
+    rendered: list[str] = []
+    for p in parts:
+        if p is None:
+            continue
+        if isinstance(p, str):
+            rendered.append(p)
+            continue
+        assert isinstance(p, Mapping), p
+        pointer = p.get("asset_pointer")
+        assert isinstance(pointer, str), pointer
+        rendered.append(f"[image: {pointer}]")
+    if not rendered:
+        return None
+    return "\n\n".join(rendered)
+
+
 def _extract_reasoning_recap(content: JsonObj) -> str | None:
     """Extract from content_type=reasoning_recap."""
     text = content.get("content")
@@ -275,10 +309,12 @@ def extract_text_content(raw: JsonObj) -> str | None:
     claude's `extract_text` for unknown block types.
 
     Reasoning (`thoughts`, `reasoning_recap`) and tool content (`code`,
-    tool-role search metadata) render inside a collapsible
-    `<details type="thinking"|"tool_call">`, matching claude/aistudio's
-    splat — so `grep 'type="thinking"'` finds every provider's reasoning
-    instead of silently missing chatgpt's bare markdown.
+    `execution_output`, tool-role search metadata) render inside a
+    collapsible `<details type="thinking"|"tool_call">`, matching
+    claude/aistudio's splat — so `grep 'type="thinking"'` finds every
+    provider's reasoning instead of silently missing chatgpt's bare
+    markdown. `multimodal_text` (mixed image/string parts) renders like
+    `text`: verbatim, no `<details>` wrapper, since it's a real user turn.
     """
     inner = raw.get("message")
     if inner is None:
@@ -302,6 +338,8 @@ def extract_text_content(raw: JsonObj) -> str | None:
                 return None
             return render_details("tool_call", "🔍", "Search", meta, tool="search")
         return None
+    elif content_type == "multimodal_text":
+        return _extract_multimodal_text(content)
     elif content_type == "thoughts":
         thoughts = _extract_thoughts(content)
         if thoughts is None:
@@ -314,6 +352,11 @@ def extract_text_content(raw: JsonObj) -> str | None:
         recipient = inner.get("recipient")
         tool = recipient if isinstance(recipient, str) and recipient != "all" else None
         return render_details("tool_call", "🛠️", tool or "Code", code, tool=tool)
+    elif content_type == "execution_output":
+        output = _extract_execution_output(content)
+        if output is None:
+            return None
+        return render_details("tool_call", "🛠️", "Output", output)
     elif content_type == "reasoning_recap":
         recap = _extract_reasoning_recap(content)
         if recap is None:

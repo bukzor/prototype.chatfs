@@ -3,6 +3,8 @@
 from collections.abc import Mapping
 from decimal import Decimal
 
+import pytest
+
 from . import splat as M
 from .json import JsonObj
 
@@ -244,6 +246,69 @@ class DescribeExtractTextContent:
         assert result is not None
         assert result.startswith('<details type="tool_call"')
         assert "climbing gyms near me" in result
+
+    def it_wraps_execution_output_in_details_tool_call(self):
+        raw: JsonObj = {
+            "message": {
+                "content": {
+                    "content_type": "execution_output",
+                    "text": "{'RAG+Promotion': 80.54, 'LLM+KG': 73.45}",
+                },
+                "author": {"role": "tool"},
+            }
+        }
+        result = M.extract_text_content(raw)
+        assert result is not None
+        assert result.startswith('<details type="tool_call"')
+        assert "```\n{'RAG+Promotion': 80.54, 'LLM+KG': 73.45}\n```" in result
+
+    def it_returns_none_for_blank_execution_output(self):
+        raw: JsonObj = {
+            "message": {
+                "content": {"content_type": "execution_output", "text": "   "},
+                "author": {"role": "tool"},
+            }
+        }
+        assert M.extract_text_content(raw) is None
+
+    def it_preserves_multimodal_text_parts_verbatim(self):
+        raw: JsonObj = {
+            "message": {
+                "content": {
+                    "content_type": "multimodal_text",
+                    "parts": [
+                        {
+                            "content_type": "image_asset_pointer",
+                            "asset_pointer": "sediment://file_000000009c14720c85a2a98ec08f6243",
+                            "size_bytes": 36856,
+                            "width": 423,
+                            "height": 836,
+                        },
+                        'we\'d probably want to define "gas" of some kind, yea?\n'
+                        + "that doesn't seem like the hard part though.",
+                    ],
+                }
+            }
+        }
+        result = M.extract_text_content(raw)
+        assert result is not None
+        assert "sediment://file_000000009c14720c85a2a98ec08f6243" in result
+        assert "we'd probably want to define" in result
+        # image placeholder precedes the prose, matching parts order
+        assert result.index("sediment://") < result.index("we'd probably")
+
+    def it_returns_none_for_empty_multimodal_parts(self):
+        raw: JsonObj = {
+            "message": {"content": {"content_type": "multimodal_text", "parts": []}}
+        }
+        assert M.extract_text_content(raw) is None
+
+    def it_raises_for_unrecognized_content_type(self):
+        raw: JsonObj = {
+            "message": {"content": {"content_type": "something_new_and_unknown"}}
+        }
+        with pytest.raises(ValueError, match="something_new_and_unknown"):
+            _ = M.extract_text_content(raw)
 
 
 class DescribePrepareMessage:
