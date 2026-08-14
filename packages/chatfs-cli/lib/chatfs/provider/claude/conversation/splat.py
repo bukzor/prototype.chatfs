@@ -14,9 +14,12 @@ symlink, is left alone). The .json carries the raw message object; the
 Scope: `text` blocks pass through; `thinking` and each
 `tool_use`+`tool_result` pair render as collapsible
 `<details type="...">` sections (the `type` attribute makes each kind
-greppable). Unknown block types raise. The raw block stays in the
-.json regardless. No `conversations/` branch-symlinks yet (next ladder
-rung).
+greppable); `token_budget` is dropped (timestamps only, nothing to
+show); a `tool_use` the user canceled before its result arrived (a
+hollow trailing text block instead of a `tool_result`) renders as its
+own collapsible, marked canceled. Unknown block types raise. The raw
+block stays in the .json regardless. No `conversations/`
+branch-symlinks yet (next ladder rung).
 """
 import json
 from datetime import datetime
@@ -110,8 +113,9 @@ def render_tool_call(use: ToolUseBlock, result: ToolResultBlock) -> str:
     """Render a `tool_use` + its `tool_result` as one collapsible pair.
 
     Every tool_use is immediately followed by the tool_result for the
-    same call (asserted by the caller), so they read better fused: one
-    disclosure tagged `tool="<name>"`. web_search/web_fetch get a
+    same call -- position is the only correlation claude.ai's export
+    gives us, and the caller asserts it -- so they read better fused:
+    one disclosure tagged `tool="<name>"`. web_search/web_fetch get a
     bespoke icon and a summary built from their single argument, with
     the request omitted; other tools show the request JSON above the
     result.
@@ -129,18 +133,38 @@ def render_tool_call(use: ToolUseBlock, result: ToolResultBlock) -> str:
             label = query + error
             return render_details("tool_call", "🔍", label, result_md, tool=name)
         case "web_fetch":
-            assert set(tool_input) == {"url"}, tool_input
+            # `text_content_token_limit` is an optional cap the caller can
+            # pass alongside `url` -- observed 2025-12 requesting a 5000-token
+            # excerpt of a docs page. Only `url` feeds the label.
+            assert "url" in tool_input and set(tool_input) <= {
+                "url",
+                "text_content_token_limit",
+            }, tool_input
             url = tool_input["url"]
             assert isinstance(url, str), url
             label = url + error
             return render_details("tool_call", "🕷️", label, result_md, tool=name)
         case _:
-            label = f"{name} — {use['message']}" + error
+            label = f"{name} — {use.get('message', name)}" + error
             body = (
                 f"**Request:**\n\n{fenced_json(tool_input)}\n\n"
                 f"**Result:**\n\n{result_md}"
             )
             return render_details("tool_call", "🛠️", label, body, tool=name)
+
+
+def render_interrupted_tool_call(use: ToolUseBlock) -> str:
+    """Render a `tool_use` the user canceled before its `tool_result` arrived.
+
+    claude.ai's export marks this the same way it marks a bodiless
+    `user_canceled` retry (see `has_body` in render.py): a single hollow
+    `{"type":"text","text":""}` block, here trailing the tool call instead
+    of standing alone as the whole message.
+    """
+    name = use["name"]
+    label = f"{name} — {use.get('message', name)} — canceled"
+    body = f"**Request:**\n\n{fenced_json(use['input'])}\n\n_(canceled before result)_"
+    return render_details("tool_call", "🛠️", label, body, tool=name)
 
 
 def extract_text(content_blocks: Several[ContentBlock]) -> str:
@@ -161,19 +185,29 @@ def extract_text(content_blocks: Several[ContentBlock]) -> str:
                     pieces.append(text)
             case {"type": "thinking"}:
                 pieces.append(render_thinking(block))
+            case {"type": "token_budget"}:
+                pass  # timestamps only, nothing to show
             case {"type": "tool_use"}:
                 # each tool_use is paired with the next block; None at end-of-list
-                # (an interrupted call) falls to the same mispairing raise below
+                # (an interrupted call) falls to the same mispairing raise below.
+                # Pairing is positional only -- claude.ai's export carries no
+                # id/tool_use_id to cross-check (see ToolUseBlock/ToolResultBlock).
                 next_block = content_blocks[i + 1] if i + 1 < len(content_blocks) else None
+                is_last = i + 2 >= len(content_blocks)
                 match next_block:
                     case {"type": "tool_result"}:
-                        assert next_block["tool_use_id"] == block["id"], (block, next_block)
                         pieces.append(render_tool_call(block, next_block))
+                    case {"type": "text", "text": ""} if is_last:
+                        # user_canceled mid-call: the same hollow marker
+                        # has_body/normalize_bodiless_nodes treat as a canceled
+                        # retry, here trailing a tool call instead of standing
+                        # alone -- no tool_result ever arrived.
+                        pieces.append(render_interrupted_tool_call(block))
                     case _:
                         raise AssertionError(
                             ("tool_use without following tool_result", block, next_block)
                         )
-                i += 1  # consume the paired tool_result
+                i += 1  # consume the paired tool_result (or hollow placeholder)
             case {"type": "tool_result"}:
                 raise AssertionError(("tool_result without preceding tool_use", block))
             case _:

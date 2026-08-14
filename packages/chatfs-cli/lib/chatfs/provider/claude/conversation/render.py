@@ -4,7 +4,8 @@
 The fork-fact notation -- what the output guarantees a reader, including
 excerpt readers -- is specified and implemented in `chatfs.render`; this
 module contributes only the claude-shaped parts: message-file stems, the
-all-zero root sentinel, and pruning of bodiless canceled retries.
+all-zero root sentinel, and repair of bodiless canceled retries (dropped if
+a dead end, spliced out of the tree if the user continued past one).
 
 Usage:
     chatfs-claude-conversation-render <path-to-chat-dir-or-inside>
@@ -25,6 +26,7 @@ from pathlib import Path
 
 import typed_json
 from chatfs.layout import DATA_DIR_NAME
+from chatfs.provider.claude.conversation.splat import extract_text
 from chatfs.provider.claude.types import ChatMessage, Several, is_conversation
 from chatfs.render import ConversationTree, Turn, render_tree
 from chatfs.shell import sh as chatfs_sh
@@ -92,29 +94,52 @@ def load_turns(messages_dir: Path) -> dict[str, Turn]:
     return turns
 
 
-def prune_bodiless_leaves(
+def has_body(msg: ChatMessage, rendered: Container[str]) -> bool:
+    """Whether `msg` carries real content -- the same definition `extract_text`
+    uses, not the raw presence of a `content` list. A `user_canceled` retry
+    still gets a single content block, just one holding an empty `text`;
+    checking list-truthiness alone would count that hollow block as a body."""
+    return msg["uuid"] in rendered or bool(msg["text"]) or bool(extract_text(tuple(msg["content"])))
+
+
+def normalize_bodiless_nodes(
     chat_messages: Several[ChatMessage], rendered: Container[str]
 ) -> Several[ChatMessage]:
-    """Drop messages that splatted to a .json but no .md -- a bodiless node such
-    as a `user_canceled` retry that emitted nothing. Keeping one would fabricate
-    a fork whose sibling has no turn to number. Prunes to a fixpoint, so a chain
-    of bodiless nodes falls leaf-first; a bodiless node that still carries
-    content or a surviving child is a splat/render bug, so it stays and trips
-    the downstream body-coverage check."""
-    msgs = tuple(chat_messages)
+    """Repair claude's legitimately turn-less nodes -- a `user_canceled` retry
+    that emitted nothing, per `has_body`. A turn-less leaf is dropped --
+    nothing to show, no fork to anchor. A turn-less node with exactly one
+    child is spliced out, its child reparented to its own parent, so a
+    canceled retry the user immediately continued past doesn't fork the tree
+    at all. Repairs to a fixpoint, so a chain of these falls leaf-first.
+
+    A turn-less node that still carries real, unrendered content is a
+    splat/render bug, not a legitimate gap -- it stays untouched so it trips
+    the downstream body-coverage assert in `render_tree`. Likewise a
+    turn-less fork (2+ children, none bodied) is left unhandled -- unobserved
+    in real data so far, so render_tree's assert catches it rather than this
+    function guessing which branch to keep.
+    """
+    msgs = {m["uuid"]: m for m in chat_messages}
     while True:
-        parents = {m["parent_message_uuid"] for m in msgs}
-        kept = tuple(
-            m
-            for m in msgs
-            if m["uuid"] in rendered
-            or m["text"]
-            or m["content"]
-            or m["uuid"] in parents
-        )
-        if len(kept) == len(msgs):
-            return kept
-        msgs = kept
+        children: dict[str, list[str]] = {}
+        for m in msgs.values():
+            children.setdefault(m["parent_message_uuid"], []).append(m["uuid"])
+
+        changed = False
+        for uuid, m in list(msgs.items()):
+            if has_body(m, rendered):
+                continue
+            kids = children.get(uuid, [])
+            if not kids:
+                del msgs[uuid]
+                changed = True
+            elif len(kids) == 1:
+                (child,) = kids
+                msgs[child] = {**msgs[child], "parent_message_uuid": m["parent_message_uuid"]}
+                del msgs[uuid]
+                changed = True
+        if not changed:
+            return tuple(msgs.values())
 
 
 def render_conversation(
@@ -124,7 +149,7 @@ def render_conversation(
 ) -> tuple[str, int]:
     """The pure render pipeline: conversation tree + loaded turns → the full
     markdown document. Returns (markdown, turn count)."""
-    chat_messages = prune_bodiless_leaves(chat_messages, turns)
+    chat_messages = normalize_bodiless_nodes(chat_messages, turns)
     return render_tree(build_tree(chat_messages, current), turns)
 
 

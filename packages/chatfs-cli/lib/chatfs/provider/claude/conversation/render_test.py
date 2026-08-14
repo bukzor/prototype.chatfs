@@ -9,7 +9,7 @@ import pytest
 from chatfs.provider.claude.conversation.render import (
     build_tree,
     load_turns,
-    prune_bodiless_leaves,
+    normalize_bodiless_nodes,
     render_conversation,
 )
 from chatfs.provider.claude.types import ChatMessage, ContentBlock, Several
@@ -38,16 +38,16 @@ def uuids(messages: Several[ChatMessage]) -> list[str]:
     return [m["uuid"] for m in messages]
 
 
-class DescribePruneBodilessLeaves:
+class DescribeNormalizeBodilessNodes:
     def it_drops_a_contentless_canceled_leaf(self):
         # a user_canceled retry: a .json on disk, no .md, no children — keeping it
         # would fabricate a fork whose sibling has no turn to number.
         msgs = (msg("a", text="hi"), msg("cancel", parent="a"))
-        assert uuids(prune_bodiless_leaves(msgs, rendered={"a"})) == ["a"]
+        assert uuids(normalize_bodiless_nodes(msgs, rendered={"a"})) == ["a"]
 
     def it_keeps_every_rendered_message(self):
         msgs = (msg("a", text="hi"), msg("b", parent="a", text="bye"))
-        assert uuids(prune_bodiless_leaves(msgs, rendered={"a", "b"})) == ["a", "b"]
+        assert uuids(normalize_bodiless_nodes(msgs, rendered={"a", "b"})) == ["a", "b"]
 
     def it_keeps_a_bodiless_node_that_still_has_content(self):
         # bodiless-but-has-content is a splat/render bug, not a cancel: retain it
@@ -56,25 +56,27 @@ class DescribePruneBodilessLeaves:
             msg("a", text="hi"),
             msg("b", parent="a", content=[{"type": "text", "text": "stray"}]),
         )
-        kept = prune_bodiless_leaves(msgs, rendered={"a"})
+        kept = normalize_bodiless_nodes(msgs, rendered={"a"})
         assert {m["uuid"] for m in kept} == {"a", "b"}, kept
 
     def it_prunes_a_chain_of_bodiless_nodes(self):
         # a cancel whose only child is another cancel: the leaf falls first,
         # which leaves its parent childless and contentless -- it must fall too.
         msgs = (msg("a", text="hi"), msg("b", parent="a"), msg("c", parent="b"))
-        assert uuids(prune_bodiless_leaves(msgs, rendered={"a"})) == ["a"]
+        assert uuids(normalize_bodiless_nodes(msgs, rendered={"a"})) == ["a"]
 
-    def it_keeps_a_bodiless_non_leaf(self):
-        # an empty node with a child can't be dropped without re-parenting: retain
-        # it so the missing-body check fires rather than silently restructuring.
+    def it_splices_a_bodiless_non_leaf_with_one_child(self):
+        # claude.ai's tree can chain straight through a `user_canceled` retry:
+        # the next real message parents off the cancel, not off the cancel's
+        # own parent. Reparent the child and drop the cancel, so it doesn't
+        # fabricate a fork whose only "sibling" is itself.
         msgs = (
             msg("a", text="hi"),
             msg("empty", parent="a"),
             msg("c", parent="empty", text="hi"),
         )
-        kept = prune_bodiless_leaves(msgs, rendered={"a", "c"})
-        assert {m["uuid"] for m in kept} == {"a", "empty", "c"}, kept
+        kept = normalize_bodiless_nodes(msgs, rendered={"a", "c"})
+        assert {m["uuid"]: m["parent_message_uuid"] for m in kept} == {"a": "root", "c": "a"}, kept
 
 
 class DescribePrimaryChild:
@@ -148,6 +150,29 @@ class DescribeRenderConversation:
             # [005 · human · T](L) (re: 000)
 
             *prior revisions: 001, 004*
+
+            body b
+            """)
+
+    def it_renders_past_a_canceled_retry_with_no_assertion_failure(self):
+        # regression for a real capture (2026-05-07): a `user_canceled`
+        # assistant turn -- one empty text content block, no .md -- sat
+        # mid-chain, its own reply continuing straight through it. Splicing
+        # it out is what lets set(turns) == set(tree.parent_of) hold.
+        msgs = (
+            msg("a", text="body a"),
+            msg("cancel", parent="a", content=[{"type": "text", "text": ""}]),
+            msg("b", parent="cancel", text="body b", created_at="2026-06-03T00:00:01Z"),
+        )
+        turns = {m["uuid"]: Turn("human", "T", "L", m["text"]) for m in msgs if m["text"]}
+        markdown, count = render_conversation(msgs, "b", turns)
+        assert count == 2
+        assert markdown == dedent("""\
+            # [000 · human · T](L)
+
+            body a
+
+            # [001 · human · T](L)
 
             body b
             """)

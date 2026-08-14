@@ -1,6 +1,6 @@
 """Shared types for the claude mockup."""
 
-from typing import Literal, TypeGuard, TypedDict
+from typing import Literal, NotRequired, TypeGuard, TypedDict
 
 from typed_json import JsonObject, JsonValue
 
@@ -49,17 +49,25 @@ class ThinkingBlock(TypedDict):
 
 class ToolUseBlock(TypedDict):
     """A tool invocation. `message` is a human-readable status shown while the
-    tool runs (e.g. "Generating ask_user_input_v0..."), distinct from `input`."""
+    tool runs (e.g. "Generating ask_user_input_v0..."), distinct from `input`;
+    when present it's typically just the tool name, so callers fall back to
+    `name` when it's absent (observed: an `artifacts` call with no `message`
+    key at all).
+
+    No `id` field: claude.ai's own conversation export (unlike the Messages
+    API) carries none -- pairing with the following `tool_result` is purely
+    positional.
+    """
 
     type: Literal["tool_use"]
-    id: str
     name: str
     input: JsonObject
-    message: str
+    message: NotRequired[str]
 
 
 class ToolResultBlock(TypedDict):
-    """The result paired with a preceding `tool_use` (matched by `tool_use_id`).
+    """The result paired with the preceding `tool_use`, purely by position --
+    no `tool_use_id` to match against (see `ToolUseBlock`).
 
     `content` shape is tool-defined (open-ended across integrations) — a bare
     string, a list of result items, or occasionally a single object — so it
@@ -67,12 +75,24 @@ class ToolResultBlock(TypedDict):
     """
 
     type: Literal["tool_result"]
-    tool_use_id: str
     content: JsonValue
     is_error: bool
 
 
-type ContentBlock = TextBlock | ThinkingBlock | ToolUseBlock | ToolResultBlock
+class TokenBudgetBlock(TypedDict):
+    """An internal budget checkpoint claude.ai's export interleaves into
+    `content` around tool calls. Carries only timestamps -- no text, no
+    tool linkage -- so the renderer ignores it rather than rendering an
+    empty section."""
+
+    type: Literal["token_budget"]
+    start_timestamp: str
+    stop_timestamp: str
+
+
+type ContentBlock = (
+    TextBlock | ThinkingBlock | ToolUseBlock | ToolResultBlock | TokenBudgetBlock
+)
 
 
 class ChatMessage(TypedDict):
