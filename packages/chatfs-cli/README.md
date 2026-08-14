@@ -81,7 +81,8 @@ subprocesses (`design.kb/040-design.kb/driver-model.md`).
    `.data/$UUID/`, then delegates to path-render.
 5. **`chatfs-<p>-conversation-path-render <chat-dir>`** — rebuilds the
    whole derived surface (splat + render) in a staged sibling and
-   atomically swaps it into place.
+   atomically swaps it into place. Prints the absolute path of `chat.md`
+   on stdout; `url-browse`/`url-render` delegate here, so they do too.
 6. **`chatfs-<p>-conversation-render <chat-dir>`** — walks the mapping
    tree from `current_node` back to root, streams turn headings linking
    to atomic `.md` files; dead branches render as nested blockquoted

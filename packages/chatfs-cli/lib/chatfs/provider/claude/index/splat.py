@@ -12,23 +12,22 @@ item, calls place_meta which:
 Pages overlap (the SPA re-fetches stable pages as the user scrolls), so
 duplicate uuids across pages are expected; last-write-wins.
 """
-from pathlib import Path
-
 import typed_json
+from chatfs.cli import extract_cache
 from chatfs.provider.claude import layout as claude_layout
 from chatfs.provider.claude.types import is_index_page
+from chatfs.shell import sh as chatfs_sh
 from chatfs.shell.place import place_meta
 
 
 def main() -> None:
+    import os
     import sys
 
-    match sys.argv[1:]:
-        case ["--cache", cache]:
-            root = Path(cache)
-        case _:
-            print(f"usage: {sys.argv[0]} --cache <dir>", file=sys.stderr)
-            sys.exit(2)
+    root, rest = extract_cache(sys.argv[1:], os.environ)
+    if root is None or rest:
+        print(f"usage: {sys.argv[0]} --cache <dir>", file=sys.stderr)
+        sys.exit(2)
 
     root.mkdir(parents=True, exist_ok=True)
     seen: set[str] = set()
@@ -48,10 +47,9 @@ def main() -> None:
                 item,
                 root,
             )
-    print(
+    chatfs_sh.log(
         f"placed {len(seen)} item(s) under {root} "
-        + f"({dups} duplicate-uuid re-writes across pages)",
-        file=sys.stderr,
+        + f"({dups} duplicate-uuid re-writes across pages)"
     )
 
 

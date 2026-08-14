@@ -25,6 +25,7 @@ import typed_json
 from chatfs.provider.aistudio.types import Turn as RawTurn
 from chatfs.provider.aistudio.types import is_turn
 from chatfs.render import ConversationTree, Turn, render_tree
+from chatfs.shell import sh as chatfs_sh
 from chatfs.shell.place import resolve_chat_dir
 
 VIRTUAL_ROOT = ""
@@ -104,7 +105,7 @@ def main() -> None:
     markdown, count = render_conversation(turns, created)
     _ = sys.stdout.write(markdown)
 
-    print(f"Rendered {count} turn(s).", file=sys.stderr)
+    chatfs_sh.log(f"Rendered {count} turn(s).")
 
 
 if __name__ == "__main__":

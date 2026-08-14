@@ -37,6 +37,7 @@ from typing import cast
 
 import typed_json
 from typed_json import JsonObject
+from chatfs.cli import extract_cache
 from chatfs.layout import chat_dir_for
 from chatfs.provider.claude import layout as claude_layout
 from chatfs.provider.claude.pluck import pluck_conversation, pluck_index_pages
@@ -76,14 +77,14 @@ def find_index_item(data_dir: Path, uuid: str) -> IndexItem:
 
 
 def main() -> None:
+    import os
     import sys
 
-    match sys.argv[1:]:
-        case ["--cache", cache, url]:
-            root = Path(cache)
-        case _:
-            print(f"usage: {sys.argv[0]} --cache <dir> <claude-url>", file=sys.stderr)
-            sys.exit(2)
+    root, rest = extract_cache(sys.argv[1:], os.environ)
+    if root is None or len(rest) != 1:
+        print(f"usage: {sys.argv[0]} --cache <dir> <claude-url>", file=sys.stderr)
+        sys.exit(2)
+    (url,) = rest
 
     uuid = claude_layout.uuid_from_url(url)
 

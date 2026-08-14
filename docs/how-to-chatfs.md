@@ -27,8 +27,15 @@ That puts one command per pipeline stage on your PATH, named
 `chatfs-<provider>-<noun>-<verb>` (activate `.venv` — direnv does this for
 you in this checkout). They run from any directory; every command that isn't
 addressed by an on-disk path takes `--cache <dir>`, the per-provider root it
-reads and writes. There is deliberately no default — pick a directory and
-keep using it.
+reads and writes, in any position on the command line. There is deliberately
+no default — pick a directory and keep using it, or export it once:
+
+```bash
+export CHATFS_CACHE=~/chats/claude
+```
+
+and drop `--cache` from every command below; an explicit `--cache` still
+wins if you pass both.
 
 Node 22+ is required. You do **not** need an API key — capture drives your
 own browser session, so whatever you can read while logged in, you can pull.
@@ -44,11 +51,16 @@ thing that changes.
 
 A browser window opens on the conversation. Log in if you need to, let the
 page finish loading, then click **Done Capturing** in the overlay. The command
-runs the rest of the pipeline and exits.
+runs the rest of the pipeline and exits, printing the absolute path of the
+resulting `chat.md` on stdout.
 
 Your login persists in a dedicated browser profile under
 `~/.cache/har-browse/profile/`, so you only log in once — this browser is
 separate from your daily one.
+
+Progress messages (what's being captured/splatted/rendered, and the
+subprocess calls between stages) go to stderr and are silent by default; set
+`DEBUG=1` to see them.
 
 ## Where it lands
 
@@ -65,6 +77,10 @@ Created=YYYY/MM/DD/$TIMESTAMP/$TITLE -> ../../../../.chat/$UUID/
 Two ways in, same bytes: `.chat/$UUID/` if you know the UUID, or browse the
 date tree by title. The date-tree entry is a symlink to the chat dir, so
 `cat Created=2026/07/26/*/My\ Chat/chat.md` just works.
+
+`.chat/$UUID/.data` is an absolute symlink, so `cp -ar .chat/$UUID/
+anywhere/` carries a chat dir out of the cache without leaving `.data`
+dangling — it still resolves back into this cache's `.data/$UUID/`.
 
 `chat.md` renders the live conversation path as a sequence of turns. Edited
 and regenerated messages appear as nested blockquoted asides at the point

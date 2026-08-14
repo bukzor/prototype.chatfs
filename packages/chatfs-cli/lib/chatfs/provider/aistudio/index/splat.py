@@ -17,13 +17,13 @@ chunkedPrompt — no turn content on an index-only entry), then handed to
 index_item/place_meta, which already handle that provenance (see
 chatfs.provider.aistudio.layout).
 """
-from pathlib import Path
-
 import typed_json
 from typed_json import JsonObject, JsonValue
+from chatfs.cli import extract_cache
 from chatfs.provider.aistudio.conversation.massage_json import PROMPT, from_message
 from chatfs.provider.aistudio.layout import index_item, place_meta
 from chatfs.provider.aistudio.types import Conversation, is_conversation
+from chatfs.shell import sh as chatfs_sh
 
 
 def massage_entry(entry: JsonValue) -> Conversation:
@@ -39,14 +39,13 @@ def massage_entry(entry: JsonValue) -> Conversation:
 
 
 def main() -> None:
+    import os
     import sys
 
-    match sys.argv[1:]:
-        case ["--cache", cache]:
-            root = Path(cache)
-        case _:
-            print(f"usage: {sys.argv[0]} --cache <dir>", file=sys.stderr)
-            sys.exit(2)
+    root, rest = extract_cache(sys.argv[1:], os.environ)
+    if root is None or rest:
+        print(f"usage: {sys.argv[0]} --cache <dir>", file=sys.stderr)
+        sys.exit(2)
 
     root.mkdir(parents=True, exist_ok=True)
     seen: set[str] = set()
@@ -58,10 +57,8 @@ def main() -> None:
             dups += 1
         seen.add(item["id"])
         _ = place_meta(item, root)
-    print(
-        f"placed {len(seen)} item(s) under {root} "
-        + f"({dups} duplicate-id re-writes)",
-        file=sys.stderr,
+    chatfs_sh.log(
+        f"placed {len(seen)} item(s) under {root} " + f"({dups} duplicate-id re-writes)"
     )
 
 

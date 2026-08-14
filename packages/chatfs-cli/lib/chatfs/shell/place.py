@@ -8,7 +8,7 @@ every function here does real I/O.
 
 import json
 import os
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
 from datetime import datetime
 from pathlib import Path
 
@@ -26,16 +26,23 @@ from chatfs.shell import locks as chatfs_locks
 def link_data_dir(dst: Path, uuid: str) -> None:
     """Create/refresh `dst/.data` as a symlink to `.data/$UUID`.
 
-    Fixed relative target (`../../.data/$UUID`), valid unchanged
-    whether `dst` is the final chat_dir (`root/.chat/$UUID/`) or a
-    same-depth staged scratch sibling (`root/.chat/.{$UUID}.tmp/`) --
-    both sit two levels below `root`. `uuid` is taken explicitly rather
-    than `dst.name`, since that assumption breaks for the scratch case.
+    Absolute target, not relative: a relative `../../.data/$UUID`
+    dangles the moment `dst` is `cp -ar`'d anywhere else, since the copy
+    keeps the same two-levels-up text but no longer sits under `root`.
+    An absolute target survives the copy -- it still resolves, back to
+    this same cache's `.data/$UUID` -- so `cp -ar`ing a chat dir out of
+    the cache doesn't leave its `.data` inspection link broken.
+
+    Same target either way `dst` is passed: the final chat_dir
+    (`root/.chat/$UUID/`) or a same-depth staged scratch sibling
+    (`root/.chat/.{$UUID}.tmp/`) -- both sit two levels below `root`.
+    `uuid` is taken explicitly rather than `dst.name`, since that
+    assumption breaks for the scratch case.
     """
     link = dst / DATA_DIR_NAME
     if link.is_symlink() or link.exists():
         link.unlink()
-    link.symlink_to(Path("..", "..", DATA_DIR_NAME, uuid))
+    link.symlink_to((dst.parent.parent / DATA_DIR_NAME / uuid).resolve())
 
 
 def resolve_chat_dir(arg: str | os.PathLike[str]) -> Path:
@@ -65,32 +72,53 @@ def resolve_chat_dir(arg: str | os.PathLike[str]) -> Path:
         p = p.parent
 
 
+def _view_symlinks(uuid: str, root: Path) -> Iterator[Path]:
+    """Yield every view-tree symlink under `root` whose target mentions
+    `uuid`.
+
+    Skips `.chat/` and `.data/` -- those hold storage-internal symlinks
+    (e.g. `.chat/$UUID/.data`'s inspection link back to `.data/$UUID/`),
+    not views, and their targets legitimately contain the uuid too.
+    Skips `trash/` -- trashed content is a preserved artifact, not a
+    view (a re-captured chat must not reach into an earlier trashing of
+    itself).
+    """
+    for path in root.rglob("*"):
+        rel_parts = path.relative_to(root).parts
+        if ".chat" in rel_parts or ".data" in rel_parts or "trash" in rel_parts:
+            continue
+        if path.is_symlink() and uuid in os.readlink(path):
+            yield path
+
+
 def _purge_view_symlinks(uuid: str, root: Path, *, keep: Path | None = None) -> None:
     """Remove every view-tree symlink under `root` whose target mentions
     `uuid`, except `keep`.
 
     Identity-scoped cleanup: derived view paths can move when
     derivation logic changes (TZ format, view shape); we sweep by
-    identity, not path. Skips `.chat/` and `.data/` -- those hold
-    storage-internal symlinks (e.g. `.chat/$UUID/.data`'s inspection
-    link back to `.data/$UUID/`), not views, and their targets
-    legitimately contain the uuid too. Skips `trash/` -- trashed
-    content is a preserved artifact, not a view (a re-captured chat
-    must not reach into an earlier trashing of itself).
+    identity, not path.
 
     `keep` is the symlink `place_meta` just placed (place-then-purge:
     see `deterministic-regeneration.md`) -- its target also contains
     `uuid`, so without this exclusion the sweep would immediately
     undo the placement it's meant to follow.
     """
-    for path in root.rglob("*"):
-        rel_parts = path.relative_to(root).parts
-        if ".chat" in rel_parts or ".data" in rel_parts or "trash" in rel_parts:
-            continue
-        if path == keep:
-            continue
-        if path.is_symlink() and uuid in os.readlink(path):
+    for path in _view_symlinks(uuid, root):
+        if path != keep:
             path.unlink()
+
+
+def find_view_path(uuid: str, root: Path) -> Path | None:
+    """The view-tree symlink under `root` naming `uuid`'s chat -- the
+    "nice" (title, not UUID) path a human navigates to, for callers that
+    want to report it (e.g. printing where a rendered chat.md landed).
+
+    None if no view has been placed yet. `place_meta`'s place-then-purge
+    protocol keeps at most one live view symlink per uuid at a time, so
+    the first match is the only one there is to find.
+    """
+    return next(_view_symlinks(uuid, root), None)
 
 
 def place_meta(

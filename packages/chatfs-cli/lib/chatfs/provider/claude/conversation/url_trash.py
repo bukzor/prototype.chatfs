@@ -17,7 +17,9 @@ and keeping the move within one filesystem keeps it a rename.
 from datetime import datetime
 from pathlib import Path
 
+from chatfs.cli import extract_cache
 from chatfs.provider.claude.layout import uuid_from_url
+from chatfs.shell import sh as chatfs_sh
 
 
 def rmdir_p(dir: Path) -> None:
@@ -31,15 +33,15 @@ def rmdir_p(dir: Path) -> None:
 
 
 def main() -> None:
+    import os
     import shutil
     import sys
 
-    match sys.argv[1:]:
-        case ["--cache", cache, url]:
-            root = Path(cache)
-        case _:
-            print(f"usage: {sys.argv[0]} --cache <dir> <claude-url>", file=sys.stderr)
-            sys.exit(2)
+    root, rest = extract_cache(sys.argv[1:], os.environ)
+    if root is None or len(rest) != 1:
+        print(f"usage: {sys.argv[0]} --cache <dir> <claude-url>", file=sys.stderr)
+        sys.exit(2)
+    (url,) = rest
 
     uuid = uuid_from_url(url)
 
@@ -56,7 +58,7 @@ def main() -> None:
             _ = shutil.move(link, trash)
             rmdir_p(parent)
 
-    print(f"Moved to: {trash}", file=sys.stderr)
+    chatfs_sh.log(f"Moved to: {trash}")
 
 
 if __name__ == "__main__":

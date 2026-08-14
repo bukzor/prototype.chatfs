@@ -32,6 +32,7 @@ from pathlib import Path
 
 import typed_json
 from chatfs.provider.aistudio.types import Conversation, Turn, is_conversation
+from chatfs.shell import sh as chatfs_sh
 
 
 def turns_of(doc: Conversation) -> list[Turn]:
@@ -147,9 +148,8 @@ def main() -> None:
             _ = (messages_dir / f"{basename}.md").write_text(text + "\n")
             rendered_count += 1
 
-    print(
-        f"wrote {len(turns)} turn(s), {rendered_count} with rendered content, to {base_dir}",
-        file=sys.stderr,
+    chatfs_sh.log(
+        f"wrote {len(turns)} turn(s), {rendered_count} with rendered content, to {base_dir}"
     )
 
 

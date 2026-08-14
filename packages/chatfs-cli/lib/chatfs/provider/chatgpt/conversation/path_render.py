@@ -29,7 +29,7 @@ every pipeline-stage boundary stays crossable only through argv/stdio.
 from chatfs.layout import data_dir_of
 from chatfs.shell import sh as chatfs_sh
 from chatfs.shell.atomic import staged
-from chatfs.shell.place import link_data_dir, resolve_chat_dir
+from chatfs.shell.place import find_view_path, link_data_dir, resolve_chat_dir
 
 
 def main() -> None:
@@ -53,11 +53,11 @@ def main() -> None:
         tmp.mkdir(parents=True)
         link_data_dir(tmp, uuid)
 
-        print(f"Splatting {conversation} ...", file=sys.stderr)
+        chatfs_sh.log(f"Splatting {conversation} ...")
         _ = chatfs_sh.run(["chatgpt-splat", str(conversation), str(tmp)])
 
         out = tmp / "chat.md"
-        print(f"Rendering {tmp} → chat.md ...", file=sys.stderr)
+        chatfs_sh.log(f"Rendering {tmp} → chat.md ...")
         with out.open("wb") as f:
             _ = chatfs_sh.run(
                 [
@@ -68,6 +68,9 @@ def main() -> None:
                 ],
                 stdout=f,
             )
+
+    view = find_view_path(uuid, chat_dir.parent.parent)
+    print((view or chat_dir) / "chat.md")
 
 
 if __name__ == "__main__":

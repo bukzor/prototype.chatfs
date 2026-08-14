@@ -11,8 +11,7 @@ chats fit one page in practice; a scroll-triggered second page is
 unverified here (same har-browse "wait until has_more=false" gap tracked
 for claude in todo.md).
 """
-from pathlib import Path
-
+from chatfs.cli import extract_cache
 from chatfs.layout import DATA_DIR_NAME
 from chatfs.provider.claude.pluck import pluck_index_pages
 from chatfs.shell.capture import browse, dump_jsonl
@@ -21,14 +20,13 @@ URL = "https://claude.ai/recents"
 
 
 def main() -> None:
+    import os
     import sys
 
-    match sys.argv[1:]:
-        case ["--cache", cache]:
-            root = Path(cache)
-        case _:
-            print(f"usage: {sys.argv[0]} --cache <dir>", file=sys.stderr)
-            sys.exit(2)
+    root, rest = extract_cache(sys.argv[1:], os.environ)
+    if root is None or rest:
+        print(f"usage: {sys.argv[0]} --cache <dir>", file=sys.stderr)
+        sys.exit(2)
 
     cdp = root / DATA_DIR_NAME / "index.cdp.jsonl"  # debug intermediate
     cdp.parent.mkdir(parents=True, exist_ok=True)

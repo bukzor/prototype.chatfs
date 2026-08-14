@@ -34,6 +34,7 @@ from chatfs.provider.claude.types import (
     ToolUseBlock,
     is_conversation,
 )
+from chatfs.shell import sh as chatfs_sh
 
 
 def format_timestamp(created_at: str) -> str:
@@ -227,10 +228,9 @@ def main() -> None:
     base_dir = Path(sys.argv[2]) if len(sys.argv) == 3 else src.with_suffix(".splat")
     total, rendered_count = splat(src, base_dir)
 
-    print(
+    chatfs_sh.log(
         f"wrote {total} message(s), {rendered_count} with rendered "
-        + f"content, to {base_dir}",
-        file=sys.stderr,
+        + f"content, to {base_dir}"
     )
 
 

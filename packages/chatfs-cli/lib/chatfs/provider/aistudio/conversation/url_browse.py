@@ -21,9 +21,8 @@ Steps:
     4. place_meta from the raw doc (writes meta.json, view dir-symlink)
     5. delegate to path_render
 """
-from pathlib import Path
-
 import typed_json
+from chatfs.cli import extract_cache
 from chatfs.layout import chat_dir_for
 from chatfs.provider.aistudio import layout as aistudio_layout
 from chatfs.provider.aistudio.types import is_conversation
@@ -32,14 +31,14 @@ from chatfs.shell.capture import run_module
 
 
 def main() -> None:
+    import os
     import sys
 
-    match sys.argv[1:]:
-        case ["--cache", cache, url]:
-            root = Path(cache)
-        case _:
-            print(f"usage: {sys.argv[0]} --cache <dir> <aistudio-url>", file=sys.stderr)
-            sys.exit(2)
+    root, rest = extract_cache(sys.argv[1:], os.environ)
+    if root is None or len(rest) != 1:
+        print(f"usage: {sys.argv[0]} --cache <dir> <aistudio-url>", file=sys.stderr)
+        sys.exit(2)
+    (url,) = rest
 
     id_ = aistudio_layout.uuid_from_url(url)
 
@@ -48,7 +47,7 @@ def main() -> None:
     raw = data_dir / "conversation.json.d" / "raw.json"
     conversation = data_dir / "conversation.json"
 
-    print(f"Massaging {raw} → {conversation} ...", file=sys.stderr)
+    chatfs_sh.log(f"Massaging {raw} → {conversation} ...")
     run_module(
         "chatfs.provider.aistudio.conversation.massage_json",
         raw,

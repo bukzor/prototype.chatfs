@@ -1,15 +1,17 @@
 """Minimal shell-tracing helper, adapted from ~/lib/pythonpath/bukzor/sh/io.py.
 
 `xtrace` prints a copy-pasteable, `set -x`-style line to stderr for every
-subprocess this codebase spawns. Unconditional for now (no `DEBUG`
-env-var gate, no `quiet()`/`loud()` toggle like the source module has) --
-add those back if a call site needs to suppress it.
+subprocess this codebase spawns. `log` is the general progress-message
+counterpart other modules print through. Both are gated by `debug_enabled`
+(`DEBUG=1` or higher) -- normal runs stay quiet; the trace is there for
+when something needs debugging.
 
 `run` traces, then runs a command to completion, always raising on
 non-zero exit. Deliberately narrow signature (stdin/stdout handles);
 grow it as needed.
 """
 
+import os
 import shlex
 import subprocess
 import sys
@@ -19,6 +21,17 @@ from typing import IO
 _TEAL = "\033[36;1m"
 _RESET = "\033[m"
 PS4 = f"+ {_TEAL}${_RESET} "
+
+
+def debug_enabled() -> bool:
+    """True when $DEBUG is set to a positive integer."""
+    return int(os.environ.get("DEBUG", "0") or "0") >= 1
+
+
+def log(msg: str) -> None:
+    """Print a progress message to stderr, gated by debug_enabled()."""
+    if debug_enabled():
+        print(msg, file=sys.stderr, flush=True)
 
 
 def quote(cmd: Sequence[object]) -> str:
@@ -32,7 +45,7 @@ def quote(cmd: Sequence[object]) -> str:
 
 def xtrace(cmd: Sequence[object]) -> None:
     """Print a command to stderr in copy-pasteable, `set -x`-style form."""
-    print(PS4 + quote(cmd), file=sys.stderr, flush=True)
+    log(PS4 + quote(cmd))
 
 
 def run(

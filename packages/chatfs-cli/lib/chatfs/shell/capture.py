@@ -35,7 +35,7 @@ def run_module(module: str, src: Path, dst: Path) -> None:
 
 def browse(url: str, dst: Path) -> None:
     """Run har-browse against url, writing its CDP capture (jsonl) to dst."""
-    print(f"Capturing {url} → {dst} ...", file=sys.stderr)
+    chatfs_sh.log(f"Capturing {url} → {dst} ...")
     with dst.open("wb") as f:
         _ = chatfs_sh.run(["har-browse", url], stdout=f)
 
@@ -55,7 +55,7 @@ def pluck(
     target a not-yet-existing `X.d/` scratch dir (`path-ownership.md`)
     without a separate mkdir at each call site.
     """
-    print(f"Plucking → {dst} ...", file=sys.stderr)
+    chatfs_sh.log(f"Plucking → {dst} ...")
     dst.parent.mkdir(parents=True, exist_ok=True)
     with src.open() as fin, dst.open("w") as fout:
         dump_jsonl(fn(fin), fout)

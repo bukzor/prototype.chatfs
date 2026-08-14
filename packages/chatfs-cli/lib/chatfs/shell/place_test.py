@@ -143,9 +143,10 @@ class DescribeLinkDataDir:
 
         data_link = chat_dir / ".data"
         assert data_link.is_symlink()
+        assert data_link.readlink().is_absolute()
         assert data_link.resolve() == data_dir_for("abc123", tmp_path).resolve()
 
-    def it_uses_the_same_relative_target_from_a_staged_scratch_sibling(
+    def it_uses_the_same_absolute_target_from_a_staged_scratch_sibling(
         self, tmp_path: Path
     ):
         # same-depth sibling of the real chat_dir (root/.chat/.{uuid}.tmp/),
@@ -158,6 +159,7 @@ class DescribeLinkDataDir:
 
         data_link = scratch / ".data"
         assert data_link.is_symlink()
+        assert data_link.readlink().is_absolute()
         assert data_link.resolve() == data_dir_for("abc123", tmp_path).resolve()
 
     def it_replaces_a_prior_link(self, tmp_path: Path):

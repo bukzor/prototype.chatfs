@@ -27,6 +27,7 @@ import typed_json
 from chatfs.layout import DATA_DIR_NAME
 from chatfs.provider.claude.types import ChatMessage, Several, is_conversation
 from chatfs.render import ConversationTree, Turn, render_tree
+from chatfs.shell import sh as chatfs_sh
 from chatfs.shell.place import resolve_chat_dir
 
 
@@ -154,7 +155,7 @@ def main() -> None:
     markdown, count = render_chat_dir(chat_dir)
     _ = sys.stdout.write(markdown)
 
-    print(f"Rendered {count} turn(s).", file=sys.stderr)
+    chatfs_sh.log(f"Rendered {count} turn(s).")
 
 
 if __name__ == "__main__":
