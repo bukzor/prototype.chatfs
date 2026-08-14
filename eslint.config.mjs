@@ -6,7 +6,7 @@ export default [
   {
     ignores: [
       "**/node_modules/**",
-      "trash/**",
+      "**/trash/**",
       "docs/dev/reference-implementations/**",
       ".venv/**",
       "target/**",
