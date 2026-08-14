@@ -10,7 +10,7 @@ references.
 - **New user? Want overview?** → [../README.md] - What the project does
 - **Want to actually use it?** → [how-to-chatfs.md] - Pull a conversation down as markdown
 - **Want to contribute?** → [../HACKING.md] - Setup and development workflow
-- **Resume development session?** → Latest [../.claude/todo*]
+- **Resume development session?** → Latest `../.claude/todo*`
 - **Learn system architecture?** → [dev/design.kb/] - Layered design knowledge; decision rationale lives inline with each entry
 - **Working with LLM assistant?** → [../CLAUDE.md] - Quick reference guide
 
@@ -35,3 +35,9 @@ references.
 - Development plans and milestones
 - Session logs and history
 - Usage examples and tutorials
+
+[../README.md]: ../README.md
+[how-to-chatfs.md]: how-to-chatfs.md
+[../HACKING.md]: ../HACKING.md
+[dev/design.kb/]: dev/design.kb/
+[../CLAUDE.md]: ../CLAUDE.md

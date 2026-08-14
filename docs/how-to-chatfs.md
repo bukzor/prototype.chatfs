@@ -25,17 +25,16 @@ pnpm install   # Node deps; puts `har-browse` on your PATH
 
 That puts one command per pipeline stage on your PATH, named
 `chatfs-<provider>-<noun>-<verb>` (activate `.venv` — direnv does this for
-you in this checkout). They run from any directory; every command that isn't
-addressed by an on-disk path takes `--cache <dir>`, the per-provider root it
-reads and writes, in any position on the command line. There is deliberately
-no default — pick a directory and keep using it, or export it once:
+you in this checkout). They run from any directory. Most take `--cache
+<dir>` — the per-provider root they read and write — in any position on the
+command line. There's no default; pick a directory and keep using it, or
+export it once:
 
 ```bash
 export CHATFS_CACHE=~/chats/claude
 ```
 
-and drop `--cache` from every command below; an explicit `--cache` still
-wins if you pass both.
+An explicit `--cache` overrides it.
 
 Node 22+ is required. You do **not** need an API key — capture drives your
 own browser session, so whatever you can read while logged in, you can pull.
@@ -58,9 +57,8 @@ Your login persists in a dedicated browser profile under
 `~/.cache/har-browse/profile/`, so you only log in once — this browser is
 separate from your daily one.
 
-Progress messages (what's being captured/splatted/rendered, and the
-subprocess calls between stages) go to stderr and are silent by default; set
-`DEBUG=1` to see them.
+Progress messages go to stderr and are silent by default; set `DEBUG=1` to
+see them.
 
 ## Where it lands
 
@@ -75,16 +73,16 @@ Created=YYYY/MM/DD/$TIMESTAMP/$TITLE -> ../../../../.chat/$UUID/
 ```
 
 Two ways in, same bytes: `.chat/$UUID/` if you know the UUID, or browse the
-date tree by title. The date-tree entry is a symlink to the chat dir, so
-`cat Created=2026/07/26/*/My\ Chat/chat.md` just works.
+date tree by title.
 
 `.chat/$UUID/.data` is an absolute symlink, so `cp -ar .chat/$UUID/
 anywhere/` carries a chat dir out of the cache without leaving `.data`
-dangling — it still resolves back into this cache's `.data/$UUID/`.
+dangling.
 
-`chat.md` renders the live conversation path as a sequence of turns. Edited
-and regenerated messages appear as nested blockquoted asides at the point
-where the conversation forked, so nothing you said is silently dropped.
+`chat.md` is the whole conversation as it currently reads, turn by turn.
+Edited and regenerated messages appear as nested blockquoted asides at the
+point where the conversation forked, so nothing you said is silently
+dropped.
 
 ## Other things you can do
 
@@ -95,8 +93,8 @@ chatfs-claude-conversation-url-render --cache ~/chats/claude https://claude.ai/c
 ```
 
 Pull many conversations — capture the sidebar index first, which lays down a
-chat dir per conversation, then walk them (path-addressed commands need no
-`--cache`; the path says which cache they're in):
+chat dir per conversation, then walk them (the commands below take a path
+instead of `--cache`; the path says which cache they're in):
 
 ```bash
 chatfs-claude-index-browse --cache ~/chats/claude | chatfs-claude-index-splat --cache ~/chats/claude
@@ -122,23 +120,27 @@ and is the first thing to try.
 
 The raw capture stays on disk at `.chat/$UUID/.data/` — `cdp.jsonl` (the
 browser's network traffic) and `conversation.json` (the provider's own
-conversation document, plucked out of it). A failure leaves those in place to
-look at, and the previous successful capture is never destroyed by a failed
-one.
+conversation document, extracted from it). A failure leaves those in place
+to look at, and the previous successful capture is never destroyed by a
+failed one.
 
 **"no sidebar index page included $UUID"** — capturing by URL relies on the
 page also loading your conversation list, which is where the title and
 timestamp come from. If it didn't, run the bulk path above instead:
 `index-browse | index-splat`, then `path-browse`.
 
-**Capture succeeded but the conversation isn't in it** — providers hydrate
-from their own client-side cache and may never hit the network on a revisit.
-Local storage is cleared before navigating to prevent exactly this; if you
-opted out with `har-browse --keep-origin-storage`, don't.
+**Capture succeeded but the conversation isn't in it** — providers may serve
+a revisit from their own client-side cache and never hit the network. Local
+storage is cleared before navigating to prevent exactly this; if you opted
+out with `har-browse --keep-origin-storage`, don't.
 
 ## Deeper
 
 - Stage-by-stage walkthrough, and why the layout is shaped this way:
-  [packages/chatfs-cli/README.md](../packages/chatfs-cli/README.md)
+  [packages/chatfs-cli/README.md]
 - Where all this is headed: [../README.md]
 - The design knowledge behind it: [dev/design.kb/]
+
+[packages/chatfs-cli/README.md]: ../packages/chatfs-cli/README.md
+[../README.md]: ../README.md
+[dev/design.kb/]: dev/design.kb/

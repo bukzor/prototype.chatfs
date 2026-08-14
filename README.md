@@ -82,3 +82,7 @@ This project explores ideas that may feed into:
 - **aider-ng:** Modular, composable AI coding assistant (like aider/claude-code)
 
 chatfs serves as a test case for composable tool design.
+
+[docs/how-to-chatfs.md]: docs/how-to-chatfs.md
+[docs/dev/design.kb/]: docs/dev/design.kb/
+[HACKING.md]: HACKING.md
