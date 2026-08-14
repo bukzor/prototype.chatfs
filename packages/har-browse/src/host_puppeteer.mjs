@@ -3,7 +3,8 @@
 // the production capture path (ratified 2026-07-23,
 // todo.kb/2026-07-23-002-*). Playwright remains a devDependency for
 // the test suite; its shell is `host_playwright.mjs`.
-import { mkdirSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import puppeteer from "puppeteer-core";
 import { overlayInitScript } from "./inject.mjs";
 import { captureStream } from "./capture.mjs";
@@ -88,6 +89,36 @@ export const WINDOWLESS_ARGS = [
 ];
 
 /**
+ * Force a profile's "On startup" setting to "Open the New Tab page"
+ * before every launch, so a reused profile never restores its previous
+ * tabs -- the source of a flash-of-prior-content on each run. Measured
+ * 2026-08-14: this unbranded Chromium build defaults to "Continue where
+ * you left off" (`session.restore_on_startup` unset resolves to `1`)
+ * even on profiles that never asked for it and shut down cleanly;
+ * `--hide-crash-restore-bubble` only suppresses the crash-recovery
+ * infobar, a separate code path. `5` is the value Chromium itself
+ * writes for "Open the New Tab page" -- confirmed live via
+ * `chrome://settings/onStartup`.
+ *
+ * Patches rather than overwrites: an absent or unparsable Preferences
+ * file (profile's first-ever launch) starts from `{}`, and any other
+ * top-level keys already written by a prior run are preserved.
+ *
+ * @param {string} profileDir
+ */
+function disableSessionRestore(profileDir) {
+  const prefsPath = join(profileDir, "Default", "Preferences");
+  mkdirSync(join(profileDir, "Default"), { recursive: true });
+  /** @type {{ session?: Record<string, unknown> } & Record<string, unknown>} */
+  let prefs = {};
+  try {
+    prefs = JSON.parse(readFileSync(prefsPath, "utf-8"));
+  } catch {}
+  prefs.session = { ...prefs.session, restore_on_startup: 5 };
+  writeFileSync(prefsPath, JSON.stringify(prefs));
+}
+
+/**
  * Locate a Chromium for puppeteer-core (which bundles no browser).
  * `$HAR_BROWSE_BROWSER` wins; otherwise use Playwright's installed
  * Chromium -- already pinned by the devDependency, so captures and the
@@ -142,7 +173,9 @@ const HIGH_ENTROPY_HINTS = [
  * @returns {Promise<any>}
  */
 export async function userAgentMetadata(browser) {
-  const probe = await browser.newPage();
+  // background: true -- a foreground tab would steal window focus and
+  // flash `file:///` in front of the human before the real navigation.
+  const probe = await browser.newPage({ background: true });
   try {
     await probe.goto("file:");
     const hints = await probe.evaluate(
@@ -315,6 +348,7 @@ export async function startCapture({
   windowless = false,
 }) {
   mkdirSync(profileDir, { recursive: true });
+  disableSessionRestore(profileDir);
 
   const browser = await puppeteer.launch({
     executablePath: await executablePath(),
@@ -339,17 +373,19 @@ export async function startCapture({
       // required (in addition to --enable-automation stripping) to
       // clear Cloudflare Turnstile on cold logins.
       "--disable-blink-features=AutomationControlled",
-      // A reused profile can offer to restore the previous session's
-      // tabs; a capture run always starts from its own navigation.
+      // `disableSessionRestore` stops the ordinary restore path; this
+      // covers the separate crash-recovery infobar Chrome shows after
+      // an unclean shutdown of this same profile.
       "--hide-crash-restore-bubble",
       ...(windowless ? WINDOWLESS_ARGS : []),
     ],
   });
-  // A persistent profile restores the previous session's tabs. Only
-  // this page and targets created after attach get wired for capture,
-  // so a human who wandered into a restored tab would generate traffic
-  // no session is listening to -- a silent miss. Close them, leaving
-  // the capture window single-tabbed.
+  // Belt-and-suspenders against extra tabs (crash recovery, a stale
+  // profile written before this fix existed): only this page and
+  // targets created after attach get wired for capture, so a human who
+  // wandered into an extra tab would generate traffic no session is
+  // listening to -- a silent miss. Close them, leaving the capture
+  // window single-tabbed.
   const pages = await browser.pages();
   const page = pages[0] ?? (await browser.newPage());
   for (const stale of pages.slice(1)) {
