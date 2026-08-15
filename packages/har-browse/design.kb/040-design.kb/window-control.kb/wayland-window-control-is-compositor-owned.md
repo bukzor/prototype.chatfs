@@ -34,7 +34,17 @@ this surface." That's not a Chromium gap, it's the protocol.
 `Target.createTarget`'s `background` param is CDP's own purpose-built
 mechanism for "create this target without stealing focus" — the most
 targeted lever available — and it still didn't hold under this
-compositor.
+compositor, when the backgrounded target is the browser's *first*
+window (forced via `--no-startup-window`, so nothing else could have
+grabbed focus first). This is not a contradiction of the same `background`
+option's working use elsewhere in this codebase
+(`userAgentMetadata()` in `src/host_puppeteer.mjs`, devlog
+`2026-08-14-000`): that call backgrounds a *second* page inside a
+browser that already has a foregrounded window — Chromium's own
+tab-activation logic, which does honor `background`. A brand-new
+toplevel surface's *initial* keyboard focus is the compositor's
+decision, not Chromium's; only the second case is a lever a client
+actually has.
 
 ## Consequence
 
