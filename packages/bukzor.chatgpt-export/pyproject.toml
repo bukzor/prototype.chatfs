@@ -7,7 +7,6 @@ dependencies = []
 
 [project.scripts]
 chatgpt-har2jsonl = "bukzor.chatgpt_export.har2jsonl:main"
-chatgpt-splat = "bukzor.chatgpt_export.splat:main"
 
 [project.optional-dependencies]
 dev = [

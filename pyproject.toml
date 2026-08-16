@@ -8,6 +8,7 @@ dependencies = ["chatfs-cli"]
 [dependency-groups]
 dev = [
     "bukzor-chatgpt-export[dev]",
+    "chatfs-cli[dev]",
 ]
 
 [tool.uv]
