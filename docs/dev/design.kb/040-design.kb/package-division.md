@@ -23,7 +23,12 @@ if it decides otherwise.)
   `docs/dev/design-incubators/chatfs-cli-mockup/` with one installed
   `chatfs-<provider>-<noun>-<verb>` command per stage
   (graduation child 001).
-- **`bukzor.chatgpt-export`** — prior art, unchanged.
+- **`bukzor.chatgpt-export`** — prior art. Its `conversation-splat` stage
+  migrated into `chatfs.provider.chatgpt.conversation.splat` 2026-08-16
+  (the "why not per-provider packages" exception below was itself
+  temporary and has expired); `har2jsonl` (unreferenced by the current
+  har-browse/pluck capture path) and its package identity remain,
+  pending a decision on their fate.
 
 ## Rust (cargo workspace)
 

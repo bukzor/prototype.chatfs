@@ -16,15 +16,12 @@ docstring for the mechanism; `staged` takes data_dir's write lock
 itself (from chatfs.shell.locks, reentrant), so no separate lock
 acquisition is needed here.
 
-Splat runs via the external `chatgpt-splat` command (packages/
-bukzor.chatgpt-export) rather than an in-tree module — that package has
-its own pyproject.toml, test suite, and typesafety tests, so it keeps
-its independent package identity instead of folding into this
-package (see the module-shape-refactor todo for the full rationale).
-Render runs as a subprocess (`python -m
-chatfs.provider.chatgpt.conversation.render`), not an in-process
-import, deliberately -- see `design.kb/040-design.kb/driver-model.md`:
-every pipeline-stage boundary stays crossable only through argv/stdio.
+Splat and render run as subprocesses (`python -m chatfs.provider.chatgpt
+.conversation.{splat,render}`), not in-process imports, deliberately —
+see `design.kb/040-design.kb/driver-model.md`: every pipeline-stage
+boundary stays crossable only through argv/stdio, so the CLI-shaped
+calling convention stays exercised and no subsystem can grow a coupling
+wider than that peephole.
 """
 from chatfs.layout import data_dir_of
 from chatfs.shell import sh as chatfs_sh
@@ -54,7 +51,15 @@ def main() -> None:
         link_data_dir(tmp, uuid)
 
         chatfs_sh.log(f"Splatting {conversation} ...")
-        _ = chatfs_sh.run(["chatgpt-splat", str(conversation), str(tmp)])
+        _ = chatfs_sh.run(
+            [
+                sys.executable,
+                "-m",
+                "chatfs.provider.chatgpt.conversation.splat",
+                str(conversation),
+                str(tmp),
+            ],
+        )
 
         out = tmp / "chat.md"
         chatfs_sh.log(f"Rendering {tmp} → chat.md ...")

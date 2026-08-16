@@ -111,10 +111,10 @@ have a numbered anchor), claude via the narrower `prune_bodiless_leaves`.
 
 The orchestrator forms prepare inputs and place outputs. `path render`
 purges non-captured content (allowlist `{.data}`), splats
-`.data/conversation.json` via `chatgpt-splat` (see `../../verb=splat.md`)
-into `messages/` and `conversations/`, calls the bare leaf, and writes
-the result to `chat.md`. `url render` thinly resolves the URL → chat dir
-and delegates to `path render`.
+`.data/conversation.json` via `conversation splat` (see
+`../../verb=splat.md`) into `messages/` and `conversations/`, calls the
+bare leaf, and writes the result to `chat.md`. `url render` thinly
+resolves the URL → chat dir and delegates to `path render`.
 
 Deterministic regen: orchestrator forms rebuild the splat tree and
 `chat.md` from `.data/conversation.json` on every invocation. See

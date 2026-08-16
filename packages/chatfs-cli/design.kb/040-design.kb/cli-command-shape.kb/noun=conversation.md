@@ -27,7 +27,5 @@ Both locators resolve to the same canonical `.chat/$UUID/` (via
   `noun=conversation.kb/verb=browse.md`).
 - **render** — emit `chat.md` from captured state (see
   `noun=conversation.kb/verb=render.md`).
-
-No top-level `splat` command at the conversation noun: the splatting inside
-`path render` (`chatgpt-splat`) is an internal helper, not a user-facing
-verb. See `../verb=splat.md`.
+- **splat** — fan `.data/conversation.json` into `messages/` and
+  `conversations/`, invoked by `path render`. See `../verb=splat.md`.

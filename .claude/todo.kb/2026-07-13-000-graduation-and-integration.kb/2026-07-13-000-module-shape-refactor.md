@@ -251,6 +251,22 @@ surfaces) is the guide.
         splats are local only because they never had independent
         package identity to begin with.
 
+        **Reversed 2026-08-16** (user fiat: this carve-out was always
+        provisional, and the provision has expired). `splat.py`/
+        `splat_test.py` ported to
+        `chatfs.provider.chatgpt.conversation.splat`, matching
+        claude/aistudio; the Decimal-preserving JSON helper moved with
+        it as `chatfs.provider.chatgpt.json` (chatgpt-specific: its
+        `create_time` needs sub-millisecond precision that `typed_json`'s
+        float parsing loses). `path_render.py` now delegates via
+        `python -m chatfs.provider.chatgpt.conversation.splat`, same
+        subprocess convention as the other two providers; new entry
+        point `chatfs-chatgpt-conversation-splat`. `bukzor.chatgpt-export`
+        keeps `har2jsonl` (unreferenced by any current pipeline path) and
+        its own copies of `splat.py`/`json.py`/the typesafety test for
+        now — the package's ultimate fate (trim vs. delete) is still
+        open, tracked separately from this reversal.
+
       **aistudio edit pass landed 2026-07-21** (devlog
       `docs/dev/design-incubators/chatfs-cli-mockup/devlog/2026-07-21-001-aistudio-family-edit-pass-package-imports.md`):
       last of the three families, closing this step. `provider/aistudio/layout.py`

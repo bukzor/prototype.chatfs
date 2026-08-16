@@ -7,15 +7,18 @@ in-house jargon but precise — readers of this repo recognize it, and it
 carries the connotation of "explode into many pieces" that the
 alternatives lose.
 
-Two splat operations in the pipeline:
+Two splat operations in the pipeline, both top-level CLI verbs (as of
+2026-08-16 -- `chatgpt conversation splat` previously ran via the
+external `chatgpt-splat` command from `packages/bukzor.chatgpt-export`,
+carved out of the uniform command surface; that carve-out was temporary
+and has since expired -- see `package-division.md`):
 
-- `chatgpt index splat` — top-level CLI verb. Reads the sidebar index
-  jsonl on stdin, places per-UUID chat dirs via `place_meta`. See
-  `noun=index.md`.
-- `chatgpt-splat` — internal helper invoked by
-  `chatgpt conversation path render`. Splats `.data/conversation.json`
-  into `messages/` and `conversations/` subtrees before the bare-leaf
-  render walks the result. Not a user-facing top-level CLI verb.
+- `chatgpt index splat` — reads the sidebar index jsonl on stdin, places
+  per-UUID chat dirs via `place_meta`. See `noun=index.md`.
+- `chatgpt conversation splat` — invoked by `chatgpt conversation path
+  render`. Splats `.data/conversation.json` into `messages/` and
+  `conversations/` subtrees before the bare-leaf render walks the
+  result, same as claude/aistudio's conversation splat.
 
 The verb is shape-of-operation, not shape-of-input: index splat reads
 jsonl-of-pages-from-stdin; conversation splat reads a single JSON file.

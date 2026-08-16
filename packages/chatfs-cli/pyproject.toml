@@ -5,7 +5,6 @@ description = "Lazy filesystem for chat conversations (claude.ai, ChatGPT)"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "bukzor.chatgpt-export",
     "python-typed-json",
 ]
 
@@ -27,6 +26,7 @@ chatfs-chatgpt-conversation-url-render = "chatfs.provider.chatgpt.conversation.u
 chatfs-chatgpt-conversation-path-browse = "chatfs.provider.chatgpt.conversation.path_browse:main"
 chatfs-chatgpt-conversation-path-render = "chatfs.provider.chatgpt.conversation.path_render:main"
 chatfs-chatgpt-conversation-render = "chatfs.provider.chatgpt.conversation.render:main"
+chatfs-chatgpt-conversation-splat = "chatfs.provider.chatgpt.conversation.splat:main"
 chatfs-chatgpt-index-browse = "chatfs.provider.chatgpt.index.browse:main"
 chatfs-chatgpt-index-splat = "chatfs.provider.chatgpt.index.splat:main"
 chatfs-aistudio-conversation-url-browse = "chatfs.provider.aistudio.conversation.url_browse:main"
@@ -38,9 +38,6 @@ chatfs-aistudio-conversation-splat = "chatfs.provider.aistudio.conversation.spla
 chatfs-aistudio-conversation-massage-json = "chatfs.provider.aistudio.conversation.massage_json:main"
 chatfs-aistudio-index-browse = "chatfs.provider.aistudio.index.browse:main"
 chatfs-aistudio-index-splat = "chatfs.provider.aistudio.index.splat:main"
-
-[dependency-groups]
-dev = ["bukzor.chatgpt-export[dev]"]
 
 [build-system]
 requires = ["hatchling"]

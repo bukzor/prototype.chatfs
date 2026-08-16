@@ -1,0 +1,484 @@
+"""Tests for chatfs.provider.chatgpt.conversation.splat."""
+
+from collections.abc import Mapping
+from decimal import Decimal
+
+from chatfs.provider.chatgpt.json import JsonObj
+
+from . import splat as M
+
+
+class DescribeMessage:
+    def it_formats_as_timestamp_role_uuid(self):
+        msg = M.Message(
+            uuid="abc123",
+            timestamp=Decimal("1700000000.0"),
+            role="user",
+            text_content=None,
+            raw={},
+        )
+        result = str(msg)
+        assert "user" in result
+        assert "abc123" in result
+        assert result.endswith(".user.abc123.root")
+
+    def it_preserves_nanoseconds(self):
+        msg = M.Message(
+            uuid="x",
+            timestamp=Decimal("1234567890.123456789"),
+            role="assistant",
+            text_content=None,
+            raw={},
+        )
+        assert ",123456789" in str(msg)
+
+
+class DescribeConversationLink:
+    def it_formats_as_seq_dot_role(self):
+        msg = M.Message(uuid="x", timestamp=Decimal(0), role="user", text_content=None, raw={})
+        link = M.ConversationLink(path=(), seq=95, message=msg)
+        assert str(link) == "095.user.root"
+
+
+class DescribeFormatTimestamp:
+    def it_formats_as_iso8601(self):
+        result = M.format_timestamp(Decimal(0))
+        assert "1970" in result or "1969" in result  # depends on local tz
+        assert "T" in result
+
+    def it_preserves_nanoseconds_with_decimal(self):
+        result = M.format_timestamp(Decimal("1234567890.123456789"))
+        assert ",123456789" in result
+
+    def it_preserves_nanoseconds_with_string(self):
+        result = M.format_timestamp("1234567890.123456789")
+        assert ",123456789" in result
+
+
+class DescribeBuildTree:
+    def it_maps_parents_to_children(self):
+        mapping: JsonObj = {
+            "root": {},
+            "child1": {"parent": "root"},
+            "child2": {"parent": "root"},
+        }
+        tree = M.build_tree(mapping)
+        assert set(tree["root"]) == {"child1", "child2"}
+
+    def it_handles_root_messages_without_parent(self):
+        mapping: JsonObj = {
+            "root": {},
+            "child": {"parent": "root"},
+        }
+        tree = M.build_tree(mapping)
+        assert "root" in tree
+        assert tree["root"] == ["child"]
+
+
+class DescribeComputeMinTimestamp:
+    def it_finds_earliest_timestamp(self):
+        mapping: JsonObj = {
+            "a": {"message": {"create_time": Decimal("300.0")}},
+            "b": {"message": {"create_time": Decimal("100.0")}},
+            "c": {"message": {"create_time": Decimal("200.0")}},
+        }
+        assert M.compute_min_timestamp(mapping) == Decimal("100.0")
+
+    def it_handles_integer_timestamps(self):
+        mapping: JsonObj = {
+            "a": {"message": {"create_time": 300}},
+            "b": {"message": {"create_time": 100}},
+        }
+        assert M.compute_min_timestamp(mapping) == Decimal(100)
+
+    def it_returns_zero_when_no_timestamps(self):
+        mapping: JsonObj = {
+            "a": {},
+            "b": {"message": {}},
+            "c": {"message": {"create_time": None}},
+        }
+        assert M.compute_min_timestamp(mapping) == Decimal(0)
+
+
+class DescribeExtractTextContent:
+    def it_joins_text_parts(self):
+        raw: JsonObj = {
+            "message": {
+                "content": {
+                    "content_type": "text",
+                    "parts": ["Hello", "World"],
+                }
+            }
+        }
+        assert M.extract_text_content(raw) == "Hello\nWorld"
+
+    def it_returns_none_when_no_message(self):
+        assert M.extract_text_content({}) is None
+
+    def it_returns_none_for_non_text_content(self):
+        raw: JsonObj = {
+            "message": {
+                "content": {
+                    "content_type": "code",
+                    "parts": ["print('hi')"],
+                }
+            }
+        }
+        assert M.extract_text_content(raw) is None
+
+    def it_returns_none_when_parts_are_empty(self):
+        raw: JsonObj = {
+            "message": {
+                "content": {
+                    "content_type": "text",
+                    "parts": [],
+                }
+            }
+        }
+        assert M.extract_text_content(raw) is None
+
+    def it_preserves_empty_string_parts(self):
+        """Empty strings between parts should produce blank lines, not be dropped."""
+        raw: JsonObj = {
+            "message": {
+                "content": {
+                    "content_type": "text",
+                    "parts": ["Hello", "", "World"],
+                }
+            }
+        }
+        assert M.extract_text_content(raw) == "Hello\n\nWorld"
+
+    def it_returns_none_when_all_parts_are_none(self):
+        """All-None parts means no text content, not empty string."""
+        raw: JsonObj = {
+            "message": {
+                "content": {
+                    "content_type": "text",
+                    "parts": [None, None],
+                }
+            }
+        }
+        assert M.extract_text_content(raw) is None
+
+    def it_returns_none_for_single_empty_string_part(self):
+        """A single empty-string part means no meaningful content."""
+        raw: JsonObj = {
+            "message": {
+                "content": {
+                    "content_type": "text",
+                    "parts": [""],
+                }
+            }
+        }
+        assert M.extract_text_content(raw) is None
+
+    def it_returns_none_for_all_empty_string_parts(self):
+        """Multiple empty-string parts means no meaningful content."""
+        raw: JsonObj = {
+            "message": {
+                "content": {
+                    "content_type": "text",
+                    "parts": ["", ""],
+                }
+            }
+        }
+        assert M.extract_text_content(raw) is None
+
+    def it_wraps_thoughts_in_details_thinking(self):
+        raw: JsonObj = {
+            "message": {
+                "content": {
+                    "content_type": "thoughts",
+                    "thoughts": [{"content": "Considering the options"}],
+                }
+            }
+        }
+        result = M.extract_text_content(raw)
+        assert result is not None
+        assert result.startswith('<details type="thinking">')
+        assert result.endswith("</details>")
+        assert "Considering the options" in result
+
+    def it_wraps_reasoning_recap_in_details_thinking(self):
+        raw: JsonObj = {
+            "message": {
+                "content": {
+                    "content_type": "reasoning_recap",
+                    "content": "Recapped the reasoning",
+                }
+            }
+        }
+        result = M.extract_text_content(raw)
+        assert result is not None
+        assert result.startswith('<details type="thinking">')
+        assert "Recapped the reasoning" in result
+
+    def it_wraps_code_in_details_tool_call(self):
+        raw: JsonObj = {
+            "message": {
+                "content": {
+                    "content_type": "code",
+                    "text": "print('hi')",
+                    "language": "python",
+                },
+                "recipient": "python",
+            }
+        }
+        result = M.extract_text_content(raw)
+        assert result is not None
+        assert result.startswith('<details type="tool_call"')
+        assert "```python" in result
+        assert "print('hi')" in result
+
+    def it_wraps_tool_metadata_in_details_tool_call(self):
+        raw: JsonObj = {
+            "message": {
+                "content": {"content_type": "text", "parts": []},
+                "author": {"role": "tool"},
+                "metadata": {
+                    "search_model_queries": {"queries": ["climbing gyms near me"]}
+                },
+            }
+        }
+        result = M.extract_text_content(raw)
+        assert result is not None
+        assert result.startswith('<details type="tool_call"')
+        assert "climbing gyms near me" in result
+
+    def it_wraps_execution_output_in_details_tool_call(self):
+        raw: JsonObj = {
+            "message": {
+                "content": {
+                    "content_type": "execution_output",
+                    "text": "{'RAG+Promotion': 80.54, 'LLM+KG': 73.45}",
+                },
+                "author": {"role": "tool"},
+            }
+        }
+        result = M.extract_text_content(raw)
+        assert result is not None
+        assert result.startswith('<details type="tool_call"')
+        assert "```\n{'RAG+Promotion': 80.54, 'LLM+KG': 73.45}\n```" in result
+
+    def it_returns_none_for_blank_execution_output(self):
+        raw: JsonObj = {
+            "message": {
+                "content": {"content_type": "execution_output", "text": "   "},
+                "author": {"role": "tool"},
+            }
+        }
+        assert M.extract_text_content(raw) is None
+
+    def it_preserves_multimodal_text_parts_verbatim(self):
+        raw: JsonObj = {
+            "message": {
+                "content": {
+                    "content_type": "multimodal_text",
+                    "parts": [
+                        {
+                            "content_type": "image_asset_pointer",
+                            "asset_pointer": "sediment://file_000000009c14720c85a2a98ec08f6243",
+                            "size_bytes": 36856,
+                            "width": 423,
+                            "height": 836,
+                        },
+                        'we\'d probably want to define "gas" of some kind, yea?\n'
+                        + "that doesn't seem like the hard part though.",
+                    ],
+                }
+            }
+        }
+        result = M.extract_text_content(raw)
+        assert result is not None
+        assert "sediment://file_000000009c14720c85a2a98ec08f6243" in result
+        assert "we'd probably want to define" in result
+        # image placeholder precedes the prose, matching parts order
+        assert result.index("sediment://") < result.index("we'd probably")
+
+    def it_returns_none_for_empty_multimodal_parts(self):
+        raw: JsonObj = {
+            "message": {"content": {"content_type": "multimodal_text", "parts": []}}
+        }
+        assert M.extract_text_content(raw) is None
+
+    def it_passes_through_an_unrecognized_content_type(self):
+        raw: JsonObj = {
+            "message": {"content": {"content_type": "something_new_and_unknown"}}
+        }
+        result = M.extract_text_content(raw)
+        assert result is not None
+        assert result.startswith('<details type="unmodeled">')
+        assert "something_new_and_unknown" in result
+
+
+class DescribePrepareMessage:
+    def it_replaces_text_parts_with_placeholder(self):
+        raw: JsonObj = {
+            "message": {
+                "content": {
+                    "content_type": "text",
+                    "parts": ["Hello", "World"],
+                }
+            }
+        }
+        result = M.prepare_message(raw)
+        inner = result["message"]
+        assert isinstance(inner, Mapping)
+        content = inner["content"]
+        assert isinstance(content, Mapping)
+        assert content["parts"] == [M.MARKDOWN_PLACEHOLDER]
+
+    def it_returns_raw_unchanged_when_no_text(self):
+        raw: JsonObj = {"message": {"content": {"content_type": "code", "parts": ["x"]}}}
+        result = M.prepare_message(raw)
+        assert result is raw
+
+    def it_returns_raw_unchanged_when_no_message(self):
+        raw: JsonObj = {"id": "root"}
+        result = M.prepare_message(raw)
+        assert result is raw
+
+    def it_returns_raw_unchanged_for_empty_parts(self):
+        raw: JsonObj = {
+            "message": {
+                "content": {
+                    "content_type": "text",
+                    "parts": [""],
+                }
+            }
+        }
+        result = M.prepare_message(raw)
+        assert result is raw
+
+    def it_does_not_mutate_original(self):
+        raw: JsonObj = {
+            "message": {
+                "content": {
+                    "content_type": "text",
+                    "parts": ["Hello"],
+                }
+            }
+        }
+        _ = M.prepare_message(raw)
+        inner = raw["message"]
+        assert isinstance(inner, Mapping)
+        content = inner["content"]
+        assert isinstance(content, Mapping)
+        assert content["parts"] == ["Hello"]
+
+
+class DescribeFindRoots:
+    def it_finds_messages_without_parent(self):
+        mapping: JsonObj = {
+            "root": {},
+            "child": {"parent": "root"},
+        }
+        assert M.find_roots(mapping) == ["root"]
+
+    def it_returns_empty_list_when_all_have_parents(self):
+        mapping: JsonObj = {
+            "a": {"parent": "x"},
+            "b": {"parent": "y"},
+        }
+        assert M.find_roots(mapping) == []
+
+
+class DescribeEnumerateConversationLinks:
+    def _make_messages(self, spec: dict[str, dict[str, object]]) -> dict[str, M.Message]:
+        """Build messages from {id: {parent, ts, role}} shorthand."""
+        messages: dict[str, M.Message] = {}
+        for msg_id, info in spec.items():
+            ts = info.get("ts", 0.0)
+            assert isinstance(ts, (int, float))
+            role = info.get("role", "unknown")
+            assert isinstance(role, str)
+            raw: JsonObj = {}
+            if "parent" in info:
+                parent = info["parent"]
+                assert isinstance(parent, str)
+                raw["parent"] = parent
+            messages[msg_id] = M.Message(
+                uuid=msg_id,
+                timestamp=Decimal(str(ts)),
+                role=role,
+                text_content=None,
+                raw=raw,
+            )
+        return messages
+
+    def _make_mapping(self, spec: dict[str, dict[str, object]]) -> JsonObj:
+        """Build a JsonObj mapping from {id: {parent, ts, role}} shorthand."""
+        from chatfs.provider.chatgpt.json import JsonValue
+
+        mapping: dict[str, JsonValue] = {}
+        for msg_id, info in spec.items():
+            raw: dict[str, JsonValue] = {}
+            if "parent" in info:
+                parent = info["parent"]
+                assert isinstance(parent, str)
+                raw["parent"] = parent
+            mapping[msg_id] = raw
+        return mapping
+
+    def it_yields_links_for_linear_chain(self):
+        spec: dict[str, dict[str, object]] = {
+            "root": {"ts": 1.0, "role": "root"},
+            "a": {"parent": "root", "ts": 2.0, "role": "user"},
+            "b": {"parent": "a", "ts": 3.0, "role": "assistant"},
+        }
+        messages = self._make_messages(spec)
+        tree = M.build_tree(self._make_mapping(spec))
+        links = list(M.enumerate_conversation_links(messages, tree, "root"))
+        assert len(links) == 3
+        assert [str(l) for l in links] == ["000.root.root", "001.user.root", "002.assistant.root"]
+        assert all(l.path == () for l in links)
+        assert links[0].message is messages["root"]
+        assert links[1].message is messages["a"]
+        assert links[2].message is messages["b"]
+
+    def it_splits_fork_into_separate_links(self):
+        spec: dict[str, dict[str, object]] = {
+            "root": {"ts": 1.0, "role": "root"},
+            "a": {"parent": "root", "ts": 2.0, "role": "user"},
+            "b": {"parent": "root", "ts": 3.0, "role": "user"},
+        }
+        messages = self._make_messages(spec)
+        tree = M.build_tree(self._make_mapping(spec))
+        links = list(M.enumerate_conversation_links(messages, tree, "root"))
+        # root link, then one link per fork child (leaves, so no further links)
+        assert len(links) == 3
+        assert links[0].message is messages["root"]
+        # Each fork child is a separate link at seq 1 with timestamp-suffixed path
+        assert links[1].seq == 1
+        assert links[1].message is messages["a"]
+        assert links[2].seq == 1
+        assert links[2].message is messages["b"]
+
+    def it_nests_branch_paths(self):
+        spec: dict[str, dict[str, object]] = {
+            "root": {"ts": 1.0, "role": "root"},
+            "a": {"parent": "root", "ts": 2.0, "role": "user"},
+            "b": {"parent": "root", "ts": 3.0, "role": "user"},
+            "a1": {"parent": "a", "ts": 4.0, "role": "assistant"},
+            "b1": {"parent": "b", "ts": 5.0, "role": "assistant"},
+        }
+        messages = self._make_messages(spec)
+        tree = M.build_tree(self._make_mapping(spec))
+        links = list(M.enumerate_conversation_links(messages, tree, "root"))
+        # root, fork child a, a1 in branch a, fork child b, b1 in branch b
+        assert len(links) == 5
+        branch_links = [l for l in links if l.path != ()]
+        assert len(branch_links) == 4  # both fork children + their descendants
+        # Fork children have timestamp-suffixed paths
+        ts_a = M.format_timestamp(messages["a"].timestamp)
+        ts_b = M.format_timestamp(messages["b"].timestamp)
+        fork_a = [l for l in links if l.message is messages["a"]][0]
+        fork_b = [l for l in links if l.message is messages["b"]][0]
+        assert fork_a.path == (f"001.user.root.{ts_a}",)
+        assert fork_b.path == (f"001.user.root.{ts_b}",)
+        # Children inherit the fork path
+        child_a1 = [l for l in links if l.message is messages["a1"]][0]
+        child_b1 = [l for l in links if l.message is messages["b1"]][0]
+        assert child_a1.path == fork_a.path
+        assert child_b1.path == fork_b.path
