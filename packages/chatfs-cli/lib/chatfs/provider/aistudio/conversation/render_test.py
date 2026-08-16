@@ -38,10 +38,12 @@ class DescribeLoadTurns:
         stem: str,
         *,
         role: str,
-        seconds: int,
+        seconds: int | None,
         body: str | None,
     ) -> None:
-        turn = {"role": role, "text": body or "", "createTime": [str(seconds), 0]}
+        turn: dict[str, object] = {"role": role, "text": body or ""}
+        if seconds is not None:
+            turn["createTime"] = [str(seconds), 0]
         _ = (tmp_path / f"{stem}.json").write_text(json.dumps(turn) + "\n")
         if body is not None:
             _ = (tmp_path / f"{stem}.md").write_text(body + "\n")
@@ -64,6 +66,31 @@ class DescribeLoadTurns:
         turns, created = load_turns(tmp_path)
         assert turns["000.user"].time == "2026-06-20T12:42", turns
         assert created["000.user"] == 1781977360
+
+    def it_renders_no_time_when_createTime_is_absent(self, tmp_path: Path):
+        # older-era captures: the key is simply missing, not corrupt (see
+        # types.Turn) -- the honest render is a heading with no time, not a
+        # fabricated one.
+        self.write_turn(tmp_path, "000.user", role="user", seconds=None, body="hi")
+        turns, created = load_turns(tmp_path)
+        assert turns["000.user"].time == ""
+        assert created["000.user"] == 0
+
+    def it_handles_a_mixed_conversation_of_timed_and_untimed_turns(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ):
+        # a capture-in-progress could plausibly straddle the era boundary
+        # turn by turn, even though observed conversations are all-or-nothing
+        # so far -- don't assume that holds for every future capture.
+        monkeypatch.setenv("TZ", "America/Chicago")
+        time.tzset()
+        self.write_turn(tmp_path, "000.user", role="user", seconds=None, body="hi")
+        self.write_turn(tmp_path, "001.model", role="model", seconds=1781977360, body="hello")
+        turns, created = load_turns(tmp_path)
+        assert turns["000.user"].time == ""
+        assert created["000.user"] == 0
+        assert turns["001.model"].time == "2026-06-20T12:42"
+        assert created["001.model"] == 1781977360
 
     def it_tags_a_thought_turn_with_a_note_but_not_a_plain_model_turn(
         self, tmp_path: Path
@@ -104,6 +131,15 @@ class DescribeRenderConversation:
             # [001 · model · T](L1)
 
             hello
+            """)
+
+    def it_omits_the_time_separator_when_time_is_empty(self):
+        turns = {"000.user": Turn("user", "", "L0", "hi")}
+        markdown, _ = render_conversation(turns, {"000.user": 0.0})
+        assert markdown == dedent("""\
+            # [000 · user](L0)
+
+            hi
             """)
 
     def it_orders_by_stem_index_regardless_of_dict_insertion_order(self):

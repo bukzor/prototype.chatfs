@@ -85,7 +85,7 @@ def index_item(doc: Conversation) -> IndexItem:
         last_modified=int(metadata["lastModified"]["revisionTime"][0]),
     )
     chunks = prompt["chunkedPrompt"].get("chunks")
-    if chunks:
+    if chunks and "createTime" in chunks[0]:
         item["create_time"] = int(chunks[0]["createTime"][0])
     return item
 

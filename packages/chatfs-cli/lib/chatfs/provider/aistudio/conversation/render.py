@@ -44,7 +44,15 @@ def parse_stem(stem: str) -> tuple[int, str, str]:
 
 def _time(raw: RawTurn) -> str:
     """Local wall-clock time truncated to the minute, matching the other
-    two providers' headings -- the full offset survives in the link."""
+    two providers' headings -- the full offset survives in the link.
+
+    `createTime` is era-dependent: older captures' chunks don't carry it
+    at all (verified: not corrupt, just absent -- see types.Turn). No
+    substitute is fabricated -- an empty string renders as a heading with
+    no time, which chatfs.render's title formatting already drops
+    cleanly."""
+    if "createTime" not in raw:
+        return ""
     seconds = int(raw["createTime"][0])
     dt = datetime.fromtimestamp(seconds, tz=timezone.utc).astimezone()
     return f"{dt:%Y-%m-%dT%H:%M}"
@@ -54,8 +62,13 @@ def load_turns(messages_dir: Path) -> tuple[dict[str, Turn], dict[str, float]]:
     """stem -> its Turn, and stem -> its epoch seconds, for every splatted
     turn that rendered a body. `created` is carried through even though a
     fork-less chain never consults it (see `chatfs.render.primary_child`)
-    -- it's the real value, not a fabricated one, so a genuine future fork
-    would tie-break correctly rather than silently by insertion order."""
+    -- when known, it's the real value, not a fabricated one, so a genuine
+    future fork would tie-break correctly rather than silently by
+    insertion order. When `createTime` is absent from the source (older
+    captures -- see types.Turn), 0 stands in; that's never a fabricated
+    *displayed* time (the heading gets `""` from `_time`, not this), and
+    aistudio's chain is never actually forked so this tie-break value is
+    presently dead weight regardless."""
     turns: dict[str, Turn] = {}
     created: dict[str, float] = {}
     for entry in messages_dir.glob("*.json"):
@@ -68,7 +81,7 @@ def load_turns(messages_dir: Path) -> tuple[dict[str, Turn], dict[str, float]]:
         turns[entry.stem] = Turn(
             role, _time(raw), f"messages/{entry.stem}.md", md_path.read_text().rstrip(), note
         )
-        created[entry.stem] = int(raw["createTime"][0])
+        created[entry.stem] = int(raw["createTime"][0]) if "createTime" in raw else 0
     return turns, created
 
 

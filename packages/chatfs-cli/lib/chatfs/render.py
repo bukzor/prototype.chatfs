@@ -271,7 +271,11 @@ class Renderer:
         """The turn's full markdown block, blockquote-indented to its depth."""
         turn = self.turns[node]
         note = f" ({turn.note})" if turn.note else ""
-        title = f"# [{self.number(node)} · {turn.sender} · {turn.time}{note}]({turn.link})"
+        # turn.time can be "" (e.g. aistudio turns from an era whose capture
+        # didn't carry createTime) -- drop it rather than leave a dangling
+        # separator in the heading.
+        meta = " · ".join(part for part in (self.number(node), turn.sender, turn.time) if part)
+        title = f"# [{meta}{note}]({turn.link})"
         title += self.backlink(node, prev_seq)
         parts = (
             title,

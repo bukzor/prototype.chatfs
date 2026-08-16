@@ -58,7 +58,11 @@ class Turn(TypedDict):
 
     role: str  # "user" | "model"
     text: str
-    createTime: tuple[str, int]  # [seconds-string, nanos] pair
+    # NotRequired: era-dependent, not corrupt -- older captures' chunks
+    # simply don't carry it (observed: all-or-nothing per conversation so
+    # far, but handled per-turn since that isn't guaranteed for every
+    # capture). See conversation/render.py's `_time`.
+    createTime: NotRequired[tuple[str, int]]  # [seconds-string, nanos] pair
     isThought: NotRequired[int]  # 1 when present; absent otherwise
     finishReason: NotRequired[int]  # 1 == STOP, present on completed model turns
 
