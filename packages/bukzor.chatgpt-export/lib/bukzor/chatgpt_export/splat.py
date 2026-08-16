@@ -244,6 +244,20 @@ def _extract_reasoning_recap(content: JsonObj) -> str | None:
     return text
 
 
+def _extract_tether_browsing_display(content: JsonObj) -> str | None:
+    """Extract from content_type=tether_browsing_display: legacy ChatGPT
+    browsing-tool result display. `result`/`summary` are the only text-bearing
+    fields observed; render whichever is non-empty, joined if both are."""
+    parts = [
+        text
+        for text in (content.get("result"), content.get("summary"))
+        if isinstance(text, str) and text.strip()
+    ]
+    if not parts:
+        return None
+    return "\n\n".join(parts)
+
+
 def _extract_editable_context(content: JsonObj) -> str | None:
     """Extract from user_editable_context or model_editable_context."""
     for key in ("user_instructions", "user_profile", "model_set_context"):
@@ -364,6 +378,11 @@ def extract_text_content(raw: JsonObj) -> str | None:
         return render_details("thinking", "💭", "Reasoning recap", recap)
     elif content_type in ("user_editable_context", "model_editable_context"):
         return _extract_editable_context(content)
+    elif content_type == "tether_browsing_display":
+        display = _extract_tether_browsing_display(content)
+        if display is None:
+            return None
+        return render_details("tool_call", "🛠️", "Browsing result", display)
     else:
         raise ValueError(f"unexpected content type: {content_type!r}")
 
