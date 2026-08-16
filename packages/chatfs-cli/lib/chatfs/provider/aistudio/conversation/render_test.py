@@ -26,6 +26,11 @@ class DescribeParseStem:
     def it_splits_index_role_and_thought_note(self):
         assert parse_stem("001.model.thought") == (1, "model", "thought")
 
+    def it_splits_index_role_and_unmodeled_note(self):
+        # role is the turn's own (possibly novel), not "user"/"model" --
+        # see splat.py's basename_for.
+        assert parse_stem("002.system.unmodeled") == (2, "system", "unmodeled")
+
     def it_rejects_a_malformed_stem(self):
         with pytest.raises(AssertionError):
             _ = parse_stem("weird")
@@ -102,6 +107,14 @@ class DescribeLoadTurns:
         assert turns["001.model.thought"].note == "thought"
         assert turns["002.model"].note == ""
 
+    def it_tags_an_unmodeled_turn_with_a_note_naming_its_own_role(self, tmp_path: Path):
+        # splat.py's basename_for names the turn's actual role, not a
+        # guessed one -- the round trip through parse_stem must preserve it.
+        self.write_turn(tmp_path, "000.system.unmodeled", role="system", seconds=1, body="raw dump")
+        turns, _ = load_turns(tmp_path)
+        assert turns["000.system.unmodeled"].sender == "system"
+        assert turns["000.system.unmodeled"].note == "unmodeled"
+
 
 class DescribeBuildTree:
     def it_chains_turns_in_the_given_order(self):
@@ -132,6 +145,11 @@ class DescribeRenderConversation:
 
             hello
             """)
+
+    def it_shows_the_unmodeled_note_in_the_heading(self):
+        turns = {"000.system": Turn("system", "T", "L0", "raw dump", "unmodeled")}
+        markdown, _ = render_conversation(turns, {"000.system": 1.0})
+        assert "# [000 · system · T (unmodeled)](L0)" in markdown
 
     def it_omits_the_time_separator_when_time_is_empty(self):
         turns = {"000.user": Turn("user", "", "L0", "hi")}
