@@ -19,9 +19,11 @@ show); a `tool_use` the user canceled before its result arrived (a
 hollow trailing text block instead of a `tool_result`) renders as its
 own collapsible, marked canceled; a parallel batch whose results can't
 be correlated renders one collapsible per block, unfused (see
-`render_tool_run`). Unknown block types raise. The raw block stays in
-the .json regardless. No `conversations/` branch-symlinks yet (next
-ladder rung).
+`render_tool_run`). A block type this parser doesn't recognize renders
+as a `<details type="unmodeled">` dump of the raw block rather than
+crashing the whole conversation's render; either case also warns on
+stderr. The raw block stays in the .json regardless. No
+`conversations/` branch-symlinks yet (next ladder rung).
 """
 import json
 import sys
@@ -334,9 +336,12 @@ def extract_text(content_blocks: Several[ContentBlock]) -> str:
 
     `text` passes through; `thinking` and each tool call become collapsible
     `<details>`. Order is preserved so reasoning and tool calls sit where
-    they happened, around the answer they produced. Unknown block types raise
-    rather than vanish; an uncorrelatable tool call renders unfused rather
-    than raising -- see `render_tool_run`.
+    they happened, around the answer they produced. A block type this parser
+    doesn't recognize renders as a raw-JSON `<details type="unmodeled">`
+    rather than vanishing or crashing the render -- the wire format is a
+    third party's and unversioned, so a fresh block type is expected drift,
+    not a bug; an uncorrelatable tool call renders unfused rather than
+    raising -- see `render_tool_run`.
     """
     pieces: list[str] = []
     i = 0
@@ -366,9 +371,24 @@ def extract_text(content_blocks: Several[ContentBlock]) -> str:
                         pieces.extend(render_tool_run(tuple(uses), tuple(results)))
                 i = end - 1  # the loop's own increment lands on the next block
             case {"type": "tool_result"}:
-                raise AssertionError(("tool_result without preceding tool_use", block))
+                # A tool_result with no preceding tool_use in this message --
+                # not a shape render_tool_result doesn't already handle (it's
+                # built for exactly "a tool_result we can't attribute to a
+                # call"), just an unexpected position for it.
+                print(
+                    "warning: tool_result with no preceding tool_use in this message; rendering unfused",
+                    file=sys.stderr,
+                )
+                pieces.append(render_tool_result(block))
             case _:
-                raise ValueError(f"unexpected content type: {block['type']!r}")
+                kind = block["type"]
+                print(
+                    f"warning: unmodeled content block type, passed through: {kind!r}",
+                    file=sys.stderr,
+                )
+                pieces.append(
+                    render_details("unmodeled", "❓", f"Unrecognized content: {kind}", fenced_json(block))
+                )
         i += 1
     return "\n\n".join(pieces)
 

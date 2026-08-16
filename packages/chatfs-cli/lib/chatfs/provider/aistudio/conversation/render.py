@@ -34,11 +34,11 @@ that is named as a parent but is never a node."""
 
 
 def parse_stem(stem: str) -> tuple[int, str, str]:
-    """`{index}.{role}[.thought]` -> (index, role, note)."""
+    """`{index}.{role}[.thought|.unmodeled]` -> (index, role, note)."""
     parts = stem.split(".")
     assert len(parts) in (2, 3), stem
     note = parts[2] if len(parts) == 3 else ""
-    assert note in ("", "thought"), stem
+    assert note in ("", "thought", "unmodeled"), stem
     return int(parts[0]), parts[1], note
 
 

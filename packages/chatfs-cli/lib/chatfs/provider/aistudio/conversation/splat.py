@@ -19,7 +19,11 @@ claude splat's directory shape so the two providers read side-by-side.
 Scope: user prompts and model answers pass their text through; model
 `thought` turns render as a collapsible `<details type="thinking">`
 section (the `type` attribute matches the claude side, keeping reasoning
-greppable across providers). The raw turn stays in the .json regardless.
+greppable across providers). A turn this parser doesn't recognize --
+role neither `user` nor `model`, or a model turn that's neither thought
+nor answer -- renders as a raw-JSON `<details type="unmodeled">` rather
+than crashing the whole splat, and warns on stderr. The raw turn stays
+in the .json regardless.
 
 Turns carry a `createTime` but no unique id, and user/thought turns can
 share a timestamp, so basenames lead with the turn index (zero-padded,
@@ -28,11 +32,16 @@ document order) rather than claude's `{ts}.{uuid}`.
 
 import json
 import re
+import sys
 from pathlib import Path
 
 import typed_json
 from chatfs.provider.aistudio.types import Conversation, Turn, is_conversation
 from chatfs.shell import sh as chatfs_sh
+
+
+def fenced_json(value: object) -> str:
+    return "```json\n" + json.dumps(value, indent=2, ensure_ascii=False) + "\n```"
 
 
 def turns_of(doc: Conversation) -> list[Turn]:
@@ -47,10 +56,13 @@ def turns_of(doc: Conversation) -> list[Turn]:
 
 
 def turn_kind(turn: Turn) -> str:
-    """One of user | answer | thought; raises on an unclassifiable turn.
+    """One of user | answer | thought | unmodeled.
 
-    Roles are a closed set in the captured payloads; a model turn that is
-    neither answer nor thought is a parser gap, not a soft case.
+    Roles are a closed set in the captured payloads so far, but the wire
+    format is a third party's and unversioned -- a model turn that's neither
+    thought nor answer, or a role this parser has never seen, is expected
+    drift, not a bug. `unmodeled` passes the raw turn through rather than
+    crashing the whole splat over one turn.
     """
     role = turn["role"]
     if role == "user":
@@ -61,9 +73,9 @@ def turn_kind(turn: Turn) -> str:
         elif turn.get("finishReason") == 1:
             return "answer"
         else:
-            raise AssertionError(("model turn is neither thought nor answer", turn))
+            return "unmodeled"
     else:
-        raise AssertionError(("unexpected turn role", role))
+        return "unmodeled"
 
 
 def thought_label(text: str) -> str:
@@ -99,27 +111,35 @@ def render_details(kind: str, icon: str, label: str, body: str) -> str:
 
 
 def render_turn(turn: Turn, kind: str) -> str:
-    """Render one turn to markdown by kind; thoughts collapse, the rest pass through."""
+    """Render one turn to markdown by kind; thoughts collapse, unmodeled turns
+    dump raw and warn, the rest pass through."""
     text = turn["text"].strip()
     if kind == "thought":
         label = thought_label(text)
         return render_details(
             "thinking", "💭", label, strip_leading_header(text, label)
         )
+    elif kind == "unmodeled":
+        role = turn["role"]
+        print(
+            f"warning: unmodeled turn shape, passed through: role={role!r}",
+            file=sys.stderr,
+        )
+        return render_details("unmodeled", "❓", "Unrecognized turn", fenced_json(turn))
     else:
         return text
 
 
-def basename_for(index: int, kind: str) -> str:
-    """`{index}.{role}` (+`.thought`), zero-padded so document order sorts."""
-    role = "user" if kind == "user" else "model"
-    suffix = ".thought" if kind == "thought" else ""
+def basename_for(index: int, role: str, kind: str) -> str:
+    """`{index}.{role}` (+`.thought`/`.unmodeled`), zero-padded so document
+    order sorts. `role` is the turn's own, not guessed from `kind`, so an
+    unmodeled turn's filename still names its actual (possibly novel) role."""
+    suffix = {"thought": ".thought", "unmodeled": ".unmodeled"}.get(kind, "")
     return f"{index:03d}.{role}{suffix}"
 
 
 def main() -> None:
     import shutil
-    import sys
 
     if len(sys.argv) not in (2, 3):
         print(f"Usage: {sys.argv[0]} <conversation.json> [output-dir]", file=sys.stderr)
@@ -139,7 +159,7 @@ def main() -> None:
     rendered_count = 0
     for index, turn in enumerate(turns):
         kind = turn_kind(turn)
-        basename = basename_for(index, kind)
+        basename = basename_for(index, turn["role"], kind)
         _ = (messages_dir / f"{basename}.json").write_text(
             json.dumps(turn, indent=2, ensure_ascii=False) + "\n"
         )

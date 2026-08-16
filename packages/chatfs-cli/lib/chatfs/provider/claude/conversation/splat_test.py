@@ -1,7 +1,10 @@
 """Regression tests for splat's content-block extraction."""
 
+from typing import cast
+
 from chatfs.provider.claude.conversation.splat import extract_text
 from chatfs.provider.claude.types import (
+    ContentBlock,
     TextBlock,
     TokenBudgetBlock,
     ToolResultBlock,
@@ -104,6 +107,27 @@ class DescribeExtractText:
         text = extract_text((block,))
         assert "x" in text
         assert "request" in text
+
+    def it_renders_an_orphan_tool_result_unfused(self):
+        # a tool_result with no preceding tool_use in this message at all --
+        # not expected, but a known block shape, so it renders via the same
+        # path as an unpaired result rather than crashing the render.
+        result: ToolResultBlock = {
+            "type": "tool_result",
+            "content": "orphaned",
+            "is_error": False,
+        }
+        text = extract_text((result,))
+        assert "orphaned" in text
+
+    def it_passes_through_an_unrecognized_block_type(self):
+        # the wire format is a third party's and unversioned -- a block type
+        # this parser has never seen is expected drift, not a crash.
+        block = cast(ContentBlock, cast(object, {"type": "something_new_and_unknown", "foo": "bar"}))
+        text = extract_text((block,))
+        assert 'type="unmodeled"' in text
+        assert "something_new_and_unknown" in text
+        assert "bar" in text
 
 
 class DescribeParallelToolCalls:

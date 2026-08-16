@@ -17,9 +17,13 @@ from pathlib import Path
 from typing import override
 
 from . import json
-from .json import JsonObj
+from .json import JsonObj, JsonValue
 
 MARKDOWN_PLACEHOLDER = "$MARKDOWN"
+
+
+def fenced_json(value: JsonValue) -> str:
+    return "```json\n" + json.dumps(value, indent=2) + "\n```"
 
 
 def render_details(kind: str, icon: str, label: str, body: str, tool: str | None = None) -> str:
@@ -319,8 +323,10 @@ def extract_text_content(raw: JsonObj) -> str | None:
 
     A node with no `message` or no `content` legitimately has nothing to
     render (e.g. the root node). But once a `content_type` is present, an
-    unrecognized one raises rather than vanishing silently — mirrors
-    claude's `extract_text` for unknown block types.
+    unrecognized one renders as a raw-JSON `<details type="unmodeled">`
+    rather than vanishing or crashing the render — mirrors claude's
+    `extract_text` for unknown block types: the export format is a third
+    party's and unversioned, so a fresh content_type is expected drift.
 
     Reasoning (`thoughts`, `reasoning_recap`) and tool content (`code`,
     `execution_output`, tool-role search metadata) render inside a
@@ -384,7 +390,13 @@ def extract_text_content(raw: JsonObj) -> str | None:
             return None
         return render_details("tool_call", "🛠️", "Browsing result", display)
     else:
-        raise ValueError(f"unexpected content type: {content_type!r}")
+        print(
+            f"warning: unmodeled content_type, passed through: {content_type!r}",
+            file=sys.stderr,
+        )
+        return render_details(
+            "unmodeled", "❓", f"Unrecognized content: {content_type}", fenced_json(content)
+        )
 
 
 def parse_messages(mapping: JsonObj, min_ts: Decimal) -> dict[str, Message]:

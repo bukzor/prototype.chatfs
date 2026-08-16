@@ -3,8 +3,6 @@
 from collections.abc import Mapping
 from decimal import Decimal
 
-import pytest
-
 from . import splat as M
 from .json import JsonObj
 
@@ -303,12 +301,14 @@ class DescribeExtractTextContent:
         }
         assert M.extract_text_content(raw) is None
 
-    def it_raises_for_unrecognized_content_type(self):
+    def it_passes_through_an_unrecognized_content_type(self):
         raw: JsonObj = {
             "message": {"content": {"content_type": "something_new_and_unknown"}}
         }
-        with pytest.raises(ValueError, match="something_new_and_unknown"):
-            _ = M.extract_text_content(raw)
+        result = M.extract_text_content(raw)
+        assert result is not None
+        assert result.startswith('<details type="unmodeled">')
+        assert "something_new_and_unknown" in result
 
 
 class DescribePrepareMessage:
