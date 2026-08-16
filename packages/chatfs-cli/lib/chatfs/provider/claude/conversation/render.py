@@ -24,9 +24,11 @@ from collections.abc import Container, Mapping
 from datetime import datetime
 from pathlib import Path
 
-import typed_json
 from chatfs.layout import DATA_DIR_NAME
-from chatfs.provider.claude.conversation.splat import extract_text
+from chatfs.provider.claude.conversation.splat import (
+    extract_text,
+    load_conversation_json,
+)
 from chatfs.provider.claude.types import ChatMessage, Several, is_conversation
 from chatfs.render import ConversationTree, Turn, render_tree
 from chatfs.shell import sh as chatfs_sh
@@ -142,6 +144,25 @@ def normalize_bodiless_nodes(
             return tuple(msgs.values())
 
 
+def surviving_leaf(
+    chat_messages: Several[ChatMessage], kept: Several[ChatMessage], current: str
+) -> str:
+    """`current`, or its nearest ancestor that survived normalization.
+
+    claude.ai points `current_leaf_message_uuid` at the last message it
+    created, which may be a bodiless one -- an assistant turn that produced
+    nothing, or a canceled retry -- and `normalize_bodiless_nodes` drops
+    exactly those. Walking up the original parent chain recovers the deepest
+    surviving message on the live path, which is what the live set means.
+    """
+    parent_of = {m["uuid"]: m["parent_message_uuid"] for m in chat_messages}
+    alive = {m["uuid"] for m in kept}
+    node = current
+    while node not in alive and node in parent_of:
+        node = parent_of[node]
+    return node
+
+
 def render_conversation(
     chat_messages: Several[ChatMessage],
     current: str,
@@ -149,24 +170,29 @@ def render_conversation(
 ) -> tuple[str, int]:
     """The pure render pipeline: conversation tree + loaded turns → the full
     markdown document. Returns (markdown, turn count)."""
-    chat_messages = normalize_bodiless_nodes(chat_messages, turns)
-    return render_tree(build_tree(chat_messages, current), turns)
+    kept = normalize_bodiless_nodes(chat_messages, turns)
+    if not kept:
+        # every message was bodiless -- no tree, and nothing to put in it.
+        return "", 0
+    return render_tree(build_tree(kept, surviving_leaf(chat_messages, kept, current)), turns)
 
 
 def render_chat_dir(chat_dir: Path) -> tuple[str, int]:
     """Load conversation.json + messages/ under an already-splatted
     chat_dir and render markdown. Returns (markdown, turn count)."""
-    conversation = typed_json.loads(
-        (chat_dir / DATA_DIR_NAME / "conversation.json").read_text()
-    )
+    conversation = load_conversation_json(chat_dir / DATA_DIR_NAME / "conversation.json")
     assert is_conversation(conversation), conversation
 
+    chat_messages = tuple(conversation["chat_messages"])
+    leaf = conversation.get("current_leaf_message_uuid")
+    if not chat_messages:
+        # A chat created and never used: no messages, no leaf to build a
+        # tree from -- nothing to render (see Conversation.current_leaf_message_uuid).
+        return "", 0
+    assert leaf is not None, conversation  # is_conversation guarantees this once non-empty
+
     turns = load_turns(chat_dir / "messages")
-    return render_conversation(
-        tuple(conversation["chat_messages"]),
-        conversation["current_leaf_message_uuid"],
-        turns,
-    )
+    return render_conversation(chat_messages, leaf, turns)
 
 
 def main() -> None:

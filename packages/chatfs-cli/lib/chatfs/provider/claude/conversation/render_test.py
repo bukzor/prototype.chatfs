@@ -177,6 +177,26 @@ class DescribeRenderConversation:
             body b
             """)
 
+    def it_renders_when_the_current_leaf_was_pruned(self):
+        # regression for a real capture (2026-06-03,
+        # cdacc3dc-fcdf-4871-b605-061e542c2407): the conversation's
+        # `current_leaf_message_uuid` named a trailing assistant message with
+        # an empty `content` -- exactly what normalize_bodiless_nodes drops --
+        # so the live leaf was gone by the time live_ancestors looked for it.
+        msgs = (
+            msg("a", text="body a"),
+            msg("b", parent="a", text="body b", created_at="2026-06-03T00:00:01Z"),
+            msg("empty", parent="b", created_at="2026-06-03T00:00:02Z"),
+        )
+        turns = {m["uuid"]: Turn("human", "T", "L", m["text"]) for m in msgs if m["text"]}
+        markdown, count = render_conversation(msgs, "empty", turns)
+        assert count == 2
+        assert "body b" in markdown
+
+    def it_renders_nothing_when_every_message_was_pruned(self):
+        msgs = (msg("empty"),)
+        assert render_conversation(msgs, "empty", {}) == ("", 0)
+
 
 class DescribeLoadTurns:
     def write_message(self, tmp_path: Path, stem: str):

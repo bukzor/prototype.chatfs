@@ -54,20 +54,33 @@ class ToolUseBlock(TypedDict):
     `name` when it's absent (observed: an `artifacts` call with no `message`
     key at all).
 
-    No `id` field: claude.ai's own conversation export (unlike the Messages
-    API) carries none -- pairing with the following `tool_result` is purely
-    positional.
+    The call's id lives in one of two places, or neither: a top-level `id`
+    (the common shape), or `input["_tool_call_id"]` (observed 2026-06 on the
+    shape that emits parallel calls), or nothing at all (older captures).
+    `tool_call_id` in splat.py reads both; see `ToolResultBlock` for what
+    pairing is possible in each case.
     """
 
     type: Literal["tool_use"]
     name: str
     input: JsonObject
+    id: NotRequired[str]
     message: NotRequired[str]
 
 
 class ToolResultBlock(TypedDict):
-    """The result paired with the preceding `tool_use`, purely by position --
-    no `tool_use_id` to match against (see `ToolUseBlock`).
+    """The result of one `tool_use`, correlated by `tool_use_id` when present.
+
+    Three shapes occur, and which one you get is not the renderer's choice:
+
+    - `tool_use_id` matching the use's `id` — the common shape, and the only
+      one that makes pairing sound when several calls run in parallel.
+    - no `tool_use_id`, results strictly alternating with uses — older
+      captures; adjacency pairs them unambiguously.
+    - no `tool_use_id`, several uses then several results — claude.ai's
+      parallel-call shape as of 2026-06. The correspondence is *not*
+      recoverable: observed results arrive in completion order, which is not
+      call order (see `render_tool_run`).
 
     `content` shape is tool-defined (open-ended across integrations) — a bare
     string, a list of result items, or occasionally a single object — so it
@@ -77,6 +90,8 @@ class ToolResultBlock(TypedDict):
     type: Literal["tool_result"]
     content: JsonValue
     is_error: bool
+    name: NotRequired[str]
+    tool_use_id: NotRequired[str]
 
 
 class TokenBudgetBlock(TypedDict):
@@ -111,10 +126,16 @@ class ChatMessage(TypedDict):
 
 
 class Conversation(TypedDict):
-    """The conversation.json payload — the subset the renderer reads."""
+    """The conversation.json payload — the subset the renderer reads.
+
+    `current_leaf_message_uuid` is NotRequired: claude.ai omits it on a
+    conversation with zero messages (a chat created and never used --
+    legal, and not rare -- there's no leaf to name). Present whenever
+    `chat_messages` is non-empty.
+    """
 
     chat_messages: list[ChatMessage]
-    current_leaf_message_uuid: str
+    current_leaf_message_uuid: NotRequired[str]
 
 
 def is_index_item(value: JsonValue) -> TypeGuard[IndexItem]:
@@ -149,7 +170,11 @@ def is_conversation(value: JsonValue) -> TypeGuard[Conversation]:
     if not isinstance(value, dict):
         return False
     messages = value.get("chat_messages")
+    if not isinstance(messages, list):
+        return False
     leaf = value.get("current_leaf_message_uuid")
-    if not isinstance(messages, list) or not isinstance(leaf, str):
+    # A leaf is required once there's at least one message to be the leaf of;
+    # an empty conversation has none and omits the key entirely.
+    if messages and not isinstance(leaf, str):
         return False
     return all(is_chat_message(m) for m in messages)

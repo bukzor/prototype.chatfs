@@ -11,22 +11,25 @@ content in an explicit output-dir, e.g. a caller-placed `.data`
 symlink, is left alone). The .json carries the raw message object; the
 .md carries the rendered content.
 
-Scope: `text` blocks pass through; `thinking` and each
+Scope: `text` blocks pass through; `thinking` and each correlated
 `tool_use`+`tool_result` pair render as collapsible
 `<details type="...">` sections (the `type` attribute makes each kind
 greppable); `token_budget` is dropped (timestamps only, nothing to
 show); a `tool_use` the user canceled before its result arrived (a
 hollow trailing text block instead of a `tool_result`) renders as its
-own collapsible, marked canceled. Unknown block types raise. The raw
-block stays in the .json regardless. No `conversations/`
-branch-symlinks yet (next ladder rung).
+own collapsible, marked canceled; a parallel batch whose results can't
+be correlated renders one collapsible per block, unfused (see
+`render_tool_run`). Unknown block types raise. The raw block stays in
+the .json regardless. No `conversations/` branch-symlinks yet (next
+ladder rung).
 """
 import json
+import sys
 from datetime import datetime
 from pathlib import Path
 
 import typed_json
-from typed_json import JsonValue
+from typed_json import JsonObject, JsonValue
 from chatfs.layout import safe_filename
 from chatfs.provider.claude.types import (
     ChatMessage,
@@ -109,48 +112,121 @@ def render_result_content(content: JsonValue) -> str:
             return fenced_json(content)
 
 
-def render_tool_call(use: ToolUseBlock, result: ToolResultBlock) -> str:
-    """Render a `tool_use` + its `tool_result` as one collapsible pair.
+def warn_unmodeled_input_keys(name: str, tool_input: JsonObject, modeled: frozenset[str]) -> None:
+    """Warn -- don't raise -- when a tool_input carries keys we don't model.
 
-    Every tool_use is immediately followed by the tool_result for the
-    same call -- position is the only correlation claude.ai's export
-    gives us, and the caller asserts it -- so they read better fused:
-    one disclosure tagged `tool="<name>"`. web_search/web_fetch get a
-    bespoke icon and a summary built from their single argument, with
-    the request omitted; other tools show the request JSON above the
-    result.
+    claude.ai adds optional tool parameters over time: `web_fetch` grew
+    `text_content_token_limit` (observed 2025-12) and then
+    `html_extraction_method` (2026-08). The wire format permits them, so
+    per technical-policy.kb's robustness target they're required work,
+    not defensive work.
+
+    Only the modeled keys feed the rendered label, so an unmodeled key
+    costs nothing to ignore. Raising on one costs the whole
+    conversation's render. That trade sits at the consumer end of the
+    pipeline, where zero-data-loss explicitly permits filtering on read:
+    the capture is already safe on disk and the render is redoable. Loud,
+    not fatal.
+    """
+    unmodeled = set(tool_input) - modeled
+    if unmodeled:
+        print(
+            f"warning: unmodeled {name} tool_input keys, ignored: {sorted(unmodeled)}",
+            file=sys.stderr,
+        )
+
+
+TOOL_ICONS = {"web_search": "🔍", "web_fetch": "🕷️"}
+"""Per-tool disclosure icon; anything unlisted gets the generic wrench."""
+
+
+def tool_icon(name: str | None) -> str:
+    return TOOL_ICONS.get(name or "", "🛠️")
+
+
+def tool_label(use: ToolUseBlock) -> str:
+    """The disclosure summary for a `tool_use`: its one salient argument.
+
+    web_search/web_fetch each have a single argument worth reading, so it
+    stands alone as the label and the request JSON is dropped from the body.
+    Any other tool has no argument we can name, so the label carries the
+    tool's own status `message` and the body keeps the request verbatim.
     """
     name = use["name"]
     tool_input = use["input"]
-    result_md = render_result_content(result["content"])
-    error = " — ERROR" if result["is_error"] else ""
-
     match name:
         case "web_search":
-            assert set(tool_input) == {"query"}, tool_input
+            warn_unmodeled_input_keys(name, tool_input, frozenset({"query", "_tool_call_id"}))
+            assert "query" in tool_input, tool_input
             query = tool_input["query"]
             assert isinstance(query, str), query
-            label = query + error
-            return render_details("tool_call", "🔍", label, result_md, tool=name)
+            return query
         case "web_fetch":
-            # `text_content_token_limit` is an optional cap the caller can
-            # pass alongside `url` -- observed 2025-12 requesting a 5000-token
-            # excerpt of a docs page. Only `url` feeds the label.
-            assert "url" in tool_input and set(tool_input) <= {
-                "url",
-                "text_content_token_limit",
-            }, tool_input
+            # Only `url` feeds the label; the rest are caller-side knobs
+            # (`text_content_token_limit` caps the excerpt,
+            # `html_extraction_method` picks the parse, `_tool_call_id`
+            # identifies the call). See warn_unmodeled_input_keys for why new
+            # ones warn instead of raise.
+            warn_unmodeled_input_keys(
+                name,
+                tool_input,
+                frozenset({
+                    "url",
+                    "text_content_token_limit",
+                    "html_extraction_method",
+                    "_tool_call_id",
+                }),
+            )
+            assert "url" in tool_input, tool_input
             url = tool_input["url"]
             assert isinstance(url, str), url
-            label = url + error
-            return render_details("tool_call", "🕷️", label, result_md, tool=name)
+            return url
         case _:
-            label = f"{name} — {use.get('message', name)}" + error
-            body = (
-                f"**Request:**\n\n{fenced_json(tool_input)}\n\n"
-                f"**Result:**\n\n{result_md}"
-            )
-            return render_details("tool_call", "🛠️", label, body, tool=name)
+            return f"{name} — {use.get('message', name)}"
+
+
+def render_tool_call(use: ToolUseBlock, result: ToolResultBlock) -> str:
+    """Render a `tool_use` + the `tool_result` known to be its own, fused into
+    one collapsible tagged `tool="<name>"`.
+
+    Fusing asserts a correspondence, so the caller may only pair blocks it
+    can actually correlate -- see `render_tool_run`. web_search/web_fetch
+    show the result under a summary built from their single argument; other
+    tools show the request JSON above the result.
+    """
+    name = use["name"]
+    result_md = render_result_content(result["content"])
+    error = " — ERROR" if result["is_error"] else ""
+    label = tool_label(use) + error
+
+    if name in TOOL_ICONS:
+        body = result_md
+    else:
+        body = f"**Request:**\n\n{fenced_json(use['input'])}\n\n**Result:**\n\n{result_md}"
+    return render_details("tool_call", tool_icon(name), label, body, tool=name)
+
+
+def render_tool_request(use: ToolUseBlock) -> str:
+    """Render a `tool_use` whose result we cannot name -- the request alone.
+
+    Used where fusing would be a guess: a parallel batch whose results carry
+    no id, or a call whose result never arrived. The request JSON is kept
+    verbatim (`_tool_call_id` included) so nothing the capture holds is lost
+    on the way to the page.
+    """
+    name = use["name"]
+    label = f"{tool_label(use)} — request"
+    body = f"**Request:**\n\n{fenced_json(use['input'])}"
+    return render_details("tool_call", tool_icon(name), label, body, tool=name)
+
+
+def render_tool_result(result: ToolResultBlock) -> str:
+    """Render a `tool_result` we cannot attribute to a particular call."""
+    name = result.get("name")
+    error = " — ERROR" if result["is_error"] else ""
+    label = f"{name or 'tool'} — result{error}"
+    body = render_result_content(result["content"])
+    return render_details("tool_call", tool_icon(name), label, body, tool=name or "")
 
 
 def render_interrupted_tool_call(use: ToolUseBlock) -> str:
@@ -167,13 +243,100 @@ def render_interrupted_tool_call(use: ToolUseBlock) -> str:
     return render_details("tool_call", "🛠️", label, body, tool=name)
 
 
+def tool_call_id(use: ToolUseBlock) -> str | None:
+    """The call's id, from either place claude.ai puts it (see ToolUseBlock)."""
+    top = use.get("id")
+    if isinstance(top, str):
+        return top
+    nested = use["input"].get("_tool_call_id")
+    return nested if isinstance(nested, str) else None
+
+
+def pair_by_id(
+    uses: Several[ToolUseBlock], results: Several[ToolResultBlock]
+) -> list[tuple[ToolUseBlock, ToolResultBlock | None]] | None:
+    """Match each use to its result by id, in call order. `None` when the ids
+    can't do the job -- a missing or duplicate id on either side, or a result
+    naming a call that isn't in this run.
+
+    An id present on both sides is the only sound correlation; returning
+    `None` rather than guessing is what keeps a mispaired render impossible.
+    """
+    ids = [tool_call_id(use) for use in uses]
+    if None in ids or len(set(ids)) != len(ids):
+        return None
+    result_of: dict[str, ToolResultBlock] = {}
+    for result in results:
+        rid = result.get("tool_use_id")
+        if not isinstance(rid, str) or rid not in ids or rid in result_of:
+            return None
+        result_of[rid] = result
+    return [(use, result_of.get(rid)) for use, rid in zip(uses, ids) if rid is not None]
+
+
+def split_tool_run(
+    blocks: Several[ContentBlock], start: int
+) -> tuple[list[ToolUseBlock], list[ToolResultBlock]]:
+    """The run of consecutive `tool_use` blocks at `start`, plus the run of
+    `tool_result` blocks immediately following it.
+
+    A run is the unit of pairing because that's the unit claude.ai emits:
+    one use then one result in the sequential case, N uses then N results
+    when the calls ran in parallel.
+    """
+    uses: list[ToolUseBlock] = []
+    results: list[ToolResultBlock] = []
+    i = start
+    while i < len(blocks):
+        use = blocks[i]
+        if use["type"] != "tool_use":
+            break
+        uses.append(use)
+        i += 1
+    while i < len(blocks):
+        result = blocks[i]
+        if result["type"] != "tool_result":
+            break
+        results.append(result)
+        i += 1
+    return uses, results
+
+
+def render_tool_run(
+    uses: Several[ToolUseBlock], results: Several[ToolResultBlock]
+) -> list[str]:
+    """Render one run of tool calls and their results, fusing only what we can
+    correlate.
+
+    Ids win when both sides carry them. Failing that, a lone use and a lone
+    result pair by adjacency -- unambiguous, and how every pre-2026 capture
+    reads. Everything else stays unfused: claude.ai's parallel-call shape
+    (2026-06) drops the ids and emits results in completion order, observed
+    reversed against call order, so positional fusing there would caption one
+    query with another query's hits. An unfused run loses nothing -- every
+    block still renders, just under its own disclosure.
+    """
+    pairs = pair_by_id(uses, results)
+    if pairs is None and len(uses) == 1 and len(results) == 1:
+        pairs = [(uses[0], results[0])]
+    if pairs is None:
+        counts = f"{len(uses)} tool call(s) and {len(results)} result(s)"
+        print(f"warning: {counts} carry no matching ids; rendering them unpaired", file=sys.stderr)
+        return [render_tool_request(u) for u in uses] + [render_tool_result(r) for r in results]
+    return [
+        render_tool_call(use, result) if result is not None else render_tool_request(use)
+        for use, result in pairs
+    ]
+
+
 def extract_text(content_blocks: Several[ContentBlock]) -> str:
     """Render content blocks to markdown, in document order.
 
-    `text` passes through; `thinking` and each tool_use+tool_result
-    pair become collapsible `<details>`. Order is preserved so
-    reasoning and tool calls sit where they happened, around the answer
-    they produced. Unknown block types raise rather than vanish.
+    `text` passes through; `thinking` and each tool call become collapsible
+    `<details>`. Order is preserved so reasoning and tool calls sit where
+    they happened, around the answer they produced. Unknown block types raise
+    rather than vanish; an uncorrelatable tool call renders unfused rather
+    than raising -- see `render_tool_run`.
     """
     pieces: list[str] = []
     i = 0
@@ -188,26 +351,20 @@ def extract_text(content_blocks: Several[ContentBlock]) -> str:
             case {"type": "token_budget"}:
                 pass  # timestamps only, nothing to show
             case {"type": "tool_use"}:
-                # each tool_use is paired with the next block; None at end-of-list
-                # (an interrupted call) falls to the same mispairing raise below.
-                # Pairing is positional only -- claude.ai's export carries no
-                # id/tool_use_id to cross-check (see ToolUseBlock/ToolResultBlock).
-                next_block = content_blocks[i + 1] if i + 1 < len(content_blocks) else None
-                is_last = i + 2 >= len(content_blocks)
-                match next_block:
-                    case {"type": "tool_result"}:
-                        pieces.append(render_tool_call(block, next_block))
-                    case {"type": "text", "text": ""} if is_last:
+                uses, results = split_tool_run(content_blocks, i)
+                end = i + len(uses) + len(results)
+                trailing = content_blocks[end] if end == len(content_blocks) - 1 else None
+                match trailing:
+                    case {"type": "text", "text": ""} if not results and len(uses) == 1:
                         # user_canceled mid-call: the same hollow marker
                         # has_body/normalize_bodiless_nodes treat as a canceled
                         # retry, here trailing a tool call instead of standing
                         # alone -- no tool_result ever arrived.
-                        pieces.append(render_interrupted_tool_call(block))
+                        pieces.append(render_interrupted_tool_call(uses[0]))
+                        end += 1  # consume the hollow placeholder too
                     case _:
-                        raise AssertionError(
-                            ("tool_use without following tool_result", block, next_block)
-                        )
-                i += 1  # consume the paired tool_result (or hollow placeholder)
+                        pieces.extend(render_tool_run(tuple(uses), tuple(results)))
+                i = end - 1  # the loop's own increment lands on the next block
             case {"type": "tool_result"}:
                 raise AssertionError(("tool_result without preceding tool_use", block))
             case _:
@@ -222,13 +379,36 @@ def basename_for(msg: ChatMessage) -> str:
     )
 
 
+def load_conversation_json(src: Path) -> JsonValue:
+    """Load a conversation.json, tolerating a duplicate-capture artifact.
+
+    Observed once (3e52c1b9): a capture wrote the same conversation twice,
+    concatenated with no separator. Parse the first complete object and warn
+    rather than crash on "Extra data" -- but only when the trailing bytes are
+    themselves a second JSON value; anything else means the file is actually
+    corrupt, and `json.loads` below raises for that case same as always.
+    """
+    text = src.read_text()
+    _, end = json.JSONDecoder().raw_decode(text)
+    trailing = text[end:].strip()
+    if not trailing:
+        return typed_json.loads(text)
+    json.loads(trailing)  # raises if trailing isn't valid JSON on its own
+    print(
+        f"warning: {src} has trailing JSON data after the first object "
+        f"({len(trailing)} bytes) -- using the first object, discarding the rest",
+        file=sys.stderr,
+    )
+    return typed_json.loads(text[:end])
+
+
 def splat(src: Path, base_dir: Path) -> tuple[int, int]:
     """Splat src's conversation into base_dir/messages/.
 
     Returns (message count, rendered-with-body count)."""
     import shutil
 
-    doc = typed_json.loads(src.read_text())
+    doc = load_conversation_json(src)
     assert is_conversation(doc), doc
     chat_messages = doc["chat_messages"]
 
