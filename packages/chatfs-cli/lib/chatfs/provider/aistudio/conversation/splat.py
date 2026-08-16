@@ -30,6 +30,7 @@ share a timestamp, so basenames lead with the turn index (zero-padded,
 document order) rather than claude's `{ts}.{uuid}`.
 """
 
+import inspect
 import json
 import re
 import sys
@@ -38,6 +39,18 @@ from pathlib import Path
 import typed_json
 from chatfs.provider.aistudio.types import Conversation, Turn, is_conversation
 from chatfs.shell import sh as chatfs_sh
+
+
+def caller_location() -> str:
+    """The calling line's `file:line` -- Python has no compile-time
+    `__FILE__`/`__LINE__`, but a frame lookup gives the runtime equivalent,
+    so an unmodeled-shape warning can point straight at the branch to
+    extend rather than making the reader search for it."""
+    frame = inspect.currentframe()
+    assert frame is not None
+    caller = frame.f_back
+    assert caller is not None
+    return f"{__file__}:{caller.f_lineno}"
 
 
 def fenced_json(value: object) -> str:
@@ -122,7 +135,8 @@ def render_turn(turn: Turn, kind: str) -> str:
     elif kind == "unmodeled":
         role = turn["role"]
         print(
-            f"warning: unmodeled turn shape, passed through: role={role!r}",
+            f"warning: unmodeled turn shape, passed through: role={role!r}"
+            f" -- extend {caller_location()}",
             file=sys.stderr,
         )
         return render_details("unmodeled", "❓", "Unrecognized turn", fenced_json(turn))

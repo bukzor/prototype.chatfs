@@ -6,6 +6,7 @@ second argv gives an explicit output-dir instead. Only the two owned
 subdirs are cleared/recreated -- sibling content in an explicit
 output-dir (e.g. a caller-placed `.data` symlink) is left alone."""
 
+import inspect
 import os
 import shutil
 import sys
@@ -20,6 +21,18 @@ from . import json
 from .json import JsonObj, JsonValue
 
 MARKDOWN_PLACEHOLDER = "$MARKDOWN"
+
+
+def caller_location() -> str:
+    """The calling line's `file:line` -- Python has no compile-time
+    `__FILE__`/`__LINE__`, but a frame lookup gives the runtime equivalent,
+    so an unmodeled-shape warning can point straight at the branch to
+    extend rather than making the reader search for it."""
+    frame = inspect.currentframe()
+    assert frame is not None
+    caller = frame.f_back
+    assert caller is not None
+    return f"{__file__}:{caller.f_lineno}"
 
 
 def fenced_json(value: JsonValue) -> str:
@@ -391,7 +404,8 @@ def extract_text_content(raw: JsonObj) -> str | None:
         return render_details("tool_call", "🛠️", "Browsing result", display)
     else:
         print(
-            f"warning: unmodeled content_type, passed through: {content_type!r}",
+            f"warning: unmodeled content_type, passed through: {content_type!r}"
+            f" -- extend {caller_location()}",
             file=sys.stderr,
         )
         return render_details(
