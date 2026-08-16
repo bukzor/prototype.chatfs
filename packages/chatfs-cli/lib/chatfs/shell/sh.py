@@ -9,8 +9,13 @@ when something needs debugging.
 `run` traces, then runs a command to completion, always raising on
 non-zero exit. Deliberately narrow signature (stdin/stdout handles);
 grow it as needed.
+
+`caller_location` is the runtime stand-in for C's `__FILE__`/`__LINE__`
+(Python has no preprocessor) -- for diagnostics that should point a
+reader at the call site, not just describe it.
 """
 
+import inspect
 import os
 import shlex
 import subprocess
@@ -32,6 +37,17 @@ def log(msg: str) -> None:
     """Print a progress message to stderr, gated by debug_enabled()."""
     if debug_enabled():
         print(msg, file=sys.stderr, flush=True)
+
+
+def caller_location() -> str:
+    """The calling line's `file:line`. `co_filename` (not `__file__`) is
+    what makes this correct from any caller, in any module -- `__file__`
+    would name wherever this function itself is defined."""
+    frame = inspect.currentframe()
+    assert frame is not None
+    caller = frame.f_back
+    assert caller is not None
+    return f"{caller.f_code.co_filename}:{caller.f_lineno}"
 
 
 def quote(cmd: Sequence[object]) -> str:

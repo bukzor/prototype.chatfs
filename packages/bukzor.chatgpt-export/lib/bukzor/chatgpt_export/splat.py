@@ -27,12 +27,15 @@ def caller_location() -> str:
     """The calling line's `file:line` -- Python has no compile-time
     `__FILE__`/`__LINE__`, but a frame lookup gives the runtime equivalent,
     so an unmodeled-shape warning can point straight at the branch to
-    extend rather than making the reader search for it."""
+    extend rather than making the reader search for it. Not shared with
+    chatfs-cli's copy of this same helper: this package is deliberately
+    dependency-free (`dependencies = []`), and chatfs-cli depends on it,
+    not the other way around."""
     frame = inspect.currentframe()
     assert frame is not None
     caller = frame.f_back
     assert caller is not None
-    return f"{__file__}:{caller.f_lineno}"
+    return f"{caller.f_code.co_filename}:{caller.f_lineno}"
 
 
 def fenced_json(value: JsonValue) -> str:

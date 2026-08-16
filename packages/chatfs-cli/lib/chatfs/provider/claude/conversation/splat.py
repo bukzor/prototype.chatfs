@@ -25,7 +25,6 @@ crashing the whole conversation's render; either case also warns on
 stderr. The raw block stays in the .json regardless. No
 `conversations/` branch-symlinks yet (next ladder rung).
 """
-import inspect
 import json
 import sys
 from datetime import datetime
@@ -44,18 +43,6 @@ from chatfs.provider.claude.types import (
     is_conversation,
 )
 from chatfs.shell import sh as chatfs_sh
-
-
-def caller_location() -> str:
-    """The calling line's `file:line` -- Python has no compile-time
-    `__FILE__`/`__LINE__`, but a frame lookup gives the runtime equivalent,
-    so an unmodeled-shape warning can point straight at the branch to
-    extend rather than making the reader search for it."""
-    frame = inspect.currentframe()
-    assert frame is not None
-    caller = frame.f_back
-    assert caller is not None
-    return f"{__file__}:{caller.f_lineno}"
 
 
 def format_timestamp(created_at: str) -> str:
@@ -147,7 +134,7 @@ def warn_unmodeled_input_keys(name: str, tool_input: JsonObject, modeled: frozen
     if unmodeled:
         print(
             f"warning: unmodeled {name} tool_input keys, ignored: {sorted(unmodeled)}"
-            f" -- extend {caller_location()}",
+            f" -- extend {chatfs_sh.caller_location()}",
             file=sys.stderr,
         )
 
@@ -391,7 +378,7 @@ def extract_text(content_blocks: Several[ContentBlock]) -> str:
                 # call"), just an unexpected position for it.
                 print(
                     "warning: tool_result with no preceding tool_use in this message;"
-                    f" rendering unfused -- see {caller_location()}",
+                    f" rendering unfused -- see {chatfs_sh.caller_location()}",
                     file=sys.stderr,
                 )
                 pieces.append(render_tool_result(block))
@@ -399,7 +386,7 @@ def extract_text(content_blocks: Several[ContentBlock]) -> str:
                 kind = block["type"]
                 print(
                     f"warning: unmodeled content block type, passed through: {kind!r}"
-                    f" -- extend {caller_location()}",
+                    f" -- extend {chatfs_sh.caller_location()}",
                     file=sys.stderr,
                 )
                 pieces.append(
