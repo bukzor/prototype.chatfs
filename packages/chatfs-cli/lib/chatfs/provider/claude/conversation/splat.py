@@ -33,6 +33,7 @@ from pathlib import Path
 import typed_json
 from typed_json import JsonObject, JsonValue
 from chatfs.layout import safe_filename
+from chatfs.splat import fenced_json, render_details
 from chatfs.provider.claude.types import (
     ChatMessage,
     ContentBlock,
@@ -55,28 +56,6 @@ def format_timestamp(created_at: str) -> str:
     dt = datetime.fromisoformat(created_at.replace("Z", "+00:00")).astimezone()
     fractional = f"{dt.microsecond:06d}000"
     return dt.strftime(f"%Y-%m-%dT%H:%M:%S,{fractional}%z")
-
-
-def fenced_json(value: object) -> str:
-    return "```json\n" + json.dumps(value, indent=2, ensure_ascii=False) + "\n```"
-
-
-def render_details(
-    kind: str, icon: str, label: str, body: str, tool: str | None = None
-) -> str:
-    """Wrap non-answer content in a collapsible `<details>`, tagged for grep.
-
-    `type="{kind}"` makes each block kind searchable (e.g.
-    `grep 'type="tool_call"'`); `tool="{tool}"` further distinguishes
-    tool calls by name. `<details>` (vs a blockquote) keeps the content
-    collapsed-by-default and avoids colliding with the render step's
-    blockquote-as-fork-depth convention.
-    """
-    tool_attr = f' tool="{tool}"' if tool else ""
-    return (
-        f'<details type="{kind}"{tool_attr}><summary>{icon} {label}</summary>'
-        f"\n\n{body}\n\n</details>"
-    )
 
 
 def render_thinking(block: ThinkingBlock) -> str:

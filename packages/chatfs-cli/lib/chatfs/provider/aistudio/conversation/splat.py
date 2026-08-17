@@ -38,10 +38,7 @@ from pathlib import Path
 import typed_json
 from chatfs.provider.aistudio.types import Conversation, Turn, is_conversation
 from chatfs.shell import sh as chatfs_sh
-
-
-def fenced_json(value: object) -> str:
-    return "```json\n" + json.dumps(value, indent=2, ensure_ascii=False) + "\n```"
+from chatfs.splat import fenced_json, render_details
 
 
 def turns_of(doc: Conversation) -> list[Turn]:
@@ -96,18 +93,6 @@ def strip_leading_header(text: str, label: str) -> str:
         return rest.lstrip("\n")
     else:
         return text
-
-
-def render_details(kind: str, icon: str, label: str, body: str) -> str:
-    """Wrap non-answer content in a collapsible `<details>`, tagged for grep.
-
-    `type="{kind}"` mirrors the claude splat so a single
-    `grep 'type="thinking"'` spans both providers.
-    """
-    return (
-        f'<details type="{kind}"><summary>{icon} {label}</summary>'
-        f"\n\n{body}\n\n</details>"
-    )
 
 
 def render_turn(turn: Turn, kind: str) -> str:

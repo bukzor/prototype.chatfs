@@ -21,28 +21,11 @@ from pathlib import Path
 from typing import override
 
 from chatfs.provider.chatgpt import json
-from chatfs.provider.chatgpt.json import JsonObj, JsonValue
+from chatfs.provider.chatgpt.json import JsonObj
 from chatfs.shell import sh as chatfs_sh
+from chatfs.splat import fenced_json, render_details
 
 MARKDOWN_PLACEHOLDER = "$MARKDOWN"
-
-
-def fenced_json(value: JsonValue) -> str:
-    return "```json\n" + json.dumps(value, indent=2) + "\n```"
-
-
-def render_details(kind: str, icon: str, label: str, body: str, tool: str | None = None) -> str:
-    """Wrap non-answer content in a collapsible `<details>`, tagged for grep.
-
-    `type="{kind}"` mirrors claude/aistudio's splat so `grep 'type="thinking"'`
-    or `grep 'type="tool_call"'` spans every provider; `tool="{tool}"` further
-    distinguishes tool calls by name, matching claude's attribute.
-    """
-    tool_attr = f' tool="{tool}"' if tool else ""
-    return (
-        f'<details type="{kind}"{tool_attr}><summary>{icon} {label}</summary>'
-        f"\n\n{body}\n\n</details>"
-    )
 
 
 @dataclass
