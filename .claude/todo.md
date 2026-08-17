@@ -73,6 +73,12 @@ Plan from 2026-05-05 design.kb consolidation. Order is dependency-driven; 1-2 ar
       index, single-message access, intra-export link verification.
       Command spelling deferred to `packages/chatfs-cli/design.kb/`.
 
+## Corpus view mechanism
+
+- [ ] [Generalize the Created= symlink-view mechanism; add a pulled/unpulled status view](todo.kb/2026-08-17-001-Generalize-the-Created--symlink-view-mechanism--add-a-pulled-unpulled-status-view.md)
+      — extends `chatfs.layout`'s existing view-tree pattern to a second
+      attribute chatfs already has the data for.
+
 ## Rust port — kb scope refactor
 
 - [ ] [Execute the rust-port kb scope refactor](todo.kb/2026-05-16-000-execute-rust-port-kb-scope-refactor.md) — 9 steps; must land before commits 0750/1000/1050. Layered with 2026-05-21 meta-planning evolutions (see todo's "Additional decisions" section).
