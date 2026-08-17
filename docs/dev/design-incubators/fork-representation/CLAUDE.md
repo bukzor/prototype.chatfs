@@ -17,7 +17,7 @@ Each question builds on the previous answer. We can't normalize what we don't un
 ## Prior Art: chatgpt-splat "Rotate 90 Degrees" Layout
 
 The ChatGPT splat tool already implements a fork representation for ChatGPT
-conversations (see `packages/bukzor.chatgpt-export/lib/bukzor/chatgpt_export/splat.py`
+conversations (see `packages/chatfs-cli/lib/chatfs/provider/chatgpt/conversation/splat.py`
 and `docs/dev/background.kb/canonical-conversation-graph.md`).
 
 **Key insight:** Linear chains are flat siblings; forks create subdirectories.

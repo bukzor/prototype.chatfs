@@ -57,7 +57,7 @@ Converted from raise to passthrough-plus-warn:
   block type, and a `tool_result` with no preceding `tool_use` in the
   same message (rendered via the existing `render_tool_result`, since
   the shape is known even though the position is unexpected).
-- `bukzor.chatgpt_export/splat.py::extract_text_content` — unrecognized
+- `chatgpt/conversation/splat.py::extract_text_content` — unrecognized
   `content_type`.
 - `aistudio/conversation/splat.py::turn_kind` — a model turn that's
   neither `thought` nor `answer`, and a turn role that's neither `user`
