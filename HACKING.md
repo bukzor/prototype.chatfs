@@ -42,7 +42,7 @@ packages/
 │   │   ├── inode_table/     # Inode management
 │   │   └── resolve/         # Path resolution
 │   └── examples/            # Static tree, dynamic, procfs demos
-├── bukzor.chatgpt-export/   # Python: ChatGPT conversation export/splat
+├── bukzor.chatgpt-export/   # Python: manual HAR→jsonl export (har2jsonl; unreferenced by the live capture path)
 ├── har-browse/              # Node/Playwright: HAR capture (BB1)
 docs/
 ├── how-to-chatfs.md         # User-facing: pulling conversations down today
@@ -74,6 +74,11 @@ cargo run --example static_tree  # mount a static demo tree
 pytest          # whole workspace, from the repo root
 basedpyright    # likewise; clean repo-wide, docs/ exploration scripts included
 ```
+
+`typesafety/` tests (pyright-driven, e.g. `packages/chatfs-cli/typesafety/`)
+don't run under the root-level `pytest` above -- `pytest-pyright`'s
+collection check is relative to cwd, not repo root. Run them from the
+owning package: `cd packages/chatfs-cli && pytest typesafety`.
 
 ### Understanding Data Flow
 

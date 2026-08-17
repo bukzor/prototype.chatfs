@@ -50,6 +50,21 @@ Plan from 2026-05-05 design.kb consolidation. Order is dependency-driven; 1-2 ar
 4. [x] [Rename incubator to chatfs-cli-mockup](todo.kb/2026-05-11-000-rename-incubator-to-chatfs-cli-mockup.md) — precursor to multi-provider sketch; current name encodes a single provider. Done 2026-07-10: `git mv` + full reference sweep (remaining old-name hits are historical: devlog filenames/bodies, the ADR title); README closing reframed to the `$REPO/lib/chatfs/` graduation target. Verified: basedpyright 0/0/0, pytest 19/19, no symlink targets the old path.
 5. [x] **Multi-provider sketch** (deferrable). Scope B from 2026-05-11 conversation: hand-prepare a Claude data-export-derived `chatfs.demo/claude/.chat/$UUID/` and run splat + render through it; no live BB1 capture from claude.ai yet. Tests the parent project's `provider-plugin-model.md` against a second provider in practice. Also the natural moment to promote the incubator's `provider-plugin-model.md` symlink to a real entry or sub-kb. Superseded 2026-07-10: the claude provider landed via live BB1 capture (MVP closed 2026-05-11, devlog `2026-05-11-001`) — stronger than the hand-prepared export sketch — and AI Studio followed as a third provider (2026-06-20..07-03); the `provider-plugin-model.md` promotion landed 2026-07-09 (devlog `2026-07-09-000`). Nothing of this scope remains.
 
+## Chatgpt provider follow-ups (2026-08-16 splat fold-in)
+
+- [ ] [bukzor.chatgpt-export package fate](todo.kb/2026-08-17-000-bukzor-chatgpt-export-package-fate.md)
+      — `har2jsonl.py` is the only thing left in that package with no
+      current caller; decide keep/fold-in/delete.
+- [ ] `pytest-pyright`'s file-collection check is cwd-relative to
+      `typesafety/`, not repo-root-relative — the float-rejection
+      typesafety test (now at `packages/chatfs-cli/typesafety/`) has
+      never actually run under the documented root-level `pytest .`
+      workflow, only `cd <package> && pytest typesafety`. Either fix the
+      plugin invocation (a `--pyright-dir` per package, or a root
+      conftest hook) so root `pytest .` really exercises it, or add the
+      caveat to `HACKING.md`'s testing section so the gap is at least
+      visible.
+
 ## Transcript consumer ergonomics
 
 - [ ] [Transcript consumer ergonomics: toc, message access, export verify](todo.kb/2026-08-08-000-Transcript-consumer-ergonomics--toc--message-access--export-verify.md)
