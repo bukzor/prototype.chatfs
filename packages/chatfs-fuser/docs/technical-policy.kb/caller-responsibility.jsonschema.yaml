@@ -1,0 +1,5 @@
+# yaml-language-server: $schema=https://json-schema.org/draft-07/schema
+#
+# A sub-topic grouping of technical policies, not a kind of its own: the
+# members are policies like their parents, so they take the same schema.
+$ref: "skill://llm-design-kb/jsonschema/technical-policy.jsonschema.yaml"
