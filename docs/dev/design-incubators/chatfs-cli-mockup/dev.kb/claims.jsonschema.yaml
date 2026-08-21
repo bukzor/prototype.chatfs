@@ -1,12 +1,14 @@
-# DIVERGES from `skill://llm-discourse-graph/jsonschema/claims.jsonschema.yaml`
-# on purpose (ruled 2026-08-21, migration 2026-08-21-000): this is an
-# observation ledger, not a discourse claim. Statuses are empirical
-# (assumed/observed/refuted/settled), not rhetorical
-# (asserted/contested/retracted); `last-checked` is required because an
-# observation decays; `evidence`/`previously-claimed` track artifacts and
-# superseded wordings. Not expressible as a `#base` extender without
-# lying: the canonical requires its own `status` enum, which this
-# vocabulary replaces.
+$comment: |
+  NO-REF ruled 2026-08-21 (2026-05-15-000-schema-propagation-from-canonical):
+  originally ruled under 2026-08-21-000. Diverges from
+  skill://llm-discourse-graph/jsonschema/claims.jsonschema.yaml on
+  purpose: this is an observation ledger, not a discourse claim. Statuses
+  are empirical (assumed/observed/refuted/settled), not rhetorical
+  (asserted/contested/retracted); `last-checked` is required because an
+  observation decays; `evidence`/`previously-claimed` track artifacts and
+  superseded wordings. Not expressible as a `#base` extender without
+  lying: the canonical requires its own `status` enum, which this
+  vocabulary replaces.
 $schema: https://json-schema.org/draft/2020-12/schema
 type: object
 required: [status, last-checked]
