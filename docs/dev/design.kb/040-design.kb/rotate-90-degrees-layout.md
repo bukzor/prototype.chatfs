@@ -1,6 +1,6 @@
 ---
 why:
-  - canonical-conversation-graph
+  - ../030-requirements.kb/canonical-conversation-graph.md
 ---
 
 # On-Disk Representation: "Rotate 90 Degrees"

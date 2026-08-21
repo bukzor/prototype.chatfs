@@ -1,7 +1,7 @@
 ---
 why:
   - ../../../../docs/dev/design.kb/030-requirements.kb/opaque-extractor-boundary.md
-  - canonical-conversation-graph
+  - ../../../../docs/dev/design.kb/030-requirements.kb/canonical-conversation-graph.md
 ---
 
 # No Partial Synthesis of Provider Structures
