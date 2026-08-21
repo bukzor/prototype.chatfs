@@ -1,6 +1,6 @@
 ---
 why:
-  - reusable-vfs-crate
+  - ../020-goals.kb/reusable-vfs-crate.md
 ---
 
 # Crate Selection

@@ -1,7 +1,7 @@
 ---
 why:
-  - stable-inodes
-  - tool-chatter-resilience
+  - ../030-requirements.kb/stable-inodes.md
+  - ../030-requirements.kb/tool-chatter-resilience.md
 ---
 
 # Inode Allocation Strategy

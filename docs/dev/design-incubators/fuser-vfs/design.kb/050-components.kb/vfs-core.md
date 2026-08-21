@@ -1,7 +1,7 @@
 ---
 why:
-  - cache-backed-virtual-fs
-  - operation-dispatch
+  - ../040-design.kb/cache-backed-virtual-fs.md
+  - ../040-design.kb/operation-dispatch.md
 ---
 
 # VFS Core

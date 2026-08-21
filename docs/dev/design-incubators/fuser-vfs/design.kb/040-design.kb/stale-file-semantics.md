@@ -1,7 +1,7 @@
 ---
 why:
-  - no-work-on-read
-  - serve-static-directory-tree
+  - ../030-requirements.kb/no-work-on-read.md
+  - ../030-requirements.kb/serve-static-directory-tree.md
 ---
 
 # Stale File Semantics

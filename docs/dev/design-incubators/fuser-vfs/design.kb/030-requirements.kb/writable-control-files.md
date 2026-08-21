@@ -1,6 +1,6 @@
 ---
 why:
-  - procfs-control-plane
+  - ../020-goals.kb/procfs-control-plane.md
 ---
 
 # Writable Control Files (Future)

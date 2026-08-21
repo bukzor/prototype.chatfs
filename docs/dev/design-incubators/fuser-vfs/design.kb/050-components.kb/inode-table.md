@@ -1,7 +1,7 @@
 ---
 why:
-  - inode-allocation-strategy
-  - stable-inodes
+  - ../040-design.kb/inode-allocation-strategy.md
+  - ../030-requirements.kb/stable-inodes.md
 ---
 
 # Inode Table

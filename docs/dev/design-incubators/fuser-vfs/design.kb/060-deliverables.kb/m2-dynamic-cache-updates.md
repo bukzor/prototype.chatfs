@@ -1,8 +1,8 @@
 ---
 why:
-  - vfs-core
-  - cache-backed-virtual-fs
-  - no-work-on-read
+  - ../050-components.kb/vfs-core.md
+  - ../040-design.kb/cache-backed-virtual-fs.md
+  - ../030-requirements.kb/no-work-on-read.md
 ---
 
 # M2 — Dynamic Cache Updates

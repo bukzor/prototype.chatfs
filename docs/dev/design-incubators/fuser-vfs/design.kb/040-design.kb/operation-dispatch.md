@@ -1,7 +1,7 @@
 ---
 why:
-  - understand-fuse-operations
-  - no-work-on-read
+  - ../020-goals.kb/understand-fuse-operations.md
+  - ../030-requirements.kb/no-work-on-read.md
 ---
 
 # FUSE Operation Dispatch

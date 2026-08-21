@@ -1,6 +1,6 @@
 ---
 why:
-  - no-work-on-read
+  - ../030-requirements.kb/no-work-on-read.md
 ---
 
 # touch as Sync Trigger

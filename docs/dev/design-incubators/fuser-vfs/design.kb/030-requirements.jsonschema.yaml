@@ -1,0 +1,6 @@
+# yaml-language-server: $schema=https://json-schema.org/draft/2020-12/schema
+$schema: "https://json-schema.org/draft/2020-12/schema"
+description: Schema for requirement entries in 030-requirements.kb/
+$ref: "skill://llm-design-kb/jsonschema/layer-entry.jsonschema.yaml#base"
+required: [why]
+unevaluatedProperties: false

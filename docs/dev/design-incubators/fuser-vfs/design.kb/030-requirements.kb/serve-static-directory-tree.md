@@ -1,7 +1,7 @@
 ---
 why:
-  - reusable-vfs-crate
-  - understand-fuse-operations
+  - ../020-goals.kb/reusable-vfs-crate.md
+  - ../020-goals.kb/understand-fuse-operations.md
 ---
 
 # Serve a Static Directory Tree

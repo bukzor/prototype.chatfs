@@ -1,7 +1,7 @@
 ---
 why:
-  - control-plane
-  - writable-control-files
+  - ../050-components.kb/control-plane.md
+  - ../030-requirements.kb/writable-control-files.md
 ---
 
 # M3 — Procfs/Sysfs Control Plane (Future, Unscheduled)

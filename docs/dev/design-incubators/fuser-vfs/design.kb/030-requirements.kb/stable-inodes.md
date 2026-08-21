@@ -1,6 +1,6 @@
 ---
 why:
-  - understand-fuse-operations
+  - ../020-goals.kb/understand-fuse-operations.md
 ---
 
 # Stable Inodes

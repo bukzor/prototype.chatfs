@@ -1,6 +1,6 @@
 ---
 why:
-  - fuse-filesystem-learning
+  - ../010-mission.kb/fuse-filesystem-learning.md
 ---
 
 # Reusable VFS Crate

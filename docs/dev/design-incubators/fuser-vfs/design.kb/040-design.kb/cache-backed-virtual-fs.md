@@ -1,7 +1,7 @@
 ---
 why:
-  - serve-static-directory-tree
-  - no-work-on-read
+  - ../030-requirements.kb/serve-static-directory-tree.md
+  - ../030-requirements.kb/no-work-on-read.md
 ---
 
 # Cache-Backed Virtual Filesystem

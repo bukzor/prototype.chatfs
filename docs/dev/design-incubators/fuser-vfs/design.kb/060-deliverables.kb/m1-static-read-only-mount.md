@@ -1,8 +1,8 @@
 ---
 why:
-  - vfs-core
-  - inode-table
-  - serve-static-directory-tree
+  - ../050-components.kb/vfs-core.md
+  - ../050-components.kb/inode-table.md
+  - ../030-requirements.kb/serve-static-directory-tree.md
 ---
 
 # M1 — Static Read-Only Mount
