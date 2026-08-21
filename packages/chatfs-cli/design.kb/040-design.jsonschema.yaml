@@ -1,1 +1,2 @@
-../../../docs/dev/design.kb/040-design.jsonschema.yaml
+# yaml-language-server: $schema=https://json-schema.org/draft-07/schema
+$ref: "../../../docs/dev/design.kb/040-design.jsonschema.yaml"
