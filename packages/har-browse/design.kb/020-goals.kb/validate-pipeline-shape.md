@@ -1,6 +1,6 @@
 ---
 why:
-  - data-possession
+  - ../010-mission.kb/data-possession.md
 ---
 
 # Validate the Capture → Extract → Emit Pipeline Shape

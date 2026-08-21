@@ -1,7 +1,7 @@
 ---
 why:
-  - toy-pluck
-  - content-encoding-handling
+  - ../050-components.kb/toy-pluck.md
+  - ../030-requirements.kb/content-encoding-handling.md
 ---
 
 # M3 — Extraction

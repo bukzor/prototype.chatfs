@@ -1,7 +1,7 @@
 ---
 why:
-  - three-subsystem-pipeline
-  - content-encoding-handling
+  - ../040-design.kb/three-subsystem-pipeline.md
+  - ../030-requirements.kb/content-encoding-handling.md
 ---
 
 # toy_pluck — CDP events → extracted.json

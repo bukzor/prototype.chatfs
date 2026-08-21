@@ -1,7 +1,7 @@
 ---
 why:
-  - toy-capture
-  - capture-cut-completeness
+  - ../050-components.kb/toy-capture.md
+  - ../030-requirements.kb/capture-cut-completeness.md
 ---
 
 # M1 — HAR-Derivable Capture

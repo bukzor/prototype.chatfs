@@ -1,6 +1,6 @@
 ---
 why:
-  - validate-pipeline-shape
+  - ../020-goals.kb/validate-pipeline-shape.md
 ---
 
 # CLI Interface

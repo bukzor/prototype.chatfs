@@ -1,6 +1,6 @@
 ---
 why:
-  - unblocked-sessions
+  - ../../030-requirements.kb/unblocked-sessions.md
 ---
 
 # Headless changes the agent; windowless does not

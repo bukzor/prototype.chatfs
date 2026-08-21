@@ -1,6 +1,6 @@
 ---
 why:
-  - capture-implementation-frontier
+  - ../capture-implementation-frontier.md
 status: dominated
 owned-loc: "~250"
 middleware: "none"

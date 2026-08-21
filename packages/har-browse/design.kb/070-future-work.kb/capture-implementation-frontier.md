@@ -1,9 +1,9 @@
 ---
 why:
-  - data-possession
-  - capture-everything
-  - crash-durability
-  - unblocked-sessions
+  - ../010-mission.kb/data-possession.md
+  - ../020-goals.kb/capture-everything.md
+  - ../030-requirements.kb/crash-durability.md
+  - ../030-requirements.kb/unblocked-sessions.md
 ---
 
 # What Is the Minimal-Complexity Implementation of BB1 Capture?

@@ -1,6 +1,6 @@
 ---
 why:
-  - reusable-capture-components
+  - reusable-capture-components.md
 ---
 
 # Site-Agnostic Capture

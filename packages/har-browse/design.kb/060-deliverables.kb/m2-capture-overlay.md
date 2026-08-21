@@ -1,9 +1,9 @@
 ---
 why:
-  - toy-capture
-  - capture-cut-completeness
-  - in-flow-termination
-  - howto-overlay
+  - ../050-components.kb/toy-capture.md
+  - ../030-requirements.kb/capture-cut-completeness.md
+  - ../030-requirements.kb/in-flow-termination.md
+  - ../050-components.kb/howto-overlay.md
 ---
 
 # M2 — Capture Overlay

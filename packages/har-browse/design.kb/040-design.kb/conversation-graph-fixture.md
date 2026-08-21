@@ -1,6 +1,6 @@
 ---
 why:
-  - content-encoding-handling
+  - ../030-requirements.kb/content-encoding-handling.md
 ---
 
 # Conversation Graph Fixture

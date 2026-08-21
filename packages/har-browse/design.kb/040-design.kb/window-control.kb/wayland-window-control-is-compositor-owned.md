@@ -1,6 +1,6 @@
 ---
 why:
-  - undisrupted-operator-input
+  - ../../030-requirements.kb/undisrupted-operator-input.md
 ---
 
 # Wayland window control is compositor-owned

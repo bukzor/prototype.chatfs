@@ -1,6 +1,6 @@
 ---
 why:
-  - site-agnostic-capture
+  - ../020-goals.kb/site-agnostic-capture.md
 ---
 
 # In-Flow Termination

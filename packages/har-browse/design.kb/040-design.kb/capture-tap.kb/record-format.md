@@ -1,9 +1,9 @@
 ---
 why:
-  - capture-everything
-  - crash-durability
-  - capture-cut-completeness
-  - cli-interface
+  - ../../020-goals.kb/capture-everything.md
+  - ../../030-requirements.kb/crash-durability.md
+  - ../../030-requirements.kb/capture-cut-completeness.md
+  - ../../030-requirements.kb/cli-interface.md
 ---
 
 # Record Format: Streamed JSONL of CDP Events

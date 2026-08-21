@@ -1,7 +1,7 @@
 ---
 why:
-  - cli-interface
-  - validate-pipeline-shape
+  - ../030-requirements.kb/cli-interface.md
+  - ../020-goals.kb/validate-pipeline-shape.md
 ---
 
 # Three-Subsystem Pipeline

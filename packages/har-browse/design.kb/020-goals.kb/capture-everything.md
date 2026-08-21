@@ -1,6 +1,6 @@
 ---
 why:
-  - data-possession
+  - ../010-mission.kb/data-possession.md
 ---
 
 # Capture Everything, Verify Downstream

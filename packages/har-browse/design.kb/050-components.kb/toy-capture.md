@@ -1,12 +1,12 @@
 ---
 why:
-  - three-subsystem-pipeline
-  - tap-point
-  - record-format
-  - marks
-  - capture-cut-completeness
-  - in-flow-termination
-  - site-agnostic-capture
+  - ../040-design.kb/three-subsystem-pipeline.md
+  - ../040-design.kb/capture-tap.kb/tap-point.md
+  - ../040-design.kb/capture-tap.kb/record-format.md
+  - ../040-design.kb/capture-tap.kb/marks.md
+  - ../030-requirements.kb/capture-cut-completeness.md
+  - ../030-requirements.kb/in-flow-termination.md
+  - ../020-goals.kb/site-agnostic-capture.md
 ---
 
 # har-browse — CDP Capture Script

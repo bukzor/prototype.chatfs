@@ -1,7 +1,7 @@
 ---
 why:
-  - three-subsystem-pipeline
-  - local-only-operation
+  - ../040-design.kb/three-subsystem-pipeline.md
+  - ../030-requirements.kb/local-only-operation.md
 ---
 
 # toy_server — Local Web App

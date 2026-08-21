@@ -1,7 +1,7 @@
 ---
 why:
-  - site-agnostic-capture
-  - in-flow-termination
+  - ../020-goals.kb/site-agnostic-capture.md
+  - ../030-requirements.kb/in-flow-termination.md
 ---
 
 # howto-overlay — Site-Specific Instructions for Human Operator

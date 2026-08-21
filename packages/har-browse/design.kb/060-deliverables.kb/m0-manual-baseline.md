@@ -1,6 +1,6 @@
 ---
 why:
-  - toy-server
+  - ../050-components.kb/toy-server.md
 ---
 
 # M0 — Manual Baseline

@@ -1,6 +1,6 @@
 ---
 why:
-  - reusable-capture-components
+  - ../020-goals.kb/reusable-capture-components.md
 ---
 
 # Content Encoding Handling

@@ -1,7 +1,7 @@
 ---
 why:
-  - capture-everything
-  - unblocked-sessions
+  - ../../020-goals.kb/capture-everything.md
+  - ../../030-requirements.kb/unblocked-sessions.md
 ---
 
 # Tap Point: Browser DevTools Protocol on a Spawned, Human-Driven Browser

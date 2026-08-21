@@ -1,6 +1,6 @@
 ---
 why:
-  - capture-everything
+  - ../020-goals.kb/capture-everything.md
 ---
 
 # Capture Cut Completeness

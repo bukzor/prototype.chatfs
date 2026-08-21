@@ -1,6 +1,6 @@
 ---
 why:
-  - undisruptive-launch
+  - ../020-goals.kb/undisruptive-launch.md
 ---
 
 # Splash overlay for loading jank

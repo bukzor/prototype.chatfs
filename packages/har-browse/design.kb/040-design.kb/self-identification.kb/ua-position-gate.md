@@ -1,6 +1,6 @@
 ---
 why:
-  - unblocked-sessions
+  - ../../030-requirements.kb/unblocked-sessions.md
 ---
 
 # The User-Agent gate is positional

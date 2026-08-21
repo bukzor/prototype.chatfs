@@ -1,6 +1,6 @@
 ---
 why:
-  - safe-learning-environment
+  - ../020-goals.kb/safe-learning-environment.md
 ---
 
 # Local-Only Operation

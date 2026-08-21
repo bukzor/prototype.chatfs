@@ -1,6 +1,6 @@
 ---
 why:
-  - capture-implementation-frontier
+  - ../capture-implementation-frontier.md
 status: frontier-optimal
 owned-loc: "~600"
 middleware: "none"

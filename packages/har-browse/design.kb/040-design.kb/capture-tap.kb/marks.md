@@ -1,6 +1,6 @@
 ---
 why:
-  - capture-cut-completeness
+  - ../../030-requirements.kb/capture-cut-completeness.md
 ---
 
 # Marks: Page-Facing Checkpoint Stamps

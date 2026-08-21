@@ -1,8 +1,10 @@
 # yaml-language-server: $schema=https://json-schema.org/draft/2020-12/schema
-type: object
+$schema: "https://json-schema.org/draft/2020-12/schema"
+description: >
+  A capture-implementation candidate, scored on the axes that decide the
+  frontier. The canonical layer entry plus this comparison's own axes.
+$ref: "skill://llm-design-kb/jsonschema/layer-entry.jsonschema.yaml#base"
 properties:
-  why:
-    $ref: "../jsonschema/why.jsonschema.yaml"
   status:
     description: Whether this candidate sits on the owned-code/footprint/silent-miss frontier or is beaten outright by another candidate
     enum: [frontier-optimal, dominated]
@@ -25,4 +27,4 @@ properties:
     description: Whether the capture stage stays free of site-specific knowledge (pure) or leaks extraction-layer concerns into BB1
     $ref: "../jsonschema/valued.jsonschema.yaml"
 required: [why, status, owned-loc, middleware, silent-miss, crash-durable, stealth, bb1-purity]
-additionalProperties: false
+unevaluatedProperties: false
