@@ -1,7 +1,7 @@
 ---
 why:
-  - explicit-sync-triggers
-  - no-network-on-read
+  - ../030-requirements.kb/explicit-sync-triggers.md
+  - ../030-requirements.kb/no-network-on-read.md
 source:
   - conversations.cleaned/04-system-decomposition-sync-design/133.assistant.text.md
 ---

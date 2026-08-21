@@ -1,7 +1,7 @@
 ---
 why:
-  - unix-composability
-  - pipeline-composability
+  - ../../../../docs/dev/design.kb/020-goals.kb/unix-composability.md
+  - ../../../../docs/dev/design.kb/030-requirements.kb/pipeline-composability.md
 last-updated: 2026-08-07
 ---
 

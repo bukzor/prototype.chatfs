@@ -1,13 +1,6 @@
-$schema: "http://json-schema.org/draft-07/schema#"
+# yaml-language-server: $schema=https://json-schema.org/draft/2020-12/schema
+$schema: "https://json-schema.org/draft/2020-12/schema"
 description: Schema for future-work entries in 070-future-work.kb/
-type: object
-additionalProperties: false
-required:
-  - why
-properties:
-  why:
-    description: Mission/goal/requirement this future work would serve if pursued
-    type: array
-    items:
-      type: string
-    minItems: 1
+$ref: "skill://llm-design-kb/jsonschema/layer-entry.jsonschema.yaml#base"
+required: [why]
+unevaluatedProperties: false

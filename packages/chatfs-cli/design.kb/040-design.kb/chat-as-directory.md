@@ -1,9 +1,9 @@
 ---
-last-updated: "2026-07-18"
+last-updated: 2026-07-18
 why:
-  - opaque-extractor-boundary
+  - ../../../../docs/dev/design.kb/030-requirements.kb/opaque-extractor-boundary.md
   - canonical-conversation-graph
-  - atomic-cache-updates
+  - ../../../../docs/dev/design.kb/030-requirements.kb/atomic-cache-updates.md
 ---
 
 # Chat as Directory

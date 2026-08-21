@@ -1,6 +1,6 @@
 ---
 why:
-  - chatfs
+  - ../010-mission.kb/chatfs.md
 background:
   - fuse-filesystem
   - google-piper-precedent

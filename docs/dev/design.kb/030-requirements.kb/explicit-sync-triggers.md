@@ -1,7 +1,7 @@
 ---
 why:
-  - safe-automation
-  - no-network-on-read
+  - ../020-goals.kb/safe-automation.md
+  - no-network-on-read.md
 ---
 
 # Explicit Sync Triggers

@@ -1,6 +1,6 @@
 ---
 why:
-  - safe-automation
+  - ../020-goals.kb/safe-automation.md
 background:
   - policy-safe-automation-boundary
 ---

@@ -1,8 +1,8 @@
 ---
-last-updated: "2026-04-20"
+last-updated: 2026-04-20
 why:
-  - opaque-extractor-boundary
-  - black-box-decomposition
+  - ../030-requirements.kb/opaque-extractor-boundary.md
+  - black-box-decomposition.md
 background:
   - har-format
 ---

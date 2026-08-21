@@ -1,6 +1,6 @@
 ---
 why:
-  - canonical-conversation-graph
+  - ../030-requirements.kb/canonical-conversation-graph.md
 background:
   - har-format
 source:

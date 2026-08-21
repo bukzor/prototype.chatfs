@@ -1,6 +1,6 @@
 ---
 why:
-  - multi-provider
+  - ../020-goals.kb/multi-provider.md
 ---
 
 # Additional LLM Chat Providers

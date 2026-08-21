@@ -1,7 +1,7 @@
 ---
 why:
-  - atomic-cache-updates
-  - pipeline-composability
+  - ../../../../docs/dev/design.kb/030-requirements.kb/atomic-cache-updates.md
+  - ../../../../docs/dev/design.kb/030-requirements.kb/pipeline-composability.md
 ---
 
 # Deterministic Regeneration

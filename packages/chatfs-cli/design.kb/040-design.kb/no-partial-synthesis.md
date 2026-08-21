@@ -1,6 +1,6 @@
 ---
 why:
-  - opaque-extractor-boundary
+  - ../../../../docs/dev/design.kb/030-requirements.kb/opaque-extractor-boundary.md
   - canonical-conversation-graph
 ---
 

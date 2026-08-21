@@ -1,6 +1,6 @@
 ---
 why:
-  - chatfs
+  - ../010-mission.kb/chatfs.md
 ---
 
 # Preserve Conversation Structure

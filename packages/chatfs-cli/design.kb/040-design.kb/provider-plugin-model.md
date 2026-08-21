@@ -1,6 +1,6 @@
 ---
 why:
-  - provider-agnostic-interface
+  - ../../../../docs/dev/design.kb/030-requirements.kb/provider-agnostic-interface.md
 ---
 
 # Provider Plugin Model — Lessons from Three Providers

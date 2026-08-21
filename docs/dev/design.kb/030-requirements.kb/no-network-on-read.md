@@ -1,7 +1,7 @@
 ---
 why:
-  - safe-automation
-  - lazy-filesystem
+  - ../020-goals.kb/safe-automation.md
+  - ../020-goals.kb/lazy-filesystem.md
 ---
 
 # No Network Activity on Read

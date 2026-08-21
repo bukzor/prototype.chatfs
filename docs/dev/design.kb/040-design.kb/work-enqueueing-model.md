@@ -1,7 +1,7 @@
 ---
 why:
-  - no-network-on-read
-  - explicit-sync-triggers
+  - ../030-requirements.kb/no-network-on-read.md
+  - ../030-requirements.kb/explicit-sync-triggers.md
 background:
   - google-piper-precedent
 source:

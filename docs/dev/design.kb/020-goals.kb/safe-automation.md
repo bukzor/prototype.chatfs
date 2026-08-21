@@ -1,6 +1,6 @@
 ---
 why:
-  - chatfs
+  - ../010-mission.kb/chatfs.md
 background:
   - policy-safe-automation-boundary
 ---

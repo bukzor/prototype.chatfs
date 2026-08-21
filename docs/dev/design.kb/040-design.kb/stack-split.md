@@ -1,6 +1,6 @@
 ---
 why:
-  - black-box-decomposition
+  - black-box-decomposition.md
 background:
   - fuse-filesystem
 source:

@@ -1,7 +1,7 @@
 ---
 why:
-  - opaque-extractor-boundary
-  - pipeline-composability
+  - ../../../../docs/dev/design.kb/030-requirements.kb/opaque-extractor-boundary.md
+  - ../../../../docs/dev/design.kb/030-requirements.kb/pipeline-composability.md
 ---
 
 # Browse-Incidental Capture

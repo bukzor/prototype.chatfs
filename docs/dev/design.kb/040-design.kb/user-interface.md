@@ -1,8 +1,8 @@
 ---
-last-updated: "2026-04-20"
+last-updated: 2026-04-20
 why:
-  - no-network-on-read
-  - explicit-sync-triggers
+  - ../030-requirements.kb/no-network-on-read.md
+  - ../030-requirements.kb/explicit-sync-triggers.md
 background:
   - fuse-filesystem
   - google-piper-precedent

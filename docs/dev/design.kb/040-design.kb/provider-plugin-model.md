@@ -1,6 +1,6 @@
 ---
 why:
-  - provider-agnostic-interface
+  - ../030-requirements.kb/provider-agnostic-interface.md
 source:
   - conversations.cleaned/06-design-spec-project-handoff/167.assistant.text.md#2
 ---

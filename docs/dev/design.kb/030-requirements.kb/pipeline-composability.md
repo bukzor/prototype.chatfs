@@ -1,7 +1,7 @@
 ---
 why:
-  - unix-composability
-  - multi-provider
+  - ../020-goals.kb/unix-composability.md
+  - ../020-goals.kb/multi-provider.md
 ---
 
 # Pipeline Composability

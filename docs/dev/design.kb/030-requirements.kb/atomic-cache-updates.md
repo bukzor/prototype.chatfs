@@ -1,6 +1,6 @@
 ---
 why:
-  - lazy-filesystem
+  - ../020-goals.kb/lazy-filesystem.md
 ---
 
 # Atomic Cache Updates

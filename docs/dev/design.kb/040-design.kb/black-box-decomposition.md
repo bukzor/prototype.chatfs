@@ -1,7 +1,7 @@
 ---
 why:
-  - pipeline-composability
-  - provider-agnostic-interface
+  - ../030-requirements.kb/pipeline-composability.md
+  - ../030-requirements.kb/provider-agnostic-interface.md
 source:
   - conversations.cleaned/04-system-decomposition-sync-design/127.assistant.text.md
   - extracted/04-bb-decomposition.md

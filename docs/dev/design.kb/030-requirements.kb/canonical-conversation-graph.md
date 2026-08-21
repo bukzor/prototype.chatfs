@@ -1,7 +1,7 @@
 ---
 why:
-  - preserve-structure
-  - multi-provider
+  - ../020-goals.kb/preserve-structure.md
+  - ../020-goals.kb/multi-provider.md
 ---
 
 # Canonical Conversation Graph

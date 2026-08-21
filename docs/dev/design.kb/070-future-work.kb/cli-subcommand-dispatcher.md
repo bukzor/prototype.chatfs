@@ -1,6 +1,6 @@
 ---
 why:
-  - unix-composability
+  - ../020-goals.kb/unix-composability.md
 ---
 
 # CLI Subcommand Dispatcher (git-style)

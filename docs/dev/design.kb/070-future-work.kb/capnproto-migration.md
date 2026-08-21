@@ -1,6 +1,6 @@
 ---
 why:
-  - pipeline-composability
+  - ../030-requirements.kb/pipeline-composability.md
 ---
 
 # Capnproto Migration

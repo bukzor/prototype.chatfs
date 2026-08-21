@@ -1,7 +1,7 @@
 ---
 why:
-  - stack-split
-  - provider-agnostic-interface
+  - stack-split.md
+  - ../030-requirements.kb/provider-agnostic-interface.md
 ---
 
 # Package Division
