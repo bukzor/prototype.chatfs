@@ -3,7 +3,10 @@ name = "chatfs-workspace"
 version = "0"
 description = "Top-level workspace for chatfs development; depends on chatfs for default install"
 requires-python = ">=3.12"
-dependencies = ["chatfs-cli"]
+dependencies = [
+    "chatfs-cli",
+    "llm-kb",
+]
 
 [dependency-groups]
 dev = [
@@ -21,6 +24,7 @@ exclude = ["packages/chatfs-fuser", "packages/har-browse"]
 [tool.uv.sources]
 chatfs-cli = { workspace = true }
 bukzor-chatgpt-export = { workspace = true }
+llm-kb = { path = "../bukzor-agent-skills/llm-kb", editable = true }
 
 [tool.pyright]
 # Vendored third-party code is excluded by name; our own exploration
