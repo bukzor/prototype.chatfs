@@ -41,7 +41,9 @@ fleet-wide schema sweep.
   the `# yaml-language-server` modeline (`MODELINE_SELECTS`,
   `llm-kb/claims.kb/design.claims.kb/a-file-may-name-its-own-schema.md`).
   Clears the moment `llm.kb-validate` honours the modeline
-  (`VALIDATE_ENFORCES`); nothing to do here first.
+  (`VALIDATE_ENFORCES`); nothing to do here first. **Cleared
+  2026-08-27** -- `VALIDATE_ENFORCES` landed upstream; the count here is
+  now 9, and only the `status` enum pair remains blocked.
 - **2 x `status` enum drift** -- `exploring` and `active`, from no
   vocabulary at all. Blocked on `STATUS_ENUM`
   (`llm-kb/claims.kb/design.claims.kb/status-is-four-enums-under-one-name.md`),

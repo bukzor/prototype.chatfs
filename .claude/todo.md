@@ -65,6 +65,21 @@ Plan from 2026-05-05 design.kb consolidation. Order is dependency-driven; 1-2 ar
       caveat to `HACKING.md`'s testing section so the gap is at least
       visible.
 
+## Index pipeline follow-ups (2026-08-27)
+
+- [ ] Nothing drives `index splat`'s `main()` under test. Its stdout
+      contract (one `{id, title, chat_dir, view}` per chat placed) and
+      its first-sight dedup rule were verified once, by hand, against a
+      throwaway fake `har-browse` in `trash/`; `place_test.py` only
+      covers `Placement` itself. Feed each provider's splat a two-page
+      jsonl fixture with one item repeated across pages, assert the
+      records on stdout.
+  - [ ] claude — overlapping pages are expected, so the repeat must be
+        re-written but announced only once
+  - [ ] chatgpt — asserts no duplicate uuid; cover that the assertion
+        still fires rather than silently emitting twice
+  - [ ] aistudio — claude's dedup shape, chatgpt's item wrapper
+
 ## Transcript consumer ergonomics
 
 - [ ] [Transcript consumer ergonomics: toc, message access, export verify](todo.kb/2026-08-08-000-Transcript-consumer-ergonomics--toc--message-access--export-verify.md)
@@ -86,9 +101,27 @@ Plan from 2026-05-05 design.kb consolidation. Order is dependency-driven; 1-2 ar
 - [ ] **Update `packages/har-browse/dev.kb/rust-port.md` charter:** insert commit `0050` (blackbox `.spec.mjs` → CLI conversion + baseline capture) before `0100` scaffold; record commits `0025`/`0035` if diagnostic-events design and Node-side emission want separate commits. Source: `.claude/decision.kb/test-conversion-precedes-port-scaffold.md`.
 - [ ] **Pre-port testing infrastructure** (Phases C/D/E) — tracked at `~/.claude/sessions.kb/har-browse-rust-port-pre-port-infrastructure.md`. Must precede commit `0800` (cdp-jsonl contract freeze) at minimum.
 
+## Doc & schema hygiene
+
+- [ ] [Clear the twelve frontmatter validation errors](todo.kb/2026-08-22-000-clear-the-twelve-frontmatter-validation-errors.md)
+      — surveyed 2026-08-22 as twelve errors in five causes; down to
+      nine on 2026-08-27, the modeline ruling having cleared the three
+      `todo.md` roll-ups upstream. Seven of the nine are fixable here (a
+      missing `background.jsonschema.yaml`, a `kind` enum, one legacy
+      field shape); the `status` enum pair stays blocked on
+      bukzor-agent-skills. Listed here 2026-08-27, having been invisible
+      to every sweep in between.
+- [ ] Four `> [!TODO]` callouts in
+      `packages/chatfs-cli/design.kb/040-design.kb/cli-command-shape.kb/noun=conversation.kb/verb=render.md`
+      carry no one-line title after the bracket, which is what makes a
+      bare `grep '\[!TODO\]'` read like a todo list (`Skill(llm-design-kb)`).
+      Title each; the fourth needs its body's opening clause rewritten
+      so the title isn't duplicated. They are the repo's only untitled
+      markers.
+
 ## Deferred
 
-- [ ] Fix 4 frontmatter violations in `docs/dev/aistudio-schema/discourse.kb/` — drift accumulated 2026-06-23..08-08 while the schema symlinks dangled (revealed when the `$ref: skill://` stubs restored validation, commit 9324dba): `sources.kb/{bundle-audit,live-replay-probe,rosetta-correlation-experiment}.md` use `kind: investigation` (not in the canonical enum — may want an enum addition in llm-discourse-graph instead of a content edit), and `questions.kb/how-does-this-serve-chatfs.md` has an unexpected `status:` plus a date-typed `resolved:` where the canonical wants a string
+- [x] Fix 4 frontmatter violations in `docs/dev/aistudio-schema/discourse.kb/` — drift accumulated 2026-06-23..08-08 while the schema symlinks dangled (revealed when the `$ref: skill://` stubs restored validation, commit 9324dba): `sources.kb/{bundle-audit,live-replay-probe,rosetta-correlation-experiment}.md` use `kind: investigation` (not in the canonical enum — may want an enum addition in llm-discourse-graph instead of a content edit), and `questions.kb/how-does-this-serve-chatfs.md` has an unexpected `status:` plus a date-typed `resolved:` where the canonical wants a string. Superseded 2026-08-27: the 2026-08-22 fleet-wide sweep re-surveyed the same drift as part of a twelve-error picture — all four of these are in it. Live entry under "Schema & frontmatter hygiene" above.
 - [ ] Create `docs/dev/milestones.kb/` — double-blocked (no milestone content yet; skills-repo pattern not defined)
 - [x] Fix pre-existing basedpyright errors in docs/ exploration scripts (3 as of 2026-08-08: implicitly-relative `convert` imports in `docs/dev/aistudio-schema/rosetta/{correlate,verify}.py`; unresolvable vendored `claude_api` import in `docs/dev/design-incubators/fork-representation/investigate-forks.py`) — deliberately left visible rather than excluded when the `**/docs` pyright exclude was narrowed to vendored code only. Done 2026-08-08: rosetta imports resolved via root `executionEnvironments`; `investigate-forks.py` rewritten to file/stdin input (dead `claude_api` fetch path removed). Repo-wide pyright 0/0 — devlogs `2026-08-08-001`, `2026-08-08-003`.
 - [x] Drop the typed-json `[tool.uv.sources]` git pins — root `pyproject.toml` plus the PEP 723 blocks in `docs/dev/aistudio-schema/{body-shape,extract-bundles}.py` and `docs/dev/design-incubators/fork-representation/investigate-forks.py`. Done 2026-08-08: publication landed as **`python-typed-json`** (PyPI blocked `typed-json` — name collision with third-party `typedjson`; my "name confirmed free" was wrong at upload time). Import name is unchanged (`typed_json`); dependency renamed in `packages/chatfs-cli/pyproject.toml` and the three PEP 723 blocks, sources tables deleted.

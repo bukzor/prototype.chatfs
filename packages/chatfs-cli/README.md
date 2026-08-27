@@ -70,7 +70,8 @@ subprocesses (`design.kb/040-design.kb/driver-model.md`).
 2. **`chatfs-<p>-index-splat --cache $C`** — reads index pages on stdin;
    per item, writes `.data/$UUID/meta.json`, purges prior view symlinks
    for that UUID, places a fresh `$TITLE` directory-symlink under the
-   date tree.
+   date tree. Emits one placement record per chat placed on stdout —
+   `{id, title, chat_dir, view}`, the same shape for every provider.
 3. **`chatfs-<p>-conversation-url-browse --cache $C <url>`** — captures
    one chat by URL: one browse trip yields both the conversation document
    and (chatgpt/claude) an index page to derive `meta.json` from; places
@@ -88,6 +89,12 @@ subprocesses (`design.kb/040-design.kb/driver-model.md`).
    to atomic `.md` files; dead branches render as nested blockquoted
    asides at their fork point. Markdown on stdout.
 
+`chatfs-<p>-index --cache $C` is the bare-noun driver for stages 1-2:
+it runs them as an OS pipe over one cache, so its stdout is splat's.
+A noun earns a driver only when its stages compose into one obvious
+default — `conversation`'s verbs are alternatives, so it has none. See
+`design.kb/040-design.kb/cli-command-shape.md`.
+
 Every stage rebuilds its outputs from scratch (no freshness caches) and
 regeneration is byte-deterministic; see
 `design.kb/040-design.kb/deterministic-regeneration.md`.
@@ -96,11 +103,11 @@ regeneration is byte-deterministic; see
 
 ```
 packages/chatfs-cli/
-├── pyproject.toml        # [project.scripts]: one entry per stage
+├── pyproject.toml        # [project.scripts]: one per stage + driver
 └── lib/chatfs/
     ├── provider/{claude,chatgpt,aistudio}/
     │   ├── conversation/ # url_browse, path_browse, *_render, splat, ...
-    │   ├── index/        # browse, splat
+    │   ├── index/        # browse, splat, __main__ (the driver)
     │   ├── layout.py     # provider-specific naming/url/time
     │   ├── pluck.py      # network-exhaust filters
     │   └── types.py

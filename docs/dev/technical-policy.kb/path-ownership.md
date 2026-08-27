@@ -50,6 +50,13 @@ business, not a cross-stage contract.
 | `.data/conversation.json` | capture | splat | The canonical plucked conversation document — splat's sole input. Capture is not always a single step to produce it (some sources need an internal normalization pass first); that intermediate step is scratch, below, not a second contract name. |
 | `.data/cdp.jsonl` | capture | — | Raw captured network exhaust; kept for inspectability and recovery, not read by any later stage in the ordinary path. |
 
+**Verbatim is the contract, not an oversight.** Most of a claude index
+entry's bytes are per-conversation feature-flag `settings` (~74%, mostly
+`enabled_mcp_tools`), so a cache runs several times larger than its
+identity fields need. Filtering would mean parsing a structure nothing
+downstream has claimed yet — what is currently opaque stays opaque.
+Ruled 2026-08-27; re-raise when a consumer needs the space, not before.
+
 **Scratch:** a capture stage may need working files beyond the three
 above — a pre-normalization pluck, a cross-check dump from a
 single-browse-trip optimization, anything internal to producing or
