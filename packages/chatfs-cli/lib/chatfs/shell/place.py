@@ -11,6 +11,7 @@ import os
 from collections.abc import Iterator, Mapping
 from datetime import datetime
 from pathlib import Path
+from typing import NamedTuple
 
 from chatfs.layout import (
     DATA_DIR_NAME,
@@ -121,6 +122,31 @@ def find_view_path(uuid: str, root: Path) -> Path | None:
     return next(_view_symlinks(uuid, root), None)
 
 
+class Placement(NamedTuple):
+    """One chat as `place_meta` left it: the identity it was placed
+    under, its storage dir, and the live view symlink into that dir.
+
+    `record()` is the shape index splat writes to stdout, one line per
+    chat placed. Identity comes from here rather than from a provider's
+    own index item so the stream reads the same whichever provider
+    produced it -- `id`/`title` are already the normalized fields every
+    provider's leaf extracts before calling place_meta.
+    """
+
+    id: str
+    title: str
+    chat_dir: Path
+    view: Path
+
+    def record(self) -> dict[str, str]:
+        return {
+            "id": self.id,
+            "title": self.title,
+            "chat_dir": str(self.chat_dir),
+            "view": str(self.view),
+        }
+
+
 def place_meta(
     id: str,
     title: str,
@@ -129,7 +155,7 @@ def place_meta(
     root: Path,
     *,
     label: str = "Created",
-) -> Path:
+) -> Placement:
     """Write meta.json into `.data/$UUID/`, refresh the view dir-symlink.
 
     `item` is serialized verbatim into meta.json (the provider's full
@@ -155,9 +181,9 @@ def place_meta(
     transition.
 
     Does not touch `.chat/$UUID/` -- it may not exist yet (see
-    chatfs.layout's module docstring); that's render's job. Returns
-    the (possibly not-yet-existing) chat dir, for callers that pass it
-    on to render.
+    chatfs.layout's module docstring); that's render's job. The
+    returned `Placement`'s chat_dir is therefore possibly
+    not-yet-existing, for callers that pass it on to render.
     """
     chat_dir = chat_dir_for(id, root)
     data_dir = data_dir_for(id, root)
@@ -177,4 +203,4 @@ def place_meta(
 
         _purge_view_symlinks(id, root, keep=title_link)
 
-    return chat_dir
+    return Placement(id, title, chat_dir, title_link)

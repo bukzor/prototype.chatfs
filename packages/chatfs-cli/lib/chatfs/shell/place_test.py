@@ -29,7 +29,7 @@ class DescribePlaceMeta:
     ):
         use_chicago_tz(monkeypatch)
         dt = datetime.fromtimestamp(DEMO_EPOCH, tz=timezone.utc)
-        chat_dir = place_meta("abc123", "Hello", dt, {"foo": "bar"}, tmp_path)
+        chat_dir = place_meta("abc123", "Hello", dt, {"foo": "bar"}, tmp_path).chat_dir
 
         assert chat_dir == chat_dir_for("abc123", tmp_path)
         assert not chat_dir.exists()  # place_meta doesn't touch .chat/ -- render's job
@@ -54,7 +54,7 @@ class DescribePlaceMeta:
         stale_link = tmp_path / "LastModified=2026/06/20/12:42:40-05:00" / "Hello"
         assert stale_link.is_symlink()
 
-        chat_dir = place_meta("abc123", "Hello", dt, {"real": True}, tmp_path)
+        chat_dir = place_meta("abc123", "Hello", dt, {"real": True}, tmp_path).chat_dir
 
         assert not stale_link.is_symlink()
         fresh_link = tmp_path / "Created=2026/06/20/12:42:40-05:00" / "Hello"
@@ -72,7 +72,7 @@ class DescribePlaceMeta:
         # must not delete it.
         use_chicago_tz(monkeypatch)
         dt = datetime.fromtimestamp(DEMO_EPOCH, tz=timezone.utc)
-        chat_dir = place_meta("abc123", "Hello", dt, {"v": 1}, tmp_path)
+        chat_dir = place_meta("abc123", "Hello", dt, {"v": 1}, tmp_path).chat_dir
         chat_dir.mkdir(parents=True)
         link_data_dir(chat_dir, "abc123")
 
@@ -226,3 +226,36 @@ class DescribeResolveChatDir:
         _ = stray.write_text("x")
         with pytest.raises(AssertionError, match="reached fs root"):
             _ = resolve_chat_dir(stray)
+
+
+class DescribePlacement:
+    """place_meta's return value: the record index splat emits on stdout,
+    so a consumer can act on what was just placed without re-deriving
+    any of the layout logic that placed it."""
+
+    def it_reports_the_chat_dir_and_the_live_view_symlink(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ):
+        use_chicago_tz(monkeypatch)
+        dt = datetime.fromtimestamp(DEMO_EPOCH, tz=timezone.utc)
+
+        placed = place_meta("abc123", "Hello", dt, {"foo": "bar"}, tmp_path)
+
+        assert placed.chat_dir == chat_dir_for("abc123", tmp_path)
+        assert placed.view == tmp_path / "Created=2026/06/20/12:42:40-05:00" / "Hello"
+        assert placed.view.is_symlink()
+
+    def it_records_identity_and_both_paths_as_json(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ):
+        use_chicago_tz(monkeypatch)
+        dt = datetime.fromtimestamp(DEMO_EPOCH, tz=timezone.utc)
+
+        placed = place_meta("abc123", "Hello", dt, {"foo": "bar"}, tmp_path)
+
+        assert placed.record() == {
+            "id": "abc123",
+            "title": "Hello",
+            "chat_dir": str(chat_dir_for("abc123", tmp_path)),
+            "view": str(tmp_path / "Created=2026/06/20/12:42:40-05:00" / "Hello"),
+        }

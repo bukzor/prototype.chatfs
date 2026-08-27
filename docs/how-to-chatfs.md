@@ -102,6 +102,16 @@ chatfs-claude-conversation-path-browse ~/chats/claude/.chat/$UUID/
 chatfs-claude-conversation-path-render ~/chats/claude/.chat/$UUID/
 ```
 
+The index command reports what it placed, one JSON object per chat —
+`{id, title, chat_dir, view}` — so you can drive the walk from it
+instead of filling in `$UUID` by hand:
+
+```bash
+chatfs-claude-index --cache ~/chats/claude |
+  jq -r .chat_dir |
+  xargs -rL1 chatfs-claude-conversation-path-browse
+```
+
 `chatfs-claude-index` is the two index stages joined for you. Run them
 apart when you want to see or filter the pages in between — the browse
 stage emits one raw index page per line on stdout, which is large (most

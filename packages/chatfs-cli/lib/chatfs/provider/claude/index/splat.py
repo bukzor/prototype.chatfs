@@ -9,9 +9,18 @@ item, calls place_meta which:
     - purges existing view symlinks for $UUID
     - creates a view dir-symlink under $root/YYYY/MM/DD/HH:MM:SS±HH:MM/
 
+stdout: one placement record per chat placed (jsonl) --
+`{id, title, chat_dir, view}`, the shared shape every provider's index
+splat emits. Deduplicated: a uuid already placed this run
+is re-written but not re-announced, so the line count matches the
+"placed N item(s)" summary. Feed it to whatever acts on a fresh
+index -- `jq -r .chat_dir | xargs -rL1 chatfs-claude-conversation-path-browse`.
+
 Pages overlap (the SPA re-fetches stable pages as the user scrolls), so
 duplicate uuids across pages are expected; last-write-wins.
 """
+import json
+
 import typed_json
 from chatfs.cli import extract_cache
 from chatfs.provider.claude import layout as claude_layout
@@ -39,14 +48,16 @@ def main() -> None:
             uuid = item["uuid"]
             if uuid in seen:
                 dups += 1
-            seen.add(uuid)
-            _ = place_meta(
+            placed = place_meta(
                 item["uuid"],
                 item["name"],
                 claude_layout.created_at(item["created_at"]),
                 item,
                 root,
             )
+            if uuid not in seen:
+                print(json.dumps(placed.record()))
+            seen.add(uuid)
     chatfs_sh.log(
         f"placed {len(seen)} item(s) under {root} "
         + f"({dups} duplicate-uuid re-writes across pages)"

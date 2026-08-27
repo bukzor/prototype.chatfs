@@ -19,6 +19,35 @@ pages of `{id, title, create_time, update_time}` records served by
   branch point, which is what earns the noun a driver at all -- see
   `../cli-command-shape.md`'s "Why a bare-noun driver".
 
+## What index splat emits
+
+Splat's stdout is one **placement record** per chat placed --
+`{id, title, chat_dir, view}` -- not an echo of its input. The stream
+answers "what landed, and where", which is what a consumer of a fresh
+index actually acts on; re-emitting the provider's index pages would
+just be `tee` of the bulkiest thing in the pipeline.
+
+Identity is the normalized pair `place_meta` already takes, not the
+provider's own field names (claude's `uuid`/`name`, chatgpt's
+`id`/`title`, AI Studio's synthesized pair). One `jq` works against
+every provider's stream.
+
+`chat_dir` is the machine handle -- it's what `conversation path
+browse` and `conversation path render` take as their argument, so
+`index | jq -r .chat_dir | xargs` is the whole bulk-capture loop.
+`view` is the human handle, the titled symlink a person navigates to.
+
+Deliberately absent: `created`. It's already in `meta.json` and already
+encoded in `view`'s path segments, and emitting it uniformly would mean
+re-deriving AI Studio's create_time/last_modified fallback outside the
+`place_meta` wrapper that owns that choice.
+
+The driver (`chatfs-<provider>-index`) does not compose this stream
+itself: it emits whatever its last stage emits, because it *is* the
+pipe (`../driver-model.md`). A driver with stdout of its own would be
+a third implementation of the index flow rather than a way to run the
+existing one.
+
 ## Why the index matters
 
 The index is one of two places title is captured. Chats reached via the

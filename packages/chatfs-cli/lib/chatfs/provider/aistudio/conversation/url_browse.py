@@ -58,7 +58,7 @@ def main() -> None:
     assert is_conversation(parsed), parsed
     item = aistudio_layout.index_item(parsed)
     assert item["id"] == id_, (item["id"], id_)
-    chat_dir = aistudio_layout.place_meta(item, root)
+    chat_dir = aistudio_layout.place_meta(item, root).chat_dir
 
     _ = chatfs_sh.run(
         [

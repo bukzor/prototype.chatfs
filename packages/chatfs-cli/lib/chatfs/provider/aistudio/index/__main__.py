@@ -6,9 +6,11 @@ Usage:
 
 The bare-noun driver for `index` -- `index browse | index splat` over
 one `--cache`, joined by an OS pipe rather than composed by the user's
-shell. Run the two stages by hand instead when you want to see or
-filter the pages in between; browse's stdout is the raw index pages,
-which are bulky.
+shell. Its stdout is splat's: one placement record per chat placed.
+
+Run the two stages by hand instead when you want to see or filter the
+pages in between; browse's stdout is the raw index pages, which are
+bulky.
 """
 from chatfs.cli import extract_cache
 from chatfs.shell import sh as chatfs_sh

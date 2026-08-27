@@ -17,6 +17,7 @@ from urllib.parse import urlparse
 from chatfs.provider.aistudio.pluck import pluck_conversation
 from chatfs.provider.aistudio.types import Conversation, IndexItem
 from chatfs.shell.capture import capture as _capture
+from chatfs.shell.place import Placement
 from chatfs.shell.place import place_meta as _place_meta
 
 
@@ -100,7 +101,7 @@ def _created(unix_seconds: int) -> datetime:
     return datetime.fromtimestamp(unix_seconds, tz=timezone.utc)
 
 
-def place_meta(item: IndexItem, root: Path) -> Path:
+def place_meta(item: IndexItem, root: Path) -> Placement:
     """Write meta.json into `.data/$UUID/`, refresh the view dir-symlink.
 
     View-tree placement prefers true creation time when `index_item`
@@ -113,7 +114,7 @@ def place_meta(item: IndexItem, root: Path) -> Path:
     shared place_meta) and re-places it under `Created=`: this entry
     "graduates."
 
-    Returns the chat dir.
+    Returns the placement -- see chatfs.shell.place.Placement.
     """
     if "create_time" in item:
         created, label = _created(item["create_time"]), "Created"

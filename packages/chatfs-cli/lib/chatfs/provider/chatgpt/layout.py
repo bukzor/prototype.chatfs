@@ -10,6 +10,7 @@ from urllib.parse import urlparse
 from chatfs.provider.chatgpt.pluck import pluck_conversation
 from chatfs.provider.chatgpt.types import IndexItem
 from chatfs.shell.capture import capture as _capture
+from chatfs.shell.place import Placement
 from chatfs.shell.place import place_meta as _place_meta
 
 
@@ -39,9 +40,9 @@ def capture(url: str, chat_dir: Path) -> Path:
     return _capture(url, chat_dir, pluck_conversation)
 
 
-def place_meta(item: IndexItem, root: Path) -> Path:
+def place_meta(item: IndexItem, root: Path) -> Placement:
     """Write meta.json into `.data/$UUID/`, refresh the view dir-symlink.
 
-    Returns the chat dir.
+    Returns the placement -- see chatfs.shell.place.Placement.
     """
     return _place_meta(item["id"], item["title"], created_at(item["create_time"]), item, root)

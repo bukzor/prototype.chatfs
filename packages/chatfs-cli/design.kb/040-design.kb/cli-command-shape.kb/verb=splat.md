@@ -14,7 +14,8 @@ carved out of the uniform command surface; that carve-out was temporary
 and has since expired -- see `package-division.md`):
 
 - `chatgpt index splat` — reads the sidebar index jsonl on stdin, places
-  per-UUID chat dirs via `place_meta`. See `noun=index.md`.
+  per-UUID chat dirs via `place_meta`, and writes one placement record
+  per chat placed to stdout. See `noun=index.md`.
 - `chatgpt conversation splat` — invoked by `chatgpt conversation path
   render`. Splats `.data/conversation.json` into `messages/` and
   `conversations/` subtrees before the bare-leaf render walks the

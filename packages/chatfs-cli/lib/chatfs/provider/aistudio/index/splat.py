@@ -16,7 +16,16 @@ uses (verified: entries decode with it unchanged, just with an empty
 chunkedPrompt — no turn content on an index-only entry), then handed to
 index_item/place_meta, which already handle that provenance (see
 chatfs.provider.aistudio.layout).
+
+stdout: one placement record per chat placed (jsonl) --
+`{id, title, chat_dir, view}`, the shared shape every provider's index
+splat emits. Deduplicated: a uuid already placed this run
+is re-written but not re-announced, so the line count matches the
+"placed N item(s)" summary. Feed it to whatever acts on a fresh
+index -- `jq -r .chat_dir | xargs -rL1 chatfs-aistudio-conversation-path-browse`.
 """
+import json
+
 import typed_json
 from typed_json import JsonObject, JsonValue
 from chatfs.cli import extract_cache
@@ -53,10 +62,12 @@ def main() -> None:
     for line in sys.stdin:
         entry = typed_json.loads(line)
         item = index_item(massage_entry(entry))
+        placed = place_meta(item, root)
         if item["id"] in seen:
             dups += 1
+        else:
+            print(json.dumps(placed.record()))
         seen.add(item["id"])
-        _ = place_meta(item, root)
     chatfs_sh.log(
         f"placed {len(seen)} item(s) under {root} " + f"({dups} duplicate-id re-writes)"
     )
