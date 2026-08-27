@@ -47,6 +47,19 @@ directly (the 2026-07-19 purity split). `run_module()` (subprocess
 `python -m`) still exists for the one stage that's a genuine separate
 command rather than an in-process generator: AI Studio's massage stage.
 
+The index flow's pipe now has a driver of its own —
+`chatfs-<provider>-index`, the bare-noun form
+(`cli-command-shape.md`) — but this does not move the index flow from
+the pipe surface to the delegation surface. The driver *is* the pipe:
+it spawns `python -m …index.browse` and `python -m …index.splat` and
+joins their stdio with an OS pipe (`chatfs.shell.sh.pipe`), so the
+stages still address each other only through argv and stdio, exactly
+as when the user types the `|`. What it saves is the second
+`--cache` and the need to remember which two verbs compose, not a
+process boundary. `pipe()` raises on either stage's non-zero exit —
+`pipefail`, not the shell's last-stage-only default — so a failed
+browse can't be swallowed by a splat that happily reads zero pages.
+
 ## Decided against: converting splat/render delegation to in-process calls
 
 Splat and render are each factored into an importable, testable pure

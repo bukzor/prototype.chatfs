@@ -97,9 +97,20 @@ chat dir per conversation, then walk them (the commands below take a path
 instead of `--cache`; the path says which cache they're in):
 
 ```bash
-chatfs-claude-index-browse --cache ~/chats/claude | chatfs-claude-index-splat --cache ~/chats/claude
+chatfs-claude-index --cache ~/chats/claude
 chatfs-claude-conversation-path-browse ~/chats/claude/.chat/$UUID/
 chatfs-claude-conversation-path-render ~/chats/claude/.chat/$UUID/
+```
+
+`chatfs-claude-index` is the two index stages joined for you. Run them
+apart when you want to see or filter the pages in between — the browse
+stage emits one raw index page per line on stdout, which is large (most
+of it is per-conversation feature-flag settings), so pipe it somewhere
+rather than to a terminal:
+
+```bash
+chatfs-claude-index-browse --cache ~/chats/claude | chatfs-claude-index-splat --cache ~/chats/claude
+chatfs-claude-index-browse --cache ~/chats/claude | jq -c '.data[] | {uuid, name, created_at}'
 ```
 
 Throw one away — moves the chat dir and its symlinks to the cache root's own
@@ -127,7 +138,7 @@ failed one.
 **"no sidebar index page included $UUID"** — capturing by URL relies on the
 page also loading your conversation list, which is where the title and
 timestamp come from. If it didn't, run the bulk path above instead:
-`index-browse | index-splat`, then `path-browse`.
+`chatfs-<provider>-index`, then `path-browse`.
 
 **Capture succeeded but the conversation isn't in it** — providers may serve
 a revisit from their own client-side cache and never hit the network. Local

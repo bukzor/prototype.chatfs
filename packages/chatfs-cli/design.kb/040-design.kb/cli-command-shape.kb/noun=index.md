@@ -14,6 +14,10 @@ pages of `{id, title, create_time, update_time}` records served by
   calls `place_meta` — writing `.data/$UUID/meta.json` and creating the
   view dir-symlink `YYYY/MM/DD/HH-MM-SS-$TITLE → .chat/$UUID/`. Placement
   mechanics live in `../chat-as-directory.kb/`.
+- `chatgpt index` (bare noun) runs those two as a subprocess pipe over
+  one `--cache`. The whole lifecycle is browse-then-splat with no
+  branch point, which is what earns the noun a driver at all -- see
+  `../cli-command-shape.md`'s "Why a bare-noun driver".
 
 ## Why the index matters
 

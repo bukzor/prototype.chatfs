@@ -8,7 +8,8 @@ when something needs debugging.
 
 `run` traces, then runs a command to completion, always raising on
 non-zero exit. Deliberately narrow signature (stdin/stdout handles);
-grow it as needed.
+grow it as needed. `pipe` is its two-stage counterpart, for a driver
+whose job is to be a pipeline.
 
 `caller_location` is the runtime stand-in for C's `__FILE__`/`__LINE__`
 (Python has no preprocessor) -- for diagnostics that should point a
@@ -89,6 +90,33 @@ def run(
         check=True,
         timeout=timeout,
     )
+
+
+def pipe(producer: Sequence[object], consumer: Sequence[object]) -> None:
+    """Run `producer | consumer` to completion, tracing the whole line first.
+
+    Raises on a non-zero exit from *either* stage -- `pipefail`, not the
+    shell's last-stage-only default. `close_fds=False` for the same
+    reason as `run`.
+    """
+    log(PS4 + f"{quote(producer)} | {quote(consumer)}")
+    producer_argv = [_stringify(arg) for arg in producer]
+    consumer_argv = [_stringify(arg) for arg in consumer]
+    upstream = subprocess.Popen(producer_argv, stdout=subprocess.PIPE, close_fds=False)
+    assert upstream.stdout is not None, upstream
+    # The consumer dups the read end into its own fd 0; drop the parent's
+    # handle once it has, so nothing here holds the pipe open.
+    with upstream.stdout as read_end:
+        downstream = subprocess.Popen(consumer_argv, stdin=read_end, close_fds=False)
+    upstream_code = upstream.wait()
+    downstream_code = downstream.wait()
+    # Both are reaped before either is reported, and the producer is
+    # reported first: when a browse fails, the splat's downstream
+    # complaint about empty input is the symptom, not the cause.
+    if upstream_code:
+        raise subprocess.CalledProcessError(upstream_code, producer_argv)
+    if downstream_code:
+        raise subprocess.CalledProcessError(downstream_code, consumer_argv)
 
 
 def _stringify(arg: object) -> str:

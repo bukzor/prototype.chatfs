@@ -68,7 +68,7 @@ def find_index_item(data_dir: Path, uuid: str) -> IndexItem:
         matches.extend(item for item in page["data"] if item["uuid"] == uuid)
     assert matches, (
         f"no sidebar index page included {uuid}; "
-        f"run index browse | index splat, then use path_browse"
+        "run chatfs-claude-index, then use path_browse"
     )
     assert all(
         m == matches[0] for m in matches

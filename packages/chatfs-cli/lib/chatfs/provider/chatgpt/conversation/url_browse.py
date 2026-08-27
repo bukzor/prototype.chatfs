@@ -72,7 +72,7 @@ def find_index_item(data_dir: Path, uuid: str) -> IndexItem:
                 matches.append(item)
     assert matches, (
         f"no sidebar index page included {uuid}; "
-        f"run index browse | index splat, then use path_browse"
+        "run chatfs-chatgpt-index, then use path_browse"
     )
     assert all(m == matches[0] for m in matches), (
         f"index endpoint returned divergent items for {uuid}: {matches}"
