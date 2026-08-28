@@ -24,12 +24,16 @@ pnpm install   # Node deps; puts `har-browse` on your PATH
 ```
 
 That puts one command per pipeline stage on your PATH, named
-`chatfs-provider-<provider>-<noun>-<verb>` (activate `.venv` — direnv does this for
-you in this checkout). They run from any directory. Most take `--cache
-<dir>` — the cache they read and write — in any position on the command
-line. Each provider gets its own `<provider>/` subdirectory under it,
-appended for you, so one cache serves all three. There's no default; pick
-a directory and keep using it, or export it once:
+`chatfs-provider-<provider>-<noun>-<verb>` (activate `.venv` — direnv
+does this for you in this checkout), plus a shorter
+`chatfs-<noun>-<locator>-<verb>` for each stage that can work out the
+provider from the URL or path you hand it. They run from any directory.
+
+Most take `--cache <dir>` — the cache they read and write — in any
+position on the command line. Each provider gets its own `<provider>/`
+subdirectory under it, appended for you, so one cache serves all three.
+There's no default; pick a directory and keep using it, or export it
+once:
 
 ```bash
 export CHATFS_CACHE=~/chats
