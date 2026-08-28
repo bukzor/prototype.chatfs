@@ -24,12 +24,13 @@ field.
 
 Steps:
     1. browse $url → .data/$UUID/cdp.jsonl
-    2. conversation pluck → .data/$UUID/conversation.json
-    3. index pluck → .data/$UUID/cdp.jsonl.d/index-pages.jsonl; filter to
+    2. conversation pluck → .data/$UUID/conversation.json.d/raw.jsonl
+    3. assemble → .data/$UUID/conversation.json
+    4. index pluck → .data/$UUID/cdp.jsonl.d/index-pages.jsonl; filter to
        .id == $UUID → meta (fail loudly if absent)
-    4. cross-check conversation doc vs index item, null-tolerant
-    5. place_meta (writes meta.json, purges + places view dir-symlink)
-    6. delegate to path_render
+    5. cross-check conversation doc vs index item, null-tolerant
+    6. place_meta (writes meta.json, purges + places view dir-symlink)
+    7. delegate to path_render
 
 Captures are written directly into `.data/$UUID/` — no temp staging
 (matches claude's `capture()` policy). If a later step fails, the
@@ -110,7 +111,7 @@ def main() -> None:
 
     chat_dir = chat_dir_for(uuid, root)
     data_dir = chatgpt_layout.capture(url, chat_dir)
-    conversation = data_dir / "conversation.json"
+    conversation = chatgpt_layout.assemble_conversation(data_dir)
 
     item = find_index_item(data_dir, uuid)
 

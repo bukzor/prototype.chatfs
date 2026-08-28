@@ -21,13 +21,14 @@ def run_module(module: str, src: Path, dst: Path) -> None:
     """Run `python -m module` as an external filter: read src, write its stdout to dst.
 
     Shared low-level primitive behind pipeline stages that still shell
-    out to a separate process rather than run in-process — today, only
-    AI Studio's massage stage (`conversation.json.d/raw.json` ->
-    `conversation.json`). `-m`, not a direct script path, so the callee
-    resolves `chatfs.*` imports the same way every other subprocess
-    delegation in this codebase does: via the installed package, from
-    any cwd. Kept generic (any module, not just massage) in case a
-    future stage needs the same "external filter, teed to disk" shape.
+    out to a separate process rather than run in-process -- the
+    `conversation.json.d/raw.*` -> `conversation.json` stages, AI
+    Studio's massage and chatgpt's assemble. `-m`, not a direct script
+    path, so the callee resolves `chatfs.*` imports the same way every
+    other subprocess delegation in this codebase does: via the installed
+    package, from any cwd. Kept generic (any module, not just those two)
+    in case a future stage needs the same "external filter, teed to
+    disk" shape.
     """
     with src.open("rb") as fin, dst.open("wb") as fout:
         _ = chatfs_sh.run([sys.executable, "-m", module], stdin=fin, stdout=fout)
@@ -50,7 +51,7 @@ def pluck(
 ) -> None:
     """Run a plucking generator over src's lines; write its yields as JSONL to dst.
 
-    `fn` is `chatfs.pluck.iter_responses_matching` (or a provider's thin
+    `fn` is `chatfs.pluck.iter_response_bodies` (or a provider's thin
     wrapper around it). Creates `dst`'s parent so callers can freely
     target a not-yet-existing `X.d/` scratch dir (`path-ownership.md`)
     without a separate mkdir at each call site.
@@ -87,12 +88,13 @@ def capture(
 
     `pluck_fn` and `conversation_filename` are the provider-shaped
     half: each provider's leaf entry points supply their own
-    conversation pluck (and, for AI Studio, `conversation.json.d/raw.json`
-    instead of the default `conversation.json`, since that provider's
-    pluck output still needs a massage pass before it's named — the `.d/`
-    scratch convention is `path-ownership.md`'s: a top-level contract
-    name `X` reserves the sibling `X.d/` for scratch involved in
-    producing or checking it).
+    conversation pluck, and name its output `conversation.json.d/raw.*`
+    instead of the default `conversation.json` whenever that pluck
+    output needs a stage of its own before it earns the contract name
+    (AI Studio's massage, chatgpt's assemble). The `.d/` scratch
+    convention is `path-ownership.md`'s: a top-level contract name `X`
+    reserves the sibling `X.d/` for scratch involved in producing or
+    checking it.
 
     The intermediate-data policy is the load-bearing piece: captures
     land directly in `.data/$UUID/`, never a tempdir. Failures leave

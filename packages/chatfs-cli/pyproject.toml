@@ -36,6 +36,7 @@ chatfs-chatgpt-conversation-path-browse = "chatfs.provider.chatgpt.conversation.
 chatfs-chatgpt-conversation-path-render = "chatfs.provider.chatgpt.conversation.path_render:main"
 chatfs-chatgpt-conversation-render = "chatfs.provider.chatgpt.conversation.render:main"
 chatfs-chatgpt-conversation-splat = "chatfs.provider.chatgpt.conversation.splat:main"
+chatfs-chatgpt-conversation-assemble = "chatfs.provider.chatgpt.conversation.assemble:main"
 chatfs-chatgpt-index = "chatfs.provider.chatgpt.index.__main__:main"
 chatfs-chatgpt-index-browse = "chatfs.provider.chatgpt.index.browse:main"
 chatfs-chatgpt-index-splat = "chatfs.provider.chatgpt.index.splat:main"

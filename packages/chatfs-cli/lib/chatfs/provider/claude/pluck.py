@@ -6,7 +6,7 @@ import re
 from collections.abc import Iterable, Iterator
 
 from typed_json import JsonValue
-from chatfs.pluck import iter_responses_matching
+from chatfs.pluck import iter_response_bodies
 
 # The URL carries query params (tree, rendering_mode, etc.) so we anchor on
 # end-of-path-segment, not end-of-url.
@@ -16,9 +16,9 @@ INDEX_URL = re.compile(r"/chat_conversations_v2\?")
 
 def pluck_conversation(cdp_lines: Iterable[str]) -> Iterator[JsonValue]:
     """Pluck the /chat_conversations/{id}?tree=True&... response body."""
-    return iter_responses_matching(cdp_lines, CONVERSATION_URL)
+    return iter_response_bodies(cdp_lines, CONVERSATION_URL)
 
 
 def pluck_index_pages(cdp_lines: Iterable[str]) -> Iterator[JsonValue]:
     """Pluck each /chat_conversations_v2?... response body."""
-    return iter_responses_matching(cdp_lines, INDEX_URL)
+    return iter_response_bodies(cdp_lines, INDEX_URL)

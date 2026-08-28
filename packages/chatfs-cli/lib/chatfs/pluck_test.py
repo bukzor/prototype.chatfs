@@ -1,11 +1,11 @@
-"""Tests for chatfs.pluck.iter_responses_matching, the skeleton every
+"""Tests for chatfs.pluck.iter_response_bodies, the skeleton every
 provider's pluck is built on (ported 2026-07-14 from six per-provider
 `.jq` filters)."""
 
 import json
 import re
 
-from chatfs.pluck import iter_responses_matching
+from chatfs.pluck import iter_response_bodies
 
 # Shapes below are modeled on real captures inspected during the 2026-07-14
 # jq/sh port (a live `aistudio.cdp.jsonl`/`chatgpt.2.cdp.jsonl` capture):
@@ -24,7 +24,7 @@ def response_received(url: str, body: object | None) -> str:
     )
 
 
-class DescribeIterResponsesMatching:
+class DescribeIterResponseBodies:
     def it_yields_the_parsed_body_of_a_matching_response(self):
         lines = [
             response_received(
@@ -32,7 +32,7 @@ class DescribeIterResponsesMatching:
                 json.dumps({"conversation_id": "0badc0de"}),
             )
         ]
-        assert list(iter_responses_matching(lines, CHATGPT_CONVERSATION_URL)) == [
+        assert list(iter_response_bodies(lines, CHATGPT_CONVERSATION_URL)) == [
             {"conversation_id": "0badc0de"}
         ]
 
@@ -43,7 +43,7 @@ class DescribeIterResponsesMatching:
                 json.dumps({"items": []}),
             )
         ]
-        assert list(iter_responses_matching(lines, CHATGPT_CONVERSATION_URL)) == []
+        assert list(iter_response_bodies(lines, CHATGPT_CONVERSATION_URL)) == []
 
     def it_skips_a_non_response_received_event(self):
         line = json.dumps(
@@ -56,7 +56,7 @@ class DescribeIterResponsesMatching:
                 },
             }
         )
-        assert list(iter_responses_matching([line], CHATGPT_CONVERSATION_URL)) == []
+        assert list(iter_response_bodies([line], CHATGPT_CONVERSATION_URL)) == []
 
     def it_skips_a_non_string_body(self):
         # a 204 or interrupted response: real captures carry `body: null`
@@ -66,11 +66,11 @@ class DescribeIterResponsesMatching:
                 "https://chatgpt.com/backend-api/conversation/0badc0de", None
             )
         ]
-        assert list(iter_responses_matching(lines, CHATGPT_CONVERSATION_URL)) == []
+        assert list(iter_response_bodies(lines, CHATGPT_CONVERSATION_URL)) == []
 
     def it_skips_blank_lines(self):
         lines = ["", "   \n"]
-        assert list(iter_responses_matching(lines, CHATGPT_CONVERSATION_URL)) == []
+        assert list(iter_response_bodies(lines, CHATGPT_CONVERSATION_URL)) == []
 
     def it_yields_once_per_matching_event_across_multiple_lines(self):
         lines = [
@@ -83,7 +83,7 @@ class DescribeIterResponsesMatching:
                 json.dumps({"conversation_id": "bbbbbbbb"}),
             ),
         ]
-        assert list(iter_responses_matching(lines, CHATGPT_CONVERSATION_URL)) == [
+        assert list(iter_response_bodies(lines, CHATGPT_CONVERSATION_URL)) == [
             {"conversation_id": "aaaaaaaa"},
             {"conversation_id": "bbbbbbbb"},
         ]

@@ -11,8 +11,9 @@ or url browse).
 
 Steps:
     1. browse $url → .data/$UUID/cdp.jsonl
-    2. pluck cdp.jsonl → .data/$UUID/conversation.json
-    3. delegate to path_render
+    2. pluck cdp.jsonl → .data/$UUID/conversation.json.d/raw.jsonl
+    3. assemble → .data/$UUID/conversation.json
+    4. delegate to path_render
 """
 import typed_json
 from chatfs.layout import data_dir_of
@@ -34,7 +35,7 @@ def main() -> None:
     assert is_index_item(meta), meta
     url = chatgpt_layout.url_for(meta["id"])
 
-    _ = chatgpt_layout.capture(url, chat_dir)
+    _ = chatgpt_layout.assemble_conversation(chatgpt_layout.capture(url, chat_dir))
 
     _ = chatfs_sh.run(
         [

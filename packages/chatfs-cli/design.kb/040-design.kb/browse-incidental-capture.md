@@ -24,7 +24,8 @@ target conversation as one of its `items[]`.
 CDP file, placing the outputs in `.data/$UUID/`:
 
 - `chatfs.provider.chatgpt.pluck.pluck_conversation` →
-  `conversation.json` (the mapping document)
+  `conversation.json.d/raw.jsonl` → assemble →
+  `conversation.json` (see `conversation-document-is-whole.md`)
 - `chatfs.provider.chatgpt.pluck.pluck_index_pages` → filtered to
   `item["id"] == $UUID` → `meta.json`
 

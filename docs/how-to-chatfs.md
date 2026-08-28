@@ -84,6 +84,11 @@ Edited and regenerated messages appear as nested blockquoted asides at the
 point where the conversation forked, so nothing you said is silently
 dropped.
 
+Forks only appear if the provider sent them. chatgpt's current endpoints
+serve a conversation as one linear thread -- the alternate versions behind
+its `<` `>` arrows are not in the capture -- so a chatgpt `chat.md` reads
+as a straight line whether or not the conversation has forks.
+
 ## Other things you can do
 
 Re-render from bytes already captured (no browser, no network):
@@ -149,6 +154,13 @@ failed one.
 page also loading your conversation list, which is where the title and
 timestamp come from. If it didn't, run the bulk path above instead:
 `chatfs-<provider>-index`, then `path-browse`.
+
+**"capture holds only N of this conversation's pages"** -- chatgpt sends
+older messages only as you scroll back through them, so a capture taken
+from the bottom of a long conversation has a prefix missing. Scroll to the
+top of the conversation, then click **Done Capturing**. The previous
+`conversation.json` survives the failure, so re-running costs only the
+browse.
 
 **Capture succeeded but the conversation isn't in it** — providers may serve
 a revisit from their own client-side cache and never hit the network. Local

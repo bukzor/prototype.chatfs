@@ -1,6 +1,6 @@
 """Tests for chatfs.provider.aistudio.pluck's pluck_conversation/
 pluck_index_pages — the two provider plucks with real logic beyond
-iter_responses_matching's shared skeleton (guard + flatten).
+iter_response_bodies's shared skeleton (guard + flatten).
 
 Envelope shapes are trimmed synthetic versions of what a real
 ResolveDriveResource/ListPrompts capture holds (verified during the port

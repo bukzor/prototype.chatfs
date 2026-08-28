@@ -10,7 +10,7 @@ import re
 from collections.abc import Iterable, Iterator
 
 from typed_json import JsonValue, is_json_array
-from chatfs.pluck import iter_responses_matching
+from chatfs.pluck import iter_response_bodies
 
 # ResolveDriveResource resolves any Drive resource, not just prompts, so URL
 # alone doesn't guarantee a prompt body — pluck_conversation guards on shape
@@ -28,7 +28,7 @@ def pluck_conversation(cdp_lines: Iterable[str]) -> Iterator[JsonValue]:
     `[0]` is `"prompts/<id>"`; yielding each envelope element flattens to
     one message per line (mirrors the old `.jq`'s `.[]`).
     """
-    for envelope in iter_responses_matching(cdp_lines, CONVERSATION_URL):
+    for envelope in iter_response_bodies(cdp_lines, CONVERSATION_URL):
         assert is_json_array(envelope), envelope
         first = envelope[0] if envelope else None
         first_id = first[0] if is_json_array(first) and first else ""
@@ -48,7 +48,7 @@ def pluck_index_pages(cdp_lines: Iterable[str]) -> Iterator[JsonValue]:
     chatfs.provider.aistudio.conversation.massage_json) with an empty
     chunkedPrompt (index entries carry no turn content).
     """
-    for envelope in iter_responses_matching(cdp_lines, INDEX_URL):
+    for envelope in iter_response_bodies(cdp_lines, INDEX_URL):
         assert is_json_array(envelope) and envelope, envelope
         entries = envelope[0]
         assert is_json_array(entries), entries
