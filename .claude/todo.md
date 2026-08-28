@@ -111,6 +111,14 @@ dict instead of saying which driver to use.
       `cli-command-shape.md` as the **dispatching form** vocabulary entry.
 - [x] Enforce the module↔command mapping in a test rather than by eye
       (`entry_points_test.py`); bijective at 34/34 when pinned.
+- [ ] Decide whether `[project.scripts]` should be *generated* rather than
+      only checked. `entry_points_test.py`'s `modules_defining_main()` is
+      already the generator; emitting the block from it is a few lines, and a
+      test that the checked-in block matches keeps `pyproject.toml` the honest
+      declaration. Ruled 2026-08-28 to ship the check alone first — revisit if
+      hand-writing the line ever actually annoys. The hatchling
+      `dynamic = ["scripts"]` metadata hook does this natively and was
+      rejected: `pyproject.toml` would stop stating the CLI surface.
 - [x] `chatfs-conversation-path-<verb>` — dispatch on the provider segment of
       the resolved chat dir. Deliberately *not* a `meta.json` shape sniffer:
       chatgpt's and aistudio's `is_index_item` differ only in which second

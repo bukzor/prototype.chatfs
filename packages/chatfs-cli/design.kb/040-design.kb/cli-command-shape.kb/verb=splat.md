@@ -25,3 +25,9 @@ The verb is shape-of-operation, not shape-of-input: index splat reads
 jsonl-of-pages-from-stdin; conversation splat reads a single JSON file.
 Both fan a single document out into a tree of small files; that's the
 common shape `splat` names.
+
+That input shape is also why neither splat has a provider-dispatching
+form. Both take a document and a destination rather than an address, and
+conversation splat's destination is a staged scratch sibling that need
+not sit in a cache at all -- there is nothing in the arguments a provider
+could be read off. See `../cli-command-shape.md`'s **dispatching form**.

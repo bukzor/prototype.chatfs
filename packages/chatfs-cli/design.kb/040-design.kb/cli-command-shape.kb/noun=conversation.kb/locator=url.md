@@ -1,8 +1,18 @@
 # noun=conversation, locator=url
 
-URL addresses a conversation by its ChatGPT URL:
-`https://chatgpt.com/c/$UUID`. `uuid_from_url` parses with
-`assert parts[0] == "c"` — the URL must match that shape.
+URL addresses a conversation by the link its provider serves it at --
+`https://chatgpt.com/c/$UUID`, `https://claude.ai/chat/$UUID`,
+`https://aistudio.google.com/prompts/$ID`. Each provider's
+`uuid_from_url` asserts its own path shape (chatgpt's checks
+`parts[0] == "c"`), so a malformed link fails at parse rather than
+producing a plausible wrong uuid.
+
+The host names the provider, and is the only part that does: the paths
+differ per provider and carry no such signal. Each `layout` declares its
+`HOST` and builds `url_for` from it, so the map
+`chatfs-conversation-url-<verb>` dispatches on cannot drift from the URLs
+this codebase emits -- see `../../cli-command-shape.md`'s
+**dispatching form**.
 
 `url browse` is the first-capture entry point — used when the chat dir
 doesn't yet exist or when only the URL is known. The conversation

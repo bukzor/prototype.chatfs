@@ -60,6 +60,16 @@ process boundary. `pipe()` raises on either stage's non-zero exit —
 `pipefail`, not the shell's last-stage-only default — so a failed
 browse can't be swallowed by a splat that happily reads zero pages.
 
+## A third surface: dispatch owns routing, not logic
+
+`chatfs-conversation-<locator>-<verb>` is a delegator that calls no stage
+function at all. It reads the provider off its locator, then runs that
+provider's own leaf as a subprocess with argv forwarded untouched. That is
+deliberately thinner than the drivers above: the moment it parsed `--cache`,
+or imported a stage, it would become a second copy of a leaf's contract,
+free to drift from it. Owning only the routing decision is what keeps it
+from being one.
+
 ## Decided against: converting splat/render delegation to in-process calls
 
 Splat and render are each factored into an importable, testable pure

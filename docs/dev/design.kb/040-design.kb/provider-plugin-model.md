@@ -31,13 +31,16 @@ extractors and splat genuinely provider-only.
 
 > [!QUESTION] one multi-provider mount root, or one mount per cache dir?
 > The original sketch mounts providers side by side under
-> `/mnt/llmfs/<provider>/` (`chatgpt/`, `claude.ai/`, ...). The pipeline
-> that exists addresses one `--cache <dir>` at a time, and the cache
-> contract (`docs/dev/technical-policy.kb/path-ownership.md`) has no
-> `<provider>/` level inside it. Settles with the mount MVP (graduation
-> child 003): either the daemon composes per-provider cache roots into
-> one mount tree, or a mount serves one cache root and multi-provider
-> is the consumer's arrangement of mounts.
+> `/mnt/llmfs/<provider>/` (`chatgpt/`, `claude.ai/`, ...). The cache
+> tree now has that shape: `--cache` names a cache holding every
+> provider, each writing under `$cache/<provider>/`
+> (`docs/dev/technical-policy.kb/path-ownership.md`, 2026-08-28). One
+> mount over one cache therefore already serves every provider, which
+> collapses most of the original either/or. Still settles with the
+> mount MVP (graduation child 003); what remains genuinely open is
+> narrower — whether the daemon ever composes *several* caches into a
+> single tree, or whether that stays the consumer's arrangement of
+> mounts.
 
 > [!QUESTION] is a declarative provider manifest still wanted?
 > The sketched per-provider configuration record — accepted `conv_ref`

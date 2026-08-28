@@ -3,12 +3,19 @@
 Path addresses a conversation by any filesystem path inside or
 referencing the chat dir. `resolve_chat_dir` (in
 `chatfs.shell.place`) normalizes input — accepts the chat dir itself,
-a file inside it, the view dir-symlink under the date tree, or any
-descendant — and walks up to canonical `.chat/$UUID/`. Post-condition
-asserted: result is a real directory whose parent is named `.chat`.
+a file inside it, the `.data/$UUID/` twin, the view dir-symlink under the
+date tree, or any descendant — and walks up to canonical `.chat/$UUID/`.
+It climbs by `p.parent.name` rather than `is_dir()`, and does **not**
+assert the result exists: a chat dir legitimately does not, before its
+first render.
 
-The view dir-symlink (`YYYY/MM/DD/HH-MM-SS-$TITLE → .chat/$UUID/`, see
-`../../chat-as-directory.md`) is the user-facing entry point;
+The provider is a segment of that canonical form. `resolve_chat_dir`
+yields `$cache/$provider/.chat/$UUID`, so `chatfs-conversation-path-<verb>`
+reads the provider off the path instead of being told it -- see
+`../../cli-command-shape.md`'s **dispatching form**.
+
+The view dir-symlink (`Created=YYYY/MM/DD/HH:MM:SS±HH:MM/$TITLE →
+.chat/$UUID/`, see `../../chat-as-directory.md`) is the user-facing entry point;
 `resolve_chat_dir` is intentionally forgiving so the user can pass either
 the view path or the storage dir interchangeably. Loose-then-strict:
 ergonomic input shapes encapsulated inside `resolve_chat_dir`, downstream
