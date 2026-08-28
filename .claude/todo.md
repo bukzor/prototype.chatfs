@@ -99,9 +99,11 @@ dict instead of saying which driver to use.
       left in `.venv/bin/`. Historical hits left stale by the repo's own
       precedent — devlog bodies, and the two completed `todo.kb/` children
       that record the 2026-08-07 naming decision.
-- [ ] `chatfs-conversation-url-<verb>` — dispatch on URL host
+- [x] `chatfs-conversation-url-<verb>` — dispatch on URL host
       (`claude.ai` / `chatgpt.com` / `aistudio.google.com`). Total and
-      injective; every provider already has `uuid_from_url`.
+      injective; every provider already has `uuid_from_url`. Done 2026-08-28:
+      `browse` and `url_render` dispatch; `url-trash` stayed provider-only,
+      claude being the only provider with the verb.
 - [ ] `chatfs-conversation-path-<verb>` — dispatch on the provider segment of
       the resolved chat dir. Deliberately *not* a `meta.json` shape sniffer:
       chatgpt's and aistudio's `is_index_item` differ only in which second

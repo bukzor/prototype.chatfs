@@ -22,12 +22,16 @@ from chatfs.shell.place import Placement
 from chatfs.shell.place import place_meta as _place_meta
 
 
+HOST: Final = "aistudio.google.com"
+"""The web host this provider serves conversations from -- the half of a
+URL that identifies which provider a link belongs to."""
+
 PROVIDER: Final = "aistudio"
 """This provider's path segment under a cache root (`chatfs.cli.extract_cache`)."""
 
 
 def url_for(id_: str) -> str:
-    return f"https://aistudio.google.com/prompts/{id_}"
+    return f"https://{HOST}/prompts/{id_}"
 
 
 def uuid_from_url(url: str) -> str:

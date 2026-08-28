@@ -18,12 +18,16 @@ from chatfs.shell.place import Placement
 from chatfs.shell.place import place_meta as _place_meta
 
 
+HOST: Final = "chatgpt.com"
+"""The web host this provider serves conversations from -- the half of a
+URL that identifies which provider a link belongs to."""
+
 PROVIDER: Final = "chatgpt"
 """This provider's path segment under a cache root (`chatfs.cli.extract_cache`)."""
 
 
 def url_for(uuid: str) -> str:
-    return f"https://chatgpt.com/c/{uuid}"
+    return f"https://{HOST}/c/{uuid}"
 
 
 def uuid_from_url(url: str) -> str:

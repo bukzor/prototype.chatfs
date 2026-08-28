@@ -20,6 +20,10 @@ dev = [
 # design.kb/040-design.kb/cli-command-shape.md. The bare `chatfs` name is
 # reserved for the future Rust dispatcher (package-division.md).
 [project.scripts]
+# Provider-dispatching forms: same noun/locator/verb, provider read off the
+# locator itself (URL host, cache path segment) instead of typed.
+chatfs-conversation-url-browse = "chatfs.conversation.url_browse:main"
+chatfs-conversation-url-render = "chatfs.conversation.url_render:main"
 chatfs-provider-claude-conversation-url-browse = "chatfs.provider.claude.conversation.url_browse:main"
 chatfs-provider-claude-conversation-url-render = "chatfs.provider.claude.conversation.url_render:main"
 chatfs-provider-claude-conversation-url-trash = "chatfs.provider.claude.conversation.url_trash:main"

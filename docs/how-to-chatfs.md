@@ -43,11 +43,13 @@ own browser session, so whatever you can read while logged in, you can pull.
 ## Pull one conversation
 
 ```bash
-chatfs-provider-claude-conversation-url-browse --cache ~/chats https://claude.ai/chat/$UUID
+chatfs-conversation-url-browse --cache ~/chats https://claude.ai/chat/$UUID
 ```
 
-Swap `claude` for `chatgpt` or `aistudio`; the command name is the only
-thing that changes.
+The provider comes from the URL's host, so that same command takes a
+`chatgpt.com` or `aistudio.google.com` link. Every dispatching command has a
+`chatfs-provider-<provider>-…` twin naming one provider outright — the
+dispatcher just picks which twin to run.
 
 A browser window opens on the conversation. Log in if you need to, let the
 page finish loading, then click **Done Capturing** in the overlay. The command

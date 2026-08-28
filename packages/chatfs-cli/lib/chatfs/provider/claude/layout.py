@@ -9,12 +9,16 @@ from typing import Final
 from urllib.parse import urlparse
 
 
+HOST: Final = "claude.ai"
+"""The web host this provider serves conversations from -- the half of a
+URL that identifies which provider a link belongs to."""
+
 PROVIDER: Final = "claude"
 """This provider's path segment under a cache root (`chatfs.cli.extract_cache`)."""
 
 
 def url_for(uuid: str) -> str:
-    return f"https://claude.ai/chat/{uuid}"
+    return f"https://{HOST}/chat/{uuid}"
 
 
 def uuid_from_url(url: str) -> str:

@@ -29,6 +29,11 @@ the module path (`chatfs.provider.claude.conversation.url_browse` →
 `design.kb/040-design.kb/cli-command-shape.md` for the vocabulary
 (noun, verb, locator sub-noun).
 
+Commands come in two shapes. `chatfs-conversation-<locator>-<verb>` reads
+the provider off the locator you already typed — a URL's host — and runs the
+matching `chatfs-provider-<provider>-conversation-<locator>-<verb>`, which
+names one provider outright and is what every pipeline stage ultimately is.
+
 Every command runs from any directory. URL-addressed and index commands
 take `--cache <dir>` — the cache they read and write, deliberately with no
 baked default (`technical-policy.kb/path-ownership.md`). Each command works
