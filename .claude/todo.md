@@ -104,12 +104,14 @@ dict instead of saying which driver to use.
       injective; every provider already has `uuid_from_url`. Done 2026-08-28:
       `browse` and `url_render` dispatch; `url-trash` stayed provider-only,
       claude being the only provider with the verb.
-- [ ] `chatfs-conversation-path-<verb>` — dispatch on the provider segment of
+- [x] `chatfs-conversation-path-<verb>` — dispatch on the provider segment of
       the resolved chat dir. Deliberately *not* a `meta.json` shape sniffer:
       chatgpt's and aistudio's `is_index_item` differ only in which second
       time field they carry and its JSON type, and the chatgpt half is an
       upstream payload `path-ownership.md` requires we keep verbatim, so
-      shape-disjointness is a coincidence we don't control.
+      shape-disjointness is a coincidence we don't control. Done 2026-08-28:
+      `path-browse` and `path-render` dispatch, verified against the chatgpt
+      chat whose wrong-driver failure started this.
 
 ## Transcript consumer ergonomics
 

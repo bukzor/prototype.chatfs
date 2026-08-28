@@ -30,7 +30,8 @@ the module path (`chatfs.provider.claude.conversation.url_browse` →
 (noun, verb, locator sub-noun).
 
 Commands come in two shapes. `chatfs-conversation-<locator>-<verb>` reads
-the provider off the locator you already typed — a URL's host — and runs the
+the provider off the locator you already typed — a URL's host, or a chat
+dir's cache segment — and runs the
 matching `chatfs-provider-<provider>-conversation-<locator>-<verb>`, which
 names one provider outright and is what every pipeline stage ultimately is.
 

@@ -111,13 +111,17 @@ chatfs-provider-claude-conversation-url-render --cache ~/chats https://claude.ai
 
 Pull many conversations — capture the sidebar index first, which lays down a
 chat dir per conversation, then walk them (the commands below take a path
-instead of `--cache`; the path says which cache they're in):
+instead of `--cache`; the path says both which cache and which provider):
 
 ```bash
 chatfs-provider-claude-index --cache ~/chats
-chatfs-provider-claude-conversation-path-browse ~/chats/claude/.chat/$UUID/
-chatfs-provider-claude-conversation-path-render ~/chats/claude/.chat/$UUID/
+chatfs-conversation-path-browse ~/chats/claude/.chat/$UUID/
+chatfs-conversation-path-render ~/chats/claude/.chat/$UUID/
 ```
+
+Listing an index is per-provider — it's one account's sidebar — but the walk
+is not: the chat dir's own path says which provider it belongs to, so a
+mixed stream of chat dirs walks with one command.
 
 The index command reports what it placed, one JSON object per chat —
 `{id, title, chat_dir, view}` — so you can drive the walk from it
@@ -126,7 +130,7 @@ instead of filling in `$UUID` by hand:
 ```bash
 chatfs-provider-claude-index --cache ~/chats |
   jq -r .chat_dir |
-  xargs -rL1 chatfs-provider-claude-conversation-path-browse
+  xargs -rL1 chatfs-conversation-path-browse
 ```
 
 `chatfs-provider-claude-index` is the two index stages joined for you. Run them

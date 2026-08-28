@@ -1,11 +1,16 @@
 """Tests for the provider-dispatching commands' one job: naming the provider
 a locator belongs to."""
 
+from pathlib import Path
 from urllib.parse import urlparse
 
 import pytest
 
-from chatfs.conversation.dispatch import provider_for_url, url_in
+from chatfs.conversation.dispatch import (
+    provider_for_path,
+    provider_for_url,
+    url_in,
+)
 from chatfs.provider.aistudio import layout as aistudio_layout
 from chatfs.provider.chatgpt import layout as chatgpt_layout
 from chatfs.provider.claude import layout as claude_layout
@@ -66,3 +71,36 @@ class DescribeRegistry:
             chatgpt_layout.PROVIDER,
             claude_layout.PROVIDER,
         )
+
+
+UUID = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
+
+class DescribeProviderForPath:
+    """The provider is a path segment the cache root already carries, so it is
+    read rather than guessed. Every address `resolve_chat_dir` accepts has to
+    land on the same answer."""
+
+    def it_reads_the_segment_from_a_chat_dir(self, tmp_path: Path):
+        assert provider_for_path(str(tmp_path / "claude/.chat" / UUID)) == "claude"
+
+    def it_reads_the_segment_from_a_path_inside_a_chat_dir(self, tmp_path: Path):
+        inside = tmp_path / "chatgpt/.chat" / UUID / "messages/001.md"
+        assert provider_for_path(str(inside)) == "chatgpt"
+
+    def it_reads_the_segment_from_the_data_twin(self, tmp_path: Path):
+        assert provider_for_path(str(tmp_path / "aistudio/.data" / UUID)) == "aistudio"
+
+    def it_follows_a_view_symlink_to_its_provider(self, tmp_path: Path):
+        chat_dir = tmp_path / "claude/.chat" / UUID
+        chat_dir.mkdir(parents=True)
+        view = tmp_path / "claude/Created=2026/01/02"
+        view.mkdir(parents=True)
+        link = view / "Some Title"
+        link.symlink_to(chat_dir)
+        assert provider_for_path(str(link)) == "claude"
+
+    def it_rejects_a_segment_that_names_no_provider(self, tmp_path: Path):
+        with pytest.raises(AssertionError) as caught:
+            _ = provider_for_path(str(tmp_path / "gemini/.chat" / UUID))
+        assert "gemini" in str(caught.value)
