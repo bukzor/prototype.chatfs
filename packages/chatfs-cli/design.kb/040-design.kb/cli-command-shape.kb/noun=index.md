@@ -42,7 +42,7 @@ encoded in `view`'s path segments, and emitting it uniformly would mean
 re-deriving AI Studio's create_time/last_modified fallback outside the
 `place_meta` wrapper that owns that choice.
 
-The driver (`chatfs-<provider>-index`) does not compose this stream
+The driver (`chatfs-provider-<provider>-index`) does not compose this stream
 itself: it emits whatever its last stage emits, because it *is* the
 pipe (`../driver-model.md`). A driver with stdout of its own would be
 a third implementation of the index flow rather than a way to run the

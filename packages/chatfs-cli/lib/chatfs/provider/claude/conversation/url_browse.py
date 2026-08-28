@@ -2,7 +2,7 @@
 """Capture a claude.ai conversation by URL.
 
 Usage:
-    chatfs-claude-conversation-url-browse --cache <dir> <claude-url>
+    chatfs-provider-claude-conversation-url-browse --cache <dir> <claude-url>
 
 Assumes (per browse-incidental-capture.md) that visiting `/chat/$UUID`
 also fires `/chat_conversations_v2` for the sidebar, so one browse trip
@@ -68,7 +68,7 @@ def find_index_item(data_dir: Path, uuid: str) -> IndexItem:
         matches.extend(item for item in page["data"] if item["uuid"] == uuid)
     assert matches, (
         f"no sidebar index page included {uuid}; "
-        "run chatfs-claude-index, then use path_browse"
+        "run chatfs-provider-claude-index, then use path_browse"
     )
     assert all(
         m == matches[0] for m in matches

@@ -2,7 +2,7 @@
 """Capture claude.ai's conversation index.
 
 Usage:
-    chatfs-claude-index-browse --cache <dir>
+    chatfs-provider-claude-index-browse --cache <dir>
 
 stdout: one index entry page per line (jsonl) — pluck flattens every
 `/chat_conversations_v2` response the browse session sees, so this catches

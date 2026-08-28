@@ -2,7 +2,7 @@
 """Assemble chatgpt's conversation responses into one whole document.
 
 Usage:
-    chatfs-chatgpt-conversation-assemble
+    chatfs-provider-chatgpt-conversation-assemble
 
 Input (stdin): `conversation.json.d/raw.jsonl` -- one `{"url", "body"}`
 record per conversation-bearing response, in capture order, as plucked

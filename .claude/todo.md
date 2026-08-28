@@ -88,14 +88,17 @@ the user naming a driver. Diagnosed from a live failure: the claude driver
 run against a chatgpt path asserts on `meta.json`'s shape and dumps the whole
 dict instead of saying which driver to use.
 
-- [ ] Demote the provider to an ordinary path segment in command names:
+- [x] Demote the provider to an ordinary path segment in command names:
       `chatfs-<p>-<noun>-<verb>` → `chatfs-provider-<p>-<noun>-<verb>`. Makes
       `cli-command-shape.md`'s stated kebab-name-equals-module-path rule true
       (the module path already carries `provider`; the command silently elides
       it), and frees the bare `chatfs-<noun>-<verb>` names for the dispatcher.
       `[project.scripts]` and docs only — no runtime coupling, since every
       occurrence under `lib/` is a docstring and stages invoke each other by
-      module path.
+      module path. Done 2026-08-28: 30 entry points renamed, no stale name
+      left in `.venv/bin/`. Historical hits left stale by the repo's own
+      precedent — devlog bodies, and the two completed `todo.kb/` children
+      that record the 2026-08-07 naming decision.
 - [ ] `chatfs-conversation-url-<verb>` — dispatch on URL host
       (`claude.ai` / `chatgpt.com` / `aistudio.google.com`). Total and
       injective; every provider already has `uuid_from_url`.

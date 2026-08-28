@@ -82,7 +82,7 @@ listing is the index, not restated here.
 ## Later
 
 - [ ] Live-verify AI Studio's `conversation.json.d/raw.json` round-trip —
-      run `chatfs-aistudio-conversation-url-browse` against a real
+      run `chatfs-provider-aistudio-conversation-url-browse` against a real
       prompt URL and confirm a correct `conversation.json` results. The
       2026-07-15 `.data/` scratch dot-d migration (devlog
       `docs/dev/design-incubators/chatfs-cli-mockup/devlog/2026-07-15-001-migrate-data-scratch-files-into-dot-d-sibling-directories.md`)

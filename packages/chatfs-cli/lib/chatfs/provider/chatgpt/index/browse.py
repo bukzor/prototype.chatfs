@@ -2,7 +2,7 @@
 """Capture chatgpt.com's conversation index.
 
 Usage:
-    chatfs-chatgpt-index-browse --cache <dir>
+    chatfs-provider-chatgpt-index-browse --cache <dir>
 
 stdout: one /backend-api/conversations page per line (jsonl).
 """

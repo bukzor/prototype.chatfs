@@ -2,7 +2,7 @@
 """Render an AI Studio conversation by URL, using already-captured artifacts.
 
 Usage:
-    chatfs-aistudio-conversation-url-render --cache <dir> <aistudio-url>
+    chatfs-provider-aistudio-conversation-url-render --cache <dir> <aistudio-url>
 
 Resolves the conversation id from the URL and delegates to path_render
 against `.chat/$id/`, as a subprocess (see path_render's own module

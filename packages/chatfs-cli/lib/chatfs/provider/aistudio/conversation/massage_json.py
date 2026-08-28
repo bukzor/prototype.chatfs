@@ -7,7 +7,7 @@ is JSPB (positional arrays) — a stage has to assign names before the result
 is "good" json, i.e. the same shape of thing chatgpt/claude get for free.
 
 Usage:
-    chatfs-aistudio-conversation-massage-json
+    chatfs-provider-aistudio-conversation-massage-json
 
 Input (stdin): conversation.json.d/raw.json — one plucked prompt message (a
 JSPB array; chatfs.provider.aistudio.pluck.pluck_conversation already unwraps

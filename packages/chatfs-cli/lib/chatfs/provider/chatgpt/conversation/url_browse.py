@@ -2,7 +2,7 @@
 """Capture a chatgpt.com conversation by URL.
 
 Usage:
-    chatfs-chatgpt-conversation-url-browse --cache <dir> <chatgpt-url>
+    chatfs-provider-chatgpt-conversation-url-browse --cache <dir> <chatgpt-url>
 
 Assumes (per browse-incidental-capture.md) that visiting `/c/$UUID` also
 fires `/backend-api/conversations` for the sidebar, so one browse trip
@@ -73,7 +73,7 @@ def find_index_item(data_dir: Path, uuid: str) -> IndexItem:
                 matches.append(item)
     assert matches, (
         f"no sidebar index page included {uuid}; "
-        "run chatfs-chatgpt-index, then use path_browse"
+        "run chatfs-provider-chatgpt-index, then use path_browse"
     )
     assert all(m == matches[0] for m in matches), (
         f"index endpoint returned divergent items for {uuid}: {matches}"

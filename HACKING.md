@@ -6,7 +6,7 @@
 
 To *use* chatfs rather than develop it, see [docs/how-to-chatfs.md] — the
 working pipeline is `packages/chatfs-cli/`; `uv sync` installs its
-`chatfs-<provider>-<noun>-<verb>` commands.
+`chatfs-provider-<provider>-<noun>-<verb>` commands.
 
 **Prerequisites:**
 

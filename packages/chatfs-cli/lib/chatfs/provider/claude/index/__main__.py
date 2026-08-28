@@ -2,7 +2,7 @@
 """Refresh the claude index: capture it, then place every chat it names.
 
 Usage:
-    chatfs-claude-index --cache <dir>
+    chatfs-provider-claude-index --cache <dir>
 
 The bare-noun driver for `index` -- `index browse | index splat` over
 one `--cache`, joined by an OS pipe rather than composed by the user's

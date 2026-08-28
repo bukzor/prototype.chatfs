@@ -2,7 +2,7 @@
 """Render a chatgpt conversation by URL, using already-captured artifacts.
 
 Usage:
-    chatfs-chatgpt-conversation-url-render --cache <dir> <chatgpt-url>
+    chatfs-provider-chatgpt-conversation-url-render --cache <dir> <chatgpt-url>
 
 Resolves the conversation UUID from the URL and delegates to path_render
 against `.chat/$UUID/`, as a subprocess (see path_render's own module

@@ -2,7 +2,7 @@
 """Capture an aistudio.google.com prompt by URL.
 
 Usage:
-    chatfs-aistudio-conversation-url-browse --cache <dir> <aistudio-url>
+    chatfs-provider-aistudio-conversation-url-browse --cache <dir> <aistudio-url>
 
 Unlike chatgpt/claude, there's no separate index endpoint to derive
 meta.json from yet (ListPrompts hasn't been reverse-engineered — see

@@ -26,9 +26,9 @@ chatfs provides lazy filesystem access to chat conversations (claude.ai, ChatGPT
 The README describes the destination (FUSE mount, `chatfs` command); neither
 exists yet. The pipeline that actually runs end-to-end — capture a
 conversation URL, get markdown on disk, all three providers — is
-`packages/chatfs-cli/`: `uv sync` installs one `chatfs-<provider>-<noun>-<verb>`
-command per stage, runnable from any directory against an explicit
-`--cache <dir>`.
+`packages/chatfs-cli/`: `uv sync` installs one
+`chatfs-provider-<provider>-<noun>-<verb>` command per stage, runnable from
+any directory against an explicit `--cache <dir>`.
 
 **To run anything, read `docs/how-to-chatfs.md` first.** It has the commands,
 setup, output layout, and failure modes. Don't reconstruct them from source.

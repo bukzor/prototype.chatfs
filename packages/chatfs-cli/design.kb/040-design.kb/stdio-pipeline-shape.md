@@ -22,9 +22,9 @@ A script with one logical input and one logical output uses stdin/stdout
 for those — no file arguments, no hardcoded output paths. Progress and
 status go to stderr; data goes to stdout. This applies to:
 
-- `chatfs-chatgpt-index-splat` — stdin: index pages jsonl
-- `chatfs-chatgpt-conversation-render` — stdout: markdown
-- `chatfs-chatgpt-index-browse` — stdout: index pages jsonl (pluck
+- `chatfs-provider-chatgpt-index-splat` — stdin: index pages jsonl
+- `chatfs-provider-chatgpt-conversation-render` — stdout: markdown
+- `chatfs-provider-chatgpt-index-browse` — stdout: index pages jsonl (pluck
   itself — `chatfs.pluck.iter_responses_matching` plus a provider's thin
   wrapper — is an in-process generator, not a standalone stdio leaf; see
   `driver-model.md`)
@@ -33,9 +33,9 @@ Multi-input or multi-output stages need parameterization other than
 stdio — there is no single stream to plumb. Two patterns:
 
 - **Positional target arg** when the target varies — URL or chat dir.
-  - `chatfs-chatgpt-conversation-path-browse <chat-dir>` — reads
+  - `chatfs-provider-chatgpt-conversation-path-browse <chat-dir>` — reads
     `meta.json`, writes `cdp.jsonl` + `conversation.json` next to it.
-  - `chatfs-chatgpt-conversation-path-render <chat-dir>` — reads
+  - `chatfs-provider-chatgpt-conversation-path-render <chat-dir>` — reads
     `meta.json` + `conversation.json`, runs splat, writes `chat.md`.
 - **Required `--cache <dir>`** when the stage places files into a cache
   — `index-splat` and the url-addressed commands take it, with

@@ -2,7 +2,7 @@
 """Capture a claude.ai conversation by chat-dir address.
 
 Usage:
-    chatfs-claude-conversation-path-browse <path-to-chat-dir-or-inside>
+    chatfs-provider-claude-conversation-path-browse <path-to-chat-dir-or-inside>
 
 The argument resolves to a `.chat/$UUID/` directory (see
 chatfs.shell.place.resolve_chat_dir; need not exist yet). Its

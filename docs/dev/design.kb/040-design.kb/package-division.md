@@ -21,7 +21,7 @@ if it decides otherwise.)
   small and freshly stabilized, and per-provider code carries no
   divergent dependencies. Landed 2026-08-07: promoted from
   `docs/dev/design-incubators/chatfs-cli-mockup/` with one installed
-  `chatfs-<provider>-<noun>-<verb>` command per stage
+  `chatfs-provider-<provider>-<noun>-<verb>` command per stage
   (graduation child 001).
 - **`bukzor.chatgpt-export`** — prior art. Its `conversation-splat` stage
   migrated into `chatfs.provider.chatgpt.conversation.splat` 2026-08-16

@@ -2,7 +2,7 @@
 """Render a chatgpt conversation from already-captured artifacts.
 
 Usage:
-    chatfs-chatgpt-conversation-path-render <path-to-chat-dir-or-inside>
+    chatfs-provider-chatgpt-conversation-path-render <path-to-chat-dir-or-inside>
 
 Prerequisites in the resolved chat dir's `.data/$UUID/` twin:
     meta.json           — placed by index splat or url browse

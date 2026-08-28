@@ -24,7 +24,7 @@ pnpm install   # Node deps; puts `har-browse` on your PATH
 ```
 
 That puts one command per pipeline stage on your PATH, named
-`chatfs-<provider>-<noun>-<verb>` (activate `.venv` — direnv does this for
+`chatfs-provider-<provider>-<noun>-<verb>` (activate `.venv` — direnv does this for
 you in this checkout). They run from any directory. Most take `--cache
 <dir>` — the cache they read and write — in any position on the command
 line. Each provider gets its own `<provider>/` subdirectory under it,
@@ -43,7 +43,7 @@ own browser session, so whatever you can read while logged in, you can pull.
 ## Pull one conversation
 
 ```bash
-chatfs-claude-conversation-url-browse --cache ~/chats https://claude.ai/chat/$UUID
+chatfs-provider-claude-conversation-url-browse --cache ~/chats https://claude.ai/chat/$UUID
 ```
 
 Swap `claude` for `chatgpt` or `aistudio`; the command name is the only
@@ -104,7 +104,7 @@ be told about.
 Re-render from bytes already captured (no browser, no network):
 
 ```bash
-chatfs-claude-conversation-url-render --cache ~/chats https://claude.ai/chat/$UUID
+chatfs-provider-claude-conversation-url-render --cache ~/chats https://claude.ai/chat/$UUID
 ```
 
 Pull many conversations — capture the sidebar index first, which lays down a
@@ -112,9 +112,9 @@ chat dir per conversation, then walk them (the commands below take a path
 instead of `--cache`; the path says which cache they're in):
 
 ```bash
-chatfs-claude-index --cache ~/chats
-chatfs-claude-conversation-path-browse ~/chats/claude/.chat/$UUID/
-chatfs-claude-conversation-path-render ~/chats/claude/.chat/$UUID/
+chatfs-provider-claude-index --cache ~/chats
+chatfs-provider-claude-conversation-path-browse ~/chats/claude/.chat/$UUID/
+chatfs-provider-claude-conversation-path-render ~/chats/claude/.chat/$UUID/
 ```
 
 The index command reports what it placed, one JSON object per chat —
@@ -122,27 +122,27 @@ The index command reports what it placed, one JSON object per chat —
 instead of filling in `$UUID` by hand:
 
 ```bash
-chatfs-claude-index --cache ~/chats |
+chatfs-provider-claude-index --cache ~/chats |
   jq -r .chat_dir |
-  xargs -rL1 chatfs-claude-conversation-path-browse
+  xargs -rL1 chatfs-provider-claude-conversation-path-browse
 ```
 
-`chatfs-claude-index` is the two index stages joined for you. Run them
+`chatfs-provider-claude-index` is the two index stages joined for you. Run them
 apart when you want to see or filter the pages in between — the browse
 stage emits one raw index page per line on stdout, which is large (most
 of it is per-conversation feature-flag settings), so pipe it somewhere
 rather than to a terminal:
 
 ```bash
-chatfs-claude-index-browse --cache ~/chats | chatfs-claude-index-splat --cache ~/chats
-chatfs-claude-index-browse --cache ~/chats | jq -c '.data[] | {uuid, name, created_at}'
+chatfs-provider-claude-index-browse --cache ~/chats | chatfs-provider-claude-index-splat --cache ~/chats
+chatfs-provider-claude-index-browse --cache ~/chats | jq -c '.data[] | {uuid, name, created_at}'
 ```
 
 Throw one away — moves the chat dir and its symlinks to the provider root's
 own `trash/`:
 
 ```bash
-chatfs-claude-conversation-url-trash --cache ~/chats https://claude.ai/chat/$UUID
+chatfs-provider-claude-conversation-url-trash --cache ~/chats https://claude.ai/chat/$UUID
 ```
 
 The repo carries captured fixtures at
@@ -164,7 +164,7 @@ failed one.
 **"no sidebar index page included $UUID"** — capturing by URL relies on the
 page also loading your conversation list, which is where the title and
 timestamp come from. If it didn't, run the bulk path above instead:
-`chatfs-<provider>-index`, then `path-browse`.
+`chatfs-provider-<provider>-index`, then `path-browse`.
 
 **"capture holds only N of this conversation's pages"** -- chatgpt sends
 older messages only as you scroll back through them, so a capture taken

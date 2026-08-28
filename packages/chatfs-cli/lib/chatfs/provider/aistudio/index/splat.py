@@ -2,7 +2,7 @@
 """Splat AI Studio ListPrompts index entries into per-chat storage.
 
 Usage:
-    chatfs-aistudio-index-splat --cache <dir>
+    chatfs-provider-aistudio-index-splat --cache <dir>
 
 Reads one index entry per line on stdin —
 chatfs.provider.aistudio.pluck.pluck_index_pages's output. Pluck already
@@ -22,7 +22,7 @@ stdout: one placement record per chat placed (jsonl) --
 splat emits. Deduplicated: a uuid already placed this run
 is re-written but not re-announced, so the line count matches the
 "placed N item(s)" summary. Feed it to whatever acts on a fresh
-index -- `jq -r .chat_dir | xargs -rL1 chatfs-aistudio-conversation-path-browse`.
+index -- `jq -r .chat_dir | xargs -rL1 chatfs-provider-aistudio-conversation-path-browse`.
 """
 import json
 

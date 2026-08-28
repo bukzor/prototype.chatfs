@@ -57,7 +57,7 @@ cache atomically.
       that's CPU-bound data-parallelism; jobs here are subprocess-wait-
       bound and need keyed dedup + introspectable state): channel +
       worker threads + `Mutex<HashMap<JobKey, JobState>>`.
-- [ ] Jobs invoke `chatfs-<provider>-…` entry points (subprocess; the
+- [ ] Jobs invoke `chatfs-provider-<provider>-…` entry points (subprocess; the
       path-ownership contract bounds what they may write); output lands
       via the atomic staging convention.
 - [ ] `status` / `needs_sync/` read-side surfaces from queue state.

@@ -33,7 +33,7 @@ it, exits. Single purpose: "record what the browser saw, exit."
   browser output enters the system.
 
 > [!TODO] Rust → Python: daemon invokes the CLI entry points
-> The daemon executes `chatfs-<provider>-<noun>-<verb>` commands as
+> The daemon executes `chatfs-provider-<provider>-<noun>-<verb>` commands as
 > background jobs (subprocess; the path-ownership contract bounds what
 > they may write); outputs land via the atomic staging convention, and
 > the mount picks them up by re-reading the cache. Lands with the

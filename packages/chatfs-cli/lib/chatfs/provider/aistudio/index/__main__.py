@@ -2,7 +2,7 @@
 """Refresh the aistudio index: capture it, then place every chat it names.
 
 Usage:
-    chatfs-aistudio-index --cache <dir>
+    chatfs-provider-aistudio-index --cache <dir>
 
 The bare-noun driver for `index` -- `index browse | index splat` over
 one `--cache`, joined by an OS pipe rather than composed by the user's

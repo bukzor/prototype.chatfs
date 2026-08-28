@@ -8,7 +8,7 @@ all-zero root sentinel, and repair of bodiless canceled retries (dropped if
 a dead end, spliced out of the tree if the user continued past one).
 
 Usage:
-    chatfs-claude-conversation-render <path-to-chat-dir-or-inside>
+    chatfs-provider-claude-conversation-render <path-to-chat-dir-or-inside>
 
 Reads `conversation.json` via `chat_dir/.data` (the inspection symlink
 to `.data/$UUID/`), not by computing that path directly -- path_render

@@ -2,7 +2,7 @@
 """Splat an AI Studio conversation JSON into a `messages/` directory.
 
 Usage:
-    chatfs-aistudio-conversation-splat <conversation.json> [output-dir]
+    chatfs-provider-aistudio-conversation-splat <conversation.json> [output-dir]
 
 Input: path to conversation.json —
 chatfs.provider.aistudio.conversation.massage_json's named projection of

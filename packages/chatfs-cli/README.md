@@ -23,9 +23,9 @@ Rust dispatcher (`design.kb/040-design.kb/package-division.md`).
 
 ## Command shape
 
-Commands are named `chatfs-<provider>-<noun>-<verb>`, kebab-mapped from
+Commands are named `chatfs-provider-<provider>-<noun>-<verb>`, kebab-mapped from
 the module path (`chatfs.provider.claude.conversation.url_browse` →
-`chatfs-claude-conversation-url-browse`); see
+`chatfs-provider-claude-conversation-url-browse`); see
 `design.kb/040-design.kb/cli-command-shape.md` for the vocabulary
 (noun, verb, locator sub-noun).
 
@@ -66,32 +66,32 @@ stderr). Orchestrators take an addressable target (URL or chat-dir path),
 tee intermediates to disk for debuggability, and drive the leaves as
 subprocesses (`design.kb/040-design.kb/driver-model.md`).
 
-1. **`chatfs-<p>-index-browse --cache $C`** — drives `har-browse` against
+1. **`chatfs-provider-<p>-index-browse --cache $C`** — drives `har-browse` against
    the provider's index page, tees raw CDP to `.data/index.cdp.jsonl`,
    plucks in-process, emits index pages on stdout.
-2. **`chatfs-<p>-index-splat --cache $C`** — reads index pages on stdin;
+2. **`chatfs-provider-<p>-index-splat --cache $C`** — reads index pages on stdin;
    per item, writes `.data/$UUID/meta.json`, purges prior view symlinks
    for that UUID, places a fresh `$TITLE` directory-symlink under the
    date tree. Emits one placement record per chat placed on stdout —
    `{id, title, chat_dir, view}`, the same shape for every provider.
-3. **`chatfs-<p>-conversation-url-browse --cache $C <url>`** — captures
+3. **`chatfs-provider-<p>-conversation-url-browse --cache $C <url>`** — captures
    one chat by URL: one browse trip yields both the conversation document
    and (chatgpt/claude) an index page to derive `meta.json` from; places
    meta and delegates to path-render. Fails loudly if the sidebar didn't
    include the target.
-4. **`chatfs-<p>-conversation-path-browse <chat-dir>`** — captures
+4. **`chatfs-provider-<p>-conversation-path-browse <chat-dir>`** — captures
    `cdp.jsonl` and `conversation.json` into an already-placed chat's
    `.data/$UUID/`, then delegates to path-render.
-5. **`chatfs-<p>-conversation-path-render <chat-dir>`** — rebuilds the
+5. **`chatfs-provider-<p>-conversation-path-render <chat-dir>`** — rebuilds the
    whole derived surface (splat + render) in a staged sibling and
    atomically swaps it into place. Prints the absolute path of `chat.md`
    on stdout; `url-browse`/`url-render` delegate here, so they do too.
-6. **`chatfs-<p>-conversation-render <chat-dir>`** — walks the mapping
+6. **`chatfs-provider-<p>-conversation-render <chat-dir>`** — walks the mapping
    tree from `current_node` back to root, streams turn headings linking
    to atomic `.md` files; dead branches render as nested blockquoted
    asides at their fork point. Markdown on stdout.
 
-`chatfs-<p>-index --cache $C` is the bare-noun driver for stages 1-2:
+`chatfs-provider-<p>-index --cache $C` is the bare-noun driver for stages 1-2:
 it runs them as an OS pipe over one cache, so its stdout is splat's.
 A noun earns a driver only when its stages compose into one obvious
 default — `conversation`'s verbs are alternatives, so it has none. See

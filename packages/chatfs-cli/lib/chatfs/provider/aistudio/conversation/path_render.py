@@ -2,7 +2,7 @@
 """Render an AI Studio conversation from already-captured artifacts.
 
 Usage:
-    chatfs-aistudio-conversation-path-render <path-to-chat-dir-or-inside>
+    chatfs-provider-aistudio-conversation-path-render <path-to-chat-dir-or-inside>
 
 Prerequisites in the resolved chat dir's `.data/$id/` twin:
     meta.json           — placed by conversation url browse

@@ -2,7 +2,7 @@
 """Capture a chatgpt.com conversation by chat-dir address.
 
 Usage:
-    chatfs-chatgpt-conversation-path-browse <path-to-chat-dir-or-inside>
+    chatfs-provider-chatgpt-conversation-path-browse <path-to-chat-dir-or-inside>
 
 The argument resolves to a `.chat/$UUID/` directory (see
 chatfs.shell.place.resolve_chat_dir; need not exist yet). Its

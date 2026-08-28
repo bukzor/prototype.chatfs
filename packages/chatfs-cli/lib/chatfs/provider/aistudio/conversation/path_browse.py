@@ -2,7 +2,7 @@
 """Capture an AI Studio prompt by chat-dir address.
 
 Usage:
-    chatfs-aistudio-conversation-path-browse <path-to-chat-dir-or-inside>
+    chatfs-provider-aistudio-conversation-path-browse <path-to-chat-dir-or-inside>
 
 The argument resolves to a `.chat/$id/` directory (see
 chatfs.shell.place.resolve_chat_dir; need not exist yet). Its

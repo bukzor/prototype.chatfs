@@ -2,7 +2,7 @@
 """Capture aistudio.google.com's prompt index.
 
 Usage:
-    chatfs-aistudio-index-browse --cache <dir>
+    chatfs-provider-aistudio-index-browse --cache <dir>
 
 stdout: one index entry per line (jsonl) — pluck flattens every
 ListPrompts response it sees, so this catches as many pages as

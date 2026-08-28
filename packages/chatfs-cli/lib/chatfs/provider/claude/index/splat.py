@@ -14,7 +14,7 @@ stdout: one placement record per chat placed (jsonl) --
 splat emits. Deduplicated: a uuid already placed this run
 is re-written but not re-announced, so the line count matches the
 "placed N item(s)" summary. Feed it to whatever acts on a fresh
-index -- `jq -r .chat_dir | xargs -rL1 chatfs-claude-conversation-path-browse`.
+index -- `jq -r .chat_dir | xargs -rL1 chatfs-provider-claude-conversation-path-browse`.
 
 Pages overlap (the SPA re-fetches stable pages as the user scrolls), so
 duplicate uuids across pages are expected; last-write-wins.

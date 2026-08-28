@@ -3,7 +3,7 @@
 date-labelled subdir of the cache root's `trash/`.
 
 Usage:
-    chatfs-claude-conversation-url-trash --cache <dir> <claude-url>
+    chatfs-provider-claude-conversation-url-trash --cache <dir> <claude-url>
 
 Moves the chat dir itself plus any view symlinks that point into it. After
 moving each symlink, prunes the view-tree path upward, removing any

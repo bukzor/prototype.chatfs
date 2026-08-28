@@ -12,11 +12,17 @@ Pipeline commands are named as if they were subcommands of a future
 the same action accepts multiple input shapes. Since 2026-08-07 they
 are installed entry points (`packages/chatfs-cli`'s
 `[project.scripts]`), no longer loose scripts; the naming scheme
-promoted unchanged.
+promoted unchanged. The `provider` segment became explicit 2026-08-28,
+having been dropped from the command name while present in the module
+path all along.
 
 ## Partition vocabulary
 
-- **Provider** — outermost grouping for per-provider script families.
+- **Provider** — a named adapter, addressed under the `provider`
+  partition (`provider claude …`). The segment is written, not elided:
+  that is what keeps a command's kebab name equal to its module path,
+  and it leaves the bare `<noun> <verb>` names free for the
+  provider-dispatching forms.
 - **Noun** — an artifact the pipeline manipulates.
 - **Verb** — an operation applied to a noun.
 - **Sub-noun (locator)** — disambiguates input shape (e.g. `url` vs
@@ -27,7 +33,7 @@ promoted unchanged.
 - **Orchestrator form** — locator-prefixed command that arranges
   capture, splat, and placement around a bare-verb leaf.
 - **Bare-noun driver** — the noun with no verb: runs that noun's whole
-  pipeline end to end with default arguments (`chatfs-claude-index` is
+  pipeline end to end with default arguments (`chatfs-provider-claude-index` is
   `index browse | index splat`).
 
 ## Why explicit locators
@@ -45,8 +51,8 @@ index refreshed should not have to name the cache twice and remember
 which two verbs compose. The bare noun is that default: the shortest
 name in the family does the whole job.
 
-It also lands first in shell completion. `chatfs-claude-index<TAB>`
-offers `chatfs-claude-index` ahead of its own `-browse`/`-splat`
+It also lands first in shell completion. `chatfs-provider-claude-index<TAB>`
+offers `chatfs-provider-claude-index` ahead of its own `-browse`/`-splat`
 leaves, so the completion list opens with the command that finishes the
 task rather than with a stage.
 
@@ -59,10 +65,11 @@ there is no default to name and no bare-noun command exists.
 ## Naming conventions
 
 Subcommand paths map to commands on `$PATH` with `-` separators
-(`chatgpt conversation url browse` →
-`chatfs-chatgpt-conversation-url-browse`). Python module paths express
-the same partition as dots, with `_` inside a single segment:
-`chatfs.provider.chatgpt.conversation.url_browse` — including
+(`provider chatgpt conversation url browse` →
+`chatfs-provider-chatgpt-conversation-url-browse`). Python module paths
+express the same partition as dots, with `_` inside a single segment:
+`chatfs.provider.chatgpt.conversation.url_browse` — every segment
+appears in both spellings — including
 provider-internal helpers with no `$PATH` command of their own
 (e.g. `chatfs.provider.chatgpt.pluck`).
 

@@ -6,8 +6,8 @@ why:
 
 # Driver Model — Pipe and Delegation as Thin Drivers Over One Library
 
-Index flow is user-composed by pipe (`chatfs-chatgpt-index-browse |
-chatfs-chatgpt-index-splat`); conversation flow is nested delegation
+Index flow is user-composed by pipe (`chatfs-provider-chatgpt-index-browse |
+chatfs-provider-chatgpt-index-splat`); conversation flow is nested delegation
 (`url_browse` calls `path_render`, which calls splat and render as
 subprocesses). The two surfaces look like competing philosophies, but
 neither should give way to the other: the resolution is that both are
@@ -48,7 +48,7 @@ directly (the 2026-07-19 purity split). `run_module()` (subprocess
 command rather than an in-process generator: AI Studio's massage stage.
 
 The index flow's pipe now has a driver of its own —
-`chatfs-<provider>-index`, the bare-noun form
+`chatfs-provider-<provider>-index`, the bare-noun form
 (`cli-command-shape.md`) — but this does not move the index flow from
 the pipe surface to the delegation surface. The driver *is* the pipe:
 it spawns `python -m …index.browse` and `python -m …index.splat` and

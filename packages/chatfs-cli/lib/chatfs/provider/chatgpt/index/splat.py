@@ -13,7 +13,7 @@ stdout: one placement record per chat placed (jsonl) --
 splat emits. Deduplicated: a uuid already placed this run
 is re-written but not re-announced, so the line count matches the
 "placed N item(s)" summary. Feed it to whatever acts on a fresh
-index -- `jq -r .chat_dir | xargs -rL1 chatfs-chatgpt-conversation-path-browse`.
+index -- `jq -r .chat_dir | xargs -rL1 chatfs-provider-chatgpt-conversation-path-browse`.
 """
 import json
 
