@@ -5,7 +5,12 @@ for the side-effecting operations built on it.
 """
 
 from datetime import datetime
+from typing import Final
 from urllib.parse import urlparse
+
+
+PROVIDER: Final = "claude"
+"""This provider's path segment under a cache root (`chatfs.cli.extract_cache`)."""
 
 
 def url_for(uuid: str) -> str:

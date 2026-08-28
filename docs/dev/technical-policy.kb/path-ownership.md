@@ -21,11 +21,18 @@ Aspirational content (the not-yet-built daemon) is marked `[!TODO]`.
 
 ## Cache root
 
-Every path below is relative to a cache root, one per provider. The root
-is a required argument everywhere (2026-08-07, child 001): url-addressed
-and index commands take `--cache <dir>`; path-addressed commands resolve
-the root from the given path. No baked default exists, so the daemon can
-point arbitrary mounts at arbitrary cache roots.
+Every path below is relative to a *provider root*, `$cache/<provider>/`.
+The cache is a required argument everywhere (2026-08-07, child 001):
+url-addressed and index commands take `--cache <dir>`; path-addressed
+commands resolve the provider root from the given path. No baked default
+exists, so the daemon can point arbitrary mounts at arbitrary caches.
+
+The provider segment is appended by `chatfs.cli.extract_cache`, never by
+the caller (2026-08-28). One `--cache ~/chats` therefore serves every
+provider, and `$CHATFS_CACHE` is settable once rather than per-provider.
+The cache and the provider root are different things, and only the cache
+is nameable on the command line: passing a provider root to `--cache`
+nests a second one inside it (`~/chats/claude/claude/`).
 
 Besides `.chat/`, `.data/`, and the view tree below, the root carries
 `trash/` — the url-trash verb's destination (`trash/$TIMESTAMP/`, chat

@@ -18,7 +18,7 @@ from datetime import datetime
 from pathlib import Path
 
 from chatfs.cli import extract_cache
-from chatfs.provider.claude.layout import uuid_from_url
+from chatfs.provider.claude.layout import PROVIDER, uuid_from_url
 from chatfs.shell import sh as chatfs_sh
 
 
@@ -37,7 +37,7 @@ def main() -> None:
     import shutil
     import sys
 
-    root, rest = extract_cache(sys.argv[1:], os.environ)
+    root, rest = extract_cache(sys.argv[1:], os.environ, PROVIDER)
     if root is None or len(rest) != 1:
         print(f"usage: {sys.argv[0]} --cache <dir> <claude-url>", file=sys.stderr)
         sys.exit(2)

@@ -12,12 +12,18 @@ CACHE_ENV_VAR = "CHATFS_CACHE"
 
 
 def extract_cache(
-    argv: Sequence[str], environ: Mapping[str, str]
+    argv: Sequence[str], environ: Mapping[str, str], provider: str
 ) -> tuple[Path | None, list[str]]:
     """Pull `--cache <dir>` out of argv at any position, falling back to
     $CHATFS_CACHE when the flag is absent. Returns the resolved absolute
-    cache root (or None if neither source supplies one) and the
-    remaining args with `--cache` and its value removed.
+    provider root -- `$cache/$provider/` -- or None when neither source
+    supplies a cache, plus the remaining args with `--cache` and its
+    value removed.
+
+    Appending `provider` here rather than in each leaf is what lets one
+    `--cache`/$CHATFS_CACHE value serve every provider: a leaf that
+    forgot the append would spill its capture into the cache root
+    itself, where it is indistinguishable from another provider's.
 
     A dangling `--cache` with no following value is dropped rather than
     raising -- it's a routine typo, not a bug; the caller's own usage
@@ -40,4 +46,4 @@ def extract_cache(
         cache = environ.get(CACHE_ENV_VAR)
     if not cache:
         return None, rest
-    return Path(cache).resolve(), rest
+    return Path(cache).resolve() / provider, rest

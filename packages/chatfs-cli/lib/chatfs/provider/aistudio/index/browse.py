@@ -12,6 +12,7 @@ har-browse "wait until has_more=false" gap tracked for claude (todo.md).
 """
 from chatfs.cli import extract_cache
 from chatfs.layout import DATA_DIR_NAME
+from chatfs.provider.aistudio.layout import PROVIDER
 from chatfs.provider.aistudio.pluck import pluck_index_pages
 from chatfs.shell.capture import browse, dump_jsonl
 
@@ -22,7 +23,7 @@ def main() -> None:
     import os
     import sys
 
-    root, rest = extract_cache(sys.argv[1:], os.environ)
+    root, rest = extract_cache(sys.argv[1:], os.environ, PROVIDER)
     if root is None or rest:
         print(f"usage: {sys.argv[0]} --cache <dir>", file=sys.stderr)
         sys.exit(2)

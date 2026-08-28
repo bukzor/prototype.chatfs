@@ -19,7 +19,7 @@ import json
 
 import typed_json
 from chatfs.cli import extract_cache
-from chatfs.provider.chatgpt.layout import place_meta
+from chatfs.provider.chatgpt.layout import PROVIDER, place_meta
 from chatfs.provider.chatgpt.types import is_index_page
 from chatfs.shell import sh as chatfs_sh
 
@@ -28,7 +28,7 @@ def main() -> None:
     import os
     import sys
 
-    root, rest = extract_cache(sys.argv[1:], os.environ)
+    root, rest = extract_cache(sys.argv[1:], os.environ, PROVIDER)
     if root is None or rest:
         print(f"usage: {sys.argv[0]} --cache <dir>", file=sys.stderr)
         sys.exit(2)

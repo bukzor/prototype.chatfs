@@ -5,6 +5,7 @@ side-effecting operations built on it.
 """
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Final
 from urllib.parse import urlparse
 
 from chatfs.provider.chatgpt.pluck import pluck_conversation
@@ -15,6 +16,10 @@ from chatfs.shell.capture import capture as _capture
 from chatfs.shell.capture import run_module
 from chatfs.shell.place import Placement
 from chatfs.shell.place import place_meta as _place_meta
+
+
+PROVIDER: Final = "chatgpt"
+"""This provider's path segment under a cache root (`chatfs.cli.extract_cache`)."""
 
 
 def url_for(uuid: str) -> str:

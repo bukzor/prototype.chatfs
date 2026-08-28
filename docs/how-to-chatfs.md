@@ -26,12 +26,13 @@ pnpm install   # Node deps; puts `har-browse` on your PATH
 That puts one command per pipeline stage on your PATH, named
 `chatfs-<provider>-<noun>-<verb>` (activate `.venv` — direnv does this for
 you in this checkout). They run from any directory. Most take `--cache
-<dir>` — the per-provider root they read and write — in any position on the
-command line. There's no default; pick a directory and keep using it, or
-export it once:
+<dir>` — the cache they read and write — in any position on the command
+line. Each provider gets its own `<provider>/` subdirectory under it,
+appended for you, so one cache serves all three. There's no default; pick
+a directory and keep using it, or export it once:
 
 ```bash
-export CHATFS_CACHE=~/chats/claude
+export CHATFS_CACHE=~/chats
 ```
 
 An explicit `--cache` overrides it.
@@ -42,7 +43,7 @@ own browser session, so whatever you can read while logged in, you can pull.
 ## Pull one conversation
 
 ```bash
-chatfs-claude-conversation-url-browse --cache ~/chats/claude https://claude.ai/chat/$UUID
+chatfs-claude-conversation-url-browse --cache ~/chats https://claude.ai/chat/$UUID
 ```
 
 Swap `claude` for `chatgpt` or `aistudio`; the command name is the only
@@ -62,7 +63,8 @@ see them.
 
 ## Where it lands
 
-Everything goes under the `--cache` directory:
+Everything goes under the cache's provider subdirectory --
+`~/chats/claude/` for the commands above:
 
 ```
 .chat/$UUID/
@@ -94,7 +96,7 @@ as a straight line whether or not the conversation has forks.
 Re-render from bytes already captured (no browser, no network):
 
 ```bash
-chatfs-claude-conversation-url-render --cache ~/chats/claude https://claude.ai/chat/$UUID
+chatfs-claude-conversation-url-render --cache ~/chats https://claude.ai/chat/$UUID
 ```
 
 Pull many conversations — capture the sidebar index first, which lays down a
@@ -102,7 +104,7 @@ chat dir per conversation, then walk them (the commands below take a path
 instead of `--cache`; the path says which cache they're in):
 
 ```bash
-chatfs-claude-index --cache ~/chats/claude
+chatfs-claude-index --cache ~/chats
 chatfs-claude-conversation-path-browse ~/chats/claude/.chat/$UUID/
 chatfs-claude-conversation-path-render ~/chats/claude/.chat/$UUID/
 ```
@@ -112,7 +114,7 @@ The index command reports what it placed, one JSON object per chat —
 instead of filling in `$UUID` by hand:
 
 ```bash
-chatfs-claude-index --cache ~/chats/claude |
+chatfs-claude-index --cache ~/chats |
   jq -r .chat_dir |
   xargs -rL1 chatfs-claude-conversation-path-browse
 ```
@@ -124,20 +126,21 @@ of it is per-conversation feature-flag settings), so pipe it somewhere
 rather than to a terminal:
 
 ```bash
-chatfs-claude-index-browse --cache ~/chats/claude | chatfs-claude-index-splat --cache ~/chats/claude
-chatfs-claude-index-browse --cache ~/chats/claude | jq -c '.data[] | {uuid, name, created_at}'
+chatfs-claude-index-browse --cache ~/chats | chatfs-claude-index-splat --cache ~/chats
+chatfs-claude-index-browse --cache ~/chats | jq -c '.data[] | {uuid, name, created_at}'
 ```
 
-Throw one away — moves the chat dir and its symlinks to the cache root's own
-`trash/`:
+Throw one away — moves the chat dir and its symlinks to the provider root's
+own `trash/`:
 
 ```bash
-chatfs-claude-conversation-url-trash --cache ~/chats/claude https://claude.ai/chat/$UUID
+chatfs-claude-conversation-url-trash --cache ~/chats https://claude.ai/chat/$UUID
 ```
 
 The repo carries captured fixtures at
 `docs/dev/design-incubators/chatfs-cli-mockup/chatfs.demo/<provider>` — point
-`--cache` there to try the render stages without capturing anything.
+`--cache` at `chatfs.demo` to try the render stages without capturing
+anything; the `<provider>` segment is appended for you.
 
 ## When it goes wrong
 
