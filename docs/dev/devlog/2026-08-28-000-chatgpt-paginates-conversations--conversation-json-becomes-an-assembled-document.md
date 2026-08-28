@@ -93,13 +93,40 @@ migration completed.
   name writes `conversation.json.d/raw.*` -- AI Studio's massage,
   chatgpt's assemble.
 
+## Postscript: the fork markers survive
+
+Asked whether the data says *where* a fork went missing. It does, and
+checking beat the assumption twice:
+
+- **`metadata.has_versions: true`** marks a message with siblings the
+  response didn't carry -- 6 of 160 here, every one a user message. It's
+  what `?include_has_versions=true` buys, and it arrived with the
+  pagination change: the old-format captures carry it on zero nodes
+  because their requests never asked. So the branch *locations* survive
+  even though the branch *content* doesn't.
+
+  Corroborated by the one capture that still has a true `mapping`
+  (`696bf4b5`, 2026-08-17): all 6 of its fork points are
+  `assistant -> [user, user]`, i.e. user-turn edits -- exactly the shape
+  a `has_versions` user message marks.
+
+- **`metadata.parent_id` is not structure**, though 139 of 160 messages
+  carry it. Same old-format capture, where the real graph is available to
+  check against: of 91 nodes bearing a `parent_id`, 31 match the node's
+  actual parent and 60 name an id absent from the conversation entirely.
+  Generation-time bookkeeping. The commit message's "no parent/children
+  anywhere" was too strong as stated; the operative claim -- that no
+  usable edge survives -- holds, and now has a measurement behind it.
+
+`canonical-conversation-graph.md`'s fork guarantee still holds for claude
+and not for chatgpt: we can say a fork was here, not what was in it.
+
 ## Open Questions
 
-- Whether chatgpt exposes fork/version data anywhere a browse would
-  incidentally capture it (the requests carry `include_has_versions=true`,
-  but nothing in the observed bodies answers it). Until that's known,
-  `canonical-conversation-graph.md`'s fork guarantee holds for claude and
-  not for chatgpt.
+- Whether a fork's *content* is reachable at all under
+  `policy-safe-automation-boundary.md` -- clicking a `<` arrow is the
+  reader navigating, which is allowed, but whether that fires a
+  capturable response is unmeasured.
 
 ## References
 
