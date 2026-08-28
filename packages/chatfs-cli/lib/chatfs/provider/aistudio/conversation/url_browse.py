@@ -34,7 +34,7 @@ def main() -> None:
     import os
     import sys
 
-    root, rest = extract_cache(sys.argv[1:], os.environ)
+    root, rest = extract_cache(sys.argv[1:], os.environ, aistudio_layout.PROVIDER)
     if root is None or len(rest) != 1:
         print(f"usage: {sys.argv[0]} --cache <dir> <aistudio-url>", file=sys.stderr)
         sys.exit(2)

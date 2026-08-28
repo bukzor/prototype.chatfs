@@ -38,9 +38,11 @@ stdio — there is no single stream to plumb. Two patterns:
   - `chatfs-chatgpt-conversation-path-render <chat-dir>` — reads
     `meta.json` + `conversation.json`, runs splat, writes `chat.md`.
 - **Required `--cache <dir>`** when the stage places files into a cache
-  root — `index-splat` and the url-addressed commands take it, with
+  — `index-splat` and the url-addressed commands take it, with
   deliberately no default (see
-  `docs/dev/technical-policy.kb/path-ownership.md`). This supersedes the
+  `docs/dev/technical-policy.kb/path-ownership.md`). The stage writes
+  under `$cache/<provider>/`, a segment appended for it, so one
+  `--cache` value works for every provider. This supersedes the
   incubator-era fixed-by-convention `chatfs.demo/` root.
 
 Either way, never file paths to individual inputs.

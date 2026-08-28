@@ -30,7 +30,7 @@ import typed_json
 from typed_json import JsonObject, JsonValue
 from chatfs.cli import extract_cache
 from chatfs.provider.aistudio.conversation.massage_json import PROMPT, from_message
-from chatfs.provider.aistudio.layout import index_item, place_meta
+from chatfs.provider.aistudio.layout import PROVIDER, index_item, place_meta
 from chatfs.provider.aistudio.types import Conversation, is_conversation
 from chatfs.shell import sh as chatfs_sh
 
@@ -51,7 +51,7 @@ def main() -> None:
     import os
     import sys
 
-    root, rest = extract_cache(sys.argv[1:], os.environ)
+    root, rest = extract_cache(sys.argv[1:], os.environ, PROVIDER)
     if root is None or rest:
         print(f"usage: {sys.argv[0]} --cache <dir>", file=sys.stderr)
         sys.exit(2)

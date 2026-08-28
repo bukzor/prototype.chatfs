@@ -33,7 +33,7 @@ def main() -> None:
     import os
     import sys
 
-    root, rest = extract_cache(sys.argv[1:], os.environ)
+    root, rest = extract_cache(sys.argv[1:], os.environ, claude_layout.PROVIDER)
     if root is None or rest:
         print(f"usage: {sys.argv[0]} --cache <dir>", file=sys.stderr)
         sys.exit(2)

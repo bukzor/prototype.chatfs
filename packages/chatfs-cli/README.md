@@ -30,8 +30,10 @@ the module path (`chatfs.provider.claude.conversation.url_browse` →
 (noun, verb, locator sub-noun).
 
 Every command runs from any directory. URL-addressed and index commands
-take `--cache <dir>` — the per-provider cache root they read and write,
-deliberately with no baked default (`technical-policy.kb/path-ownership.md`).
+take `--cache <dir>` — the cache they read and write, deliberately with no
+baked default (`technical-policy.kb/path-ownership.md`). Each command works
+under that cache's `<provider>/` subdirectory, appended for it, so the same
+`--cache` value serves every provider.
 Path-addressed commands take an on-disk path, which itself says which
 cache they're in.
 

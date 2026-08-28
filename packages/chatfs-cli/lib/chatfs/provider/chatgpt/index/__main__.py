@@ -13,6 +13,7 @@ pages in between; browse's stdout is the raw index pages, which are
 bulky.
 """
 from chatfs.cli import extract_cache
+from chatfs.provider.chatgpt.layout import PROVIDER
 from chatfs.shell import sh as chatfs_sh
 
 
@@ -20,7 +21,7 @@ def main() -> None:
     import os
     import sys
 
-    root, rest = extract_cache(sys.argv[1:], os.environ)
+    root, rest = extract_cache(sys.argv[1:], os.environ, PROVIDER)
     if root is None or rest:
         print(f"usage: {sys.argv[0]} --cache <dir>", file=sys.stderr)
         sys.exit(2)

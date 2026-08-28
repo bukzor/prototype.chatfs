@@ -12,6 +12,7 @@ projection, rather than passed through from a native dict.
 
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Final
 from urllib.parse import urlparse
 
 from chatfs.provider.aistudio.pluck import pluck_conversation
@@ -19,6 +20,10 @@ from chatfs.provider.aistudio.types import Conversation, IndexItem
 from chatfs.shell.capture import capture as _capture
 from chatfs.shell.place import Placement
 from chatfs.shell.place import place_meta as _place_meta
+
+
+PROVIDER: Final = "aistudio"
+"""This provider's path segment under a cache root (`chatfs.cli.extract_cache`)."""
 
 
 def url_for(id_: str) -> str:
