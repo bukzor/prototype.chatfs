@@ -80,6 +80,32 @@ Plan from 2026-05-05 design.kb consolidation. Order is dependency-driven; 1-2 ar
         still fires rather than silently emitting twice
   - [ ] aistudio — claude's dedup shape, chatgpt's item wrapper
 
+## Provider-agnostic CLI surface (2026-08-28)
+
+The cache root holds every provider as of `befa423`, so a chat's provider is
+now a path segment and a URL's provider is its host — both knowable without
+the user naming a driver. Diagnosed from a live failure: the claude driver
+run against a chatgpt path asserts on `meta.json`'s shape and dumps the whole
+dict instead of saying which driver to use.
+
+- [ ] Demote the provider to an ordinary path segment in command names:
+      `chatfs-<p>-<noun>-<verb>` → `chatfs-provider-<p>-<noun>-<verb>`. Makes
+      `cli-command-shape.md`'s stated kebab-name-equals-module-path rule true
+      (the module path already carries `provider`; the command silently elides
+      it), and frees the bare `chatfs-<noun>-<verb>` names for the dispatcher.
+      `[project.scripts]` and docs only — no runtime coupling, since every
+      occurrence under `lib/` is a docstring and stages invoke each other by
+      module path.
+- [ ] `chatfs-conversation-url-<verb>` — dispatch on URL host
+      (`claude.ai` / `chatgpt.com` / `aistudio.google.com`). Total and
+      injective; every provider already has `uuid_from_url`.
+- [ ] `chatfs-conversation-path-<verb>` — dispatch on the provider segment of
+      the resolved chat dir. Deliberately *not* a `meta.json` shape sniffer:
+      chatgpt's and aistudio's `is_index_item` differ only in which second
+      time field they carry and its JSON type, and the chatgpt half is an
+      upstream payload `path-ownership.md` requires we keep verbatim, so
+      shape-disjointness is a coincidence we don't control.
+
 ## Transcript consumer ergonomics
 
 - [ ] [Transcript consumer ergonomics: toc, message access, export verify](todo.kb/2026-08-08-000-Transcript-consumer-ergonomics--toc--message-access--export-verify.md)
