@@ -72,14 +72,14 @@ check. `conversation.json` means "the conversation document, whole as
 captured" -- a chain is a legitimate value of that, an assembled prefix
 is not.
 
-> [!TODO] a known-missing fork is visible in the render
-> A turn the provider marked `has_versions` renders as a fork fact:
-> the reader is told a version was superseded here and is not in the
-> capture. Silence would be the disguise this entry forbids, and the
-> marker is the one piece of fork knowledge the wire still carries.
-> Notation is `chatfs.render`'s to choose -- it already owns fork
-> facts, and this is a new kind: a fork whose alternatives are absent
-> rather than subordinated.
+A flagged turn therefore reaches the render as a fork fact rather than
+as silence: `chatfs.render` carries the flagged ids as
+`ConversationTree.uncaptured_versions` and names them in the turn's
+`prior revisions:` line as the literal `not captured`. One key finds
+every superseded version whether or not we hold its text, and a
+straight-looking line stops being indistinguishable from an unedited
+one. Rendering the gap is what keeps this entry's "we don't disguise
+it" honest at the surface a reader actually reads.
 
 ## Both response shapes assemble
 

@@ -9,6 +9,9 @@ Acceptance criteria -- from the headings and fork subtitles alone, a reader can 
 - which turns form the live conversation, and which were abandoned;
 - where each fork happened, what the alternatives were, and which one
   the conversation continued;
+- where a fork happened whose alternatives the capture does not hold --
+  named `not captured` rather than passed over in silence, since a
+  straight-looking line is otherwise indistinguishable from an unedited one;
 - for any turn, how to reach its parent and its atomic source file.
 
 The audience includes excerpt readers (grep windows, partial reads), so fork
@@ -60,6 +63,10 @@ class ConversationTree:
     - `children` lists siblings in source order; `created` (epoch seconds)
       breaks dead-fork ordering when the live path doesn't decide.
     - `current` is the live leaf and must be a node of the tree.
+    - `uncaptured_versions` holds nodes the provider says have sibling
+      versions it did not send. They are forks with no branch to
+      subordinate: nameable, not showable. A provider that always ships
+      whole trees leaves it empty.
     """
 
     root: str
@@ -67,6 +74,7 @@ class ConversationTree:
     children: dict[str, list[str]]
     created: dict[str, float]
     current: str
+    uncaptured_versions: Container[str] = frozenset[str]()
 
 
 def live_ancestors(tree: ConversationTree) -> set[str]:
@@ -141,7 +149,9 @@ def normalize_turnless(
     for node in parent_of:
         if node not in turns:
             turns[node] = make_turn(node)
-    tree = ConversationTree(tree.root, parent_of, children, tree.created, tree.current)
+    tree = ConversationTree(
+        tree.root, parent_of, children, tree.created, tree.current, tree.uncaptured_versions
+    )
     return tree, turns
 
 
@@ -210,6 +220,7 @@ class Renderer:
     parent_of: Mapping[str, str]
     turns: Mapping[str, Turn]
     live_set: Container[str]
+    uncaptured: Container[str]
 
     def number(self, node: str) -> str:
         """`head/seq`, dropping the prefix when the turn is its own branch head --
@@ -251,21 +262,33 @@ class Renderer:
 
     def version_status(self, node: str) -> str:
         """Header item placing this version within its fork -- empty when the
-        parent isn't a fork. The two cases are converses, and a node is exactly
-        one of them: a superseded sibling gets `superseded by: <winner>`, a
-        stop-reading-here pointer to the version the conversation continued
-        with; the winner gets `prior revisions: <priors>`, the revision chain
-        in one canonical place."""
+        parent isn't a fork and nothing is missing. A superseded sibling gets
+        `superseded by: <winner>`, a stop-reading-here pointer to the version
+        the conversation continued with; the winner gets `prior revisions:
+        <priors>`, the revision chain in one canonical place.
+
+        A prior the provider named but didn't send appears in that same list
+        as the literal `not captured`, so one key (`prior revisions:`) finds
+        every superseded version whether or not we hold its text. Both items
+        can apply to one node -- a captured dead branch that itself has
+        uncaptured siblings -- and neither displaces the other."""
         parent = self.parent_of[node]
         kids = self.children.get(parent, [])
-        if len(kids) < 2:
-            return ""
-        primary = self.primary_of[parent]
-        assert primary is not None, node
-        if node != primary:
-            return f"superseded by: {self.number(primary)}"
-        priors = ", ".join(self.number(c) for c in kids if c != primary)
-        return f"prior revisions: {priors}"
+        if len(kids) > 1:
+            primary = self.primary_of[parent]
+            assert primary is not None, node
+        else:
+            primary = None
+        superseded = (
+            f"superseded by: {self.number(primary)}"
+            if primary is not None and node != primary
+            else ""
+        )
+        priors = [self.number(c) for c in kids if c != primary] if node == primary else []
+        if node in self.uncaptured:
+            priors.append("not captured")
+        revisions = f"prior revisions: {', '.join(priors)}" if priors else ""
+        return " · ".join(item for item in (superseded, revisions) if item)
 
     def section(self, node: str, depth: int, prev_seq: int | None) -> str:
         """The turn's full markdown block, blockquote-indented to its depth."""
@@ -349,5 +372,13 @@ def render_tree(tree: ConversationTree, turns: Mapping[str, Turn]) -> tuple[str,
         parent_of[tree.root] = ""  # before the beginning: never an id, never numbered
 
     order, numbering = number_turns(tree.root, tree.children, primary_of, turns)
-    renderer = Renderer(numbering, tree.children, primary_of, parent_of, turns, live_set)
+    renderer = Renderer(
+        numbering,
+        tree.children,
+        primary_of,
+        parent_of,
+        turns,
+        live_set,
+        tree.uncaptured_versions,
+    )
     return renderer.render(order), len(order)

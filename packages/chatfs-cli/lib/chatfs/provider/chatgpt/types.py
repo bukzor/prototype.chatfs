@@ -23,15 +23,28 @@ class IndexPage(TypedDict):
     items: list[IndexItem]
 
 
+class MessageMetadata(TypedDict):
+    """A `message.metadata` bag -- chatgpt fills it with dozens of keys;
+    only the one the render reads is declared.
+
+    `has_versions` is chatgpt's answer to `?include_has_versions=true`:
+    true means this message has sibling versions the response did not
+    carry. It is the only fork knowledge the paginated endpoints keep.
+    """
+
+    has_versions: NotRequired[bool | None]
+
+
 class Message(TypedDict):
     """A `mapping[uuid].message` entry in a conversation document.
 
     Many nodes are legitimately messageless (forks, system placeholders) --
-    only the field conversation_render reads for dead-branch ordering is
-    declared.
+    only the fields conversation_render reads (dead-branch ordering, fork
+    markers) are declared.
     """
 
     create_time: NotRequired[float | None]
+    metadata: NotRequired[MessageMetadata]
 
 
 class Node(TypedDict):

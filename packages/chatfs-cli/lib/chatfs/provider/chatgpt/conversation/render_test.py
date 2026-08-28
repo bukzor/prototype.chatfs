@@ -82,3 +82,51 @@ class DescribeMakeTurn:
     def it_carries_the_content_type_note(self):
         turn = make_turn("t", {"t": stem("t", "assistant", "thoughts")})
         assert turn.note == "thoughts"
+
+
+def flagged(parent: str | None, children: list[str], create_time: float) -> Node:
+    """A node chatgpt marked as having versions it didn't send."""
+    return {
+        "parent": parent,
+        "children": children,
+        "message": {"create_time": create_time, "metadata": {"has_versions": True}},
+    }
+
+
+class DescribeUncapturedVersions:
+    def it_collects_nodes_the_provider_flagged(self):
+        conversation: Conversation = {
+            "mapping": {
+                "a": node(None, ["b"], create_time=1.0),
+                "b": flagged("a", [], create_time=2.0),
+            },
+            "current_node": "b",
+        }
+        assert build_tree(conversation).uncaptured_versions == {"b"}
+
+    def it_is_empty_when_nothing_is_flagged(self):
+        conversation: Conversation = {
+            "mapping": {"a": node(None, [], create_time=1.0)},
+            "current_node": "a",
+        }
+        assert build_tree(conversation).uncaptured_versions == set()
+
+    def it_ignores_a_turnless_node(self):
+        # a node with no message carries no metadata to read
+        conversation: Conversation = {
+            "mapping": {"a": node(None, [], create_time=None)},
+            "current_node": "a",
+        }
+        assert build_tree(conversation).uncaptured_versions == set()
+
+    def it_reaches_the_rendered_markdown(self):
+        conversation: Conversation = {
+            "mapping": {
+                "a": node(None, ["b"], create_time=1.0),
+                "b": flagged("a", [], create_time=2.0),
+            },
+            "current_node": "b",
+        }
+        turns = {nid: Turn("user", "T", "L", f"body {nid}") for nid in ("a", "b")}
+        markdown, _ = render_conversation(conversation, {}, turns)
+        assert "*prior revisions: not captured*" in markdown, markdown

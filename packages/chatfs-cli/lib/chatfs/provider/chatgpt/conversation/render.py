@@ -85,10 +85,16 @@ def load_turns(messages_dir: Path, stems: dict[str, Stem]) -> dict[str, Turn]:
 
 def build_tree(conversation: Conversation) -> ConversationTree:
     """Reshape `mapping` into the shared tree, cross-checking that its
-    parent pointers and children arrays agree."""
+    parent pointers and children arrays agree.
+
+    `metadata.has_versions` becomes `uncaptured_versions`: on the
+    paginated endpoints the mapping is a chain, so a flagged node's
+    siblings are nowhere in the document and the flag is all that says
+    they existed."""
     mapping = conversation["mapping"]
     children: dict[str, list[str]] = {VIRTUAL_ROOT: []}
     created: dict[str, float] = {}
+    uncaptured: set[str] = set()
     for nid, node in mapping.items():
         kids = list(node.get("children") or [])
         for c in kids:
@@ -98,12 +104,15 @@ def build_tree(conversation: Conversation) -> ConversationTree:
             children[VIRTUAL_ROOT].append(nid)
         message = node.get("message")
         created[nid] = (message.get("create_time") or 0.0) if message else 0.0
+        if message and message.get("metadata", {}).get("has_versions"):
+            uncaptured.add(nid)
     return ConversationTree(
         root=VIRTUAL_ROOT,
         parent_of={nid: node.get("parent") or VIRTUAL_ROOT for nid, node in mapping.items()},
         children=children,
         created=created,
         current=conversation["current_node"],
+        uncaptured_versions=uncaptured,
     )
 
 

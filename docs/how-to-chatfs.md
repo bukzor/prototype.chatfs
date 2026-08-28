@@ -84,10 +84,18 @@ Edited and regenerated messages appear as nested blockquoted asides at the
 point where the conversation forked, so nothing you said is silently
 dropped.
 
-Forks only appear if the provider sent them. chatgpt's current endpoints
-serve a conversation as one linear thread -- the alternate versions behind
-its `<` `>` arrows are not in the capture -- so a chatgpt `chat.md` reads
-as a straight line whether or not the conversation has forks.
+Forks read as asides only if the provider sent them. chatgpt's current
+endpoints serve a conversation as one linear thread, so the text behind its
+`<` `>` arrows is not in the capture. It still tells us *where* you edited a
+turn, and that much survives into `chat.md`:
+
+```
+*prior revisions: not captured*
+```
+
+So `grep 'prior revisions:'` finds every superseded version in any provider's
+`chat.md` -- numbered ones you can jump to, and chatgpt's, which you can only
+be told about.
 
 ## Other things you can do
 
