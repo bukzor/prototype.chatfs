@@ -32,6 +32,15 @@ path all along.
   stdout from prepared inputs.
 - **Orchestrator form** — locator-prefixed command that arranges
   capture, splat, and placement around a bare-verb leaf.
+- **Dispatching form** — a command with no provider segment, which
+  reads the provider off the locator it was given and runs the
+  corresponding `provider` command. Only a verb whose argument is an
+  *address* can have one: `conversation url browse` dispatches on the
+  URL's host and `conversation path render` on the chat dir's cache
+  segment, but `conversation splat` takes a `conversation.json` and an
+  output dir — a file and a destination, not an address, and neither is
+  required to sit in a cache at all. Inferring a provider from those
+  would be sound only by coincidence.
 - **Bare-noun driver** — the noun with no verb: runs that noun's whole
   pipeline end to end with default arguments (`chatfs-provider-claude-index` is
   `index browse | index splat`).

@@ -104,6 +104,13 @@ dict instead of saying which driver to use.
       injective; every provider already has `uuid_from_url`. Done 2026-08-28:
       `browse` and `url_render` dispatch; `url-trash` stayed provider-only,
       claude being the only provider with the verb.
+- [x] `chatfs-conversation-render` — the bare-verb leaf takes a chat-dir
+      address too, so it dispatches on the same segment. `conversation splat`
+      does not and never will: its arguments are a `conversation.json` and an
+      output dir, neither required to sit in a cache. Rule recorded in
+      `cli-command-shape.md` as the **dispatching form** vocabulary entry.
+- [x] Enforce the module↔command mapping in a test rather than by eye
+      (`entry_points_test.py`); bijective at 34/34 when pinned.
 - [x] `chatfs-conversation-path-<verb>` — dispatch on the provider segment of
       the resolved chat dir. Deliberately *not* a `meta.json` shape sniffer:
       chatgpt's and aistudio's `is_index_item` differ only in which second
