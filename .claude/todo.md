@@ -167,6 +167,10 @@ dict instead of saying which driver to use.
       so the title isn't duplicated. They are the repo's only untitled
       markers.
 
+- [ ] rename `har-browse`: it's CDP-based, not HAR-based (user, 2026-08-30:
+  "needs a rename"); it has superseded the ad-hoc `chatgpt-har2jsonl`
+  (that copy now trashed in private.bukzor-llc)
+
 ## Deferred
 
 - [x] Fix 4 frontmatter violations in `docs/dev/aistudio-schema/discourse.kb/` — drift accumulated 2026-06-23..08-08 while the schema symlinks dangled (revealed when the `$ref: skill://` stubs restored validation, commit 9324dba): `sources.kb/{bundle-audit,live-replay-probe,rosetta-correlation-experiment}.md` use `kind: investigation` (not in the canonical enum — may want an enum addition in llm-discourse-graph instead of a content edit), and `questions.kb/how-does-this-serve-chatfs.md` has an unexpected `status:` plus a date-typed `resolved:` where the canonical wants a string. Superseded 2026-08-27: the 2026-08-22 fleet-wide sweep re-surveyed the same drift as part of a twelve-error picture — all four of these are in it. Live entry under "Schema & frontmatter hygiene" above.
