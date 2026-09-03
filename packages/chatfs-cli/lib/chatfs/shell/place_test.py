@@ -258,4 +258,32 @@ class DescribePlacement:
             "title": "Hello",
             "chat_dir": str(chat_dir_for("abc123", tmp_path)),
             "view": str(tmp_path / "Created=2026/06/20/12:42:40-05:00" / "Hello"),
+            "updated": None,
         }
+
+    def it_records_the_providers_updated_timestamp_as_iso_8601(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ):
+        use_chicago_tz(monkeypatch)
+        dt = datetime.fromtimestamp(DEMO_EPOCH, tz=timezone.utc)
+        updated = datetime(2026, 7, 17, 2, 22, 13, 883559, tzinfo=timezone.utc)
+
+        placed = place_meta(
+            "abc123", "Hello", dt, {"foo": "bar"}, tmp_path, updated=updated
+        )
+
+        assert placed.updated == updated
+        assert placed.record()["updated"] == "2026-07-17T02:22:13.883559+00:00"
+
+    def it_records_updated_as_null_when_the_index_supplied_none(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ):
+        # the key is always present: a consumer filtering on staleness
+        # reads one fixed shape, and null says "can't judge this one"
+        use_chicago_tz(monkeypatch)
+        dt = datetime.fromtimestamp(DEMO_EPOCH, tz=timezone.utc)
+
+        placed = place_meta("abc123", "Hello", dt, {"foo": "bar"}, tmp_path)
+
+        assert placed.updated is None
+        assert placed.record()["updated"] is None

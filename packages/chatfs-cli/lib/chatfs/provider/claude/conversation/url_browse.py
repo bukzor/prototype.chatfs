@@ -106,7 +106,12 @@ def main() -> None:
     )
 
     _ = place_meta(
-        item["uuid"], item["name"], claude_layout.created_at(item["created_at"]), item, root
+        item["uuid"],
+        item["name"],
+        claude_layout.created_at(item["created_at"]),
+        item,
+        root,
+        updated=claude_layout.updated_at(item),
     )
 
     _ = chatfs_sh.run(

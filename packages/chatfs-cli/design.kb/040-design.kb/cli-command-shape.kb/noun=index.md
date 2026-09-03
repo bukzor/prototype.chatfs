@@ -42,6 +42,23 @@ encoded in `view`'s path segments, and emitting it uniformly would mean
 re-deriving AI Studio's create_time/last_modified fallback outside the
 `place_meta` wrapper that owns that choice.
 
+Present, and none of those objections apply to it: `updated` -- when
+the provider last saw the conversation change, ISO 8601, or `null`
+where the provider's payload doesn't say. It is not recoverable from
+`view`'s path (which encodes creation, or AI Studio's honest
+`LastModified=` stand-in for it), and it is not recoverable from
+`meta.json` either at the moment a consumer needs it: splat rewrites
+`meta.json` from the fresh index item before the record reaches
+anyone, so the value it would be compared against is already
+overwritten. Nor does it face the fallback problem `created` has --
+AI Studio's `last_modified` *is* the updated timestamp, always present,
+with no choice to re-derive.
+
+What it buys is the whole basis for `refresh`: recency (is this chat
+inside the window?) and staleness (is our capture older than the
+provider's last change?) are both answered from the stream, without a
+second pass over storage. See `verb=refresh.md`.
+
 The driver (`chatfs-provider-<provider>-index`) does not compose this stream
 itself: it emits whatever its last stage emits, because it *is* the
 pipe (`../driver-model.md`). A driver with stdout of its own would be

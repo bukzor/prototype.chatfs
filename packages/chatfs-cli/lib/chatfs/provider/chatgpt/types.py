@@ -15,6 +15,7 @@ class IndexItem(TypedDict):
     id: str
     title: str
     create_time: str  # ISO 8601 UTC, e.g. "2026-04-15T14:53:42.270850Z"
+    update_time: NotRequired[str]  # ISO 8601 UTC, same shape as create_time
 
 
 class IndexPage(TypedDict):
@@ -63,6 +64,9 @@ class Conversation(TypedDict):
 
 
 def is_index_item(value: JsonValue) -> TypeGuard[IndexItem]:
+    # `update_time` is deliberately not checked: this guard gates an assert
+    # that aborts a whole splat run, and a live payload missing the field
+    # must degrade to "we can't judge this chat's staleness", not to a crash.
     return (
         isinstance(value, dict)
         and isinstance(value.get("id"), str)

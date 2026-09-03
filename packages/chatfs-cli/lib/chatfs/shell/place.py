@@ -131,19 +131,30 @@ class Placement(NamedTuple):
     own index item so the stream reads the same whichever provider
     produced it -- `id`/`title` are already the normalized fields every
     provider's leaf extracts before calling place_meta.
+
+    `updated` is the provider's own last-changed timestamp, normalized
+    across providers. It rides the record because meta.json is the only
+    other place it exists and the splat overwrites that file before any
+    consumer reads it -- so a consumer deciding whether a chat is worth
+    re-capturing can only learn the previous answer from here. None when
+    the provider's index doesn't say.
     """
 
     id: str
     title: str
     chat_dir: Path
     view: Path
+    updated: datetime | None
 
-    def record(self) -> dict[str, str]:
+    def record(self) -> dict[str, str | None]:
+        """The JSONL line: every key always present, `updated` null when
+        unknown, so consumers filter one fixed shape."""
         return {
             "id": self.id,
             "title": self.title,
             "chat_dir": str(self.chat_dir),
             "view": str(self.view),
+            "updated": self.updated.isoformat() if self.updated else None,
         }
 
 
@@ -155,6 +166,7 @@ def place_meta(
     root: Path,
     *,
     label: str = "Created",
+    updated: datetime | None = None,
 ) -> Placement:
     """Write meta.json into `.data/$UUID/`, refresh the view dir-symlink.
 
@@ -164,6 +176,10 @@ def place_meta(
     point pulls out of it. Falls back to `id` when `title` is empty,
     so an empty-titled chat never collapses its view symlink onto
     `view_dir` itself.
+
+    `updated` is reported back in the `Placement` only -- it reaches
+    meta.json (if at all) as one of `item`'s own fields, and never
+    affects the view tree or the label.
 
     `label` forwards to `time_dir_for` — see there. Storage placement
     (`.data/$UUID/`) and the identity-scoped symlink purge are
@@ -203,4 +219,4 @@ def place_meta(
 
         _purge_view_symlinks(id, root, keep=title_link)
 
-    return Placement(id, title, chat_dir, title_link)
+    return Placement(id, title, chat_dir, title_link, updated)

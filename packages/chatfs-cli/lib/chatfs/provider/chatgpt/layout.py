@@ -48,6 +48,17 @@ def created_at(create_time: str | float) -> datetime:
         return datetime.fromisoformat(create_time.replace("Z", "+00:00"))
 
 
+def updated_at(item: IndexItem) -> datetime | None:
+    """When chatgpt last changed this conversation, per its index.
+
+    None when the item omits `update_time` -- an answer of "can't judge
+    this one", never a crash, since the field isn't guaranteed by the
+    type guards that gate the splat.
+    """
+    value = item.get("update_time")
+    return created_at(value) if value is not None else None
+
+
 def capture(url: str, chat_dir: Path) -> Path:
     """Browse $url and pluck the conversation-bearing responses -- assembly
     into `conversation.json` is a separate stage.
@@ -83,4 +94,11 @@ def place_meta(item: IndexItem, root: Path) -> Placement:
 
     Returns the placement -- see chatfs.shell.place.Placement.
     """
-    return _place_meta(item["id"], item["title"], created_at(item["create_time"]), item, root)
+    return _place_meta(
+        item["id"],
+        item["title"],
+        created_at(item["create_time"]),
+        item,
+        root,
+        updated=updated_at(item),
+    )

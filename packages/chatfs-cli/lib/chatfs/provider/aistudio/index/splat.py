@@ -18,7 +18,7 @@ index_item/place_meta, which already handle that provenance (see
 chatfs.provider.aistudio.layout).
 
 stdout: one placement record per chat placed (jsonl) --
-`{id, title, chat_dir, view}`, the shared shape every provider's index
+`{id, title, chat_dir, view, updated}`, the shared shape every provider's index
 splat emits. Deduplicated: a uuid already placed this run
 is re-written but not re-announced, so the line count matches the
 "placed N item(s)" summary. Feed it to whatever acts on a fresh

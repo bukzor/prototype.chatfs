@@ -110,6 +110,18 @@ def _created(unix_seconds: int) -> datetime:
     return datetime.fromtimestamp(unix_seconds, tz=timezone.utc)
 
 
+def updated_at(item: IndexItem) -> datetime:
+    """When AI Studio last changed this conversation, per its index.
+
+    Always known, unlike the other providers': `last_modified` is the
+    one timestamp a ListPrompts entry can honestly supply (creation
+    time needs turn content the index doesn't carry -- see
+    `index_item`), and last-changed is exactly the question a
+    staleness check asks.
+    """
+    return _created(item["last_modified"])
+
+
 def place_meta(item: IndexItem, root: Path) -> Placement:
     """Write meta.json into `.data/$UUID/`, refresh the view dir-symlink.
 
@@ -129,4 +141,12 @@ def place_meta(item: IndexItem, root: Path) -> Placement:
         created, label = _created(item["create_time"]), "Created"
     else:
         created, label = _created(item["last_modified"]), "LastModified"
-    return _place_meta(item["id"], item["title"], created, item, root, label=label)
+    return _place_meta(
+        item["id"],
+        item["title"],
+        created,
+        item,
+        root,
+        label=label,
+        updated=updated_at(item),
+    )

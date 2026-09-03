@@ -9,7 +9,7 @@ Reads chatgpt.index.jsonl on stdin (one page per line, each
     - creates view symlinks under $root/YYYY/MM/DD/HH:MM:SS±HH:MM/
 
 stdout: one placement record per chat placed (jsonl) --
-`{id, title, chat_dir, view}`, the shared shape every provider's index
+`{id, title, chat_dir, view, updated}`, the shared shape every provider's index
 splat emits. Deduplicated: a uuid already placed this run
 is re-written but not re-announced, so the line count matches the
 "placed N item(s)" summary. Feed it to whatever acts on a fresh

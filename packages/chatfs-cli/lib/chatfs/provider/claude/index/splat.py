@@ -10,7 +10,7 @@ item, calls place_meta which:
     - creates a view dir-symlink under $root/YYYY/MM/DD/HH:MM:SS±HH:MM/
 
 stdout: one placement record per chat placed (jsonl) --
-`{id, title, chat_dir, view}`, the shared shape every provider's index
+`{id, title, chat_dir, view, updated}`, the shared shape every provider's index
 splat emits. Deduplicated: a uuid already placed this run
 is re-written but not re-announced, so the line count matches the
 "placed N item(s)" summary. Feed it to whatever acts on a fresh
@@ -54,6 +54,7 @@ def main() -> None:
                 claude_layout.created_at(item["created_at"]),
                 item,
                 root,
+                updated=claude_layout.updated_at(item),
             )
             if uuid not in seen:
                 print(json.dumps(placed.record()))
