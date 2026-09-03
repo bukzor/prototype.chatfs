@@ -47,3 +47,16 @@ def extract_cache(
     if not cache:
         return None, rest
     return Path(cache).resolve() / provider, rest
+
+
+def cache_root(provider_root: Path, provider: str) -> Path:
+    """Invert extract_cache's append: the `--cache` value that produced
+    `provider_root`.
+
+    A driver that spawns child stages must forward this, not
+    `provider_root` itself -- each child calls extract_cache too and
+    appends `provider` again, so forwarding the already-appended root
+    would nest it twice.
+    """
+    assert provider_root.name == provider, (provider_root.name, provider)
+    return provider_root.parent

@@ -12,7 +12,7 @@ Run the two stages by hand instead when you want to see or filter the
 pages in between; browse's stdout is the raw index pages, which are
 bulky.
 """
-from chatfs.cli import extract_cache
+from chatfs.cli import cache_root, extract_cache
 from chatfs.provider.aistudio.layout import PROVIDER
 from chatfs.shell import sh as chatfs_sh
 
@@ -25,10 +25,11 @@ def main() -> None:
     if root is None or rest:
         print(f"usage: {sys.argv[0]} --cache <dir>", file=sys.stderr)
         sys.exit(2)
+    cache = cache_root(root, PROVIDER)
 
     chatfs_sh.pipe(
-        [sys.executable, "-m", "chatfs.provider.aistudio.index.browse", "--cache", root],
-        [sys.executable, "-m", "chatfs.provider.aistudio.index.splat", "--cache", root],
+        [sys.executable, "-m", "chatfs.provider.aistudio.index.browse", "--cache", cache],
+        [sys.executable, "-m", "chatfs.provider.aistudio.index.splat", "--cache", cache],
     )
 
 

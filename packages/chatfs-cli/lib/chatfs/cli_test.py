@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from chatfs.cli import extract_cache
+from chatfs.cli import cache_root, extract_cache
 
 
 class DescribeExtractCache:
@@ -56,3 +56,20 @@ class DescribeExtractCache:
         monkeypatch.chdir(tmp_path)
         root, _ = extract_cache(["--cache", "."], {}, "claude")
         assert root == tmp_path / "claude"
+
+
+class DescribeCacheRoot:
+    def it_inverts_extract_caches_append(self, tmp_path: Path):
+        root, _ = extract_cache(["--cache", str(tmp_path)], {}, "claude")
+        assert root is not None
+        assert cache_root(root, "claude") == tmp_path
+
+    def it_round_trips_through_extract_cache(self, tmp_path: Path):
+        root, _ = extract_cache(["--cache", str(tmp_path)], {}, "claude")
+        assert root is not None
+        replayed, _ = extract_cache(["--cache", str(cache_root(root, "claude"))], {}, "claude")
+        assert replayed == root
+
+    def it_asserts_the_root_ends_in_the_given_provider(self, tmp_path: Path):
+        with pytest.raises(AssertionError):
+            cache_root(tmp_path / "claude", "chatgpt")
