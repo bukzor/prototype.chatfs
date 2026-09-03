@@ -20,6 +20,9 @@ dev = [
 # design.kb/040-design.kb/cli-command-shape.md. The bare `chatfs` name is
 # reserved for the future Rust dispatcher (package-division.md).
 [project.scripts]
+# Fan-out driver: no locator to dispatch on, so the bare name means "every
+# provider, in turn" (cli-command-shape.kb/verb=refresh.md).
+chatfs-refresh = "chatfs.refresh:main"
 # Provider-dispatching forms: same noun/locator/verb, provider read off the
 # locator itself (URL host, cache path segment) instead of typed.
 chatfs-conversation-url-browse = "chatfs.conversation.url_browse:main"
@@ -37,6 +40,7 @@ chatfs-provider-claude-conversation-splat = "chatfs.provider.claude.conversation
 chatfs-provider-claude-index = "chatfs.provider.claude.index.__main__:main"
 chatfs-provider-claude-index-browse = "chatfs.provider.claude.index.browse:main"
 chatfs-provider-claude-index-splat = "chatfs.provider.claude.index.splat:main"
+chatfs-provider-claude-refresh = "chatfs.provider.claude.refresh:main"
 chatfs-provider-chatgpt-conversation-url-browse = "chatfs.provider.chatgpt.conversation.url_browse:main"
 chatfs-provider-chatgpt-conversation-url-render = "chatfs.provider.chatgpt.conversation.url_render:main"
 chatfs-provider-chatgpt-conversation-path-browse = "chatfs.provider.chatgpt.conversation.path_browse:main"
@@ -47,6 +51,7 @@ chatfs-provider-chatgpt-conversation-assemble = "chatfs.provider.chatgpt.convers
 chatfs-provider-chatgpt-index = "chatfs.provider.chatgpt.index.__main__:main"
 chatfs-provider-chatgpt-index-browse = "chatfs.provider.chatgpt.index.browse:main"
 chatfs-provider-chatgpt-index-splat = "chatfs.provider.chatgpt.index.splat:main"
+chatfs-provider-chatgpt-refresh = "chatfs.provider.chatgpt.refresh:main"
 chatfs-provider-aistudio-conversation-url-browse = "chatfs.provider.aistudio.conversation.url_browse:main"
 chatfs-provider-aistudio-conversation-url-render = "chatfs.provider.aistudio.conversation.url_render:main"
 chatfs-provider-aistudio-conversation-path-browse = "chatfs.provider.aistudio.conversation.path_browse:main"
@@ -57,6 +62,7 @@ chatfs-provider-aistudio-conversation-massage-json = "chatfs.provider.aistudio.c
 chatfs-provider-aistudio-index = "chatfs.provider.aistudio.index.__main__:main"
 chatfs-provider-aistudio-index-browse = "chatfs.provider.aistudio.index.browse:main"
 chatfs-provider-aistudio-index-splat = "chatfs.provider.aistudio.index.splat:main"
+chatfs-provider-aistudio-refresh = "chatfs.provider.aistudio.refresh:main"
 
 [build-system]
 requires = ["hatchling"]

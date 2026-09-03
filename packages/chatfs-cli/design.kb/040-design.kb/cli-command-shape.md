@@ -44,6 +44,15 @@ path all along.
 - **Bare-noun driver** — the noun with no verb: runs that noun's whole
   pipeline end to end with default arguments (`chatfs-provider-claude-index` is
   `index browse | index splat`).
+- **Fan-out driver** — a command with no provider segment that runs
+  *every* provider's form of itself in turn (`chatfs-refresh`). Distinct
+  from a dispatching form, which picks one provider from an address it
+  was given; a verb taking no address can't dispatch, but it can still
+  fan out. See `cli-command-shape.kb/verb=refresh.md`.
+
+A verb may also apply to the `provider` partition itself, with no noun
+between, when its object is that provider's whole cache rather than any
+one artifact (`provider claude refresh`).
 
 ## Why explicit locators
 

@@ -56,6 +56,17 @@ listing is the index, not restated here.
       (harden if/when a non-1 value is observed) and the reasoning-turn-
       mapping design question.
 
+- [ ] Index splat is quadratic in cache size. `_purge_view_symlinks`
+      (`lib/chatfs/shell/place.py`) walks `root.rglob("*")` once per item
+      placed, so placing N chats costs O(N × tree). Measured 2026-09-03
+      against a replayed 887-chat claude index: ~2.5 min, nearly all of it
+      in the sweep. `refresh` pays this on every run, so the cost is now
+      recurring rather than one-time. The identity-scoped purge is
+      deliberate (`../design.kb/040-design.kb/chat-as-directory.kb/`) --
+      what's wrong is re-walking the tree per item, not sweeping by
+      identity. Fix: build the symlink listing once per splat run and
+      purge against that.
+
 ## Claude provider — remaining parity gaps
 
 - [ ] Solve har-browse "wait until `has_more=false`". Observation: pressing

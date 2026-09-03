@@ -7,6 +7,7 @@ every function here does real I/O -- subprocess, filesystem, or both.
 import json
 import sys
 from collections.abc import Callable, Iterable, Iterator
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import TextIO
 
@@ -113,3 +114,18 @@ def capture(
             pluck(pluck_fn, cdp, tmp)
 
     return data_dir
+
+
+def captured_at(chat_dir: Path) -> datetime | None:
+    """When this chat was last captured, or None if it never was.
+
+    Read from `conversation.json`'s mtime. That file is written by one
+    stage and atomically promoted only once the capture succeeded (see
+    `capture`), so its mtime is a completed capture's finish time rather
+    than the moment some partial attempt started -- which is what makes
+    a bare mtime trustworthy as a watermark.
+    """
+    conversation = data_dir_of(chat_dir) / "conversation.json"
+    if not conversation.exists():
+        return None
+    return datetime.fromtimestamp(conversation.stat().st_mtime, UTC)

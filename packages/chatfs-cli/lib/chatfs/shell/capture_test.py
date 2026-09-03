@@ -4,7 +4,9 @@
 for: a failed browse (or pluck) must not destroy a prior capture --
 the one artifact class that isn't locally re-derivable."""
 
+import os
 from collections.abc import Iterable, Iterator
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -13,7 +15,7 @@ import typed_json
 from typed_json import JsonValue
 from chatfs.layout import chat_dir_for, data_dir_for
 from chatfs.shell import capture as chatfs_capture
-from chatfs.shell.capture import capture
+from chatfs.shell.capture import capture, captured_at
 
 
 class DescribeCapture:
@@ -88,3 +90,19 @@ class DescribeCapture:
         assert (data_dir / "cdp.jsonl").read_text() == "new capture"
         # ... but the conversation, which pluck never finished, is untouched
         assert (data_dir / "conversation.json").read_text() == '{"prior": true}'
+
+
+class DescribeCapturedAt:
+    def it_is_none_before_the_first_capture(self, tmp_path: Path):
+        assert captured_at(chat_dir_for("abc123", tmp_path)) is None
+
+    def it_reads_the_conversations_mtime_as_utc(self, tmp_path: Path):
+        chat_dir = chat_dir_for("abc123", tmp_path)
+        data_dir = data_dir_for("abc123", tmp_path)
+        data_dir.mkdir(parents=True)
+        conversation = data_dir / "conversation.json"
+        _ = conversation.write_text("{}")
+        when = datetime(2026, 7, 4, 1, 2, 3, tzinfo=UTC)
+        os.utime(conversation, (when.timestamp(), when.timestamp()))
+
+        assert captured_at(chat_dir) == when

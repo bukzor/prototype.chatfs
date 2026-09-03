@@ -128,7 +128,7 @@ is not: the chat dir's own path says which provider it belongs to, so a
 mixed stream of chat dirs walks with one command.
 
 The index command reports what it placed, one JSON object per chat —
-`{id, title, chat_dir, view}` — so you can drive the walk from it
+`{id, title, chat_dir, view, updated}` — so you can drive the walk from it
 instead of filling in `$UUID` by hand:
 
 ```bash
@@ -147,6 +147,39 @@ rather than to a terminal:
 chatfs-provider-claude-index-browse --cache ~/chats | chatfs-provider-claude-index-splat --cache ~/chats
 chatfs-provider-claude-index-browse --cache ~/chats | jq -c '.data[] | {uuid, name, created_at}'
 ```
+
+Pull everything that changed recently — index each provider, then walk
+only the conversations that are both recent and out of date:
+
+```bash
+chatfs-refresh --cache ~/chats 7
+```
+
+or one provider at a time:
+
+```bash
+chatfs-provider-claude-refresh --cache ~/chats 7
+```
+
+The number is days. Every capture still waits for **Done Capturing** —
+refresh decides which conversations are worth opening, it doesn't click
+for you. A conversation whose captured `conversation.json` is newer than
+the provider's own last-modified timestamp is skipped without opening
+anything; `DEBUG=1` names each skip. Conversations the provider listed
+*without* a last-modified timestamp are skipped too, and those you're
+told about whether you asked or not:
+
+```
+3 record(s) carried no timestamp and were skipped
+```
+
+If the captured index doesn't reach back that far, refresh stops
+*before* opening any conversation and prints the date to scroll back
+to — nothing scrolls the sidebar for you yet, so an index that stops
+short would otherwise mean a silently partial refresh. Re-run with the
+sidebar scrolled past that date. Exit status 3 means exactly that;
+other non-zero statuses mean a capture failed, and the failing chat is
+named on stderr.
 
 Throw one away — moves the chat dir and its symlinks to the provider root's
 own `trash/`:
