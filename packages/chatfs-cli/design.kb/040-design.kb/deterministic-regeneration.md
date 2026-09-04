@@ -58,29 +58,30 @@ The general form: **before a verb writes its outputs, it removes any
 prior artifact those outputs supersede, regardless of where the prior
 artifact lived.**
 
-For view symlinks targeting `.chat/$UUID/…`, the cleanup is a sweep,
-run *after* the fresh symlink is placed (`keep` excludes it so the
-sweep doesn't immediately undo the placement it's meant to follow):
-
-```python
-def _purge_view_symlinks(uuid: str, root: Path, *, keep: Path | None = None) -> None:
-    for path in root.rglob("*"):
-        rel_parts = path.relative_to(root).parts
-        if ".chat" in rel_parts or ".data" in rel_parts or "trash" in rel_parts:
-            continue  # storage-internal or preserved (trash) -- not views
-        if path == keep:
-            continue
-        if path.is_symlink() and uuid in os.readlink(path):
-            path.unlink()
-```
+For view symlinks targeting `.chat/$UUID/…`, the cleanup is a sweep of
+the labeled view trees for any symlink naming that UUID, run *after*
+the fresh symlink is placed and excluding it, so the sweep doesn't
+immediately undo the placement it's meant to follow
+(`chatfs.shell.place._purge_view_symlinks`).
 
 This keeps the storage layer (`.chat/$UUID/`) authoritative — the only
 place a UUID's view symlinks ever resolve to — while letting derived
 views (`YYYY/MM/…`) heal automatically when their derivation logic
 changes.
 
-A future improvement could move the sweep to a background thread; for
-now an inline scan is fine.
+The sweep's scope is the labeled view trees and nothing else: it owns
+what it placed. A symlink to a chat that someone else left elsewhere
+under the root is not a view and is not the sweep's to remove.
+
+**The per-item sweep is the wrong price for that healing.** Placing N
+chats costs O(N × views) — 5.8M path visits for a 1154-chat index,
+measured — and every render pays a sweep of its own through
+`find_view_path`. Healing after a derivation change is a migration
+event; charging it per item, forever, buys robustness at a cost that
+scales with the archive. Recording each placement (a back-pointer
+beside the chat's data) makes both operations a readlink and leaves
+identity-scoped sweeping as an explicit repair command, which is the
+occasion it was designed for. Tracked in the package taskfile.
 
 Other contexts where this applies: any pluggable view tree (by-tag,
 by-model), and anywhere else identity is bound to a path that

@@ -98,6 +98,21 @@ class DescribePlaceMeta:
 
         assert trashed_link.is_symlink()
 
+    def it_leaves_a_link_to_the_chat_that_sits_outside_every_view_tree(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ):
+        # the purge owns the labeled view trees and nothing else: a link
+        # someone else put beside them names this chat but was not placed
+        # as a view, so replacing the view must not delete it.
+        use_chicago_tz(monkeypatch)
+        dt = datetime.fromtimestamp(DEMO_EPOCH, tz=timezone.utc)
+        bookmark = tmp_path / "reading-list"
+        bookmark.symlink_to(".chat/abc123")
+
+        _ = place_meta("abc123", "Hello", dt, {"v": 1}, tmp_path)
+
+        assert bookmark.is_symlink()
+
     def it_places_the_fresh_symlink_before_purging_the_stale_one(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ):

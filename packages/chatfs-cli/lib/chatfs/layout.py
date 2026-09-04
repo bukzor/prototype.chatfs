@@ -55,6 +55,18 @@ def _iso_offset(dt: datetime) -> str:
     return f"{sign}{h:02d}:{m:02d}"
 
 
+VIEW_TREE_GLOB = "*=*"
+"""Matches every labeled date-view tree directly under a provider root,
+and nothing else there.
+
+The label is what makes this exact: `time_dir_for` writes every view
+tree's top segment as `f"{label}={year}"`, and no storage directory
+(`.chat`, `.data`, `trash`) carries an `=`. A caller looking for views
+therefore roots its walk here instead of descending storage it will
+only discard -- `.chat/$UUID/messages/` alone is two files per turn.
+"""
+
+
 def time_dir_for(created: datetime, *, label: str = "Created") -> Path:
     """Render an ISO 8601 path-friendly timestamp in system local time.
 

@@ -15,6 +15,7 @@ from typing import NamedTuple
 
 from chatfs.layout import (
     DATA_DIR_NAME,
+    VIEW_TREE_GLOB,
     chat_dir_for,
     data_dir_for,
     safe_filename,
@@ -77,19 +78,25 @@ def _view_symlinks(uuid: str, root: Path) -> Iterator[Path]:
     """Yield every view-tree symlink under `root` whose target mentions
     `uuid`.
 
-    Skips `.chat/` and `.data/` -- those hold storage-internal symlinks
-    (e.g. `.chat/$UUID/.data`'s inspection link back to `.data/$UUID/`),
-    not views, and their targets legitimately contain the uuid too.
-    Skips `trash/` -- trashed content is a preserved artifact, not a
-    view (a re-captured chat must not reach into an earlier trashing of
-    itself).
+    Walks the labeled view trees only (`chatfs.layout.VIEW_TREE_GLOB`),
+    which excludes three subtrees by construction rather than by
+    filtering after the fact. `.chat/` and `.data/` hold
+    storage-internal symlinks (e.g. `.chat/$UUID/.data`'s inspection
+    link back to `.data/$UUID/`), not views, and their targets
+    legitimately contain the uuid too. `trash/` holds a preserved
+    artifact, not a view: a re-captured chat must not reach into an
+    earlier trashing of itself.
+
+    Rooting the walk at the view trees is what keeps the cost
+    proportional to the number of views rather than to everything ever
+    captured -- storage dwarfs the view tree once conversations are
+    rendered, and every path under it would be walked only to be
+    discarded.
     """
-    for path in root.rglob("*"):
-        rel_parts = path.relative_to(root).parts
-        if ".chat" in rel_parts or ".data" in rel_parts or "trash" in rel_parts:
-            continue
-        if path.is_symlink() and uuid in os.readlink(path):
-            yield path
+    for tree in root.glob(VIEW_TREE_GLOB):
+        for path in tree.rglob("*"):
+            if path.is_symlink() and uuid in os.readlink(path):
+                yield path
 
 
 def _purge_view_symlinks(uuid: str, root: Path, *, keep: Path | None = None) -> None:

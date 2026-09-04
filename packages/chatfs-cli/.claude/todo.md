@@ -56,16 +56,27 @@ listing is the index, not restated here.
       (harden if/when a non-1 value is observed) and the reasoning-turn-
       mapping design question.
 
-- [ ] Index splat is quadratic in cache size. `_purge_view_symlinks`
-      (`lib/chatfs/shell/place.py`) walks `root.rglob("*")` once per item
-      placed, so placing N chats costs O(N × tree). Measured 2026-09-03
-      against a replayed 887-chat claude index: ~2.5 min, nearly all of it
-      in the sweep. `refresh` pays this on every run, so the cost is now
-      recurring rather than one-time. The identity-scoped purge is
-      deliberate (`../design.kb/040-design.kb/chat-as-directory.kb/`) --
-      what's wrong is re-walking the tree per item, not sweeping by
-      identity. Fix: build the symlink listing once per splat run and
-      purge against that.
+- [~] Index splat is quadratic in cache size. `_purge_view_symlinks`
+      (`lib/chatfs/shell/place.py`) sweeps once per item placed, so
+      placing N chats costs O(N × views); `find_view_path` runs the same
+      sweep once per render. Measured 2026-09-03 against a replayed
+      1154-chat claude index: 5.8M path visits, ~2.5 min. `refresh` pays
+      it on every run, so the cost is recurring rather than one-time.
+  - [x] Root the walk at the labeled view trees (`VIEW_TREE_GLOB`)
+        instead of the whole cache. Was walking `.chat/`+`.data/` only to
+        discard them -- 46% of paths with `.chat/` empty, and a rendered
+        chat is 18+ paths, so the discarded share grows with every
+        render. Narrowing also stopped the purge from deleting a
+        non-view symlink that merely named the chat.
+  - [ ] Record the placement instead of re-deriving it: a `view`
+        back-pointer in `.data/$UUID/`, written inside the write lock
+        that already covers meta.json and the symlink. Purge and
+        `find_view_path` both become a readlink, and an unchanged view
+        becomes a no-op. Sweeping by identity stays as an explicit
+        repair command -- reconciling after a derivation change is what
+        it was designed for, and that is a migration event, not a
+        per-item one. Needs a fallback for caches with no pointer yet
+        (sweep once, record, never again).
 
 ## Claude provider — remaining parity gaps
 
