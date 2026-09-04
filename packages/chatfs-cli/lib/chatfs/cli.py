@@ -7,13 +7,31 @@ leaf's main() stays the only place that touches process globals.
 
 from collections.abc import Mapping, Sequence
 from pathlib import Path
+from typing import NewType
 
 CACHE_ENV_VAR = "CHATFS_CACHE"
+
+CacheRoot = NewType("CacheRoot", Path)
+"""The `--cache <dir>` value a user typed: one directory holding every
+provider's data side by side.
+
+This is what a command *takes*, never what it works in -- the two are
+one `$provider` segment apart, both are plain directories, and a
+driver that hands a child the wrong one produces `$cache/$p/$p/`
+silently. Distinguishing them by type is what makes pyright, rather
+than a downstream `ls`, report the mistake."""
+
+ProviderRoot = NewType("ProviderRoot", Path)
+"""`$cache/$provider/` -- where one provider's data lives, and the
+directory every leaf command actually reads and writes under.
+
+Produced only by extract_cache, so the `$provider` append happens once.
+See CacheRoot for why it is a separate type."""
 
 
 def extract_cache(
     argv: Sequence[str], environ: Mapping[str, str], provider: str
-) -> tuple[Path | None, list[str]]:
+) -> tuple[ProviderRoot | None, list[str]]:
     """Pull `--cache <dir>` out of argv at any position, falling back to
     $CHATFS_CACHE when the flag is absent. Returns the resolved absolute
     provider root -- `$cache/$provider/` -- or None when neither source
@@ -46,10 +64,10 @@ def extract_cache(
         cache = environ.get(CACHE_ENV_VAR)
     if not cache:
         return None, rest
-    return Path(cache).resolve() / provider, rest
+    return ProviderRoot(Path(cache).resolve() / provider), rest
 
 
-def cache_root(provider_root: Path, provider: str) -> Path:
+def cache_root(provider_root: ProviderRoot, provider: str) -> CacheRoot:
     """Invert extract_cache's append: the `--cache` value that produced
     `provider_root`.
 
@@ -59,4 +77,4 @@ def cache_root(provider_root: Path, provider: str) -> Path:
     would nest it twice.
     """
     assert provider_root.name == provider, (provider_root.name, provider)
-    return provider_root.parent
+    return CacheRoot(provider_root.parent)

@@ -28,8 +28,8 @@ def main() -> None:
     cache = cache_root(root, PROVIDER)
 
     chatfs_sh.pipe(
-        [sys.executable, "-m", "chatfs.provider.claude.index.browse", "--cache", cache],
-        [sys.executable, "-m", "chatfs.provider.claude.index.splat", "--cache", cache],
+        chatfs_sh.stage(f"chatfs.provider.{PROVIDER}.index.browse", cache),
+        chatfs_sh.stage(f"chatfs.provider.{PROVIDER}.index.splat", cache),
     )
 
 

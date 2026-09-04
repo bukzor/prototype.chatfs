@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from chatfs.cli import cache_root, extract_cache
+from chatfs.cli import ProviderRoot, cache_root, extract_cache
 
 
 class DescribeExtractCache:
@@ -72,4 +72,4 @@ class DescribeCacheRoot:
 
     def it_asserts_the_root_ends_in_the_given_provider(self, tmp_path: Path):
         with pytest.raises(AssertionError):
-            cache_root(tmp_path / "claude", "chatgpt")
+            cache_root(ProviderRoot(tmp_path / "claude"), "chatgpt")

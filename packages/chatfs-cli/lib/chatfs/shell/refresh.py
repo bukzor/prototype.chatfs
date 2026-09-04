@@ -16,6 +16,7 @@ from typing import NamedTuple
 
 import typed_json
 from typed_json import JsonObject
+from chatfs.cli import CacheRoot
 from chatfs.refresh import covers, cutoff_for, in_window, is_stale
 from chatfs.shell import sh as chatfs_sh
 from chatfs.shell.capture import captured_at
@@ -52,14 +53,14 @@ def parse_index(stdout: bytes) -> list[IndexedChat]:
     return chats
 
 
-def capture_index(provider: str, cache: Path) -> list[IndexedChat]:
+def capture_index(provider: str, cache: CacheRoot) -> list[IndexedChat]:
     """Run the provider's index driver and read back what it placed.
 
     Browses: a window opens and waits for the human, same as any other
     capture in this codebase.
     """
     done = chatfs_sh.run(
-        [sys.executable, "-m", f"chatfs.provider.{provider}.index", "--cache", cache],
+        chatfs_sh.stage(f"chatfs.provider.{provider}.index", cache),
         stdout=subprocess.PIPE,
     )
     return parse_index(done.stdout)
@@ -92,7 +93,7 @@ def report_undated(chats: Sequence[IndexedChat]) -> None:
         )
 
 
-def refresh_provider(provider: str, cache: Path, days: int, now: datetime) -> int:
+def refresh_provider(provider: str, cache: CacheRoot, days: int, now: datetime) -> int:
     """Bring one provider's cache up to date over the last `days`, and
     return the exit status: 3 when the index didn't reach past the
     window, 1 when some capture failed, 0 otherwise.

@@ -14,6 +14,7 @@ from typing import IO
 
 import pytest
 
+from chatfs.cli import CacheRoot
 from chatfs.layout import chat_dir_for, data_dir_for
 from chatfs.shell import sh as chatfs_sh
 from chatfs.shell.refresh import refresh_provider
@@ -88,7 +89,7 @@ class DescribeRefreshProvider:
         fake = FakeRun([stale, anchor])
         monkeypatch.setattr(chatfs_sh, "run", fake)
 
-        status = refresh_provider("claude", tmp_path, DAYS, NOW)
+        status = refresh_provider("claude", CacheRoot(tmp_path), DAYS, NOW)
 
         assert status == 0
         assert fake.browsed == [stale["chat_dir"]]
@@ -103,7 +104,7 @@ class DescribeRefreshProvider:
         fake = FakeRun([fresh, anchor])
         monkeypatch.setattr(chatfs_sh, "run", fake)
 
-        assert refresh_provider("claude", tmp_path, DAYS, NOW) == 0
+        assert refresh_provider("claude", CacheRoot(tmp_path), DAYS, NOW) == 0
         assert fake.browsed == []
 
     def it_leaves_a_chat_older_than_the_window_alone(
@@ -114,7 +115,7 @@ class DescribeRefreshProvider:
         fake = FakeRun([old, recent])
         monkeypatch.setattr(chatfs_sh, "run", fake)
 
-        assert refresh_provider("claude", tmp_path, DAYS, NOW) == 0
+        assert refresh_provider("claude", CacheRoot(tmp_path), DAYS, NOW) == 0
         assert fake.browsed == []
 
     def it_reports_records_carrying_no_timestamp(
@@ -125,7 +126,7 @@ class DescribeRefreshProvider:
         fake = FakeRun([undated, anchor])
         monkeypatch.setattr(chatfs_sh, "run", fake)
 
-        assert refresh_provider("claude", tmp_path, DAYS, NOW) == 0
+        assert refresh_provider("claude", CacheRoot(tmp_path), DAYS, NOW) == 0
         assert fake.browsed == []
         assert "1 record(s) carried no timestamp" in capsys.readouterr().err
 
@@ -138,7 +139,7 @@ class DescribeRefreshProvider:
             fake = FakeRun([stale, also_stale])
             monkeypatch.setattr(chatfs_sh, "run", fake)
 
-            status = refresh_provider("claude", tmp_path, DAYS, NOW)
+            status = refresh_provider("claude", CacheRoot(tmp_path), DAYS, NOW)
 
             assert status == 3
             assert fake.browsed == []
@@ -154,7 +155,7 @@ class DescribeRefreshProvider:
             fake = FakeRun([doomed, ok, anchor], failing=[str(doomed["chat_dir"])])
             monkeypatch.setattr(chatfs_sh, "run", fake)
 
-            status = refresh_provider("claude", tmp_path, DAYS, NOW)
+            status = refresh_provider("claude", CacheRoot(tmp_path), DAYS, NOW)
 
             assert status == 1
             assert fake.browsed == [doomed["chat_dir"], ok["chat_dir"]]

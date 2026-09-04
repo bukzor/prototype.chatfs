@@ -9,7 +9,8 @@ when something needs debugging.
 `run` traces, then runs a command to completion, always raising on
 non-zero exit. Deliberately narrow signature (stdin/stdout handles);
 grow it as needed. `pipe` is its two-stage counterpart, for a driver
-whose job is to be a pipeline.
+whose job is to be a pipeline. `stage` builds the argv either of them
+takes when the child is another stage of this package.
 
 `caller_location` is the runtime stand-in for C's `__FILE__`/`__LINE__`
 (Python has no preprocessor) -- for diagnostics that should point a
@@ -23,6 +24,8 @@ import subprocess
 import sys
 from collections.abc import Sequence
 from typing import IO
+
+from chatfs.cli import CacheRoot
 
 _TEAL = "\033[36;1m"
 _RESET = "\033[m"
@@ -58,6 +61,17 @@ def quote(cmd: Sequence[object]) -> str:
     "ls '1 2' 3 4"
     """
     return " ".join(shlex.quote(_stringify(arg)) for arg in cmd)
+
+
+def stage(module: str, cache: CacheRoot, *args: object) -> list[object]:
+    """The argv for running a child stage of this package under `--cache`.
+
+    The `CacheRoot` annotation is the point: a child re-derives its own
+    provider root from `--cache`, so a driver that forwarded the root it
+    is working in would nest the provider segment twice. That mistake is
+    now a type error here rather than a wrong directory later.
+    """
+    return [sys.executable, "-m", module, "--cache", cache, *args]
 
 
 def xtrace(cmd: Sequence[object]) -> None:
