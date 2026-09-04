@@ -1,0 +1,13 @@
+#!/bin/bash
+# Stand-in for the real capture: replays one canned CDP stream instead of
+# opening a browser window. $CHATFS_STUB_URL is the only page it can
+# answer for -- any other URL means the pipeline tried to capture
+# something the test didn't prepare, and failing loudly here is what
+# keeps that from becoming a real window that waits for a human.
+set -euo pipefail
+
+if [[ "$1" != "$CHATFS_STUB_URL" ]]; then
+  echo >&2 "har-browse stub: asked for $1, prepared only $CHATFS_STUB_URL"
+  exit 66
+fi
+exec cat "$CHATFS_STUB_CDP"
