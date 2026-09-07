@@ -15,6 +15,7 @@ from typing import NamedTuple
 
 from chatfs.layout import (
     DATA_DIR_NAME,
+    VIEW_LINK_NAME,
     VIEW_TREE_GLOB,
     chat_dir_for,
     data_dir_for,
@@ -78,6 +79,10 @@ def _view_symlinks(uuid: str, root: Path) -> Iterator[Path]:
     """Yield every view-tree symlink under `root` whose target mentions
     `uuid`.
 
+    The search of last resort: it costs a walk of every view placed, so
+    callers reach it only for a chat carrying no back-pointer
+    (`chatfs.layout.VIEW_LINK_NAME`), which they then record.
+
     Walks the labeled view trees only (`chatfs.layout.VIEW_TREE_GLOB`),
     which excludes three subtrees by construction rather than by
     filtering after the fact. `.chat/` and `.data/` hold
@@ -86,12 +91,6 @@ def _view_symlinks(uuid: str, root: Path) -> Iterator[Path]:
     legitimately contain the uuid too. `trash/` holds a preserved
     artifact, not a view: a re-captured chat must not reach into an
     earlier trashing of itself.
-
-    Rooting the walk at the view trees is what keeps the cost
-    proportional to the number of views rather than to everything ever
-    captured -- storage dwarfs the view tree once conversations are
-    rendered, and every path under it would be walked only to be
-    discarded.
     """
     for tree in root.glob(VIEW_TREE_GLOB):
         for path in tree.rglob("*"):
@@ -103,9 +102,10 @@ def _purge_view_symlinks(uuid: str, root: Path, *, keep: Path | None = None) -> 
     """Remove every view-tree symlink under `root` whose target mentions
     `uuid`, except `keep`.
 
-    Identity-scoped cleanup: derived view paths can move when
-    derivation logic changes (TZ format, view shape); we sweep by
-    identity, not path.
+    Identity-scoped cleanup by search, for the chat whose back-pointer
+    can't say where its view is. Also the shape a repair after a
+    derivation change wants, since then no pointer describes where the
+    views should have been.
 
     `keep` is the symlink `place_meta` just placed (place-then-purge:
     see `deterministic-regeneration.md`) -- its target also contains
@@ -117,15 +117,55 @@ def _purge_view_symlinks(uuid: str, root: Path, *, keep: Path | None = None) -> 
             path.unlink()
 
 
+def _recorded_view(data_dir: Path) -> Path | None:
+    """The view symlink `place_meta` recorded for this chat, or None when
+    it recorded none: a chat this cache has never placed, or one placed
+    before back-pointers existed.
+
+    The recorded target is relative, so joining it back onto `data_dir`
+    -- without resolving the last component -- recovers the view symlink
+    itself rather than the chat dir it in turn points at.
+    """
+    link = data_dir / VIEW_LINK_NAME
+    if not link.is_symlink():
+        return None
+    return Path(os.path.normpath(data_dir / os.readlink(link)))
+
+
+def _purge_prior_view(uuid: str, root: Path, *, keep: Path, placed_before: bool) -> None:
+    """Remove the view symlink this chat had before `keep` was placed.
+
+    One readlink for a chat carrying a back-pointer, whatever the
+    archive's size, and nothing at all for a chat this cache has never
+    placed (`placed_before`, i.e. no meta.json yet: nothing has ever
+    derived a view path for it). Only a chat placed before back-pointers
+    existed pays the search -- and `place_meta` records a pointer on its
+    way out, so a cache pays that once per chat, ever.
+    """
+    prior = _recorded_view(data_dir_for(uuid, root))
+    if prior is not None:
+        if prior != keep:
+            prior.unlink(missing_ok=True)
+    elif placed_before:
+        _purge_view_symlinks(uuid, root, keep=keep)
+
+
 def find_view_path(uuid: str, root: Path) -> Path | None:
     """The view-tree symlink under `root` naming `uuid`'s chat -- the
     "nice" (title, not UUID) path a human navigates to, for callers that
     want to report it (e.g. printing where a rendered chat.md landed).
 
-    None if no view has been placed yet. `place_meta`'s place-then-purge
-    protocol keeps at most one live view symlink per uuid at a time, so
-    the first match is the only one there is to find.
+    None when no view is placed: never placed, or placed and since
+    deleted -- `place_meta` keeps at most one live view symlink per
+    uuid, so a recorded pointer that no longer names a symlink means
+    there is nothing left to report.
+
+    Falls back to searching for a chat placed before back-pointers
+    existed; the next `place_meta` records one and ends that.
     """
+    recorded = _recorded_view(data_dir_for(uuid, root))
+    if recorded is not None:
+        return recorded if recorded.is_symlink() else None
     return next(_view_symlinks(uuid, root), None)
 
 
@@ -199,9 +239,11 @@ def place_meta(
     the stale-symlink purge runs only after the fresh one is placed
     (place-then-purge, not purge-then-place: see
     `deterministic-regeneration.md`) -- a crash never makes the chat
-    vanish from every view. All three updates share one outer write
-    lock on the data dir, so a cooperating reader sees them as a single
-    transition.
+    vanish from every view. The purge follows the back-pointer this
+    call then rewrites (`chatfs.layout.VIEW_LINK_NAME`), so replacing a
+    view costs a readlink rather than a search. All four updates share
+    one outer write lock on the data dir, so a cooperating reader sees
+    them as a single transition.
 
     Does not touch `.chat/$UUID/` -- it may not exist yet (see
     chatfs.layout's module docstring); that's render's job. The
@@ -218,12 +260,17 @@ def place_meta(
     title_link = view_dir / safe_filename(title or id)
 
     with chatfs_locks.write_locked(data_dir):
+        placed_before = meta_path.exists()  # before the write below makes it so
+
         with chatfs_atomic.staged(meta_path, anchor=data_dir) as tmp:
             _ = tmp.write_text(json.dumps(item, indent=2) + "\n")
 
         with chatfs_atomic.staged(title_link, anchor=data_dir) as tmp:
             tmp.symlink_to(os.path.relpath(chat_dir, start=view_dir))
 
-        _purge_view_symlinks(id, root, keep=title_link)
+        _purge_prior_view(id, root, keep=title_link, placed_before=placed_before)
+
+        with chatfs_atomic.staged(data_dir / VIEW_LINK_NAME, anchor=data_dir) as tmp:
+            tmp.symlink_to(os.path.relpath(title_link, start=data_dir))
 
     return Placement(id, title, chat_dir, title_link, updated)

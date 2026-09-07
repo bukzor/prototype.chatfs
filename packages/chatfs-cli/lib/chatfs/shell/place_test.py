@@ -3,6 +3,7 @@ dir-symlink maintenance, and the .chat/.data resolution helpers."""
 
 import os
 import time
+from collections.abc import Iterator
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -11,7 +12,12 @@ import pytest
 import typed_json
 from chatfs.layout import chat_dir_for, data_dir_for
 from chatfs.shell import place as chatfs_place
-from chatfs.shell.place import link_data_dir, place_meta, resolve_chat_dir
+from chatfs.shell.place import (
+    find_view_path,
+    link_data_dir,
+    place_meta,
+    resolve_chat_dir,
+)
 
 # Epoch matches the AI Studio demo capture fixture used elsewhere in this
 # incubator; under America/Chicago (CDT, UTC-5) it's 2026-06-20T12:42:40.
@@ -21,6 +27,24 @@ DEMO_EPOCH = 1781977360
 def use_chicago_tz(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("TZ", "America/Chicago")
     time.tzset()
+
+
+def forbid_searching(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Fail the test if anything searches the view trees by identity.
+
+    A chat carrying a back-pointer needs one readlink; a chat this cache
+    has never placed needs nothing at all. The search is for the one case
+    neither covers, and its cost is why this distinction exists.
+    """
+
+    def no_search(uuid: str, root: Path) -> Iterator[Path]:
+        raise AssertionError(f"searched the view trees under {root} for {uuid}")
+
+    monkeypatch.setattr(chatfs_place, "_view_symlinks", no_search)
+
+
+def view_pointer(uuid: str, root: Path) -> Path:
+    return data_dir_for(uuid, root) / "view"
 
 
 class DescribePlaceMeta:
@@ -113,6 +137,66 @@ class DescribePlaceMeta:
 
         assert bookmark.is_symlink()
 
+    def it_records_the_view_it_placed(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ):
+        use_chicago_tz(monkeypatch)
+        dt = datetime.fromtimestamp(DEMO_EPOCH, tz=timezone.utc)
+
+        placement = place_meta("abc123", "Hello", dt, {"v": 1}, tmp_path)
+
+        pointer = view_pointer("abc123", tmp_path)
+        assert pointer.is_symlink()
+        # relative, so the pointer survives the whole cache being moved
+        assert os.readlink(pointer) == os.path.relpath(
+            placement.view, start=pointer.parent
+        )
+        assert pointer.resolve() == placement.chat_dir.resolve()
+
+    def it_purges_the_previous_view_without_searching_for_it(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ):
+        use_chicago_tz(monkeypatch)
+        dt = datetime.fromtimestamp(DEMO_EPOCH, tz=timezone.utc)
+        stale = place_meta(
+            "abc123", "Hello", dt, {"stub": True}, tmp_path, label="LastModified"
+        ).view
+        forbid_searching(monkeypatch)
+
+        fresh = place_meta("abc123", "Hello", dt, {"real": True}, tmp_path).view
+
+        assert not stale.is_symlink()
+        assert fresh.is_symlink()
+        assert view_pointer("abc123", tmp_path).resolve() == fresh.resolve()
+
+    def it_does_not_search_for_a_chat_it_has_never_placed(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ):
+        use_chicago_tz(monkeypatch)
+        dt = datetime.fromtimestamp(DEMO_EPOCH, tz=timezone.utc)
+        forbid_searching(monkeypatch)
+
+        placement = place_meta("abc123", "Hello", dt, {"v": 1}, tmp_path)
+
+        assert placement.view.is_symlink()
+
+    def it_searches_once_for_a_chat_placed_before_back_pointers(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ):
+        use_chicago_tz(monkeypatch)
+        dt = datetime.fromtimestamp(DEMO_EPOCH, tz=timezone.utc)
+        stale = place_meta(
+            "abc123", "Hello", dt, {"stub": True}, tmp_path, label="LastModified"
+        ).view
+        view_pointer("abc123", tmp_path).unlink()  # a cache written before this existed
+
+        fresh = place_meta("abc123", "Hello", dt, {"real": True}, tmp_path).view
+
+        assert not stale.is_symlink()
+        assert fresh.is_symlink()
+        # recorded on the way out: the next placement won't search again
+        assert view_pointer("abc123", tmp_path).is_symlink()
+
     def it_places_the_fresh_symlink_before_purging_the_stale_one(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ):
@@ -130,15 +214,18 @@ class DescribePlaceMeta:
         assert stale_link.is_symlink()
         fresh_link = tmp_path / "Created=2026/06/20/12:42:40-05:00" / "Hello"
 
-        def failing_purge(uuid: str, root: Path, *, keep: Path | None = None) -> None:
+        def failing_purge(
+            uuid: str, root: Path, *, keep: Path, placed_before: bool
+        ) -> None:
             # by the time purge would run, the fresh link must already exist
             assert uuid == "abc123"
             assert root == tmp_path
             assert keep == fresh_link
+            assert placed_before  # meta.json from the first call is already there
             assert fresh_link.is_symlink()
             raise RuntimeError("simulated crash before purge")
 
-        monkeypatch.setattr(chatfs_place, "_purge_view_symlinks", failing_purge)
+        monkeypatch.setattr(chatfs_place, "_purge_prior_view", failing_purge)
 
         with pytest.raises(RuntimeError):
             _ = place_meta("abc123", "Hello", dt, {"real": True}, tmp_path)
@@ -146,6 +233,43 @@ class DescribePlaceMeta:
         # both survive the interrupted purge -- never neither
         assert stale_link.is_symlink()
         assert fresh_link.is_symlink()
+
+
+class DescribeFindViewPath:
+    def it_follows_the_recorded_view(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ):
+        use_chicago_tz(monkeypatch)
+        dt = datetime.fromtimestamp(DEMO_EPOCH, tz=timezone.utc)
+        placement = place_meta("abc123", "Hello", dt, {"v": 1}, tmp_path)
+        forbid_searching(monkeypatch)
+
+        assert find_view_path("abc123", tmp_path) == placement.view
+
+    def it_searches_for_a_chat_placed_before_back_pointers(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ):
+        use_chicago_tz(monkeypatch)
+        dt = datetime.fromtimestamp(DEMO_EPOCH, tz=timezone.utc)
+        placement = place_meta("abc123", "Hello", dt, {"v": 1}, tmp_path)
+        view_pointer("abc123", tmp_path).unlink()
+
+        assert find_view_path("abc123", tmp_path) == placement.view
+
+    def it_reports_nothing_when_the_recorded_view_is_gone(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ):
+        # a human moved or deleted the symlink: the pointer is stale and
+        # there is nothing else to find, since a chat has one view at a time
+        use_chicago_tz(monkeypatch)
+        dt = datetime.fromtimestamp(DEMO_EPOCH, tz=timezone.utc)
+        placement = place_meta("abc123", "Hello", dt, {"v": 1}, tmp_path)
+        placement.view.unlink()
+
+        assert find_view_path("abc123", tmp_path) is None
+
+    def it_reports_nothing_for_a_chat_that_was_never_placed(self, tmp_path: Path):
+        assert find_view_path("abc123", tmp_path) is None
 
 
 class DescribeLinkDataDir:

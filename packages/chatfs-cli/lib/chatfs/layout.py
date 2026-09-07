@@ -5,6 +5,7 @@ trees:
 
     $root/.data/$UUID/       # captured exhaust -- input, never purged
         meta.json
+        view -> ../../$LABEL=YYYY/MM/DD/HH:MM:SS±HH:MM/$TITLE
         conversation.json
         conversation.json.d/raw.json  # AI Studio only: pre-massage pluck
         cdp.jsonl
@@ -35,6 +36,20 @@ from datetime import datetime
 from pathlib import Path
 
 DATA_DIR_NAME = ".data"
+
+VIEW_LINK_NAME = "view"
+"""Names the back-pointer beside a chat's captured data: a symlink to the
+view symlink `place_meta` last placed for it.
+
+A view path is derived from mutable inputs -- title, timestamp, label,
+and the derivation format itself -- so the placement has to be recorded
+somewhere for the next one to supersede it. Recorded, both superseding
+it and reporting it are a readlink; re-derived, they are a search of
+every view for a symlink naming this chat.
+
+Relative target, and beside the data rather than in the view tree, so
+the pointer survives the cache being moved and the view being replaced.
+"""
 
 
 def safe_filename(name: str) -> str:

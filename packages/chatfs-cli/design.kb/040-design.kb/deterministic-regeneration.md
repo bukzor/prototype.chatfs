@@ -36,8 +36,9 @@ This applies to:
   prior `cdp.jsonl` untouched, a failed pluck leaves the prior
   `conversation.json` untouched.
 - `index splat` — calls `place_meta` per item; `meta.json` staged into
-  `.data/$UUID/`; the view symlink is placed, then stale symlinks for
-  the same identity are purged (place-then-purge).
+  `.data/$UUID/`; the view symlink is placed, the prior one purged, and
+  the `view` back-pointer rewritten to name the new one
+  (place-then-purge).
 - `conversation path render` — builds the entire derived surface
   (`chat.md`, `messages/`, the `.data` inspection symlink) in one
   staged scratch and atomically promotes it as a single swap of
@@ -58,30 +59,34 @@ The general form: **before a verb writes its outputs, it removes any
 prior artifact those outputs supersede, regardless of where the prior
 artifact lived.**
 
-For view symlinks targeting `.chat/$UUID/…`, the cleanup is a sweep of
-the labeled view trees for any symlink naming that UUID, run *after*
-the fresh symlink is placed and excluding it, so the sweep doesn't
-immediately undo the placement it's meant to follow
-(`chatfs.shell.place._purge_view_symlinks`).
+For view symlinks targeting `.chat/$UUID/…`, cleanup follows a record
+of the placement rather than searching for it: `place_meta` writes a
+`view` back-pointer beside the chat's captured data
+(`chatfs.layout.VIEW_LINK_NAME`), inside the write lock that already
+covers meta.json and the symlink. Superseding a view is then a readlink
+and an unlink, whatever the archive holds, and `find_view_path` reports
+the live view the same way. The purge still runs *after* the fresh
+symlink is placed and excludes it, so it can't undo the placement it
+follows.
+
+Searching the view trees by identity
+(`chatfs.shell.place._purge_view_symlinks`) is what remains for the case
+a pointer cannot cover: a chat placed before back-pointers existed. Each
+such chat pays one search, on the placement that then records its
+pointer. That search is also the shape a repair wants after a derivation
+change, since then no pointer describes where the views *should* have
+been — but that is a migration event, not a per-item one, which is the
+whole reason it stopped being the default path. Measured on a replayed
+1154-chat claude index: 93 s of searching per placement, 3 s of
+following pointers.
 
 This keeps the storage layer (`.chat/$UUID/`) authoritative — the only
 place a UUID's view symlinks ever resolve to — while letting derived
-views (`YYYY/MM/…`) heal automatically when their derivation logic
-changes.
+views (`YYYY/MM/…`) heal when their derivation logic changes.
 
-The sweep's scope is the labeled view trees and nothing else: it owns
-what it placed. A symlink to a chat that someone else left elsewhere
-under the root is not a view and is not the sweep's to remove.
-
-**The per-item sweep is the wrong price for that healing.** Placing N
-chats costs O(N × views) — 5.8M path visits for a 1154-chat index,
-measured — and every render pays a sweep of its own through
-`find_view_path`. Healing after a derivation change is a migration
-event; charging it per item, forever, buys robustness at a cost that
-scales with the archive. Recording each placement (a back-pointer
-beside the chat's data) makes both operations a readlink and leaves
-identity-scoped sweeping as an explicit repair command, which is the
-occasion it was designed for. Tracked in the package taskfile.
+The scope of both is the labeled view trees and nothing else: they own
+what they placed. A symlink to a chat that someone else left elsewhere
+under the root is not a view and is not theirs to remove.
 
 Other contexts where this applies: any pluggable view tree (by-tag,
 by-model), and anywhere else identity is bound to a path that
