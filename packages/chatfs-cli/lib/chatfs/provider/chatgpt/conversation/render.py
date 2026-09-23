@@ -33,6 +33,7 @@ from chatfs.provider.chatgpt.types import Conversation, is_conversation
 from chatfs.render import ConversationTree, Turn, normalize_turnless, render_tree
 from chatfs.shell import sh as chatfs_sh
 from chatfs.shell.place import resolve_chat_dir
+from chatfs.user_error import reports_user_errors
 
 VIRTUAL_ROOT = ""
 """Stands in for chatgpt's `parent: null`: the virtual root must be an id
@@ -135,6 +136,7 @@ def render_conversation(
     return render_tree(tree, turns)
 
 
+@reports_user_errors
 def main() -> None:
     import sys
 

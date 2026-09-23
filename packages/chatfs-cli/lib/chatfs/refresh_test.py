@@ -2,7 +2,6 @@
 chats are recent, whether the index reached far enough back to say so,
 and which of the recent ones the provider changed since we captured."""
 
-import subprocess
 from collections.abc import Sequence
 from datetime import UTC, datetime, timedelta
 
@@ -10,6 +9,7 @@ import pytest
 
 from chatfs.refresh import covers, cutoff_for, day_count, in_window, is_stale, main
 from chatfs.shell import sh as chatfs_sh
+from chatfs.user_error import UserError
 
 NOW = datetime(2026, 9, 3, 12, 0, tzinfo=UTC)
 
@@ -85,7 +85,7 @@ class DescribeMain:
             module = argv[argv.index("-m") + 1]
             spawned.append(module)
             if "chatgpt" in module:
-                raise subprocess.CalledProcessError(1, argv)
+                raise UserError(status=1)
 
         monkeypatch.setattr(chatfs_sh, "run", fake_run)
         monkeypatch.setattr("sys.argv", ["prog", "--cache", "/nowhere", "7"])

@@ -26,6 +26,7 @@ from urllib.parse import parse_qs, urlparse
 
 from chatfs.provider.chatgpt import json
 from chatfs.provider.chatgpt.json import JsonObj, JsonValue
+from chatfs.user_error import UserError, reports_user_errors
 
 # Carried by a page for its own delivery, not by the conversation: the
 # assembled document states the same facts as `mapping` instead.
@@ -87,12 +88,13 @@ def chain_pages(records: Sequence[JsonObj]) -> list[JsonObj]:
         cursor = str(page_info(chain[-1])["start_cursor"])
         assert cursor not in seen, f"pagination cycle at {cursor}"
         seen.add(cursor)
-        assert cursor in pages_by_before, (
-            f"capture holds only {len(chain)} of this conversation's pages: "
-            "chatgpt loads older messages as you scroll, so scroll to the top "
-            "of the conversation before clicking Done Capturing "
-            f"(no page before message {cursor})"
-        )
+        if cursor not in pages_by_before:
+            raise UserError(
+                f"capture holds only {len(chain)} of this conversation's pages: "
+                + "chatgpt loads older messages as you scroll, so scroll to the top "
+                + "of the conversation before clicking Done Capturing "
+                + f"(no page before message {cursor})"
+            )
         chain.append(pages_by_before[cursor])
     chain.reverse()
     return chain
@@ -161,6 +163,7 @@ def read_records(lines: Iterable[str]) -> list[JsonObj]:
     return [as_object(json.loads(line)) for line in lines if line.strip()]
 
 
+@reports_user_errors
 def main() -> None:
     document = assemble(read_records(sys.stdin))
     json.dump(document, sys.stdout)

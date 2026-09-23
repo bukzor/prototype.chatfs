@@ -15,10 +15,12 @@ from chatfs.layout import DATA_DIR_NAME
 from chatfs.provider.aistudio.layout import PROVIDER
 from chatfs.provider.aistudio.pluck import pluck_index_pages
 from chatfs.shell.capture import browse, dump_jsonl
+from chatfs.user_error import reports_user_errors
 
 URL = "https://aistudio.google.com/library"
 
 
+@reports_user_errors
 def main() -> None:
     import os
     import sys

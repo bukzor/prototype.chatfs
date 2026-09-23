@@ -28,8 +28,10 @@ from chatfs.provider.aistudio import layout as aistudio_layout
 from chatfs.provider.aistudio.types import is_conversation
 from chatfs.shell import sh as chatfs_sh
 from chatfs.shell.capture import run_module
+from chatfs.user_error import reports_user_errors
 
 
+@reports_user_errors
 def main() -> None:
     import os
     import sys

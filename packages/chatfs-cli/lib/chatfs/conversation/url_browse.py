@@ -8,8 +8,10 @@ Resolves the provider from the URL's host and runs that provider's own
 `conversation url browse`, forwarding every argument untouched.
 """
 from chatfs.conversation.dispatch import provider_for_url, run_leaf, url_in
+from chatfs.user_error import reports_user_errors
 
 
+@reports_user_errors
 def main() -> None:
     import sys
 

@@ -20,6 +20,7 @@ from chatfs.cli import CacheRoot
 from chatfs.refresh import covers, cutoff_for, in_window, is_stale
 from chatfs.shell import sh as chatfs_sh
 from chatfs.shell.capture import captured_at
+from chatfs.user_error import UserError
 
 
 class IndexedChat(NamedTuple):
@@ -132,11 +133,11 @@ def refresh_provider(provider: str, cache: CacheRoot, days: int, now: datetime) 
             continue
         try:
             browse_chat(provider, chat.chat_dir)
-        except subprocess.CalledProcessError as error:
+        except UserError as error:
             failures += 1
             print(
                 f"{provider}: capture failed for {chat.chat_dir} "
-                + f"(exit {error.returncode})",
+                + f"(exit {error.status})",
                 file=sys.stderr,
             )
         else:

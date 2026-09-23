@@ -18,8 +18,10 @@ from chatfs.cli import cache_root, extract_cache
 from chatfs.provider.claude.layout import PROVIDER
 from chatfs.refresh import day_count
 from chatfs.shell.refresh import refresh_provider
+from chatfs.user_error import reports_user_errors
 
 
+@reports_user_errors
 def main() -> None:
     import os
     import sys

@@ -20,6 +20,7 @@ from pathlib import Path
 from chatfs.cli import extract_cache
 from chatfs.provider.claude.layout import PROVIDER, uuid_from_url
 from chatfs.shell import sh as chatfs_sh
+from chatfs.user_error import reports_user_errors
 
 
 def rmdir_p(dir: Path) -> None:
@@ -32,6 +33,7 @@ def rmdir_p(dir: Path) -> None:
         dir = dir.parent
 
 
+@reports_user_errors
 def main() -> None:
     import os
     import shutil

@@ -41,6 +41,7 @@ from typing import Literal, TypeAlias
 
 import typed_json
 from typed_json import JsonObject, JsonValue, is_json_array
+from chatfs.user_error import reports_user_errors
 
 Schema: TypeAlias = Mapping[int, "Field"]
 Field: TypeAlias = (
@@ -175,6 +176,7 @@ def massage(doc: JsonValue) -> JsonObject:
     return {"prompt": from_message(doc, PROMPT)}
 
 
+@reports_user_errors
 def main() -> None:
     import sys
 

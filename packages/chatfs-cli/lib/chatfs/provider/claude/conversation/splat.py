@@ -44,6 +44,7 @@ from chatfs.provider.claude.types import (
     is_conversation,
 )
 from chatfs.shell import sh as chatfs_sh
+from chatfs.user_error import reports_user_errors
 
 
 def format_timestamp(created_at: str) -> str:
@@ -433,6 +434,7 @@ def splat(src: Path, base_dir: Path) -> tuple[int, int]:
     return len(chat_messages), rendered_count
 
 
+@reports_user_errors
 def main() -> None:
     import sys
 

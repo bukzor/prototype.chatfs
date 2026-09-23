@@ -3,6 +3,7 @@
 import pytest
 
 from chatfs.provider.chatgpt.json import JsonObj, JsonValue
+from chatfs.user_error import UserError
 
 from . import assemble as M
 
@@ -73,7 +74,7 @@ class DescribeAssemble:
         }
 
     def it_raises_when_an_older_page_is_missing(self):
-        with pytest.raises(AssertionError, match="scroll to the top"):
+        with pytest.raises(UserError, match="scroll to the top"):
             _ = M.assemble([record(CONV, head_page("c", "d", has_previous=True))])
 
     def it_merges_pass_through_lists_across_pages(self):

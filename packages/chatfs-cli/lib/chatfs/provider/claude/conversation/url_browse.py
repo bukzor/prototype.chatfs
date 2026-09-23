@@ -9,7 +9,7 @@ also fires `/chat_conversations_v2` for the sidebar, so one browse trip
 captures both the conversation document and an index page that mentions
 this UUID.
 
-If that assumption is ever violated, `find_index_item` fails loudly and
+If that assumption is ever violated, `find_index_item` raises UserError and
 the recovery path is two-step: index browse → index splat → path_browse.
 
 A second cross-check asserts that the meta-shaped fields agree across
@@ -20,7 +20,7 @@ Steps:
     1. browse $url → .data/$UUID/cdp.jsonl
     2. conversation pluck → .data/$UUID/conversation.json
     3. index pluck → .data/$UUID/cdp.jsonl.d/index-pages.jsonl; filter to
-       .uuid == $UUID → meta (fail loudly if absent)
+       .uuid == $UUID → meta (UserError if absent)
     4. cross-check conversation doc vs index item, null-tolerant
     5. place_meta (writes meta.json, purges + places view dir-symlink)
     6. delegate to path_render
@@ -46,6 +46,7 @@ from chatfs.shell import sh as chatfs_sh
 from chatfs.shell.capture import capture, pluck
 from chatfs.shell.place import place_meta
 from chatfs.url_browse import null_tolerant_mismatches
+from chatfs.user_error import UserError, reports_user_errors
 
 
 def find_index_item(data_dir: Path, uuid: str) -> IndexItem:
@@ -53,7 +54,7 @@ def find_index_item(data_dir: Path, uuid: str) -> IndexItem:
     return the item matching uuid.
 
     A cross-check dump, not a contract file — scratch reserved under
-    `cdp.jsonl`'s `.d/` sibling per `path-ownership.md`. Fails loudly if
+    `cdp.jsonl`'s `.d/` sibling per `path-ownership.md`. Raises UserError if
     no incidentally-captured index page mentioned this uuid — recovery is
     the two-step (index_browse → index_splat → path_browse).
     """
@@ -66,16 +67,18 @@ def find_index_item(data_dir: Path, uuid: str) -> IndexItem:
         page = typed_json.loads(line)
         assert is_index_page(page), page
         matches.extend(item for item in page["data"] if item["uuid"] == uuid)
-    assert matches, (
-        f"no sidebar index page included {uuid}; "
-        "run chatfs-provider-claude-index, then use path_browse"
-    )
+    if not matches:
+        raise UserError(
+            f"no sidebar index page included {uuid}; "
+            + "run chatfs-provider-claude-index, then use path_browse"
+        )
     assert all(
         m == matches[0] for m in matches
     ), f"index endpoint returned divergent items for {uuid}: {matches}"
     return matches[0]
 
 
+@reports_user_errors
 def main() -> None:
     import os
     import sys

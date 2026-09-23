@@ -39,6 +39,7 @@ import typed_json
 from chatfs.provider.aistudio.types import Conversation, Turn, is_conversation
 from chatfs.shell import sh as chatfs_sh
 from chatfs.splat import fenced_json, render_details
+from chatfs.user_error import reports_user_errors
 
 
 def turns_of(doc: Conversation) -> list[Turn]:
@@ -124,6 +125,7 @@ def basename_for(index: int, role: str, kind: str) -> str:
     return f"{index:03d}.{role}{suffix}"
 
 
+@reports_user_errors
 def main() -> None:
     import shutil
 

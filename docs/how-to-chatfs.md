@@ -206,8 +206,11 @@ failed one.
 
 **"no sidebar index page included $UUID"** — capturing by URL relies on the
 page also loading your conversation list, which is where the title and
-timestamp come from. If it didn't, run the bulk path above instead:
-`chatfs-provider-<provider>-index`, then `path-browse`.
+timestamp come from; unscrolled, chatgpt's sidebar loads only the ~28 most
+recently updated chats, so this is expected for an older one. Capture it by
+path instead: `path-browse` works as-is if an earlier index already covered
+the chat, otherwise run `chatfs-provider-<provider>-index` (scrolled back
+past it) first.
 
 **"capture holds only N of this conversation's pages"** -- chatgpt sends
 older messages only as you scroll back through them, so a capture taken

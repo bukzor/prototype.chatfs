@@ -22,8 +22,10 @@ from chatfs.provider.aistudio.types import is_index_item
 from chatfs.shell import sh as chatfs_sh
 from chatfs.shell.capture import run_module
 from chatfs.shell.place import resolve_chat_dir
+from chatfs.user_error import reports_user_errors
 
 
+@reports_user_errors
 def main() -> None:
     import sys
 

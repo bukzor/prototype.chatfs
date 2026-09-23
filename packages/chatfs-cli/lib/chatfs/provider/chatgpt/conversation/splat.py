@@ -24,6 +24,7 @@ from chatfs.provider.chatgpt import json
 from chatfs.provider.chatgpt.json import JsonObj
 from chatfs.shell import sh as chatfs_sh
 from chatfs.splat import fenced_json, render_details
+from chatfs.user_error import reports_user_errors
 
 MARKDOWN_PLACEHOLDER = "$MARKDOWN"
 
@@ -546,6 +547,7 @@ def splat(src: Path, base_dir: Path) -> tuple[int, int]:
     return len(messages), rendered_count
 
 
+@reports_user_errors
 def main() -> None:
     if len(sys.argv) not in (2, 3):
         print(f"Usage: {sys.argv[0]} <conversation.json> [output-dir]", file=sys.stderr)

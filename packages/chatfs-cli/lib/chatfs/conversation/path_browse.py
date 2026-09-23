@@ -9,8 +9,10 @@ that provider's own `conversation path browse`, forwarding the path
 untouched.
 """
 from chatfs.conversation.dispatch import provider_for_path, run_leaf
+from chatfs.user_error import reports_user_errors
 
 
+@reports_user_errors
 def main() -> None:
     import sys
 

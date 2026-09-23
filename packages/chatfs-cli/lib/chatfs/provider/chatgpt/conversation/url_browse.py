@@ -7,10 +7,12 @@ Usage:
 Assumes (per browse-incidental-capture.md) that visiting `/c/$UUID` also
 fires `/backend-api/conversations` for the sidebar, so one browse trip
 captures both the conversation document and an index page that mentions
-this UUID.
+this UUID. That holds only for recent chats: unscrolled, the sidebar
+loads just its first page, the ~28 most recently updated.
 
-If that assumption is ever violated, `find_index_item` fails loudly and
-the recovery path is two-step: index browse → index splat → path_browse.
+For an older chat `find_index_item` raises UserError, and the recovery
+is capture by path: index browse (scrolled back past it) → path_browse,
+or path_browse alone if an earlier index already placed its meta.json.
 
 A second cross-check asserts that the identity fields agree across the
 two endpoints (null-tolerant) — catches schema drift if either side
@@ -27,7 +29,7 @@ Steps:
     2. conversation pluck → .data/$UUID/conversation.json.d/raw.jsonl
     3. assemble → .data/$UUID/conversation.json
     4. index pluck → .data/$UUID/cdp.jsonl.d/index-pages.jsonl; filter to
-       .id == $UUID → meta (fail loudly if absent)
+       .id == $UUID → meta (UserError if absent)
     5. cross-check conversation doc vs index item, null-tolerant
     6. place_meta (writes meta.json, purges + places view dir-symlink)
     7. delegate to path_render
@@ -48,6 +50,7 @@ from chatfs.provider.chatgpt.types import IndexItem, is_index_page
 from chatfs.shell import sh as chatfs_sh
 from chatfs.shell.capture import pluck
 from chatfs.url_browse import null_tolerant_mismatches
+from chatfs.user_error import UserError, reports_user_errors
 
 
 def find_index_item(data_dir: Path, uuid: str) -> IndexItem:
@@ -55,10 +58,8 @@ def find_index_item(data_dir: Path, uuid: str) -> IndexItem:
     return the item matching uuid.
 
     A cross-check dump, not a contract file — scratch reserved under
-    `cdp.jsonl`'s `.d/` sibling per `path-ownership.md`. Fails loudly if
-    no sidebar page included this conversation — the user's recovery is
-    to run `index browse` then `conversation path browse` against the
-    resulting chat dir.
+    `cdp.jsonl`'s `.d/` sibling per `path-ownership.md`. Raises UserError
+    if no sidebar page included this conversation.
     """
     index_pages = data_dir / "cdp.jsonl.d" / "index-pages.jsonl"
     pluck(pluck_index_pages, data_dir / "cdp.jsonl", index_pages)
@@ -71,10 +72,15 @@ def find_index_item(data_dir: Path, uuid: str) -> IndexItem:
         for item in page["items"]:
             if item["id"] == uuid:
                 matches.append(item)
-    assert matches, (
-        f"no sidebar index page included {uuid}; "
-        "run chatfs-provider-chatgpt-index, then use path_browse"
-    )
+    if not matches:
+        raise UserError(
+            f"no sidebar index page included {uuid}: unscrolled, the sidebar "
+            + "loads only the most recently updated chats, and capture by URL "
+            + "takes the title and timestamps from there. Capture by path "
+            + f"instead: chatfs-conversation-path-browse <cache>/chatgpt/.chat/{uuid}/ "
+            + "-- after chatfs-provider-chatgpt-index, scrolled back past this "
+            + "chat, if it has never been indexed."
+        )
     assert all(m == matches[0] for m in matches), (
         f"index endpoint returned divergent items for {uuid}: {matches}"
     )
@@ -97,6 +103,7 @@ def _index_shaped(conv_doc: JsonObject) -> JsonObject:
     }
 
 
+@reports_user_errors
 def main() -> None:
     import os
     import sys

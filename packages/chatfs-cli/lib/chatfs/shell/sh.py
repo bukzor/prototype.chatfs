@@ -6,9 +6,9 @@ counterpart other modules print through. Both are gated by `debug_enabled`
 (`DEBUG=1` or higher) -- normal runs stay quiet; the trace is there for
 when something needs debugging.
 
-`run` traces, then runs a command to completion, always raising on
-non-zero exit. Deliberately narrow signature (stdin/stdout handles);
-grow it as needed. `pipe` is its two-stage counterpart, for a driver
+`run` traces, then runs a command to completion, always raising
+UserError on non-zero exit (see `check`). Deliberately narrow signature
+(stdin/stdout handles); grow it as needed. `pipe` is its two-stage counterpart, for a driver
 whose job is to be a pipeline. `stage` builds the argv either of them
 takes when the child is another stage of this package.
 
@@ -26,6 +26,7 @@ from collections.abc import Sequence
 from typing import IO
 
 from chatfs.cli import CacheRoot
+from chatfs.user_error import UserError
 
 _TEAL = "\033[36;1m"
 _RESET = "\033[m"
@@ -86,7 +87,8 @@ def run(
     stdout: IO[bytes] | int | None = None,
     timeout: float | None = None,
 ) -> subprocess.CompletedProcess[bytes]:
-    """Run a command to completion, tracing it first. Raises on non-zero exit.
+    """Run a command to completion, tracing it first. Raises UserError on
+    non-zero exit.
 
     close_fds=False: the child inherits the whole fd table, matching plain
     Unix exec semantics -- Python's close_fds=True default silently drops
@@ -96,14 +98,15 @@ def run(
     tests can bound a would-be deadlock instead of hanging the suite.
     """
     xtrace(cmd)
-    return subprocess.run(
+    done = subprocess.run(
         [_stringify(arg) for arg in cmd],
         stdin=stdin,
         stdout=stdout,
         close_fds=False,
-        check=True,
         timeout=timeout,
     )
+    check(done.returncode)
+    return done
 
 
 def pipe(producer: Sequence[object], consumer: Sequence[object]) -> None:
@@ -124,13 +127,23 @@ def pipe(producer: Sequence[object], consumer: Sequence[object]) -> None:
         downstream = subprocess.Popen(consumer_argv, stdin=read_end, close_fds=False)
     upstream_code = upstream.wait()
     downstream_code = downstream.wait()
-    # Both are reaped before either is reported, and the producer is
-    # reported first: when a browse fails, the splat's downstream
+    # Both are reaped before either is checked, and the producer's status
+    # wins: when a browse fails, the splat's downstream
     # complaint about empty input is the symptom, not the cause.
-    if upstream_code:
-        raise subprocess.CalledProcessError(upstream_code, producer_argv)
-    if downstream_code:
-        raise subprocess.CalledProcessError(downstream_code, consumer_argv)
+    check(upstream_code)
+    check(downstream_code)
+
+
+def check(returncode: int) -> None:
+    """Raise a message-less UserError for a failed child.
+
+    The child shares our stderr and has already said why it failed there;
+    repeating it (or stacking a traceback on top) only buries that. What
+    is left to pass up is the status -- a signal death (negative
+    returncode) as the shell spells it, 128+N.
+    """
+    if returncode:
+        raise UserError(status=returncode if returncode > 0 else 128 - returncode)
 
 
 def _stringify(arg: object) -> str:

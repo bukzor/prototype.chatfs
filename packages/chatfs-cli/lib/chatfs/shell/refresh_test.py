@@ -18,6 +18,7 @@ from chatfs.cli import CacheRoot
 from chatfs.layout import chat_dir_for, data_dir_for
 from chatfs.shell import sh as chatfs_sh
 from chatfs.shell.refresh import refresh_provider
+from chatfs.user_error import UserError
 
 NOW = datetime(2026, 9, 3, 12, 0, tzinfo=UTC)
 DAYS = 7
@@ -76,7 +77,7 @@ class FakeRun:
         target = argv[-1]
         self.browsed.append(target)
         if target in self.failing:
-            raise subprocess.CalledProcessError(1, argv)
+            raise UserError(status=1)
         return subprocess.CompletedProcess(argv, 0, b"")
 
 

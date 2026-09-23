@@ -10,8 +10,10 @@ The leaf's stdout is this command's stdout -- `run_leaf` leaves the child's
 handles alone, so the markdown streams through rather than being buffered.
 """
 from chatfs.conversation.dispatch import provider_for_path, run_leaf
+from chatfs.user_error import reports_user_errors
 
 
+@reports_user_errors
 def main() -> None:
     import sys
 

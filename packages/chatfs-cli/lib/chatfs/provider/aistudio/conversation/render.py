@@ -27,6 +27,7 @@ from chatfs.provider.aistudio.types import is_turn
 from chatfs.render import ConversationTree, Turn, render_tree
 from chatfs.shell import sh as chatfs_sh
 from chatfs.shell.place import resolve_chat_dir
+from chatfs.user_error import reports_user_errors
 
 VIRTUAL_ROOT = ""
 """Stands in for "before the first turn": the virtual root must be an id
@@ -106,6 +107,7 @@ def render_conversation(
     return render_tree(build_tree(ids, created), turns)
 
 
+@reports_user_errors
 def main() -> None:
     import sys
 

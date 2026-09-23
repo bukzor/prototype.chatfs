@@ -66,6 +66,24 @@ def modules_defining_main() -> dict[str, str]:
     return found
 
 
+def mains_missing_reports_user_errors() -> list[str]:
+    """Modules whose `main` lacks `@reports_user_errors` -- such a command
+    answers a foreseen failure with a traceback instead of its message."""
+    lib = PACKAGE / "lib"
+    missing: list[str] = []
+    for py in sorted((lib / "chatfs").rglob("*.py")):
+        if py.name.endswith("_test.py"):
+            continue
+        tree = ast.parse(py.read_bytes().decode())
+        for node in tree.body:
+            if not (isinstance(node, ast.FunctionDef) and node.name == "main"):
+                continue
+            decorators = [ast.unparse(d) for d in node.decorator_list]
+            if "reports_user_errors" not in decorators:
+                missing.append(str(py.relative_to(lib)))
+    return missing
+
+
 class DescribeCommandFor:
     def it_joins_module_segments_with_dashes(self):
         assert (
@@ -89,3 +107,6 @@ class DescribeEntryPoints:
 
     def it_points_each_command_at_the_module_its_name_spells(self):
         assert declared_scripts() == modules_defining_main()
+
+    def it_reports_user_errors_from_every_main(self):
+        assert mains_missing_reports_user_errors() == []

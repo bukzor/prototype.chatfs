@@ -27,8 +27,10 @@ from chatfs.provider.claude import layout as claude_layout
 from chatfs.provider.claude.types import is_index_page
 from chatfs.shell import sh as chatfs_sh
 from chatfs.shell.place import place_meta
+from chatfs.user_error import reports_user_errors
 
 
+@reports_user_errors
 def main() -> None:
     import os
     import sys

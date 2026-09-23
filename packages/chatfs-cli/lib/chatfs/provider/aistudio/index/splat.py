@@ -33,6 +33,7 @@ from chatfs.provider.aistudio.conversation.massage_json import PROMPT, from_mess
 from chatfs.provider.aistudio.layout import PROVIDER, index_item, place_meta
 from chatfs.provider.aistudio.types import Conversation, is_conversation
 from chatfs.shell import sh as chatfs_sh
+from chatfs.user_error import reports_user_errors
 
 
 def massage_entry(entry: JsonValue) -> Conversation:
@@ -47,6 +48,7 @@ def massage_entry(entry: JsonValue) -> Conversation:
     return doc
 
 
+@reports_user_errors
 def main() -> None:
     import os
     import sys

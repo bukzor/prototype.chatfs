@@ -15,8 +15,10 @@ bulky.
 from chatfs.cli import cache_root, extract_cache
 from chatfs.provider.aistudio.layout import PROVIDER
 from chatfs.shell import sh as chatfs_sh
+from chatfs.user_error import reports_user_errors
 
 
+@reports_user_errors
 def main() -> None:
     import os
     import sys

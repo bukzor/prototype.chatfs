@@ -22,8 +22,10 @@ from chatfs.cli import extract_cache
 from chatfs.provider.chatgpt.layout import PROVIDER, place_meta
 from chatfs.provider.chatgpt.types import is_index_page
 from chatfs.shell import sh as chatfs_sh
+from chatfs.user_error import reports_user_errors
 
 
+@reports_user_errors
 def main() -> None:
     import os
     import sys

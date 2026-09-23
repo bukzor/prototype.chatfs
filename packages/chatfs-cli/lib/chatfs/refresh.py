@@ -16,6 +16,8 @@ to a captured index and does the browsing.
 from collections.abc import Iterable, Sequence
 from datetime import datetime, timedelta
 
+from chatfs.user_error import UserError, reports_user_errors
+
 
 def cutoff_for(days: int, now: datetime) -> datetime:
     """The oldest `updated` timestamp a chat can carry and still count as
@@ -63,8 +65,8 @@ def day_count(rest: Sequence[str]) -> int | None:
     return days if days > 0 else None
 
 
+@reports_user_errors
 def main() -> None:
-    import subprocess
     import sys
 
     from chatfs.provider.registry import PROVIDERS
@@ -75,9 +77,9 @@ def main() -> None:
         module = f"chatfs.provider.{provider}.refresh"
         try:
             _ = chatfs_sh.run([sys.executable, "-m", module, *sys.argv[1:]])
-        except subprocess.CalledProcessError as error:
+        except UserError as error:
             failed.append(provider)
-            print(f"{provider}: FAILED (exit {error.returncode})", file=sys.stderr)
+            print(f"{provider}: FAILED (exit {error.status})", file=sys.stderr)
         else:
             print(f"{provider}: ok", file=sys.stderr)
 

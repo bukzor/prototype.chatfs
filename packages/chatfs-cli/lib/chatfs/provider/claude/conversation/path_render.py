@@ -32,6 +32,7 @@ from chatfs.layout import data_dir_of
 from chatfs.shell import sh as chatfs_sh
 from chatfs.shell.atomic import staged
 from chatfs.shell.place import find_view_path, link_data_dir, resolve_chat_dir
+from chatfs.user_error import reports_user_errors
 
 
 def path_render(chat_dir: Path) -> None:
@@ -75,6 +76,7 @@ def path_render(chat_dir: Path) -> None:
             )
 
 
+@reports_user_errors
 def main() -> None:
     import sys
 

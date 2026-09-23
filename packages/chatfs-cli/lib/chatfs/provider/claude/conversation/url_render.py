@@ -12,8 +12,10 @@ from chatfs.cli import extract_cache
 from chatfs.layout import chat_dir_for, data_dir_for
 from chatfs.provider.claude import layout as claude_layout
 from chatfs.shell import sh as chatfs_sh
+from chatfs.user_error import reports_user_errors
 
 
+@reports_user_errors
 def main() -> None:
     import os
     import sys
