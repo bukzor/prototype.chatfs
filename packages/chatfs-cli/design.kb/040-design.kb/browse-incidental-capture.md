@@ -13,10 +13,14 @@ to keep stages independent without re-browsing.
 
 Loading `https://chatgpt.com/c/<uuid>` in a real browser does not just
 fetch the conversation document. It also populates the sidebar, which
-fires `/backend-api/conversations?limit=...` — the same endpoint that
-`index browse` plucks. The captured CDP stream therefore contains
-*both* the conversation document and an index page that includes the
-target conversation as one of its `items[]`.
+fires `/backend-api/conversations?offset=0&limit=28&order=updated&is_archived=false&is_starred=false`
+— the same endpoint that `index browse` plucks. The captured CDP stream
+therefore contains *both* the conversation document and the sidebar's
+first page. That page includes the target only when the target is
+among the 28 most recently updated, unstarred chats: nothing adds the
+open chat to it. Across the 55 chatgpt captures on hand (2026-10-12),
+inclusion matched that prediction 55/55, and 44 did not include their
+target.
 
 ## Consequence
 
@@ -36,13 +40,13 @@ for the common case.
 
 ## Failure mode
 
-If the sidebar pagination did not include the target conversation
-(e.g. a very old archived chat outside the first page), the index
-pluck yields no matching item. The script must fail loudly rather than
+If the sidebar page did not include the target conversation (any
+chat outside the first page), the index pluck yields no matching
+item. The script must fail loudly rather than
 fall back to synthesizing `meta.json` from the conversation document.
-The user's recovery is to run `index browse` (which paginates the full
-list) followed by `conversation path browse` against the resulting
-chat dir.
+The user's recovery is `conversation path browse`, preceded by
+`index browse` (with the sidebar scrolled back past the chat) if no
+earlier index placed its `meta.json`.
 
 ## Why not always require `index browse` first
 
