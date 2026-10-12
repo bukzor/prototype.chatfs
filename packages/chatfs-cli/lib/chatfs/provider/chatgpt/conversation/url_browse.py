@@ -15,11 +15,11 @@ When the sidebar has the chat, a second cross-check asserts that the
 identity fields agree across the two endpoints (null-tolerant) —
 catches schema drift if either side ever changes shape. Unlike claude,
 where the conversation doc and index item share literal key names and
-representations, chatgpt's conversation doc names the id field `conversation_id` (not `id`) and
-carries `create_time` as a unix float where the index returns an ISO
-string — `_index_shaped` normalizes both before the diff so the check
-stays meaningful instead of null-tolerance silently skipping every
-field.
+representations, chatgpt's conversation doc names the id field
+`conversation_id` (not `id`) and carries `create_time` as a unix float
+where the index returns an ISO string — `_index_shaped` normalizes
+both before the diff so the check stays meaningful instead of
+null-tolerance silently skipping every field.
 
 Steps:
     1. browse $url → .data/$UUID/cdp.jsonl
@@ -49,6 +49,7 @@ from chatfs.provider.chatgpt.types import IndexItem, is_index_item, is_index_pag
 from chatfs.shell import sh as chatfs_sh
 from chatfs.shell.capture import pluck
 from chatfs.url_browse import choose_meta, null_tolerant_mismatches
+from chatfs.parsing import parsing
 from chatfs.user_error import reports_user_errors
 
 
@@ -65,7 +66,8 @@ def find_index_item(data_dir: Path, uuid: str) -> IndexItem | None:
     for line in index_pages.read_text().splitlines():
         if not line.strip():
             continue
-        page = typed_json.loads(line)
+        with parsing(index_pages):
+            page = typed_json.loads(line)
         assert is_index_page(page), page
         for item in page["items"]:
             if item["id"] == uuid:
@@ -81,7 +83,8 @@ def read_meta(data_dir: Path) -> IndexItem | None:
     path = data_dir / "meta.json"
     if not path.exists():
         return None
-    meta = typed_json.loads(path.read_text())
+    with parsing(path):
+        meta = typed_json.loads(path.read_text())
     assert is_index_item(meta), meta
     return meta
 
@@ -132,7 +135,8 @@ def main() -> None:
     item = find_index_item(data_dir, uuid)
 
     if item is not None:
-        conv_doc = typed_json.loads(conversation.read_text())
+        with parsing(conversation):
+            conv_doc = typed_json.loads(conversation.read_text())
         assert isinstance(conv_doc, dict), conv_doc
         mismatches = null_tolerant_mismatches(_index_shaped(conv_doc), _identity(item))
         assert not mismatches, (

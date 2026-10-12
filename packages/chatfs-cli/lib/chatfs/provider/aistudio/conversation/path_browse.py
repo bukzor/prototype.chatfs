@@ -22,6 +22,7 @@ from chatfs.provider.aistudio.types import is_index_item
 from chatfs.shell import sh as chatfs_sh
 from chatfs.shell.capture import run_module
 from chatfs.shell.place import resolve_chat_dir
+from chatfs.parsing import parsing
 from chatfs.user_error import reports_user_errors
 
 
@@ -34,7 +35,9 @@ def main() -> None:
         sys.exit(2)
 
     chat_dir = resolve_chat_dir(sys.argv[1])
-    meta = typed_json.loads((data_dir_of(chat_dir) / "meta.json").read_text())
+    meta_path = data_dir_of(chat_dir) / "meta.json"
+    with parsing(meta_path):
+        meta = typed_json.loads(meta_path.read_text())
     assert is_index_item(meta), meta
     url = aistudio_layout.url_for(meta["id"])
 

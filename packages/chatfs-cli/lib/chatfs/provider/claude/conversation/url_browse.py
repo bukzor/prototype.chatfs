@@ -42,6 +42,7 @@ from chatfs.shell import sh as chatfs_sh
 from chatfs.shell.capture import capture, pluck
 from chatfs.shell.place import place_meta
 from chatfs.url_browse import choose_meta, null_tolerant_mismatches
+from chatfs.parsing import parsing
 from chatfs.user_error import reports_user_errors
 
 
@@ -58,7 +59,8 @@ def find_index_item(data_dir: Path, uuid: str) -> IndexItem | None:
     for line in index_pages.read_text().splitlines():
         if not line.strip():
             continue
-        page = typed_json.loads(line)
+        with parsing(index_pages):
+            page = typed_json.loads(line)
         assert is_index_page(page), page
         matches.extend(item for item in page["data"] if item["uuid"] == uuid)
     assert all(
@@ -72,7 +74,8 @@ def read_meta(data_dir: Path) -> IndexItem | None:
     path = data_dir / "meta.json"
     if not path.exists():
         return None
-    meta = typed_json.loads(path.read_text())
+    with parsing(path):
+        meta = typed_json.loads(path.read_text())
     assert is_index_item(meta), meta
     return meta
 
@@ -105,7 +108,8 @@ def main() -> None:
     item = find_index_item(data_dir, uuid)
 
     if item is not None:
-        conv_doc = typed_json.loads(conversation.read_text())
+        with parsing(conversation):
+            conv_doc = typed_json.loads(conversation.read_text())
         assert isinstance(conv_doc, dict), conv_doc
         # IndexItem's fields are all str, so this is a safe reinterpretation, not an
         # unverified cast — TypedDict's synthesized Mapping view widens values to

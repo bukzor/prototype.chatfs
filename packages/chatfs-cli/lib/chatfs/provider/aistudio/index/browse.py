@@ -15,6 +15,7 @@ from chatfs.layout import DATA_DIR_NAME
 from chatfs.provider.aistudio.layout import PROVIDER
 from chatfs.provider.aistudio.pluck import pluck_index_pages
 from chatfs.shell.capture import browse, dump_jsonl
+from chatfs.parsing import parsing
 from chatfs.user_error import reports_user_errors
 
 URL = "https://aistudio.google.com/library"
@@ -33,7 +34,7 @@ def main() -> None:
     cdp = root / DATA_DIR_NAME / "index.cdp.jsonl"  # debug intermediate
     cdp.parent.mkdir(parents=True, exist_ok=True)
     browse(URL, cdp)
-    with cdp.open() as f:
+    with parsing(cdp), cdp.open() as f:
         dump_jsonl(pluck_index_pages(f), sys.stdout)
 
 

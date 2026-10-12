@@ -28,6 +28,7 @@ from chatfs.provider.aistudio import layout as aistudio_layout
 from chatfs.provider.aistudio.types import is_conversation
 from chatfs.shell import sh as chatfs_sh
 from chatfs.shell.capture import run_module
+from chatfs.parsing import parsing
 from chatfs.user_error import reports_user_errors
 
 
@@ -56,7 +57,8 @@ def main() -> None:
         conversation,
     )
 
-    parsed = typed_json.loads(conversation.read_text())
+    with parsing(conversation):
+        parsed = typed_json.loads(conversation.read_text())
     assert is_conversation(parsed), parsed
     item = aistudio_layout.index_item(parsed)
     assert item["id"] == id_, (item["id"], id_)

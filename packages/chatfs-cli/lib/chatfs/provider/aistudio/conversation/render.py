@@ -27,6 +27,7 @@ from chatfs.provider.aistudio.types import is_turn
 from chatfs.render import ConversationTree, Turn, render_tree
 from chatfs.shell import sh as chatfs_sh
 from chatfs.shell.place import resolve_chat_dir
+from chatfs.parsing import parsing
 from chatfs.user_error import reports_user_errors
 
 VIRTUAL_ROOT = ""
@@ -77,7 +78,8 @@ def load_turns(messages_dir: Path) -> tuple[dict[str, Turn], dict[str, float]]:
         if not md_path.exists():
             continue
         _, role, note = parse_stem(entry.stem)
-        raw = typed_json.loads(entry.read_text())
+        with parsing(entry):
+            raw = typed_json.loads(entry.read_text())
         assert is_turn(raw), raw
         turns[entry.stem] = Turn(
             role, _time(raw), f"messages/{entry.stem}.md", md_path.read_text().rstrip(), note

@@ -39,6 +39,7 @@ import typed_json
 from chatfs.provider.aistudio.types import Conversation, Turn, is_conversation
 from chatfs.shell import sh as chatfs_sh
 from chatfs.splat import fenced_json, render_details
+from chatfs.parsing import parsing
 from chatfs.user_error import reports_user_errors
 
 
@@ -134,7 +135,8 @@ def main() -> None:
         sys.exit(1)
 
     src = Path(sys.argv[1])
-    parsed = typed_json.loads(src.read_text())
+    with parsing(src):
+        parsed = typed_json.loads(src.read_text())
     assert is_conversation(parsed), parsed
     turns = turns_of(parsed)
 

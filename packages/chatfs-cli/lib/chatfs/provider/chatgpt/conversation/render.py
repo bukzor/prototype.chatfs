@@ -33,6 +33,7 @@ from chatfs.provider.chatgpt.types import Conversation, is_conversation
 from chatfs.render import ConversationTree, Turn, normalize_turnless, render_tree
 from chatfs.shell import sh as chatfs_sh
 from chatfs.shell.place import resolve_chat_dir
+from chatfs.parsing import parsing
 from chatfs.user_error import reports_user_errors
 
 VIRTUAL_ROOT = ""
@@ -145,9 +146,9 @@ def main() -> None:
         sys.exit(2)
 
     chat_dir = resolve_chat_dir(sys.argv[1])
-    parsed = typed_json.loads(
-        (chat_dir / DATA_DIR_NAME / "conversation.json").read_text()
-    )
+    conversation_path = chat_dir / DATA_DIR_NAME / "conversation.json"
+    with parsing(conversation_path):
+        parsed = typed_json.loads(conversation_path.read_text())
     assert is_conversation(parsed), parsed
     conversation: Conversation = parsed
     messages_dir = chat_dir / "messages"

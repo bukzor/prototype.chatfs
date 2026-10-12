@@ -44,6 +44,7 @@ from chatfs.provider.claude.types import (
     is_conversation,
 )
 from chatfs.shell import sh as chatfs_sh
+from chatfs.parsing import parsing
 from chatfs.user_error import reports_user_errors
 
 
@@ -392,11 +393,12 @@ def load_conversation_json(src: Path) -> JsonValue:
     corrupt, and `json.loads` below raises for that case same as always.
     """
     text = src.read_text()
-    _, end = json.JSONDecoder().raw_decode(text)
-    trailing = text[end:].strip()
-    if not trailing:
-        return typed_json.loads(text)
-    json.loads(trailing)  # raises if trailing isn't valid JSON on its own
+    with parsing(src):
+        _, end = json.JSONDecoder().raw_decode(text)
+        trailing = text[end:].strip()
+        if not trailing:
+            return typed_json.loads(text)
+        json.loads(trailing)  # raises if trailing isn't valid JSON on its own
     print(
         f"warning: {src} has trailing JSON data after the first object "
         f"({len(trailing)} bytes) -- using the first object, discarding the rest",

@@ -24,6 +24,7 @@ from chatfs.provider.chatgpt import json
 from chatfs.provider.chatgpt.json import JsonObj
 from chatfs.shell import sh as chatfs_sh
 from chatfs.splat import fenced_json, render_details
+from chatfs.parsing import parsing
 from chatfs.user_error import reports_user_errors
 
 MARKDOWN_PLACEHOLDER = "$MARKDOWN"
@@ -104,7 +105,7 @@ class ConversationLink:
 
 
 def load_conversation(path: Path) -> JsonObj:
-    with path.open() as f:
+    with parsing(path), path.open() as f:
         result = json.load(f)
     assert isinstance(result, Mapping), type(result)
     return result

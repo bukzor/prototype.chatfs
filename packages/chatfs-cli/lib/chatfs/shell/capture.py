@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import TextIO
 
 from typed_json import JsonValue
+from chatfs.parsing import parsing
 from chatfs.layout import data_dir_of
 from chatfs.shell import atomic as chatfs_atomic
 from chatfs.shell import locks as chatfs_locks
@@ -59,7 +60,7 @@ def pluck(
     """
     chatfs_sh.log(f"Plucking → {dst} ...")
     dst.parent.mkdir(parents=True, exist_ok=True)
-    with src.open() as fin, dst.open("w") as fout:
+    with parsing(src), src.open() as fin, dst.open("w") as fout:
         dump_jsonl(fn(fin), fout)
 
 
