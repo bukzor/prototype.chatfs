@@ -4,33 +4,29 @@
 Usage:
     chatfs-provider-claude-conversation-url-browse --cache <dir> <claude-url>
 
-Assumes (per browse-incidental-capture.md) that visiting `/chat/$UUID`
-also fires `/chat_conversations_v2` for the sidebar, so one browse trip
-captures both the conversation document and an index page that mentions
-this UUID.
+Visiting `/chat/$UUID` also fires `/chat_conversations_v2` for the
+sidebar, so a recent chat's index item comes along with the browse.
+The meta.json placed is the one already on disk, else that sidebar
+item; with neither, or with the two disagreeing, this fails
+(UserError). See browse-incidental-capture.md, "Which meta.json wins".
 
-If that assumption is ever violated, `find_index_item` raises UserError and
-the recovery path is two-step: index browse → index splat → path_browse.
-
-A second cross-check asserts that the meta-shaped fields agree across
-the two endpoints (null-tolerant) — catches schema drift if either side
-ever changes shape.
+When the sidebar has the chat, a second cross-check asserts that the
+meta-shaped fields agree across the two endpoints (null-tolerant) —
+catches schema drift if either side ever changes shape.
 
 Steps:
     1. browse $url → .data/$UUID/cdp.jsonl
     2. conversation pluck → .data/$UUID/conversation.json
     3. index pluck → .data/$UUID/cdp.jsonl.d/index-pages.jsonl; filter to
-       .uuid == $UUID → meta (UserError if absent)
-    4. cross-check conversation doc vs index item, null-tolerant
-    5. place_meta (writes meta.json, purges + places view dir-symlink)
-    6. delegate to path_render
+       .uuid == $UUID → the sidebar's item, if any
+    4. cross-check conversation doc vs sidebar item, null-tolerant
+    5. choose meta: on disk, else sidebar (UserError if neither, or if
+       they disagree)
+    6. place_meta (writes meta.json, purges + places view dir-symlink)
+    7. delegate to path_render
 
 Captures are written directly into `.data/$UUID/` — no temp staging.
 If a later step fails, the captures remain there for inspection.
-Recovery from the long-tail "sidebar didn't include this uuid" case is
-to run index browse | index splat (deposits meta.json into the same
-`.data/$UUID/`) and then path_render on the chat dir (reuses the
-already-captured cdp.jsonl + conversation.json).
 """
 from pathlib import Path
 from typing import cast
@@ -41,22 +37,20 @@ from chatfs.cli import extract_cache
 from chatfs.layout import chat_dir_for
 from chatfs.provider.claude import layout as claude_layout
 from chatfs.provider.claude.pluck import pluck_conversation, pluck_index_pages
-from chatfs.provider.claude.types import IndexItem, is_index_page
+from chatfs.provider.claude.types import IndexItem, is_index_item, is_index_page
 from chatfs.shell import sh as chatfs_sh
 from chatfs.shell.capture import capture, pluck
 from chatfs.shell.place import place_meta
-from chatfs.url_browse import null_tolerant_mismatches
-from chatfs.user_error import UserError, reports_user_errors
+from chatfs.url_browse import choose_meta, null_tolerant_mismatches
+from chatfs.user_error import reports_user_errors
 
 
-def find_index_item(data_dir: Path, uuid: str) -> IndexItem:
+def find_index_item(data_dir: Path, uuid: str) -> IndexItem | None:
     """Pluck index pages from CDP into cdp.jsonl.d/index-pages.jsonl;
-    return the item matching uuid.
+    return the item matching uuid, or None if no sidebar page included it.
 
     A cross-check dump, not a contract file — scratch reserved under
-    `cdp.jsonl`'s `.d/` sibling per `path-ownership.md`. Raises UserError if
-    no incidentally-captured index page mentioned this uuid — recovery is
-    the two-step (index_browse → index_splat → path_browse).
+    `cdp.jsonl`'s `.d/` sibling per `path-ownership.md`.
     """
     index_pages = data_dir / "cdp.jsonl.d" / "index-pages.jsonl"
     pluck(pluck_index_pages, data_dir / "cdp.jsonl", index_pages)
@@ -67,15 +61,28 @@ def find_index_item(data_dir: Path, uuid: str) -> IndexItem:
         page = typed_json.loads(line)
         assert is_index_page(page), page
         matches.extend(item for item in page["data"] if item["uuid"] == uuid)
-    if not matches:
-        raise UserError(
-            f"no sidebar index page included {uuid}; "
-            + "run chatfs-provider-claude-index, then use path_browse"
-        )
     assert all(
         m == matches[0] for m in matches
     ), f"index endpoint returned divergent items for {uuid}: {matches}"
-    return matches[0]
+    return matches[0] if matches else None
+
+
+def read_meta(data_dir: Path) -> IndexItem | None:
+    """The meta.json already in `data_dir`, or None if there is none."""
+    path = data_dir / "meta.json"
+    if not path.exists():
+        return None
+    meta = typed_json.loads(path.read_text())
+    assert is_index_item(meta), meta
+    return meta
+
+
+def _identity(item: IndexItem) -> JsonObject:
+    return {
+        "uuid": item["uuid"],
+        "name": item["name"],
+        "created_at": item["created_at"],
+    }
 
 
 @reports_user_errors
@@ -97,24 +104,28 @@ def main() -> None:
 
     item = find_index_item(data_dir, uuid)
 
-    conv_doc = typed_json.loads(conversation.read_text())
-    assert isinstance(conv_doc, dict), conv_doc
-    # IndexItem's fields are all str, so this is a safe reinterpretation, not an
-    # unverified cast — TypedDict's synthesized Mapping view widens values to
-    # `object`, which null_tolerant_mismatches can't recurse into.
-    mismatches = null_tolerant_mismatches(conv_doc, cast(JsonObject, dict(item)))
-    assert not mismatches, (
-        f"meta fields disagree across conversation and index endpoints "
-        f"for {uuid}: {mismatches}"
-    )
+    if item is not None:
+        conv_doc = typed_json.loads(conversation.read_text())
+        assert isinstance(conv_doc, dict), conv_doc
+        # IndexItem's fields are all str, so this is a safe reinterpretation, not an
+        # unverified cast — TypedDict's synthesized Mapping view widens values to
+        # `object`, which null_tolerant_mismatches can't recurse into.
+        mismatches = null_tolerant_mismatches(conv_doc, cast(JsonObject, dict(item)))
+        assert not mismatches, (
+            f"meta fields disagree across conversation and index endpoints "
+            f"for {uuid}: {mismatches}"
+        )
 
+    meta = choose_meta(
+        uuid, read_meta(data_dir), item, _identity, claude_layout.PROVIDER
+    )
     _ = place_meta(
-        item["uuid"],
-        item["name"],
-        claude_layout.created_at(item["created_at"]),
-        item,
+        meta["uuid"],
+        meta["name"],
+        claude_layout.created_at(meta["created_at"]),
+        meta,
         root,
-        updated=claude_layout.updated_at(item),
+        updated=claude_layout.updated_at(meta),
     )
 
     _ = chatfs_sh.run(

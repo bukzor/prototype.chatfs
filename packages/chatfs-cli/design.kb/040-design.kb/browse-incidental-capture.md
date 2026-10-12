@@ -31,22 +31,36 @@ CDP file, placing the outputs in `.data/$UUID/`:
   `conversation.json.d/raw.jsonl` → assemble →
   `conversation.json` (see `conversation-document-is-whole.md`)
 - `chatfs.provider.chatgpt.pluck.pluck_index_pages` → filtered to
-  `item["id"] == $UUID` → `meta.json`
+  `item["id"] == $UUID` → the sidebar's item for this chat, if any
 
-This makes `.data/$UUID/meta.json` deterministic from the same browse
-run that fetched the conversation, with no synthesis (see
-`no-partial-synthesis.md`) and no separate `index browse` prerequisite
-for the common case.
+## Which `meta.json` wins
 
-## Failure mode
+> [!@bukzor] ruled 2026-10-12, recorded sensatim -- the four rules
+> below, chosen over "sidebar if present, else disk" to minimize
+> hysteresis.
 
-If the sidebar page did not include the target conversation (any
-chat outside the first page), the index pluck yields no matching
-item. The script must fail loudly rather than
-fall back to synthesizing `meta.json` from the conversation document.
-The user's recovery is `conversation path browse`, preceded by
-`index browse` (with the sidebar scrolled back past the chat) if no
-earlier index placed its `meta.json`.
+- `meta.json` already on disk is used as-is.
+- If the sidebar also has the chat, the two must agree, or url browse
+  fails.
+- If only the sidebar has it, its item is written as `meta.json`.
+- If neither has it, url browse fails rather than synthesize `meta.json`
+  from the conversation document (see `no-partial-synthesis.md`).
+
+Disk wins, so the result never depends on whether the chat ranked into
+this capture's sidebar page.
+
+> [!DRAFT] agent-authored 2026-10-12, vetoable.
+>
+> "Agree" covers the identity fields only (id, title, creation time),
+> the ones that place the chat's view. The rest of the item (update
+> time, snippet) changes whenever the chat does, so comparing it would
+> fail every re-capture of an active chat. url browse never refreshes
+> those fields; `index browse` owns them.
+
+Both failures are `UserError`s with one recovery: `index browse`, with
+the sidebar scrolled back past the chat, then the same url browse
+again. A disagreement usually means the chat was renamed since the last
+index.
 
 ## Why not always require `index browse` first
 

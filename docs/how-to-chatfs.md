@@ -204,13 +204,17 @@ conversation document, extracted from it). A failure leaves those in place
 to look at, and the previous successful capture is never destroyed by a
 failed one.
 
-**"no sidebar index page included $UUID"** — capturing by URL relies on the
-page also loading your conversation list, which is where the title and
-timestamp come from; unscrolled, chatgpt's sidebar loads only the ~28 most
-recently updated chats, so this is expected for an older one. Capture it by
-path instead: `path-browse` works as-is if an earlier index already covered
-the chat, otherwise run `chatfs-provider-<provider>-index` (scrolled back
-past it) first.
+**"no captured sidebar page included $UUID, and no earlier index placed
+its meta.json"** — capturing by URL takes the title and timestamps from
+an earlier index if there was one, else from the conversation list the
+page loads. Unscrolled, chatgpt's sidebar loads only the 28 most recently
+updated chats, so an older chat that has never been indexed has neither.
+Run `chatfs-provider-<provider>-index` with the sidebar scrolled back past
+it, then rerun the same command.
+
+**"meta.json for $UUID disagrees with the sidebar"** — usually the chat
+was renamed since the last index. Same recovery: rerun the index, then
+the command.
 
 **"capture holds only N of this conversation's pages"** -- chatgpt sends
 older messages only as you scroll back through them, so a capture taken

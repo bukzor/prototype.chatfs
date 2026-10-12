@@ -8,9 +8,50 @@ chatgpt have two endpoints today; AI Studio's single
 `ResolveDriveResource` body carries both identity and turn content, so
 it has nothing to cross-check.
 """
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 
-from typed_json import JsonValue
+from typed_json import JsonObject, JsonValue
+
+from chatfs.user_error import UserError
+
+
+def choose_meta[Item](
+    uuid: str,
+    on_disk: Item | None,
+    in_sidebar: Item | None,
+    identity: Callable[[Item], JsonObject],
+    provider: str,
+) -> Item:
+    """The index item a url browse places: what's on disk, else what the
+    sidebar captured (browse-incidental-capture.md, "Which meta.json wins").
+
+    Raises UserError when neither has the chat, or when both do and their
+    `identity` projections disagree.
+    """
+    recovery = (
+        f"Run chatfs-provider-{provider}-index with the sidebar scrolled back "
+        + "past this chat, then rerun this command."
+    )
+    if on_disk is not None:
+        if in_sidebar is not None:
+            mismatches = null_tolerant_mismatches(
+                identity(on_disk), identity(in_sidebar)
+            )
+            if mismatches:
+                raise UserError(
+                    f"meta.json for {uuid} disagrees with the sidebar: "
+                    + f"{'; '.join(mismatches)}. "
+                    + recovery
+                )
+        return on_disk
+    elif in_sidebar is not None:
+        return in_sidebar
+    else:
+        raise UserError(
+            f"no captured sidebar page included {uuid}, and no earlier index "
+            + "placed its meta.json. "
+            + recovery
+        )
 
 
 def null_tolerant_mismatches(

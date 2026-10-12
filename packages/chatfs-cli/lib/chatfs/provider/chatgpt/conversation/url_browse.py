@@ -4,21 +4,18 @@
 Usage:
     chatfs-provider-chatgpt-conversation-url-browse --cache <dir> <chatgpt-url>
 
-Assumes (per browse-incidental-capture.md) that visiting `/c/$UUID` also
-fires `/backend-api/conversations` for the sidebar, so one browse trip
-captures both the conversation document and an index page that mentions
-this UUID. That holds only for recent chats: unscrolled, the sidebar
-loads just its first page, the ~28 most recently updated.
+Visiting `/c/$UUID` also fires `/backend-api/conversations` for the
+sidebar's first page -- the 28 most recently updated chats -- so a
+recent chat's index item comes along with the browse. The meta.json
+placed is the one already on disk, else that sidebar item; with
+neither, or with the two disagreeing, this fails (UserError). See
+browse-incidental-capture.md, "Which meta.json wins".
 
-For an older chat `find_index_item` raises UserError, and the recovery
-is capture by path: index browse (scrolled back past it) → path_browse,
-or path_browse alone if an earlier index already placed its meta.json.
-
-A second cross-check asserts that the identity fields agree across the
-two endpoints (null-tolerant) — catches schema drift if either side
-ever changes shape. Unlike claude, where the conversation doc and index
-item share literal key names and representations, chatgpt's
-conversation doc names the id field `conversation_id` (not `id`) and
+When the sidebar has the chat, a second cross-check asserts that the
+identity fields agree across the two endpoints (null-tolerant) —
+catches schema drift if either side ever changes shape. Unlike claude,
+where the conversation doc and index item share literal key names and
+representations, chatgpt's conversation doc names the id field `conversation_id` (not `id`) and
 carries `create_time` as a unix float where the index returns an ISO
 string — `_index_shaped` normalizes both before the diff so the check
 stays meaningful instead of null-tolerance silently skipping every
@@ -29,10 +26,12 @@ Steps:
     2. conversation pluck → .data/$UUID/conversation.json.d/raw.jsonl
     3. assemble → .data/$UUID/conversation.json
     4. index pluck → .data/$UUID/cdp.jsonl.d/index-pages.jsonl; filter to
-       .id == $UUID → meta (UserError if absent)
-    5. cross-check conversation doc vs index item, null-tolerant
-    6. place_meta (writes meta.json, purges + places view dir-symlink)
-    7. delegate to path_render
+       .id == $UUID → the sidebar's item, if any
+    5. cross-check conversation doc vs sidebar item, null-tolerant
+    6. choose meta: on disk, else sidebar (UserError if neither, or if
+       they disagree)
+    7. place_meta (writes meta.json, purges + places view dir-symlink)
+    8. delegate to path_render
 
 Captures are written directly into `.data/$UUID/` — no temp staging
 (matches claude's `capture()` policy). If a later step fails, the
@@ -46,20 +45,19 @@ from chatfs.cli import extract_cache
 from chatfs.layout import chat_dir_for
 from chatfs.provider.chatgpt import layout as chatgpt_layout
 from chatfs.provider.chatgpt.pluck import pluck_index_pages
-from chatfs.provider.chatgpt.types import IndexItem, is_index_page
+from chatfs.provider.chatgpt.types import IndexItem, is_index_item, is_index_page
 from chatfs.shell import sh as chatfs_sh
 from chatfs.shell.capture import pluck
-from chatfs.url_browse import null_tolerant_mismatches
-from chatfs.user_error import UserError, reports_user_errors
+from chatfs.url_browse import choose_meta, null_tolerant_mismatches
+from chatfs.user_error import reports_user_errors
 
 
-def find_index_item(data_dir: Path, uuid: str) -> IndexItem:
+def find_index_item(data_dir: Path, uuid: str) -> IndexItem | None:
     """Pluck index pages from CDP into cdp.jsonl.d/index-pages.jsonl;
-    return the item matching uuid.
+    return the item matching uuid, or None if no sidebar page included it.
 
     A cross-check dump, not a contract file — scratch reserved under
-    `cdp.jsonl`'s `.d/` sibling per `path-ownership.md`. Raises UserError
-    if no sidebar page included this conversation.
+    `cdp.jsonl`'s `.d/` sibling per `path-ownership.md`.
     """
     index_pages = data_dir / "cdp.jsonl.d" / "index-pages.jsonl"
     pluck(pluck_index_pages, data_dir / "cdp.jsonl", index_pages)
@@ -72,19 +70,30 @@ def find_index_item(data_dir: Path, uuid: str) -> IndexItem:
         for item in page["items"]:
             if item["id"] == uuid:
                 matches.append(item)
-    if not matches:
-        raise UserError(
-            f"no sidebar index page included {uuid}: unscrolled, the sidebar "
-            + "loads only the most recently updated chats, and capture by URL "
-            + "takes the title and timestamps from there. Capture by path "
-            + f"instead: chatfs-conversation-path-browse <cache>/chatgpt/.chat/{uuid}/ "
-            + "-- after chatfs-provider-chatgpt-index, scrolled back past this "
-            + "chat, if it has never been indexed."
-        )
     assert all(m == matches[0] for m in matches), (
         f"index endpoint returned divergent items for {uuid}: {matches}"
     )
-    return matches[0]
+    return matches[0] if matches else None
+
+
+def read_meta(data_dir: Path) -> IndexItem | None:
+    """The meta.json already in `data_dir`, or None if there is none."""
+    path = data_dir / "meta.json"
+    if not path.exists():
+        return None
+    meta = typed_json.loads(path.read_text())
+    assert is_index_item(meta), meta
+    return meta
+
+
+def _identity(item: IndexItem) -> JsonObject:
+    """An index item's identity fields, `create_time` normalized to the
+    same ISO 8601 spelling `_index_shaped` gives the conversation doc."""
+    return {
+        "id": item["id"],
+        "title": item["title"],
+        "create_time": chatgpt_layout.created_at(item["create_time"]).isoformat(),
+    }
 
 
 def _index_shaped(conv_doc: JsonObject) -> JsonObject:
@@ -122,21 +131,19 @@ def main() -> None:
 
     item = find_index_item(data_dir, uuid)
 
-    conv_doc = typed_json.loads(conversation.read_text())
-    assert isinstance(conv_doc, dict), conv_doc
-    projected = _index_shaped(conv_doc)
-    item_normalized: JsonObject = {
-        "id": item["id"],
-        "title": item["title"],
-        "create_time": chatgpt_layout.created_at(item["create_time"]).isoformat(),
-    }
-    mismatches = null_tolerant_mismatches(projected, item_normalized)
-    assert not mismatches, (
-        f"meta fields disagree across conversation and index endpoints "
-        f"for {uuid}: {mismatches}"
-    )
+    if item is not None:
+        conv_doc = typed_json.loads(conversation.read_text())
+        assert isinstance(conv_doc, dict), conv_doc
+        mismatches = null_tolerant_mismatches(_index_shaped(conv_doc), _identity(item))
+        assert not mismatches, (
+            f"meta fields disagree across conversation and index endpoints "
+            f"for {uuid}: {mismatches}"
+        )
 
-    _ = chatgpt_layout.place_meta(item, root)
+    meta = choose_meta(
+        uuid, read_meta(data_dir), item, _identity, chatgpt_layout.PROVIDER
+    )
+    _ = chatgpt_layout.place_meta(meta, root)
 
     _ = chatfs_sh.run(
         [
