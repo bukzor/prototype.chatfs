@@ -216,6 +216,11 @@ it, then rerun the same command.
 was renamed since the last index. Same recovery: rerun the index, then
 the command.
 
+**"capture holds no conversation document for $UUID"** — the capture ended
+before the page requested the conversation itself. Rerun, and click **Done
+Capturing** only once the conversation is on screen. The previous capture
+is kept.
+
 **"capture holds only N of this conversation's pages"** -- chatgpt sends
 older messages only as you scroll back through them, so a capture taken
 from the bottom of a long conversation has a prefix missing. Scroll to the

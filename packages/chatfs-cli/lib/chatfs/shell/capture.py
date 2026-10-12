@@ -17,6 +17,7 @@ from chatfs.layout import data_dir_of
 from chatfs.shell import atomic as chatfs_atomic
 from chatfs.shell import locks as chatfs_locks
 from chatfs.shell import sh as chatfs_sh
+from chatfs.user_error import UserError
 
 
 def run_module(module: str, src: Path, dst: Path) -> None:
@@ -80,7 +81,8 @@ def capture(
     likely to fail, and the one artifact class that isn't locally
     re-derivable) leaves the prior `cdp.jsonl` untouched instead of
     destroying it; the partial attempt is preserved as a `.fail`
-    sibling. Both promotions share one outer write lock on the data
+    sibling. A pluck that finds no conversation document raises
+    UserError, leaving the prior conversation the same way. Both promotions share one outer write lock on the data
     dir, so a cooperating reader (`chatfs.shell.locks.read_locked`) never
     observes cdp.jsonl and the conversation as a mismatched pair from
     two different runs. Returns the data dir for callers that need to
@@ -113,6 +115,14 @@ def capture(
             browse(url, tmp)
         with chatfs_atomic.staged(conversation, anchor=data_dir) as tmp:
             pluck(pluck_fn, cdp, tmp)
+            # One line per plucked body, so empty means none: the capture
+            # ended before the page requested the conversation document.
+            if tmp.stat().st_size == 0:
+                raise UserError(
+                    f"capture holds no conversation document for {data_dir.name}; "
+                    + "wait for the conversation to appear before clicking "
+                    + "Done Capturing"
+                )
 
     return data_dir
 

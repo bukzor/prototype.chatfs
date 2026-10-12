@@ -16,6 +16,7 @@ from typed_json import JsonValue
 from chatfs.layout import chat_dir_for, data_dir_for
 from chatfs.shell import capture as chatfs_capture
 from chatfs.shell.capture import capture, captured_at
+from chatfs.user_error import UserError
 
 
 class DescribeCapture:
@@ -89,6 +90,27 @@ class DescribeCapture:
         # browse succeeded, so the new cdp.jsonl is kept ...
         assert (data_dir / "cdp.jsonl").read_text() == "new capture"
         # ... but the conversation, which pluck never finished, is untouched
+        assert (data_dir / "conversation.json").read_text() == '{"prior": true}'
+
+    def it_refuses_a_capture_that_holds_no_conversation_document(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ):
+        chat_dir = chat_dir_for("abc123", tmp_path)
+        data_dir = data_dir_for("abc123", tmp_path)
+        data_dir.mkdir(parents=True)
+        _ = (data_dir / "conversation.json").write_text('{"prior": true}')
+
+        def fake_browse(_url: str, dst: Path) -> None:
+            _ = dst.write_text("closed before the document loaded")
+
+        monkeypatch.setattr(chatfs_capture, "browse", fake_browse)
+
+        def empty_pluck_fn(_lines: Iterable[str]) -> Iterator[JsonValue]:
+            yield from ()
+
+        with pytest.raises(UserError, match="no conversation document for abc123"):
+            _ = capture("https://example/abc123", chat_dir, empty_pluck_fn)
+
         assert (data_dir / "conversation.json").read_text() == '{"prior": true}'
 
 
